@@ -32,10 +32,19 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 	r.Get("/api/health/liveness", healthH.Liveness)
 	r.Get("/api/health/readiness", healthH.Readiness)
 
+	groupH := handler.NewGroupHandler(pool, queries, cfg)
+
 	// Authenticated routes
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.Authenticate(jwtSvc))
-		// Handlers added here as they are implemented
+
+		r.Post("/api/groups", groupH.Create)
+		r.Get("/api/groups", groupH.List)
+		r.Get("/api/groups/{groupID}", groupH.Get)
+		r.Patch("/api/groups/{groupID}", groupH.Update)
+		r.Delete("/api/groups/{groupID}", groupH.Archive)
+		r.Get("/api/groups/{groupID}/invite-link", groupH.GetInviteLink)
+		r.Post("/api/groups/join/{token}", groupH.JoinViaToken)
 	})
 
 	// Hosted-only routes (Google, Apple auth)
