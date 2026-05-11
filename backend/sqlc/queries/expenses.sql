@@ -1,0 +1,38 @@
+-- name: CreateExpense :one
+INSERT INTO expenses (id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, created_by_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+RETURNING *;
+
+-- name: GetExpenseByID :one
+SELECT * FROM expenses WHERE id = $1 AND NOT is_deleted;
+
+-- name: ListExpensesByGroup :many
+SELECT * FROM expenses
+WHERE group_id = $1 AND NOT is_deleted
+ORDER BY expense_date DESC, created_at DESC
+LIMIT $2 OFFSET $3;
+
+-- name: UpdateExpense :one
+UPDATE expenses
+SET title        = COALESCE(sqlc.narg(title), title),
+    amount       = COALESCE(sqlc.narg(amount), amount),
+    currency     = COALESCE(sqlc.narg(currency), currency),
+    paid_by_id   = COALESCE(sqlc.narg(paid_by_id), paid_by_id),
+    split_method = COALESCE(sqlc.narg(split_method), split_method),
+    category     = COALESCE(sqlc.narg(category), category),
+    notes        = COALESCE(sqlc.narg(notes), notes),
+    expense_date = COALESCE(sqlc.narg(expense_date), expense_date),
+    updated_at   = NOW()
+WHERE id = $1
+RETURNING *;
+
+-- name: SoftDeleteExpense :exec
+UPDATE expenses SET is_deleted = TRUE, updated_at = NOW() WHERE id = $1;
+
+-- name: SearchExpenses :many
+SELECT * FROM expenses
+WHERE group_id = $1
+  AND NOT is_deleted
+  AND search_vector @@ plainto_tsquery('simple', $2)
+ORDER BY ts_rank(search_vector, plainto_tsquery('simple', $2)) DESC
+LIMIT 50;

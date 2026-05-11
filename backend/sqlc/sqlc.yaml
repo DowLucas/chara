@@ -1,0 +1,18 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "queries/"
+    schema: "../migrations/"
+    gen:
+      go:
+        package: "db"
+        out: "../internal/db"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_db_tags: true
+        emit_empty_slices: true
+        overrides:
+          - db_type: "bigint"
+            go_type: "int64"
+          - db_type: "jsonb"
+            go_type: "encoding/json.RawMessage"
