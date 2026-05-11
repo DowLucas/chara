@@ -33,6 +33,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 	r.Get("/api/health/readiness", healthH.Readiness)
 
 	groupH := handler.NewGroupHandler(pool, queries, cfg)
+	expenseH := handler.NewExpenseHandler(pool, queries)
 
 	// Authenticated routes
 	r.Group(func(r chi.Router) {
@@ -45,6 +46,12 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 		r.Delete("/api/groups/{groupID}", groupH.Archive)
 		r.Get("/api/groups/{groupID}/invite-link", groupH.GetInviteLink)
 		r.Post("/api/groups/join/{token}", groupH.JoinViaToken)
+
+		r.Post("/api/groups/{groupID}/expenses", expenseH.Create)
+		r.Get("/api/groups/{groupID}/expenses", expenseH.List)
+		r.Get("/api/groups/{groupID}/expenses/{expenseID}", expenseH.Get)
+		r.Patch("/api/groups/{groupID}/expenses/{expenseID}", expenseH.Update)
+		r.Delete("/api/groups/{groupID}/expenses/{expenseID}", expenseH.Delete)
 	})
 
 	// Hosted-only routes (Google, Apple auth)

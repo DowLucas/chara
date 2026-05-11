@@ -12,9 +12,10 @@ import (
 )
 
 const createExpense = `-- name: CreateExpense :one
+
 INSERT INTO expenses (id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, created_by_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at, search_vector
+RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at
 `
 
 type CreateExpenseParams struct {
@@ -32,7 +33,27 @@ type CreateExpenseParams struct {
 	CreatedByID     string      `db:"created_by_id" json:"created_by_id"`
 }
 
-func (q *Queries) CreateExpense(ctx context.Context, arg CreateExpenseParams) (Expense, error) {
+type CreateExpenseRow struct {
+	ID              string             `db:"id" json:"id"`
+	GroupID         string             `db:"group_id" json:"group_id"`
+	Title           string             `db:"title" json:"title"`
+	Amount          int64              `db:"amount" json:"amount"`
+	Currency        string             `db:"currency" json:"currency"`
+	PaidByID        string             `db:"paid_by_id" json:"paid_by_id"`
+	SplitMethod     string             `db:"split_method" json:"split_method"`
+	Category        string             `db:"category" json:"category"`
+	Notes           pgtype.Text        `db:"notes" json:"notes"`
+	ExpenseDate     pgtype.Date        `db:"expense_date" json:"expense_date"`
+	IsReimbursement bool               `db:"is_reimbursement" json:"is_reimbursement"`
+	IsDeleted       bool               `db:"is_deleted" json:"is_deleted"`
+	CreatedByID     string             `db:"created_by_id" json:"created_by_id"`
+	CreatedAt       pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+}
+
+// Explicit column list everywhere to exclude the generated `search_vector` column,
+// which pgx cannot scan into interface{} cleanly.
+func (q *Queries) CreateExpense(ctx context.Context, arg CreateExpenseParams) (CreateExpenseRow, error) {
 	row := q.db.QueryRow(ctx, createExpense,
 		arg.ID,
 		arg.GroupID,
@@ -47,7 +68,7 @@ func (q *Queries) CreateExpense(ctx context.Context, arg CreateExpenseParams) (E
 		arg.IsReimbursement,
 		arg.CreatedByID,
 	)
-	var i Expense
+	var i CreateExpenseRow
 	err := row.Scan(
 		&i.ID,
 		&i.GroupID,
@@ -64,18 +85,36 @@ func (q *Queries) CreateExpense(ctx context.Context, arg CreateExpenseParams) (E
 		&i.CreatedByID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.SearchVector,
 	)
 	return i, err
 }
 
 const getExpenseByID = `-- name: GetExpenseByID :one
-SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at, search_vector FROM expenses WHERE id = $1 AND NOT is_deleted
+SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at
+FROM expenses WHERE id = $1 AND NOT is_deleted
 `
 
-func (q *Queries) GetExpenseByID(ctx context.Context, id string) (Expense, error) {
+type GetExpenseByIDRow struct {
+	ID              string             `db:"id" json:"id"`
+	GroupID         string             `db:"group_id" json:"group_id"`
+	Title           string             `db:"title" json:"title"`
+	Amount          int64              `db:"amount" json:"amount"`
+	Currency        string             `db:"currency" json:"currency"`
+	PaidByID        string             `db:"paid_by_id" json:"paid_by_id"`
+	SplitMethod     string             `db:"split_method" json:"split_method"`
+	Category        string             `db:"category" json:"category"`
+	Notes           pgtype.Text        `db:"notes" json:"notes"`
+	ExpenseDate     pgtype.Date        `db:"expense_date" json:"expense_date"`
+	IsReimbursement bool               `db:"is_reimbursement" json:"is_reimbursement"`
+	IsDeleted       bool               `db:"is_deleted" json:"is_deleted"`
+	CreatedByID     string             `db:"created_by_id" json:"created_by_id"`
+	CreatedAt       pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+}
+
+func (q *Queries) GetExpenseByID(ctx context.Context, id string) (GetExpenseByIDRow, error) {
 	row := q.db.QueryRow(ctx, getExpenseByID, id)
-	var i Expense
+	var i GetExpenseByIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.GroupID,
@@ -92,13 +131,64 @@ func (q *Queries) GetExpenseByID(ctx context.Context, id string) (Expense, error
 		&i.CreatedByID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.SearchVector,
+	)
+	return i, err
+}
+
+const getExpenseByIDAndGroup = `-- name: GetExpenseByIDAndGroup :one
+SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at
+FROM expenses WHERE id = $1 AND group_id = $2 AND NOT is_deleted
+`
+
+type GetExpenseByIDAndGroupParams struct {
+	ID      string `db:"id" json:"id"`
+	GroupID string `db:"group_id" json:"group_id"`
+}
+
+type GetExpenseByIDAndGroupRow struct {
+	ID              string             `db:"id" json:"id"`
+	GroupID         string             `db:"group_id" json:"group_id"`
+	Title           string             `db:"title" json:"title"`
+	Amount          int64              `db:"amount" json:"amount"`
+	Currency        string             `db:"currency" json:"currency"`
+	PaidByID        string             `db:"paid_by_id" json:"paid_by_id"`
+	SplitMethod     string             `db:"split_method" json:"split_method"`
+	Category        string             `db:"category" json:"category"`
+	Notes           pgtype.Text        `db:"notes" json:"notes"`
+	ExpenseDate     pgtype.Date        `db:"expense_date" json:"expense_date"`
+	IsReimbursement bool               `db:"is_reimbursement" json:"is_reimbursement"`
+	IsDeleted       bool               `db:"is_deleted" json:"is_deleted"`
+	CreatedByID     string             `db:"created_by_id" json:"created_by_id"`
+	CreatedAt       pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+}
+
+func (q *Queries) GetExpenseByIDAndGroup(ctx context.Context, arg GetExpenseByIDAndGroupParams) (GetExpenseByIDAndGroupRow, error) {
+	row := q.db.QueryRow(ctx, getExpenseByIDAndGroup, arg.ID, arg.GroupID)
+	var i GetExpenseByIDAndGroupRow
+	err := row.Scan(
+		&i.ID,
+		&i.GroupID,
+		&i.Title,
+		&i.Amount,
+		&i.Currency,
+		&i.PaidByID,
+		&i.SplitMethod,
+		&i.Category,
+		&i.Notes,
+		&i.ExpenseDate,
+		&i.IsReimbursement,
+		&i.IsDeleted,
+		&i.CreatedByID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const listExpensesByGroup = `-- name: ListExpensesByGroup :many
-SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at, search_vector FROM expenses
+SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at
+FROM expenses
 WHERE group_id = $1 AND NOT is_deleted
 ORDER BY expense_date DESC, created_at DESC
 LIMIT $2 OFFSET $3
@@ -110,15 +200,33 @@ type ListExpensesByGroupParams struct {
 	Offset  int32  `db:"offset" json:"offset"`
 }
 
-func (q *Queries) ListExpensesByGroup(ctx context.Context, arg ListExpensesByGroupParams) ([]Expense, error) {
+type ListExpensesByGroupRow struct {
+	ID              string             `db:"id" json:"id"`
+	GroupID         string             `db:"group_id" json:"group_id"`
+	Title           string             `db:"title" json:"title"`
+	Amount          int64              `db:"amount" json:"amount"`
+	Currency        string             `db:"currency" json:"currency"`
+	PaidByID        string             `db:"paid_by_id" json:"paid_by_id"`
+	SplitMethod     string             `db:"split_method" json:"split_method"`
+	Category        string             `db:"category" json:"category"`
+	Notes           pgtype.Text        `db:"notes" json:"notes"`
+	ExpenseDate     pgtype.Date        `db:"expense_date" json:"expense_date"`
+	IsReimbursement bool               `db:"is_reimbursement" json:"is_reimbursement"`
+	IsDeleted       bool               `db:"is_deleted" json:"is_deleted"`
+	CreatedByID     string             `db:"created_by_id" json:"created_by_id"`
+	CreatedAt       pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+}
+
+func (q *Queries) ListExpensesByGroup(ctx context.Context, arg ListExpensesByGroupParams) ([]ListExpensesByGroupRow, error) {
 	rows, err := q.db.Query(ctx, listExpensesByGroup, arg.GroupID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Expense{}
+	items := []ListExpensesByGroupRow{}
 	for rows.Next() {
-		var i Expense
+		var i ListExpensesByGroupRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.GroupID,
@@ -135,7 +243,6 @@ func (q *Queries) ListExpensesByGroup(ctx context.Context, arg ListExpensesByGro
 			&i.CreatedByID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.SearchVector,
 		); err != nil {
 			return nil, err
 		}
@@ -148,7 +255,8 @@ func (q *Queries) ListExpensesByGroup(ctx context.Context, arg ListExpensesByGro
 }
 
 const searchExpenses = `-- name: SearchExpenses :many
-SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at, search_vector FROM expenses
+SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at
+FROM expenses
 WHERE group_id = $1
   AND NOT is_deleted
   AND search_vector @@ plainto_tsquery('simple', $2)
@@ -161,15 +269,33 @@ type SearchExpensesParams struct {
 	PlaintoTsquery string `db:"plainto_tsquery" json:"plainto_tsquery"`
 }
 
-func (q *Queries) SearchExpenses(ctx context.Context, arg SearchExpensesParams) ([]Expense, error) {
+type SearchExpensesRow struct {
+	ID              string             `db:"id" json:"id"`
+	GroupID         string             `db:"group_id" json:"group_id"`
+	Title           string             `db:"title" json:"title"`
+	Amount          int64              `db:"amount" json:"amount"`
+	Currency        string             `db:"currency" json:"currency"`
+	PaidByID        string             `db:"paid_by_id" json:"paid_by_id"`
+	SplitMethod     string             `db:"split_method" json:"split_method"`
+	Category        string             `db:"category" json:"category"`
+	Notes           pgtype.Text        `db:"notes" json:"notes"`
+	ExpenseDate     pgtype.Date        `db:"expense_date" json:"expense_date"`
+	IsReimbursement bool               `db:"is_reimbursement" json:"is_reimbursement"`
+	IsDeleted       bool               `db:"is_deleted" json:"is_deleted"`
+	CreatedByID     string             `db:"created_by_id" json:"created_by_id"`
+	CreatedAt       pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+}
+
+func (q *Queries) SearchExpenses(ctx context.Context, arg SearchExpensesParams) ([]SearchExpensesRow, error) {
 	rows, err := q.db.Query(ctx, searchExpenses, arg.GroupID, arg.PlaintoTsquery)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Expense{}
+	items := []SearchExpensesRow{}
 	for rows.Next() {
-		var i Expense
+		var i SearchExpensesRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.GroupID,
@@ -186,7 +312,6 @@ func (q *Queries) SearchExpenses(ctx context.Context, arg SearchExpensesParams) 
 			&i.CreatedByID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.SearchVector,
 		); err != nil {
 			return nil, err
 		}
@@ -219,7 +344,7 @@ SET title        = COALESCE($2, title),
     expense_date = COALESCE($9, expense_date),
     updated_at   = NOW()
 WHERE id = $1
-RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at, search_vector
+RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at
 `
 
 type UpdateExpenseParams struct {
@@ -234,7 +359,25 @@ type UpdateExpenseParams struct {
 	ExpenseDate pgtype.Date `db:"expense_date" json:"expense_date"`
 }
 
-func (q *Queries) UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (Expense, error) {
+type UpdateExpenseRow struct {
+	ID              string             `db:"id" json:"id"`
+	GroupID         string             `db:"group_id" json:"group_id"`
+	Title           string             `db:"title" json:"title"`
+	Amount          int64              `db:"amount" json:"amount"`
+	Currency        string             `db:"currency" json:"currency"`
+	PaidByID        string             `db:"paid_by_id" json:"paid_by_id"`
+	SplitMethod     string             `db:"split_method" json:"split_method"`
+	Category        string             `db:"category" json:"category"`
+	Notes           pgtype.Text        `db:"notes" json:"notes"`
+	ExpenseDate     pgtype.Date        `db:"expense_date" json:"expense_date"`
+	IsReimbursement bool               `db:"is_reimbursement" json:"is_reimbursement"`
+	IsDeleted       bool               `db:"is_deleted" json:"is_deleted"`
+	CreatedByID     string             `db:"created_by_id" json:"created_by_id"`
+	CreatedAt       pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+}
+
+func (q *Queries) UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (UpdateExpenseRow, error) {
 	row := q.db.QueryRow(ctx, updateExpense,
 		arg.ID,
 		arg.Title,
@@ -246,7 +389,7 @@ func (q *Queries) UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (E
 		arg.Notes,
 		arg.ExpenseDate,
 	)
-	var i Expense
+	var i UpdateExpenseRow
 	err := row.Scan(
 		&i.ID,
 		&i.GroupID,
@@ -263,7 +406,6 @@ func (q *Queries) UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (E
 		&i.CreatedByID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.SearchVector,
 	)
 	return i, err
 }
