@@ -184,3 +184,17 @@ func (q *Queries) UpdateGroupMemberName(ctx context.Context, arg UpdateGroupMemb
 	)
 	return i, err
 }
+
+const updateGroupMemberNamesByUserID = `-- name: UpdateGroupMemberNamesByUserID :exec
+UPDATE group_members SET name = $2 WHERE user_id = $1
+`
+
+type UpdateGroupMemberNamesByUserIDParams struct {
+	UserID pgtype.Text `db:"user_id" json:"user_id"`
+	Name   string      `db:"name" json:"name"`
+}
+
+func (q *Queries) UpdateGroupMemberNamesByUserID(ctx context.Context, arg UpdateGroupMemberNamesByUserIDParams) error {
+	_, err := q.db.Exec(ctx, updateGroupMemberNamesByUserID, arg.UserID, arg.Name)
+	return err
+}

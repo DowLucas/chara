@@ -17,6 +17,7 @@ type Config struct {
 
 	// Instance
 	InstanceMode string // "hosted" | "selfhost"
+	DevMode      bool   // when true, relaxes email requirement and returns magic-link tokens in the API response
 
 	// JWT
 	JWTSecret         string // HS256, required for selfhost
@@ -62,6 +63,7 @@ func Load() (*Config, error) {
 		BaseURL:      getEnv("BASE_URL", "http://localhost:8080"),
 		DatabaseURL:  mustGetEnv("DATABASE_URL"),
 		InstanceMode: getEnv("INSTANCE_MODE", "selfhost"),
+		DevMode:      getEnv("DEV_MODE", "") == "true" || getEnv("DEV_MODE", "") == "1",
 
 		JWTSecret:        getEnv("JWT_SECRET", ""),
 		JWTPrivateKeyPEM: getEnv("JWT_PRIVATE_KEY_PEM", ""),
@@ -111,8 +113,8 @@ func (c *Config) validate() error {
 	if c.InstanceMode == "hosted" && c.JWTPrivateKeyPEM == "" {
 		return fmt.Errorf("config: JWT_PRIVATE_KEY_PEM is required for hosted mode")
 	}
-	if c.ResendAPIKey == "" && c.SMTPHost == "" {
-		return fmt.Errorf("config: at least one of RESEND_API_KEY or SMTP_HOST must be set")
+	if c.ResendAPIKey == "" && c.SMTPHost == "" && !c.DevMode {
+		return fmt.Errorf("config: at least one of RESEND_API_KEY or SMTP_HOST must be set (or DEV_MODE=true)")
 	}
 	return nil
 }

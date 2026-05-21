@@ -91,7 +91,7 @@ type MemberBalance struct {
 	MemberID   string      `db:"member_id" json:"member_id"`
 	UserID     pgtype.Text `db:"user_id" json:"user_id"`
 	Currency   pgtype.Text `db:"currency" json:"currency"`
-	NetBalance int32       `db:"net_balance" json:"net_balance"`
+	NetBalance int64       `db:"net_balance" json:"net_balance"`
 }
 
 type PushToken struct {

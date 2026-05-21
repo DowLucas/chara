@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Quits — App UI kit</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<link rel="stylesheet" href="app.css">
+<style>
+  body {
+    background: var(--bone);
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    gap: 24px;
+    flex-wrap: wrap;
+    font-family: var(--font-body);
+  }
+  .stage {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+  }
+  .stage .lbl {
+    font-family: var(--font-mono); font-size: 11px; color: var(--lead); letter-spacing: 0.04em;
+  }
+  .device-frame {
+    width: 390px; height: 844px;
+    background: var(--paper);
+    border: 0.5px solid var(--rule-soft);
+    border-radius: 36px;
+    overflow: hidden;
+    position: relative;
+  }
+  .device-frame::before {
+    content: "";
+    position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+    width: 110px; height: 28px; background: var(--graphite);
+    border-radius: 999px; z-index: 100;
+  }
+  .status-bar {
+    height: 44px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px;
+    font-family: var(--font-mono); font-size: 13px; color: var(--graphite); font-weight: 500;
+    flex: none;
+  }
+  .home-bar {
+    height: 32px;
+    display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px;
+    flex: none;
+  }
+  .home-bar::after {
+    content: ""; width: 134px; height: 4px; background: var(--graphite); border-radius: 999px;
+  }
+</style>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="stage">
+    <div id="root1" class="device-frame"></div>
+    <div class="lbl">1 · groups</div>
+  </div>
+  <div class="stage">
+    <div id="root2" class="device-frame"></div>
+    <div class="lbl">2 · group detail</div>
+  </div>
+  <div class="stage">
+    <div id="root3" class="device-frame"></div>
+    <div class="lbl">3 · new expense</div>
+  </div>
+  <div class="stage">
+    <div id="root4" class="device-frame"></div>
+    <div class="lbl">4 · settle</div>
+  </div>
+  <div class="stage">
+    <div id="root5" class="device-frame"></div>
+    <div class="lbl">5 · settled</div>
+  </div>
+
+  <script type="text/babel" src="Components.jsx"></script>
+  <script type="text/babel" src="GroupsScreen.jsx"></script>
+  <script type="text/babel" src="GroupDetailScreen.jsx"></script>
+  <script type="text/babel" src="AddExpenseScreen.jsx"></script>
+  <script type="text/babel" src="SettleScreen.jsx"></script>
+
+  <script type="text/babel">
+    const StatusBar = () => (
+      <div className="status-bar">
+        <span>9:41</span>
+        <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
+          <Icon name="signal" size={16} />
+          <Icon name="wifi" size={16} />
+          <Icon name="battery-full" size={18} />
+        </span>
+      </div>
+    );
+    const HomeBar = () => <div className="home-bar" />;
+
+    const Phone = ({ children }) => (
+      <div className="app">
+        <StatusBar />
+        {children}
+        <HomeBar />
+      </div>
+    );
+
+    // Settle screen with stage="done"
+    const SettledStateScreen = () => {
+      const [, force] = React.useState(0);
+      React.useEffect(() => { /* render once */ }, []);
+      return <SettleScreen onBack={() => {}} onDone={() => {}} key="done" />;
+    };
+
+    // Pre-set the SettleScreen to "done" via a wrapper that forces it
+    const DoneScreen = () => {
+      // Recreate the done-state directly so it always shows
+      return (
+        <>
+          <TopBar title="" left={<IconButton icon="x" />} />
+          <div className="settled-screen">
+            <Stamp size="lg" />
+            <div className="h">Quits. Nice.</div>
+            <div className="p">760 kr from Mo landed in your account.</div>
+            <hr style={{ border: 0, borderBottom: "1.5px solid var(--graphite)", width: 180, margin: "8px 0" }} />
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--lead)", letterSpacing: "0.04em" }}>
+              14 May 2026 · 14:32
+            </div>
+          </div>
+          <div className="cta-bar">
+            <Button kind="primary">Done</Button>
+          </div>
+        </>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById("root1")).render(<Phone><GroupsScreen /></Phone>);
+    ReactDOM.createRoot(document.getElementById("root2")).render(<Phone><GroupDetailScreen /></Phone>);
+    ReactDOM.createRoot(document.getElementById("root3")).render(<Phone><AddExpenseScreen /></Phone>);
+    ReactDOM.createRoot(document.getElementById("root4")).render(<Phone><SettleScreen /></Phone>);
+    ReactDOM.createRoot(document.getElementById("root5")).render(<Phone><DoneScreen /></Phone>);
+
+    // Re-render lucide icons after React paints
+    setTimeout(() => window.lucide && window.lucide.createIcons(), 300);
+    setTimeout(() => window.lucide && window.lucide.createIcons(), 800);
+  </script>
+</body>
+</html>

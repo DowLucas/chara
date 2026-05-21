@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<title>Spacing scale</title>
+<style>
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  .row { display: flex; align-items: center; gap: 14px; }
+  .label { font-family: var(--font-mono); font-size: 11px; color: var(--lead); width: 72px; flex: none; }
+  .bar { height: 10px; background: var(--graphite); }
+  .val { font-family: var(--font-mono); font-size: 11px; color: var(--lead); margin-left: auto; }
+</style>
+</head>
+<body>
+<div class="card-frame">
+  <div class="stack">
+    <div class="row"><span class="label">s-1</span><span class="bar" style="width:4px"></span><span class="val">4 px</span></div>
+    <div class="row"><span class="label">s-2</span><span class="bar" style="width:8px"></span><span class="val">8 px</span></div>
+    <div class="row"><span class="label">s-3</span><span class="bar" style="width:12px"></span><span class="val">12 px</span></div>
+    <div class="row"><span class="label">s-4</span><span class="bar" style="width:16px"></span><span class="val">16 px</span></div>
+    <div class="row"><span class="label">s-5</span><span class="bar" style="width:24px"></span><span class="val">24 px</span></div>
+    <div class="row"><span class="label">s-6</span><span class="bar" style="width:32px"></span><span class="val">32 px</span></div>
+    <div class="row"><span class="label">s-7</span><span class="bar" style="width:48px"></span><span class="val">48 px</span></div>
+    <div class="row"><span class="label">s-8</span><span class="bar" style="width:64px"></span><span class="val">64 px</span></div>
+    <div class="row"><span class="label">s-9</span><span class="bar" style="width:96px"></span><span class="val">96 px</span></div>
+  </div>
+</div>
+</body>
+</html>

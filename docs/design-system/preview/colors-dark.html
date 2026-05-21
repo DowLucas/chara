@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<title>Palette — dark</title>
+<style>
+  html, body { background: #1A130F; color: #F0E5CC; }
+  .card-frame { background: #1A130F; }
+  .swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .sw { display: flex; flex-direction: column; gap: 8px; }
+  .chip { height: 64px; border-radius: 6px; border: 0.5px solid rgba(240,229,204,0.14); }
+  .name { font-family: var(--font-display); font-weight: 600; font-size: 13px; letter-spacing: -0.02em; color: #F0E5CC; }
+  .meta { display: flex; justify-content: space-between; }
+  .hex { color: #A89684; }
+  .row2 { margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="card-frame">
+  <div class="swatches">
+    <div class="sw"><div class="chip" style="background:#1A130F"></div><div class="meta"><span class="name">Paper</span><span class="hex">#1A130F</span></div></div>
+    <div class="sw"><div class="chip" style="background:#251A14"></div><div class="meta"><span class="name">Bone</span><span class="hex">#251A14</span></div></div>
+    <div class="sw"><div class="chip" style="background:#F0E5CC"></div><div class="meta"><span class="name">Graphite</span><span class="hex">#F0E5CC</span></div></div>
+    <div class="sw"><div class="chip" style="background:#A89684"></div><div class="meta"><span class="name">Lead</span><span class="hex">#A89684</span></div></div>
+  </div>
+  <div class="swatches row2">
+    <div class="sw"><div class="chip" style="background:#D45050"></div><div class="meta"><span class="name">Vermillion</span><span class="hex">#D45050</span></div></div>
+    <div class="sw"><div class="chip" style="background:#A8B86A"></div><div class="meta"><span class="name">Moss</span><span class="hex">#A8B86A</span></div></div>
+    <div class="sw"><div class="chip" style="background:#B83D3D"></div><div class="meta"><span class="name">Brick</span><span class="hex">#B83D3D</span></div></div>
+    <div class="sw"><div class="chip" style="background:#E8B046"></div><div class="meta"><span class="name">Citrine</span><span class="hex">#E8B046</span></div></div>
+  </div>
+</div>
+</body>
+</html>

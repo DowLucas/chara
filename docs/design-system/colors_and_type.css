@@ -1,0 +1,290 @@
+/* ============================================================
+   Quits — Design Tokens
+   Cool, structural, type-first. Architectural drafting meets
+   modernist ledger design. Dark mode is first-class.
+   ============================================================ */
+
+/* Brand display + body: SN Pro (variable). Mono fallback: JetBrains Mono via Google Fonts. */
+@font-face {
+  font-family: "SN Pro";
+  src: url("./fonts/SNPro-VariableFont_wght.ttf") format("truetype-variations"),
+       url("./fonts/SNPro-VariableFont_wght.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+:root {
+  /* ---- Brand anchors (5) ---- */
+  --sand-dune:    #F0E5CC;   /* main surface */
+  --dark-coffee:  #2D1F1A;   /* primary text + rule lines */
+  --tomato-jam:   #B83D3D;   /* signature accent, primary CTA, stamp */
+  --palm-leaf:    #8FA055;   /* positive balance ("you're owed") */
+  --honey-bronze: #E0A040;   /* highlights, special moments */
+
+  /* ---- Tonal derivations ---- */
+  --paper:        var(--sand-dune);
+  --bone:         #E6D9BB;        /* derived raised surface */
+  --graphite:     var(--dark-coffee);
+  --lead:         #6B5A4E;        /* derived secondary text */
+  --vermillion:   var(--tomato-jam);
+  --moss:         var(--palm-leaf);
+  --brick:        #8A2A2A;        /* derived negative balance */
+  --citrine:      var(--honey-bronze);
+
+  /* Tinted rule for soft borders */
+  --rule-soft-rgb: 45, 31, 26;
+
+  /* ---- Semantic surfaces ---- */
+  --surface:      var(--paper);
+  --surface-raised: var(--bone);
+  --rule:         var(--graphite);
+  --rule-soft:    rgba(45, 31, 26, 0.14);
+
+  /* ---- Semantic text ---- */
+  --fg-1:         var(--graphite);     /* primary */
+  --fg-2:         var(--lead);         /* secondary */
+  --fg-on-accent: #F4F1E6;             /* paper on vermillion */
+
+  /* ---- Semantic state ---- */
+  --accent:       var(--vermillion);
+  --positive:     var(--moss);
+  --negative:     var(--brick);
+  --highlight:    var(--citrine);
+
+  /* ---- Type stacks ---- */
+  --font-display: "SN Pro", "Inter", "Söhne", system-ui, sans-serif;
+  --font-body:    "SN Pro", "Inter", system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", "Geist Mono", "Berkeley Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ---- Type scale ---- */
+  --fs-display-xl: 56px;   /* hero balance figure */
+  --fs-display-l:  40px;
+  --fs-display-m:  28px;
+  --fs-display-s:  20px;
+  --fs-body-l:     17px;
+  --fs-body:       15px;
+  --fs-body-s:     13px;
+  --fs-caption:    12px;
+
+  /* ---- Spacing (4pt grid) ---- */
+  --s-1:  4px;
+  --s-2:  8px;
+  --s-3:  12px;
+  --s-4:  16px;
+  --s-5:  24px;
+  --s-6:  32px;
+  --s-7:  48px;
+  --s-8:  64px;
+  --s-9:  96px;
+
+  /* ---- Radii ---- */
+  --r-tag:    999px;   /* small tags only */
+  --r-card:   8px;     /* cards: 6–8px */
+  --r-card-s: 6px;
+  --r-app:    12px;    /* app surface */
+
+  /* ---- Rule line ---- */
+  --rule-w:   1.5px;
+  --border-w: 0.5px;
+
+  /* ---- Motion ---- */
+  --ease:     cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur:      200ms;
+  --dur-slow: 320ms;
+}
+
+/* ---- Dark mode (first-class) ---- */
+:root[data-theme="dark"],
+.theme-dark {
+  --paper:      #1A130F;   /* cool-warm near-black */
+  --bone:       #251A14;
+  --graphite:   #F0E5CC;   /* warm cream */
+  --lead:       #A89684;
+  --vermillion: #D45050;
+  --moss:       #A8B86A;
+  --brick:      #B83D3D;
+  --citrine:    #E8B046;
+
+  --surface:        var(--paper);
+  --surface-raised: var(--bone);
+  --rule:           var(--graphite);
+  --rule-soft:      rgba(240, 229, 204, 0.14);
+
+  --fg-1:           var(--graphite);
+  --fg-2:           var(--lead);
+  --fg-on-accent:   #15151A;
+}
+
+/* ============================================================
+   Semantic element styles
+   Sentence case everywhere. Never Title Case. Never ALL CAPS
+   except inside the QUITS stamp.
+   ============================================================ */
+
+html, body {
+  background: var(--surface);
+  color: var(--fg-1);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, .h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-display-l);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--fg-1);
+}
+h2, .h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-display-m);
+  letter-spacing: -0.028em;
+  line-height: 1.1;
+  color: var(--fg-1);
+}
+h3, .h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-display-s);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: var(--fg-1);
+}
+
+p, .body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  letter-spacing: -0.005em;
+  color: var(--fg-1);
+}
+.body-2 {
+  font-weight: 400;
+  color: var(--fg-2);
+}
+.caption {
+  font-family: var(--font-body);
+  font-size: var(--fs-caption);
+  color: var(--fg-2);
+  letter-spacing: 0;
+}
+
+/* Numerals — JetBrains Mono everywhere a value lives */
+.num, code, kbd, samp, .amount, .meta-num {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The Rule Line — accounting-ledger backbone */
+.rule {
+  display: block;
+  height: 0;
+  border: 0;
+  border-bottom: var(--rule-w) solid var(--rule);
+  margin: 0;
+}
+.rule-soft {
+  border-bottom-color: var(--rule-soft);
+}
+
+/* Card */
+.card {
+  background: var(--surface-raised);
+  border: var(--border-w) solid var(--rule-soft);
+  border-radius: var(--r-card);
+  padding: var(--s-5);
+}
+
+/* Buttons */
+.btn {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: var(--fs-body);
+  letter-spacing: -0.005em;
+  padding: 12px 18px;
+  border-radius: var(--r-card-s);
+  border: var(--border-w) solid transparent;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease),
+              transform var(--dur-fast) var(--ease),
+              opacity var(--dur) var(--ease);
+}
+.btn:active { transform: translateY(0.5px); }
+
+.btn-primary {
+  background: var(--vermillion);
+  color: var(--fg-on-accent);
+}
+.btn-primary:hover { background: color-mix(in oklab, var(--vermillion) 88%, black); }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--fg-1);
+  border-color: var(--rule);
+}
+.btn-secondary:hover { background: var(--rule-soft); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--fg-1);
+}
+.btn-ghost:hover { opacity: 0.7; }
+
+/* QUITS stamp — rotated vermillion-bordered tag */
+.stamp {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--vermillion);
+  padding: 4px 10px;
+  border: 1.5px solid var(--vermillion);
+  border-radius: 4px;
+  transform: rotate(-2deg);
+  text-transform: uppercase; /* the ONE place ALL CAPS is allowed */
+}
+
+/* Strike-through used on settled item titles (not amounts) */
+.settled-title {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  color: var(--fg-2);
+}
+
+/* Tag pill (small only) */
+.tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0;
+  padding: 2px 8px;
+  border-radius: var(--r-tag);
+  border: 0.5px solid var(--rule-soft);
+  color: var(--fg-2);
+  background: transparent;
+}
+
+/* Balance figures (the hero) */
+.balance {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: var(--fs-display-xl);
+  letter-spacing: -0.025em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.balance.positive { color: var(--moss); }
+.balance.negative { color: var(--brick); }

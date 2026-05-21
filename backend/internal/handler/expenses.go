@@ -225,7 +225,7 @@ func writeSplits(ctx context.Context, q *db.Queries, expenseID string, shares []
 	return out, nil
 }
 
-func writeActivity(ctx context.Context, q *db.Queries, groupID, actorID, eventType, entityID string) error {
+func writeActivity(ctx context.Context, q *db.Queries, groupID, actorID, eventType, entityID, entityType string) error {
 	payload, _ := json.Marshal(map[string]string{"entity_id": entityID})
 	_, err := q.CreateActivity(ctx, db.CreateActivityParams{
 		ID:         ulid.New(),
@@ -233,7 +233,7 @@ func writeActivity(ctx context.Context, q *db.Queries, groupID, actorID, eventTy
 		ActorID:    actorID,
 		EventType:  eventType,
 		EntityID:   pgtype.Text{String: entityID, Valid: true},
-		EntityType: pgtype.Text{String: "expense", Valid: true},
+		EntityType: pgtype.Text{String: entityType, Valid: true},
 		Payload:    payload,
 	})
 	return err
@@ -331,7 +331,7 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := writeActivity(r.Context(), q, groupID, claims.UserID, "expense_added", expense.ID); err != nil {
+	if err := writeActivity(r.Context(), q, groupID, claims.UserID, "expense_added", expense.ID, "expense"); err != nil {
 		writeError(w, http.StatusInternalServerError, "could not write activity")
 		return
 	}
@@ -545,7 +545,7 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		_ = existing
 	}
 
-	if err := writeActivity(r.Context(), q, groupID, claims.UserID, "expense_updated", expenseID); err != nil {
+	if err := writeActivity(r.Context(), q, groupID, claims.UserID, "expense_updated", expenseID, "expense"); err != nil {
 		writeError(w, http.StatusInternalServerError, "could not write activity")
 		return
 	}
@@ -600,7 +600,7 @@ func (h *ExpenseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := writeActivity(r.Context(), q, groupID, claims.UserID, "expense_deleted", expenseID); err != nil {
+	if err := writeActivity(r.Context(), q, groupID, claims.UserID, "expense_deleted", expenseID, "expense"); err != nil {
 		writeError(w, http.StatusInternalServerError, "could not write activity")
 		return
 	}

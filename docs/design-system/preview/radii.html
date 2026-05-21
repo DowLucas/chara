@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<title>Radii</title>
+<style>
+  .row { display: flex; gap: 24px; align-items: flex-end; }
+  .col { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .box { width: 96px; height: 96px; background: var(--bone); border: 0.5px solid var(--rule-soft); }
+  .name { font-family: var(--font-display); font-weight: 600; font-size: 13px; letter-spacing: -0.02em; }
+  .meta { font-family: var(--font-mono); font-size: 11px; color: var(--lead); }
+  .pill { background: var(--graphite); color: var(--paper); padding: 2px 10px; border-radius: 999px; font-family: var(--font-mono); font-size: 11px; }
+</style>
+</head>
+<body>
+<div class="card-frame">
+  <div class="row">
+    <div class="col"><div class="box" style="border-radius:6px"></div><div class="name">card-s</div><div class="meta">6 px</div></div>
+    <div class="col"><div class="box" style="border-radius:8px"></div><div class="name">card</div><div class="meta">8 px</div></div>
+    <div class="col"><div class="box" style="border-radius:12px"></div><div class="name">app</div><div class="meta">12 px</div></div>
+    <div class="col" style="margin-left:24px"><div class="pill">tag</div><div class="name">tag</div><div class="meta">pill, tags only</div></div>
+  </div>
+</div>
+</body>
+</html>
