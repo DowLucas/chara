@@ -1,6 +1,7 @@
 .claude/
 .gstack/
 docs/superpowers/
+.worktrees/
 
 # OS / editor
 .DS_Store

@@ -127,5 +127,4 @@ type User struct {
 	Locale      string             `db:"locale" json:"locale"`
 	CreatedAt   pgtype.Timestamptz `db:"created_at" json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
-	SwishNumber pgtype.Text        `db:"swish_number" json:"swish_number"`
 }

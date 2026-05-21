@@ -31,7 +31,7 @@ import {
 } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
-import { formatMinorUnits, decimalToMinor } from '@/lib/i18n';
+import { formatMinorUnits, decimalToMinor, formatDate } from '@/lib/i18n';
 import { initialsOf } from '@/lib/name';
 import { computeSuggestions } from '@/lib/settle';
 import { colors, fontDisplay, fontBody, fontBodyMedium, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
@@ -261,9 +261,6 @@ export default function GroupDetailScreen() {
               <Text style={styles.listHeaderLabel}>
                 {t('groupDetail.suggestionsHeading')}
               </Text>
-              <Text style={styles.listHeaderRight}>
-                {t('groupDetail.suggestionsHint')}
-              </Text>
             </View>
             <View style={styles.listRule} />
             {suggestions.length === 0 ? (
@@ -352,6 +349,7 @@ export default function GroupDetailScreen() {
                   <Text style={[styles.rowTitle, settled && styles.rowTitleSettled]}>{e.title}</Text>
                   <Text style={styles.rowMeta}>
                     {payerLabel} · {t('groupDetail.splitWays', { count: splitsCount })}
+                    {e.expense_date ? ` · ${formatDate(e.expense_date)}` : ''}
                   </Text>
                 </View>
                 <Text style={[styles.rowAmount, { color: settled ? colors.lead : tone }]}>

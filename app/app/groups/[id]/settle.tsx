@@ -91,11 +91,15 @@ export default function SettleScreen() {
   // expenses may be in any currency regardless of the group default.
   const heroCurrency = myHero?.currency ?? group?.currency ?? 'SEK';
 
+  // Only outgoing transfers are actionable here — you can record paying
+  // someone you owe, but you can't settle on someone else's behalf when
+  // they owe you. Incoming and unrelated suggestions both land under
+  // "between others" as read-only context.
   const { yours, others } = useMemo(() => {
     const yours: SettlementSuggestion[] = [];
     const others: SettlementSuggestion[] = [];
     for (const s of suggestions) {
-      if (s.from_member_id === myMember?.id || s.to_member_id === myMember?.id) {
+      if (s.from_member_id === myMember?.id) {
         yours.push(s);
       } else {
         others.push(s);

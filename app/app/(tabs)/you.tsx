@@ -24,6 +24,16 @@ export default function YouScreen() {
         <Avatar initials={initials} size="md" style={styles.avatar} />
         <Text style={styles.name}>{user?.name ?? t('common.dash')}</Text>
         <Text style={styles.email}>{user?.email ?? t('common.dash')}</Text>
+        <Text style={styles.email}>
+          {t('you.phoneLabel')} · {user?.phone?.trim() || t('you.phoneMissing')}
+        </Text>
+        <TouchableOpacity
+          style={styles.editBtn}
+          onPress={() => router.push('/onboarding/name')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.editBtnLabel}>{t('you.editProfile')}</Text>
+        </TouchableOpacity>
         <View style={styles.rule} />
         {__DEV__ && (
           <View style={styles.devBlock}>
@@ -70,6 +80,20 @@ const styles = StyleSheet.create({
     fontSize: fontSize.caption,
     color: colors.lead,
     marginTop: 4,
+  },
+  editBtn: {
+    marginTop: spacing.s4,
+    paddingVertical: spacing.s2,
+    paddingHorizontal: spacing.s4,
+    borderWidth: 0.5,
+    borderColor: colors.graphite,
+    borderRadius: 6,
+  },
+  editBtnLabel: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.graphite,
+    letterSpacing: 0.3,
   },
   rule: {
     width: '100%',

@@ -78,6 +78,9 @@
   "you": {
     "title": "You",
     "signOut": "Sign out",
+    "editProfile": "Edit profile",
+    "phoneLabel": "phone",
+    "phoneMissing": "not set",
     "devEyebrow": "dev tools",
     "replayOnboarding": "Replay onboarding"
   },
@@ -97,15 +100,18 @@
     "footerHint": "You can always do this later from the Groups tab."
   },
   "onboardingName": {
-    "eyebrow": "your name",
-    "headline": "What should we call you?",
-    "body": "Your full name appears on every expense and settlement, so people in your groups know it's you.",
+    "eyebrow": "your profile",
+    "headline": "Tell us about you.",
+    "body": "Your name appears on every expense and settlement. Your phone lets friends settle up with you via Swish, Vipps, or similar.",
     "label": "Full name",
     "placeholder": "Jane Andersson",
+    "phoneLabel": "Phone number",
+    "phonePlaceholder": "+46 70 123 45 67",
     "submit": "Continue",
     "saving": "Saving…",
-    "errorTitle": "Could not save name",
-    "errorEmpty": "Please enter your full name."
+    "errorTitle": "Could not save profile",
+    "errorEmpty": "Please enter your full name.",
+    "errorPhone": "Please enter your phone number."
   },
   "createGroup": {
     "eyebrow": "new group",
@@ -159,7 +165,6 @@
     "owedByGroup": "owed by the group",
     "settledUp": "settled up",
     "suggestionsHeading": "to settle",
-    "suggestionsHint": "fewest transfers",
     "suggestionsEmpty": "All settled up",
     "suggestionsEmptyBody": "No payments needed — everyone is square.",
     "suggestionRow": "{{from}} → {{to}}",

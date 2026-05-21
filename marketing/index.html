@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quits — Bill splitting that respects your data</title>
+<meta name="description" content="Open-source, self-hostable bill splitting. Track shared expenses, settle up in any currency, and own your data. The Splitwise replacement for people who care where their data lives." />
+<meta property="og:title" content="Quits — Bill splitting that respects your data" />
+<meta property="og:description" content="Open-source, self-hostable bill splitting. The Splitwise replacement for people who care where their data lives." />
+<meta property="og:type" content="website" />
+<meta name="theme-color" content="#F0E5CC" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="brand"><span class="brand-mark">Q</span> Quits</a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#self-host">Self-host</a>
+      <a href="#compare">Compare</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://github.com/lucasdow/quits" class="nav-cta">Get the app →</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <span class="blob blob-1"></span>
+  <span class="blob blob-2"></span>
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">Open source · v1.0 coming soon</div>
+      <h1 class="hero-title">
+        Split bills.<br />
+        Skip the <span class="underline">subscription</span>.<br />
+        Keep <span class="accent">your data.</span>
+      </h1>
+      <p class="hero-sub">
+        Every feature free. No ads. No daily expense limit. No bank linking required.
+        Run it on our servers or your own — same app, same code, your choice.
+      </p>
+      <div class="cta-row">
+        <a href="#download" class="btn btn-primary">
+          Get the app <span class="arrow">→</span>
+        </a>
+        <a href="#self-host" class="btn btn-ghost">
+          Or self-host it
+        </a>
+      </div>
+      <div class="trust-row">
+        <span><span class="dot"></span> End-to-end encrypted receipts</span>
+        <span><span class="dot"></span> No ads, ever</span>
+        <span><span class="dot"></span> MIT licensed</span>
+      </div>
+    </div>
+
+    <!-- Animated balance card -->
+    <div class="balance-card">
+      <div class="card-head">
+        <span>Tokyo trip · oct</span>
+        <span class="stamp">QUITS</span>
+      </div>
+      <div class="amount-label">You're owed</div>
+      <div class="amount">
+        <span class="currency">¥</span><span data-counter="48230">0.00</span>
+      </div>
+      <div class="ledger">
+        <div class="ledger-row">
+          <div><div class="who">Mira</div><div class="what">Sushi at Sukiyabashi · oct 12</div></div>
+          <div class="amt pos">+ ¥12,400</div>
+        </div>
+        <div class="ledger-row">
+          <div><div class="who">Jonas</div><div class="what">Shinkansen · oct 13</div></div>
+          <div class="amt pos">+ ¥18,900</div>
+        </div>
+        <div class="ledger-row">
+          <div><div class="who">Priya</div><div class="what">Ryokan night · oct 14</div></div>
+          <div class="amt pos">+ ¥16,930</div>
+        </div>
+        <div class="ledger-row">
+          <div><div class="who">You</div><div class="what">Conbini snacks · oct 15</div></div>
+          <div class="amt neg">– ¥1,840</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Values ── -->
+<section class="values">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2>Money is awkward enough.<br />Your app shouldn't be.</h2>
+      <p>Quits earns its place by being honest, fast, and out of the way — three things every other splitter forgets the moment it raises a Series A.</p>
+    </div>
+    <div class="value-grid reveal">
+      <div class="value-cell">
+        <div class="value-num">01 / honest</div>
+        <h3>No ads. No upsell.<br />No "premium tier."</h3>
+        <p>Every feature is free, forever. The hosted tier is funded by people who want managed hosting — not by selling spending habits.</p>
+      </div>
+      <div class="value-cell">
+        <div class="value-num">02 / fast</div>
+        <h3>Add an expense in under three seconds.</h3>
+        <p>Snap a receipt, pick who's in, hit save. Quits assumes you split equally unless you say otherwise, because 90% of the time, you do.</p>
+      </div>
+      <div class="value-cell">
+        <div class="value-num">03 / yours</div>
+        <h3>Self-host in one command. Export anytime.</h3>
+        <p>Docker Compose with Postgres, MinIO, and the app. Your data lives on your server. Export to CSV or JSON whenever you want.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Features ── -->
+<section id="features">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">What's inside</div>
+      <h2>The boring parts, done well.</h2>
+      <p>Quits sweats the basics: multi-currency math, fair settlement, and receipts you can actually find six months later.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature reveal">
+        <div class="icon">⚖︎</div>
+        <h3>Simplified settlement</h3>
+        <p>Quits computes the minimum number of payments to get everyone to zero. No more "I'll Venmo you, you Cash App them, they'll Swish me."</p>
+      </div>
+      <div class="feature alt reveal">
+        <div class="icon">$</div>
+        <h3>Multi-currency, done right</h3>
+        <p>Every amount stored as integer minor units. Daily FX snapshots. Decimals on the wire, never floats. Money math you can trust at audit time.</p>
+      </div>
+      <div class="feature alt2 reveal">
+        <div class="icon">📷</div>
+        <h3>Receipts that stick around</h3>
+        <p>Attach a photo or PDF. Stored on S3 or your bundled MinIO. Indexed by group and date so you can find that hotel bill in November.</p>
+      </div>
+      <div class="feature alt3 reveal">
+        <div class="icon">🌐</div>
+        <h3>iOS, Android, Web — one app</h3>
+        <p>Built with Expo. Open the same group on your phone, your partner's iPad, or your laptop. Push notifications when someone adds an expense.</p>
+      </div>
+      <div class="feature reveal">
+        <div class="icon">🔐</div>
+        <h3>Auth that fits your stack</h3>
+        <p>Magic links and Google/Apple Sign In on hosted. OIDC (Authentik, Keycloak, Authelia) on self-hosted. Pick the model that matches your trust boundary.</p>
+      </div>
+      <div class="feature alt reveal">
+        <div class="icon">↻</div>
+        <h3>Recurring bills handled</h3>
+        <p>Rent, Spotify Family, the gym — set it once. Quits drops the expense in on schedule and pings the right people to settle.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Compare ── -->
+<section id="compare">
+  <div class="wrap">
+    <div class="compare reveal">
+      <div class="section-head" style="margin-bottom:32px;">
+        <div class="eyebrow" style="color: var(--citrine);">Versus the alternatives</div>
+        <h2>Everything free.<br />Nothing watching.</h2>
+        <p style="color: rgba(244, 241, 230, 0.7);">Splitwise sells you back the features they removed. Steven sells you a card. Quits just splits the bill — and lets you run it on your own server if you want.</p>
+      </div>
+      <div class="compare-grid">
+        <div class="head feat">&nbsp;</div>
+        <div class="head">Splitwise free</div>
+        <div class="head">Steven</div>
+        <div class="head us">Quits</div>
+
+        <div class="feat">Add expenses</div>
+        <div><span class="limit">Capped at 3 / day</span></div>
+        <div><span class="yes">Unlimited</span></div>
+        <div class="us"><span class="yes">Unlimited</span></div>
+
+        <div class="feat">Ads in the app</div>
+        <div><span class="limit">Banner ads</span></div>
+        <div><span class="yes">None</span></div>
+        <div class="us"><span class="yes">Never</span></div>
+
+        <div class="feat">Multi-currency</div>
+        <div><span class="limit">Pro only — $49.99/yr</span></div>
+        <div><span class="yes">Included</span></div>
+        <div class="us"><span class="yes">Included</span></div>
+
+        <div class="feat">Receipt photos</div>
+        <div><span class="limit">Pro only</span></div>
+        <div><span class="yes">Included</span></div>
+        <div class="us"><span class="yes">Included</span></div>
+
+        <div class="feat">Works without your bank</div>
+        <div><span class="yes">Yes</span></div>
+        <div><span class="limit">Flow expects Swish / card</span></div>
+        <div class="us"><span class="yes">Never asks</span></div>
+
+        <div class="feat">Works outside Sweden</div>
+        <div><span class="yes">Yes</span></div>
+        <div><span class="limit">Sweden-first</span></div>
+        <div class="us"><span class="yes">Worldwide</span></div>
+
+        <div class="feat">Run it on your own server</div>
+        <div><span class="no">No</span></div>
+        <div><span class="no">No</span></div>
+        <div class="us"><span class="yes">Yes — one Docker file</span></div>
+
+        <div class="feat">Source code</div>
+        <div><span class="no">Closed</span></div>
+        <div><span class="no">Closed</span></div>
+        <div class="us"><span class="yes">Open · MIT</span></div>
+
+        <div class="feat">Export your data</div>
+        <div><span class="limit">Limited</span></div>
+        <div><span class="limit">Unclear</span></div>
+        <div class="us"><span class="yes">CSV + JSON, one click</span></div>
+
+        <div class="feat">How they make money</div>
+        <div><span class="limit">Ads + Pro subs</span></div>
+        <div><span class="limit">Card interchange + FX</span></div>
+        <div class="us"><span class="yes">Optional hosting</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Self-host ── -->
+<section id="self-host">
+  <div class="wrap selfhost">
+    <div class="reveal">
+      <div class="eyebrow">Self-host</div>
+      <h2 style="font-family: var(--font-display); font-size: clamp(34px, 4.5vw, 52px); font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 18px;">
+        Your data, your server,<br />your call.
+      </h2>
+      <p style="color: var(--lead); font-size: 18px; margin-bottom: 24px;">
+        One Docker Compose file gets you the full stack: Go API, Postgres 16, MinIO for receipts, River
+        for background jobs. No Redis to babysit. No paid tier locked behind a license key.
+      </p>
+      <ul style="list-style: none; display: grid; gap: 12px; margin-bottom: 28px;">
+        <li>· Bring your own OIDC — Authentik, Keycloak, Authelia, Pocket ID</li>
+        <li>· Point at any S3-compatible bucket, or use the bundled MinIO</li>
+        <li>· Plain SQL migrations via golang-migrate, audit-friendly</li>
+        <li>· Postgres-native job queue — no Redis, no Sidekiq, no extra moving parts</li>
+      </ul>
+      <a href="https://github.com/lucasdow/quits" class="btn btn-ghost">Read the deploy guide →</a>
+    </div>
+    <div class="code-card reveal">
+<pre><span class="c"># Get up and running in under a minute</span>
+<span class="k">git clone</span> <span class="s">https://github.com/lucasdow/quits</span>
+<span class="k">cd</span> quits
+<span class="k">cp</span> .env.example .env
+
+<span class="c"># Edit .env with your domain + OIDC settings</span>
+<span class="k">docker compose up</span> <span class="o">-d</span>
+
+<span class="c"># That's it. Visit https://your-domain</span>
+<span class="c"># Storage, queue, DB, push — all included.</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ── -->
+<section id="faq">
+  <div class="wrap">
+    <div class="section-head reveal" style="text-align:center; margin: 0 auto 56px;">
+      <h2>Questions, fairly answered.</h2>
+      <p style="margin: 0 auto;">If the answer isn't here, ask on GitHub. We reply.</p>
+    </div>
+    <div class="faq reveal">
+      <div class="faq-item">
+        <div class="faq-q">Is Quits really free? <span class="faq-toggle">+</span></div>
+        <div class="faq-a">Yes. The app is MIT licensed and every feature is available to every user. The hosted tier exists for people who don't want to run a server — it's priced to cover hosting, not to gate features.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">How is this different from Splitwise? <span class="faq-toggle">+</span></div>
+        <div class="faq-a">Splitwise added a daily expense limit on the free tier and bought-out features (multi-currency, receipts, charts) sit behind Pro. Quits keeps those open and adds the option to self-host. We also don't sell your data — there's nothing to sell.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can I import my Splitwise history? <span class="faq-toggle">+</span></div>
+        <div class="faq-a">Yes. Quits ships with a Splitwise CSV importer that maps groups, balances, and historical expenses. You won't lose anything in the move.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">What about payments — does Quits move money? <span class="faq-toggle">+</span></div>
+        <div class="faq-a">No. Quits tells you who owes who and how to make the smallest number of payments. Settlement happens in your existing payment app — Venmo, Swish, Wise, IBAN, whatever works. Less to break, less to regulate, less to leak.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Where is the hosted version run? <span class="faq-toggle">+</span></div>
+        <div class="faq-a">EU-based infrastructure. GDPR-compliant by default. See the <a href="/privacy.html">privacy policy</a> for the data-processing details.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can I export my data? <span class="faq-toggle">+</span></div>
+        <div class="faq-a">Anytime, no questions, no waiting period. CSV for accounting, JSON for everything else. Delete-and-export are both one click.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Final CTA ── -->
+<section>
+  <div class="wrap">
+    <div class="cta-final reveal">
+      <h2>Settle up. Move on.</h2>
+      <p>The bill-splitter you'll actually keep using. Free on your phone, free on your server.</p>
+      <div class="cta-row" style="justify-content: center;">
+        <a href="#download" class="btn btn-primary">Download for iOS &amp; Android <span class="arrow">→</span></a>
+        <a href="https://github.com/lucasdow/quits" class="btn btn-ghost">Star on GitHub</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-col">
+        <a href="/" class="brand" style="margin-bottom: 14px;"><span class="brand-mark">Q</span> Quits</a>
+        <p style="max-width: 320px;">Open-source bill splitting. Built in Sweden, licensed MIT, hosted in the EU.</p>
+      </div>
+      <div class="foot-col">
+        <h4>Product</h4>
+        <a href="#features">Features</a>
+        <a href="#self-host">Self-host</a>
+        <a href="#compare">Compare</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <div class="foot-col">
+        <h4>Project</h4>
+        <a href="https://github.com/lucasdow/quits">GitHub</a>
+        <a href="https://github.com/lucasdow/quits/releases">Changelog</a>
+        <a href="/security.html">Security</a>
+        <a href="/support.html">Support</a>
+      </div>
+      <div class="foot-col">
+        <h4>Legal</h4>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms of service</a>
+        <a href="/cookies.html">Cookies</a>
+        <a href="/dpa.html">DPA</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Quits · MIT licensed</span>
+      <span>v1.0 · built in Stockholm</span>
+    </div>
+  </div>
+</footer>
+
+<script src="main.js"></script>
+</body>
+</html>
