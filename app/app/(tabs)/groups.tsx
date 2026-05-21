@@ -10,7 +10,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { useTranslation } from 'react-i18next';
 import { listGroups, listMyBalances, Group, MyBalance } from '@/lib/api';
 import { formatMinorUnits, decimalToMinor } from '@/lib/i18n';
-import { colors, fontDisplay, fontBody, fontBodyMedium, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { colors, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 
 const fmtBalance = (minor: string, currency: string) =>
   formatMinorUnits(minor, currency, { relative: true });
@@ -40,9 +40,7 @@ export default function GroupsScreen() {
 
   const balanceMap = Object.fromEntries(balances.map((b) => [b.group_id, b]));
 
-  const totalOwed = balances.filter((b) => decimalToMinor(b.net_balance) > 0).reduce((s, b) => s + decimalToMinor(b.net_balance), 0);
-  const totalOwe = balances.filter((b) => decimalToMinor(b.net_balance) < 0).reduce((s, b) => s + decimalToMinor(b.net_balance), 0);
-  const net = totalOwed + totalOwe;
+  const net = balances.reduce((s, b) => s + decimalToMinor(b.net_balance), 0);
   const currency = balances[0]?.currency ?? 'SEK';
 
   return (
@@ -74,15 +72,6 @@ export default function GroupsScreen() {
           <Text style={[styles.sectionTitle, { color: net >= 0 ? colors.moss : colors.brick }]}>
             {fmtBalance(String(net), currency)}
           </Text>
-          <View style={styles.rule} />
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>{t('home.youAreOwed')}</Text>
-            <Text style={[styles.summaryValue, { color: colors.moss }]}>{fmtBalance(String(totalOwed), currency)}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>{t('home.youOwe')}</Text>
-            <Text style={[styles.summaryValue, { color: colors.brick }]}>{fmtBalance(String(totalOwe), currency)}</Text>
-          </View>
         </View>
 
         {/* Groups list header */}
@@ -152,26 +141,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize.displayM,
     letterSpacing: -0.8,
     color: colors.graphite,
-  },
-  rule: {
-    height: 1.5,
-    backgroundColor: colors.graphite,
-    marginVertical: 10,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  summaryLabel: {
-    fontFamily: fontBody,
-    fontSize: fontSize.bodyS,
-    color: colors.lead,
-  },
-  summaryValue: {
-    fontFamily: fontMono,
-    fontSize: fontSize.bodyS,
-    fontVariant: ['tabular-nums'],
   },
   listHeader: {
     flexDirection: 'row',
