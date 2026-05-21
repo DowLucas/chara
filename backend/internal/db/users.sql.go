@@ -12,7 +12,7 @@ import (
 )
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at FROM users WHERE email = $1
+SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, swish_number FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -27,12 +27,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.Locale,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SwishNumber,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at FROM users WHERE id = $1
+SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, swish_number FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
@@ -47,6 +48,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
 		&i.Locale,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SwishNumber,
 	)
 	return i, err
 }
@@ -59,7 +61,7 @@ SET display_name = COALESCE($2, display_name),
     locale       = COALESCE($5, locale),
     updated_at   = NOW()
 WHERE id = $1
-RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, swish_number
 `
 
 type UpdateUserParams struct {
@@ -88,6 +90,41 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.Locale,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SwishNumber,
+	)
+	return i, err
+}
+
+const updateUserSwishNumber = `-- name: UpdateUserSwishNumber :one
+UPDATE users
+SET swish_number = CASE WHEN $2::boolean THEN NULL ELSE COALESCE($3, swish_number) END,
+    updated_at   = NOW()
+WHERE id = $1
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, swish_number
+`
+
+type UpdateUserSwishNumberParams struct {
+	ID          string      `db:"id" json:"id"`
+	Clear       bool        `db:"clear" json:"clear"`
+	SwishNumber pgtype.Text `db:"swish_number" json:"swish_number"`
+}
+
+// swish_number is set to the given value (which may be NULL to clear).
+// Pass `clear=true` to explicitly NULL the column; otherwise the COALESCE
+// preserves the existing value when swish_number is NULL.
+func (q *Queries) UpdateUserSwishNumber(ctx context.Context, arg UpdateUserSwishNumberParams) (User, error) {
+	row := q.db.QueryRow(ctx, updateUserSwishNumber, arg.ID, arg.Clear, arg.SwishNumber)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.DisplayName,
+		&i.AvatarUrl,
+		&i.Phone,
+		&i.Locale,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.SwishNumber,
 	)
 	return i, err
 }
@@ -99,7 +136,7 @@ ON CONFLICT (email) DO UPDATE
     SET display_name = EXCLUDED.display_name,
         avatar_url   = COALESCE(EXCLUDED.avatar_url, users.avatar_url),
         updated_at   = NOW()
-RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, swish_number
 `
 
 type UpsertUserParams struct {
@@ -128,6 +165,7 @@ func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (User, e
 		&i.Locale,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SwishNumber,
 	)
 	return i, err
 }
