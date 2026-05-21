@@ -9,7 +9,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Modal,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,7 +22,19 @@ import { Chip } from '@/components/Chip';
 import { Avatar } from '@/components/Avatar';
 import { AmountKeypad } from '@/components/AmountKeypad';
 import { useTranslation } from 'react-i18next';
-import { createExpense, getGroup, listGroups, GroupDetail, GroupMember } from '@/lib/api';
+import {
+  createExpense,
+  getGroup,
+  listGroups,
+  getInstanceInfo,
+  convertFx,
+  GroupDetail,
+  GroupMember,
+  ScannedReceipt,
+  FxConvertResponse,
+} from '@/lib/api';
+import { ReceiptScanner, ReceiptScanResult } from '@/components/ReceiptScanner';
+import { CurrencyPicker } from '@/components/CurrencyPicker';
 import { useAuth } from '@/lib/auth';
 import { currentLocale } from '@/lib/i18n';
 import { initialsOf } from '@/lib/name';
@@ -91,6 +105,13 @@ export default function AddExpenseScreen() {
   const [amount, setAmount] = useState('');
   const [title, setTitle] = useState('');
   const [date, setDate] = useState<Date>(() => new Date());
+  // Currency override for the expense. Defaults to the group currency once
+  // the group loads. When this differs from the group currency the user is
+  // entering a foreign-currency expense and we show a live FX preview.
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('');
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [fxPreview, setFxPreview] = useState<FxConvertResponse | null>(null);
+  const [fxError, setFxError] = useState<string | null>(null);
   // Android opens picker on tap; iOS shows inline picker permanently.
   const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -104,6 +125,10 @@ export default function AddExpenseScreen() {
   const [pctByMember, setPctByMember] = useState<Record<string, string>>({});
 
   const [saving, setSaving] = useState(false);
+
+  // OCR: gated by the server's /.well-known/quits-instance feature flag.
+  const [ocrAvailable, setOcrAvailable] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   // Math keypad target — null = closed.
   type KeypadTarget = { kind: 'amount' };
@@ -126,6 +151,9 @@ export default function AddExpenseScreen() {
         const inc: Record<string, boolean> = {};
         g.members.forEach((m) => (inc[m.id] = true));
         setIncluded(inc);
+        // Default the expense currency to the group's. The user can still
+        // open the picker to override per-expense.
+        setSelectedCurrency(g.currency);
       })
       .catch(() => {});
   }, [id, user?.id]);
@@ -136,6 +164,39 @@ export default function AddExpenseScreen() {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    getInstanceInfo()
+      .then((info) => setOcrAvailable(info.features.ocr))
+      .catch(() => setOcrAvailable(false));
+  }, []);
+
+  function handleReceiptScanned(result: ReceiptScanResult) {
+    setScannerOpen(false);
+    const { receipt, applied } = result;
+    // The scanner already resolved which amount + currency the form should
+    // use:
+    //   • same currency  → applied = receipt total in receipt currency
+    //   • FX conversion  → applied = converted total in group currency
+    //   • FX failed      → applied = receipt total in receipt currency
+    //                       (the form's FX preview takes over)
+    if (applied.amount_minor > 0) {
+      setAmount((applied.amount_minor / 100).toFixed(2));
+    }
+    setSelectedCurrency(applied.currency);
+    // The AI's `title` is a natural-language "what was this for" string
+    // (combining merchant + items), which matches the form field's intent
+    // far better than the bare merchant name. Falls back to merchant on
+    // older backends or when the model omits it.
+    const inferredTitle = receipt.title || receipt.merchant;
+    if (inferredTitle) {
+      setTitle(inferredTitle);
+    }
+    if (receipt.date) {
+      const parsed = new Date(receipt.date + 'T00:00:00');
+      if (!Number.isNaN(parsed.getTime())) setDate(parsed);
+    }
+  }
+
   const amountMinor = useMemo(() => {
     const cleaned = amount.replace(',', '.');
     const n = hasOperator(cleaned) ? evalExpression(cleaned) : parseFloat(cleaned);
@@ -143,7 +204,37 @@ export default function AddExpenseScreen() {
     return Math.round(n * 100);
   }, [amount]);
 
-  const currency = group?.currency ?? 'SEK';
+  const groupCurrency = group?.currency ?? 'SEK';
+  const currency = selectedCurrency || groupCurrency;
+  const isForeignCurrency = currency !== groupCurrency;
+
+  // Debounced FX preview. The /api/fx/convert call is server-side and
+  // round-trips, so don't refire on every keystroke — wait 350 ms after the
+  // user stops typing the amount.
+  useEffect(() => {
+    if (!isForeignCurrency || amountMinor <= 0) {
+      setFxPreview(null);
+      setFxError(null);
+      return;
+    }
+    let cancelled = false;
+    setFxError(null);
+    const handle = setTimeout(() => {
+      convertFx({ from: currency, to: groupCurrency, amountMinor })
+        .then((res) => {
+          if (!cancelled) setFxPreview(res);
+        })
+        .catch((e) => {
+          if (cancelled) return;
+          setFxPreview(null);
+          setFxError(e?.message || 'rate unavailable');
+        });
+    }, 350);
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
+  }, [currency, groupCurrency, amountMinor, isForeignCurrency]);
 
   const includedMembers = members.filter((m) => included[m.id]);
   const equalShare =
@@ -224,7 +315,12 @@ export default function AddExpenseScreen() {
   }
 
   const totalSplitMinor = useMemo(() => {
-    if (method === 'equal') return equalShare * includedMembers.length;
+    // Equal-mode shares are reconciled by the backend's SplitEqual, which
+    // distributes the rounding remainder one minor unit at a time so the
+    // shares always sum back to the total. Multiplying the displayed
+    // per-member figure here would drift by up to N-1 cents and surface a
+    // bogus "0.03 off" line. By definition, equal mode is never off.
+    if (method === 'equal') return amountMinor;
     return includedMembers.reduce((s, m) => s + effectiveMinor(m.id), 0);
   }, [method, equalShare, includedMembers, exactByMember, pctByMember, amountMinor, autoExactMinor, autoPctBp]);
 
@@ -326,6 +422,8 @@ export default function AddExpenseScreen() {
               groupName={group?.name ?? '—'}
               showChangeGroup={groupCount > 1}
               onOpenKeypad={() => setKeypadTarget({ kind: 'amount' })}
+              ocrAvailable={ocrAvailable}
+              onScanReceipt={() => setScannerOpen(true)}
             />
           )}
 
@@ -404,6 +502,20 @@ export default function AddExpenseScreen() {
           }}
         />
       )}
+
+      <Modal
+        visible={scannerOpen}
+        animationType="slide"
+        onRequestClose={() => setScannerOpen(false)}
+        statusBarTranslucent
+      >
+        <ReceiptScanner
+          groupCurrency={groupCurrency}
+          groupLanguage={group?.language}
+          onScanned={handleReceiptScanned}
+          onCancel={() => setScannerOpen(false)}
+        />
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -454,6 +566,8 @@ interface Step1Props {
   groupName: string;
   showChangeGroup: boolean;
   onOpenKeypad: () => void;
+  ocrAvailable: boolean;
+  onScanReceipt: () => void;
 }
 function Step1({
   t,
@@ -468,6 +582,8 @@ function Step1({
   groupName,
   showChangeGroup,
   onOpenKeypad,
+  ocrAvailable,
+  onScanReceipt,
 }: Step1Props) {
   return (
     <View>
@@ -486,6 +602,18 @@ function Step1({
         </TouchableOpacity>
         <View style={styles.rule} />
       </View>
+
+      {ocrAvailable && (
+        <TouchableOpacity
+          style={styles.scanRow}
+          onPress={onScanReceipt}
+          accessibilityRole="button"
+          accessibilityLabel={t('addExpense.scanReceipt')}
+        >
+          <Feather name="camera" size={18} color={colors.graphite} />
+          <Text style={styles.scanLabel}>{t('addExpense.scanReceipt')}</Text>
+        </TouchableOpacity>
+      )}
 
       <View style={styles.fieldWrap}>
         <Text style={styles.fieldLabel}>{t('addExpense.titleLabel')}</Text>
@@ -871,6 +999,26 @@ const styles = StyleSheet.create({
   },
   currency: { fontFamily: fontMono, fontSize: 24, color: colors.lead },
   rule: { height: 1.5, backgroundColor: colors.graphite, marginTop: 12 },
+
+  scanRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginHorizontal: spacing.s5,
+    marginTop: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderWidth: 0.5,
+    borderColor: colors.graphite,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  scanLabel: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.graphite,
+    letterSpacing: 0.3,
+  },
 
   fieldWrap: {
     paddingHorizontal: spacing.s5,

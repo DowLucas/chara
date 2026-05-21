@@ -7,7 +7,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '@/lib/auth';
 import '@/lib/i18n';
 
-SplashScreen.preventAutoHideAsync();
+// Fast Refresh re-runs this module after the splash has already hidden, at
+// which point preventAutoHideAsync / hideAsync reject with "No native splash
+// screen registered…". The rejections are benign — the splash is gone — but
+// noisy in dev. Swallow them.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -19,7 +23,7 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded) SplashScreen.hideAsync();
+    if (fontsLoaded) SplashScreen.hideAsync().catch(() => {});
   }, [fontsLoaded]);
 
   if (!fontsLoaded) return null;

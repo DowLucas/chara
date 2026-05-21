@@ -21,7 +21,7 @@ Last updated: 2026-05-13 (auth endpoints + dev-mode mock login)
 cd backend
 docker run -d --name quits-postgres -e POSTGRES_DB=quits -e POSTGRES_USER=quits \
   -e POSTGRES_PASSWORD=quits -p 5433:5432 postgres:16-alpine
-set -a && . ./.env.dev && set +a
+set -a && . ./.env.local && set +a
 go run ./cmd/api
 ```
 
@@ -72,6 +72,29 @@ Commit: `TBD`
 - Migration 000012 updates `member_balances` view to include settlement offsets (CTE approach)
 - Fixed `MemberBalance.NetBalance` type from `int32` → `int64` (view returns BIGINT)
 - 12 integration tests — all green
+
+### Receipt OCR (out-of-band feature) ✅
+
+Commit: `TBD`
+
+- **Backend**: new `internal/receipt` package wraps Google Gemini
+  (`gemini-3.5-flash`) as a [`Scanner`](../backend/internal/receipt/receipt.go)
+  interface that takes raw image bytes + MIME type and returns
+  `{merchant, date, currency, total/subtotal/tax/tip}` in minor units.
+- **Endpoint**: `POST /api/receipts/scan` (`internal/handler/receipts.go`).
+  Auth required. Body: `{image_base64, mime_type}` (JPEG/PNG/WebP/HEIC).
+  Returns the parsed `Receipt`. 422 if Gemini cannot find a total, 413
+  if the image > 6 MB, 502 on upstream errors.
+- **Config**: `GEMINI_API_KEY` env var. When unset, the route is not
+  mounted and `/.well-known/quits-instance` advertises `features.ocr=false`,
+  so self-hosters without a Gemini key simply do not see the UI.
+- **Mobile**: new `components/ReceiptScanner.tsx` (full-screen `CameraView`
+  with viewfinder + shutter). `add-expense.tsx` shows a "Scan receipt"
+  button on step 1 gated by `features.ocr`. The scanned merchant /
+  total / date prefill the existing form; currency is left as the
+  group's setting.
+- **Tests**: 7 unit tests for the Gemini scanner (HTTP-mocked) + 9
+  handler tests with a fake scanner. All green.
 
 ### Week 8.5 — Settle-up suggestions ✅
 

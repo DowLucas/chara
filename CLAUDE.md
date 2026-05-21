@@ -49,6 +49,38 @@ The mobile app (`app/`) uses `i18next` + `react-i18next` + `expo-localization`. 
 - Currency codes (`SEK`, `EUR`, …) are data, not UI copy — leave them as strings.
 - When adding a new screen or string, add the key to `en.json` in the same commit. PRs that introduce raw English strings are incomplete.
 
+## Local dev
+
+### Backend with Docker (recommended)
+
+All backend env vars (db config, JWT secret, `GEMINI_API_KEY` for OCR, etc.) live in `backend/.env.local` — gitignored.
+
+```
+cd backend && docker compose up -d --build
+```
+
+This starts a containerized Go backend with automatic migrations. Verify health with:
+
+```
+curl http://localhost:8080/api/health/liveness
+```
+
+The container uses `network_mode: host` to reach the postgres container at `localhost:5433`.
+
+### Backend with go run (fast iteration)
+
+For rapid local iteration without Docker overhead:
+
+```
+cd backend && set -a && . ./.env.local && set +a && go run ./cmd/api
+```
+
+There is no `.env.dev` / `.env.dev.local` split — secrets and dev config are co-located. `.env.example` documents the schema.
+
+### Expo app caching
+
+The Expo app caches `/.well-known/quits-instance` at module load (`app/lib/api.ts`), so after toggling a backend feature flag (e.g. adding `GEMINI_API_KEY`) you must hard-reload the Expo bundle (`r` in Metro) — restarting only the server isn't enough.
+
 ## Key architectural docs
 
 - `docs/02-product-strategy.md` — MVP scope, feature priority matrix (P0/P1/P2/P3), target audiences

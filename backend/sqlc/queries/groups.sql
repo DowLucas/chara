@@ -1,6 +1,6 @@
 -- name: CreateGroup :one
-INSERT INTO groups (id, name, currency, created_by, invite_token)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO groups (id, name, currency, language, created_by, invite_token)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
 -- name: GetGroupByID :one
@@ -19,6 +19,7 @@ ORDER BY g.updated_at DESC;
 UPDATE groups
 SET name        = COALESCE(sqlc.narg(name), name),
     currency    = COALESCE(sqlc.narg(currency), currency),
+    language    = COALESCE(sqlc.narg(language), language),
     is_archived = COALESCE(sqlc.narg(is_archived), is_archived),
     updated_at  = NOW()
 WHERE id = $1

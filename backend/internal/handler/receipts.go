@@ -1,0 +1,117 @@
+package handler
+
+import (
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"net/http"
+	"strings"
+
+	"github.com/DowLucas/quits/internal/receipt"
+)
+
+// MaxReceiptImageBytes caps the decoded image size sent to Gemini. ~6 MB is
+// well above what a JPEG from a phone camera produces at sensible quality
+// and well under Gemini's per-request inline-data limit.
+const MaxReceiptImageBytes = 6 * 1024 * 1024
+
+type ReceiptHandler struct {
+	scanner receipt.Scanner
+}
+
+func NewReceiptHandler(scanner receipt.Scanner) *ReceiptHandler {
+	return &ReceiptHandler{scanner: scanner}
+}
+
+type scanRequest struct {
+	ImageBase64 string `json:"image_base64"`
+	MIMEType    string `json:"mime_type"`
+	// Language is the ISO 639-1 code the AI should generate the title in.
+	// Optional — empty means "use the receipt's own language". Callers
+	// (typically the mobile app) pass the active group's language so all
+	// members see the same title regardless of who scanned the receipt.
+	Language string `json:"language"`
+}
+
+type scanResponse struct {
+	Title         string `json:"title"`
+	Merchant      string `json:"merchant"`
+	Date          string `json:"date,omitempty"`
+	Currency      string `json:"currency"`
+	TotalMinor    int64  `json:"total_minor"`
+	SubtotalMinor int64  `json:"subtotal_minor,omitempty"`
+	TaxMinor      int64  `json:"tax_minor,omitempty"`
+	TipMinor      int64  `json:"tip_minor,omitempty"`
+}
+
+var allowedReceiptMIME = map[string]struct{}{
+	"image/jpeg": {},
+	"image/jpg":  {},
+	"image/png":  {},
+	"image/webp": {},
+	"image/heic": {},
+	"image/heif": {},
+}
+
+// Scan handles POST /api/receipts/scan.
+func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
+	var req scanRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON body")
+		return
+	}
+	if req.ImageBase64 == "" {
+		writeError(w, http.StatusBadRequest, "image_base64 is required")
+		return
+	}
+	if req.MIMEType == "" {
+		req.MIMEType = "image/jpeg"
+	}
+	if _, ok := allowedReceiptMIME[strings.ToLower(req.MIMEType)]; !ok {
+		writeError(w, http.StatusBadRequest, "unsupported mime_type")
+		return
+	}
+
+	// Strip any data-URL prefix the client might send by accident.
+	b64 := req.ImageBase64
+	if i := strings.Index(b64, ","); strings.HasPrefix(b64, "data:") && i > 0 {
+		b64 = b64[i+1:]
+	}
+
+	imgData, err := base64.StdEncoding.DecodeString(b64)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "image_base64 is not valid base64")
+		return
+	}
+	if len(imgData) == 0 {
+		writeError(w, http.StatusBadRequest, "image_base64 decoded to zero bytes")
+		return
+	}
+	if len(imgData) > MaxReceiptImageBytes {
+		writeError(w, http.StatusRequestEntityTooLarge, "image exceeds 6 MB limit")
+		return
+	}
+
+	res, err := h.scanner.Scan(r.Context(), imgData, req.MIMEType, req.Language)
+	if err != nil {
+		if errors.Is(err, receipt.ErrUnreadable) {
+			writeError(w, http.StatusUnprocessableEntity, "could not read a receipt from this image")
+			return
+		}
+		writeError(w, http.StatusBadGateway, "receipt scanner failed: "+err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(scanResponse{
+		Title:         res.Title,
+		Merchant:      res.Merchant,
+		Date:          res.Date,
+		Currency:      res.Currency,
+		TotalMinor:    int64(res.TotalMinor),
+		SubtotalMinor: int64(res.SubtotalMinor),
+		TaxMinor:      int64(res.TaxMinor),
+		TipMinor:      int64(res.TipMinor),
+	})
+}
+

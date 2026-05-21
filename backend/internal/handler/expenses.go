@@ -14,7 +14,9 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/DowLucas/quits/internal/currency"
 	"github.com/DowLucas/quits/internal/db"
+	"github.com/DowLucas/quits/internal/fx"
 	"github.com/DowLucas/quits/internal/middleware"
 	"github.com/DowLucas/quits/internal/money"
 	"github.com/DowLucas/quits/internal/split"
@@ -39,21 +41,25 @@ type SplitResponse struct {
 }
 
 type ExpenseResponse struct {
-	ID              string          `json:"id"`
-	GroupID         string          `json:"group_id"`
-	Title           string          `json:"title"`
-	Amount          string          `json:"amount"`
-	Currency        string          `json:"currency"`
-	PaidByID        string          `json:"paid_by_id"`
-	SplitMethod     string          `json:"split_method"`
-	Category        string          `json:"category"`
-	Notes           *string         `json:"notes,omitempty"`
-	ExpenseDate     *string         `json:"expense_date,omitempty"`
-	IsReimbursement bool            `json:"is_reimbursement"`
-	CreatedByID     string          `json:"created_by_id"`
-	CreatedAt       time.Time       `json:"created_at"`
-	UpdatedAt       time.Time       `json:"updated_at"`
-	Splits          []SplitResponse `json:"splits,omitempty"`
+	ID               string          `json:"id"`
+	GroupID          string          `json:"group_id"`
+	Title            string          `json:"title"`
+	Amount           string          `json:"amount"`
+	Currency         string          `json:"currency"`
+	PaidByID         string          `json:"paid_by_id"`
+	SplitMethod      string          `json:"split_method"`
+	Category         string          `json:"category"`
+	Notes            *string         `json:"notes,omitempty"`
+	ExpenseDate      *string         `json:"expense_date,omitempty"`
+	IsReimbursement  bool            `json:"is_reimbursement"`
+	CreatedByID      string          `json:"created_by_id"`
+	CreatedAt        time.Time       `json:"created_at"`
+	UpdatedAt        time.Time       `json:"updated_at"`
+	Splits           []SplitResponse `json:"splits,omitempty"`
+	OriginalAmount   *string         `json:"original_amount,omitempty"`
+	OriginalCurrency *string         `json:"original_currency,omitempty"`
+	FxRate           *string         `json:"fx_rate,omitempty"`
+	FxAsOf           *string         `json:"fx_as_of,omitempty"`
 }
 
 func buildExpenseResponse(
@@ -63,6 +69,8 @@ func buildExpenseResponse(
 	isReimbursement bool, createdByID string,
 	createdAt, updatedAt pgtype.Timestamptz,
 	splits []SplitResponse,
+	originalAmount pgtype.Int8, originalCurrency pgtype.Text,
+	fxRate pgtype.Numeric, fxAsOf pgtype.Date,
 ) ExpenseResponse {
 	resp := ExpenseResponse{
 		ID:              id,
@@ -85,6 +93,26 @@ func buildExpenseResponse(
 	if expenseDate.Valid {
 		d := expenseDate.Time.Format("2006-01-02")
 		resp.ExpenseDate = &d
+	}
+	if originalAmount.Valid {
+		s := money.Amount(originalAmount.Int64).String()
+		resp.OriginalAmount = &s
+	}
+	if originalCurrency.Valid {
+		s := originalCurrency.String
+		resp.OriginalCurrency = &s
+	}
+	if fxRate.Valid {
+		// Render to 8 fractional digits which is enough for ECB precision
+		// without showing trailing zeros all the way to NUMERIC(20,10).
+		if f, err := fxRate.Float64Value(); err == nil {
+			s := strconv.FormatFloat(f.Float64, 'f', 8, 64)
+			resp.FxRate = &s
+		}
+	}
+	if fxAsOf.Valid {
+		d := fxAsOf.Time.Format("2006-01-02")
+		resp.FxAsOf = &d
 	}
 	return resp
 }
@@ -266,6 +294,12 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if req.Currency == "" {
 		req.Currency = "SEK"
 	}
+	normalized, ok := currency.Normalize(req.Currency)
+	if !ok {
+		writeError(w, http.StatusBadRequest, "unknown currency code")
+		return
+	}
+	req.Currency = normalized
 	if req.SplitMethod == "" {
 		req.SplitMethod = "equal"
 	}
@@ -297,6 +331,52 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		expenseDate = pgtype.Date{Time: t, Valid: true}
 	}
 
+	// If the expense was paid in a currency other than the group's, convert
+	// to the group currency now and stash the original-currency snapshot so
+	// the expense detail can show both. Same-currency expenses skip this
+	// entirely (the common case).
+	canonicalAmount := int64(req.Amount)
+	canonicalCurrency := req.Currency
+	var fxOriginalAmount pgtype.Int8
+	var fxOriginalCurrency pgtype.Text
+	var fxRate pgtype.Numeric
+	var fxAsOf pgtype.Date
+	group, err := h.queries.GetGroupByID(r.Context(), groupID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not load group")
+		return
+	}
+	if req.Currency != group.Currency {
+		conv, err := fx.Convert(r.Context(), h.queries, int64(req.Amount), req.Currency, group.Currency, expenseDate.Time)
+		if err != nil {
+			if errors.Is(err, fx.ErrRateUnavailable) {
+				writeError(w, http.StatusServiceUnavailable, "fx rate unavailable for "+req.Currency+"→"+group.Currency)
+				return
+			}
+			writeError(w, http.StatusInternalServerError, "fx conversion failed")
+			return
+		}
+		canonicalAmount = conv.AmountMinor
+		canonicalCurrency = group.Currency
+		fxOriginalAmount = pgtype.Int8{Int64: int64(req.Amount), Valid: true}
+		fxOriginalCurrency = pgtype.Text{String: req.Currency, Valid: true}
+		var n pgtype.Numeric
+		if err := n.Scan(conv.Rate.Text('f', 10)); err != nil {
+			writeError(w, http.StatusInternalServerError, "encode fx rate")
+			return
+		}
+		fxRate = n
+		fxAsOf = pgtype.Date{Time: conv.AsOf, Valid: true}
+
+		// Recompute splits using the converted amount so members owe the
+		// group-currency value, not the original one.
+		shares, err = computeSplits(money.Amount(canonicalAmount), req.SplitMethod, req.Participants, req.Splits)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+	}
+
 	tx, err := h.pool.Begin(r.Context())
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error")
@@ -307,18 +387,22 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	q := db.New(tx)
 
 	expense, err := q.CreateExpense(r.Context(), db.CreateExpenseParams{
-		ID:              ulid.New(),
-		GroupID:         groupID,
-		Title:           req.Title,
-		Amount:          int64(req.Amount),
-		Currency:        req.Currency,
-		PaidByID:        req.PaidByID,
-		SplitMethod:     req.SplitMethod,
-		Category:        req.Category,
-		Notes:           pgtype.Text{Valid: req.Notes != nil, String: strOrEmpty(req.Notes)},
-		ExpenseDate:     expenseDate,
-		IsReimbursement: req.IsReimbursement,
-		CreatedByID:     claims.UserID,
+		ID:               ulid.New(),
+		GroupID:          groupID,
+		Title:            req.Title,
+		Amount:           canonicalAmount,
+		Currency:         canonicalCurrency,
+		PaidByID:         req.PaidByID,
+		SplitMethod:      req.SplitMethod,
+		Category:         req.Category,
+		Notes:            pgtype.Text{Valid: req.Notes != nil, String: strOrEmpty(req.Notes)},
+		ExpenseDate:      expenseDate,
+		IsReimbursement:  req.IsReimbursement,
+		CreatedByID:      claims.UserID,
+		OriginalAmount:   fxOriginalAmount,
+		OriginalCurrency: fxOriginalCurrency,
+		FxRate:           fxRate,
+		FxAsOf:           fxAsOf,
 	})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not create expense")
@@ -346,6 +430,7 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		expense.PaidByID, expense.SplitMethod, expense.Category, expense.Notes, expense.ExpenseDate,
 		expense.IsReimbursement, expense.CreatedByID, expense.CreatedAt, expense.UpdatedAt,
 		splitResp,
+		expense.OriginalAmount, expense.OriginalCurrency, expense.FxRate, expense.FxAsOf,
 	)
 	writeJSON(w, http.StatusCreated, resp)
 }
@@ -389,6 +474,7 @@ func (h *ExpenseHandler) List(w http.ResponseWriter, r *http.Request) {
 			e.PaidByID, e.SplitMethod, e.Category, e.Notes, e.ExpenseDate,
 			e.IsReimbursement, e.CreatedByID, e.CreatedAt, e.UpdatedAt,
 			nil,
+			e.OriginalAmount, e.OriginalCurrency, e.FxRate, e.FxAsOf,
 		)
 	}
 	writeJSON(w, http.StatusOK, resp)
@@ -426,6 +512,7 @@ func (h *ExpenseHandler) Get(w http.ResponseWriter, r *http.Request) {
 		expense.PaidByID, expense.SplitMethod, expense.Category, expense.Notes, expense.ExpenseDate,
 		expense.IsReimbursement, expense.CreatedByID, expense.CreatedAt, expense.UpdatedAt,
 		dbSplitsToResponse(dbSplits),
+		expense.OriginalAmount, expense.OriginalCurrency, expense.FxRate, expense.FxAsOf,
 	)
 	writeJSON(w, http.StatusOK, resp)
 }
@@ -477,7 +564,12 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		params.Amount = pgtype.Int8{Int64: int64(*req.Amount), Valid: true}
 	}
 	if req.Currency != nil {
-		params.Currency = pgtype.Text{String: *req.Currency, Valid: true}
+		normalized, ok := currency.Normalize(*req.Currency)
+		if !ok {
+			writeError(w, http.StatusBadRequest, "unknown currency code")
+			return
+		}
+		params.Currency = pgtype.Text{String: normalized, Valid: true}
 	}
 	if req.PaidByID != nil {
 		params.PaidByID = pgtype.Text{String: *req.PaidByID, Valid: true}
@@ -560,6 +652,7 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		updated.PaidByID, updated.SplitMethod, updated.Category, updated.Notes, updated.ExpenseDate,
 		updated.IsReimbursement, updated.CreatedByID, updated.CreatedAt, updated.UpdatedAt,
 		splitResp,
+		updated.OriginalAmount, updated.OriginalCurrency, updated.FxRate, updated.FxAsOf,
 	)
 	writeJSON(w, http.StatusOK, resp)
 }

@@ -111,13 +111,23 @@ export default function GroupDetailScreen() {
     );
   }
 
+  // Edit and archive are owner-only on the backend (handler.Update /
+  // handler.Archive both require role=="owner"). Mirror that gate in the
+  // UI so members don't see actions that would 403 — and so the menu
+  // collapses to nothing rather than an empty sheet when only one entry
+  // would be hidden.
+  const me = members.find((m) => m.user_id === user?.id);
+  const isOwner = me?.role === 'owner';
+
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuOptions = [
-    { label: t('groupDetail.edit'), onPress: () => router.push(`/groups/${id}/edit`) },
-    { label: t('groupDetail.archive'), destructive: true, onPress: confirmArchive },
-  ];
+  const menuOptions = isOwner
+    ? [
+        { label: t('groupDetail.edit'), onPress: () => router.push(`/groups/${id}/edit`) },
+        { label: t('groupDetail.archive'), destructive: true, onPress: confirmArchive },
+      ]
+    : [];
   function openMenu() {
-    if (!id) return;
+    if (!id || menuOptions.length === 0) return;
     if (openNativeActionSheet(group?.name, menuOptions)) return;
     setMenuOpen(true);
   }
@@ -152,7 +162,9 @@ export default function GroupDetailScreen() {
               onPress={() => router.push(`/groups/${id}/invite`)}
               label={t('groupDetail.inviteLabel')}
             />
-            <IconButton icon="more-horizontal" onPress={openMenu} label={t('groupDetail.menuLabel')} />
+            {menuOptions.length > 0 && (
+              <IconButton icon="more-horizontal" onPress={openMenu} label={t('groupDetail.menuLabel')} />
+            )}
           </View>
         }
       />
