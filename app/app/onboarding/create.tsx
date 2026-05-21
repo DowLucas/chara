@@ -15,9 +15,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { createGroup } from '@/lib/api';
+import { CurrencyPicker } from '@/components/CurrencyPicker';
+import { SUGGESTED_CURRENCY_CODES } from '@/lib/currencies';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
-
-const SUGGESTED_CURRENCIES = ['SEK', 'EUR', 'USD', 'GBP', 'NOK', 'DKK'] as const;
 
 export default function CreateGroupScreen() {
   const insets = useSafeAreaInsets();
@@ -25,6 +25,12 @@ export default function CreateGroupScreen() {
   const [name, setName] = useState('');
   const [currency, setCurrency] = useState<string>('SEK');
   const [submitting, setSubmitting] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  // If the user picks a currency outside the suggested strip, keep it visible
+  // as an extra chip so they can re-select without reopening the modal.
+  const suggested = SUGGESTED_CURRENCY_CODES.includes(currency as typeof SUGGESTED_CURRENCY_CODES[number])
+    ? SUGGESTED_CURRENCY_CODES
+    : [...SUGGESTED_CURRENCY_CODES, currency];
 
   const canSubmit = name.trim().length > 0 && !submitting;
 
@@ -74,7 +80,7 @@ export default function CreateGroupScreen() {
       <View style={styles.field}>
         <Text style={styles.fieldLabel}>{t('createGroup.currencyLabel')}</Text>
         <View style={styles.chipRow}>
-          {SUGGESTED_CURRENCIES.map((c) => {
+          {suggested.map((c) => {
             const active = c === currency;
             return (
               <TouchableOpacity
@@ -87,8 +93,22 @@ export default function CreateGroupScreen() {
               </TouchableOpacity>
             );
           })}
+          <TouchableOpacity
+            style={styles.chip}
+            onPress={() => setPickerOpen(true)}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.chipLabel}>{t('currencyPicker.more')}</Text>
+          </TouchableOpacity>
         </View>
       </View>
+
+      <CurrencyPicker
+        visible={pickerOpen}
+        selected={currency}
+        onClose={() => setPickerOpen(false)}
+        onSelect={setCurrency}
+      />
 
       <View style={styles.illustrationWrap}>
         <Image

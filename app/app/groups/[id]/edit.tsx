@@ -15,9 +15,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { getGroup, updateGroup, Group } from '@/lib/api';
+import { CurrencyPicker } from '@/components/CurrencyPicker';
+import { SUGGESTED_CURRENCY_CODES } from '@/lib/currencies';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
-
-const SUGGESTED_CURRENCIES = ['SEK', 'EUR', 'USD', 'GBP', 'NOK', 'DKK'] as const;
 
 export default function EditGroupScreen() {
   const insets = useSafeAreaInsets();
@@ -27,6 +27,12 @@ export default function EditGroupScreen() {
   const [name, setName] = useState('');
   const [currency, setCurrency] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const suggested = SUGGESTED_CURRENCY_CODES.includes(currency as typeof SUGGESTED_CURRENCY_CODES[number])
+    ? SUGGESTED_CURRENCY_CODES
+    : currency
+      ? [...SUGGESTED_CURRENCY_CODES, currency]
+      : SUGGESTED_CURRENCY_CODES;
 
   useEffect(() => {
     if (!id) return;
@@ -94,7 +100,7 @@ export default function EditGroupScreen() {
       <View style={styles.field}>
         <Text style={styles.fieldLabel}>{t('editGroup.currencyLabel')}</Text>
         <View style={styles.chipRow}>
-          {SUGGESTED_CURRENCIES.map((c) => {
+          {suggested.map((c) => {
             const active = c === currency;
             return (
               <TouchableOpacity
@@ -107,8 +113,22 @@ export default function EditGroupScreen() {
               </TouchableOpacity>
             );
           })}
+          <TouchableOpacity
+            style={styles.chip}
+            onPress={() => setPickerOpen(true)}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.chipLabel}>{t('currencyPicker.more')}</Text>
+          </TouchableOpacity>
         </View>
       </View>
+
+      <CurrencyPicker
+        visible={pickerOpen}
+        selected={currency}
+        onClose={() => setPickerOpen(false)}
+        onSelect={setCurrency}
+      />
 
       <View style={{ flex: 1 }} />
 
