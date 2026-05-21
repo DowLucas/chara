@@ -65,6 +65,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 
 		r.Get("/api/groups/{groupID}/balances", balancesH.ListGroupBalances)
 		r.Post("/api/groups/{groupID}/settle", balancesH.Settle)
+		r.Post("/api/groups/{groupID}/settlements/{settlementID}/revert", balancesH.RevertSettlement)
 		r.Get("/api/groups/{groupID}/settle-suggestions", balancesH.SuggestSettlements)
 		r.Get("/api/me/balances", balancesH.ListMyBalances)
 		r.Get("/api/me/activity", activityH.ListMyActivity)

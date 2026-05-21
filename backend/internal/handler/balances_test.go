@@ -3,11 +3,13 @@
 package handler_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
 
+	"github.com/DowLucas/quits/internal/db"
 	"github.com/DowLucas/quits/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -297,4 +299,170 @@ func indexByMemberID(items []map[string]any) map[string]map[string]any {
 		}
 	}
 	return out
+}
+
+// ── Settlement method ─────────────────────────────────────────────────────────
+
+func TestSettle_Create_WithSwishMethod_PersistsAndReflectsInBalance(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	body := fmt.Sprintf(`{"from_member_id":%q,"to_member_id":%q,"amount":"45.00","currency":"SEK","method":"swish"}`, bobMemberID, aliceMemberID)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, bob.Token))
+	require.Equal(t, http.StatusCreated, rr.Code, rr.Body.String())
+
+	var resp map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	assert.Equal(t, "swish", resp["method"])
+
+	// Balance reflects the settlement.
+	rr = env.Do(t, env.AuthRequest(t, "GET", "/api/groups/"+groupID+"/balances", "", alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code)
+	var balances []map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&balances))
+	for _, b := range balances {
+		assert.Equal(t, "0.00", b["net_balance"])
+	}
+}
+
+func TestSettle_Create_RejectsBogusMethod(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	body := fmt.Sprintf(`{"from_member_id":%q,"to_member_id":%q,"amount":"10.00","currency":"SEK","method":"bogus"}`, bobMemberID, aliceMemberID)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, alice.Token))
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestSettle_Create_DefaultsToManualMethod(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	body := fmt.Sprintf(`{"from_member_id":%q,"to_member_id":%q,"amount":"10.00","currency":"SEK"}`, bobMemberID, aliceMemberID)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, alice.Token))
+	require.Equal(t, http.StatusCreated, rr.Code, rr.Body.String())
+
+	var resp map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	assert.Equal(t, "manual", resp["method"])
+}
+
+// ── Settlement revert ─────────────────────────────────────────────────────────
+
+func revertCreateSettlement(t *testing.T, env *testutil.Env, groupID, fromMember, toMember, token string) string {
+	t.Helper()
+	body := fmt.Sprintf(`{"from_member_id":%q,"to_member_id":%q,"amount":"45.00","currency":"SEK","method":"swish"}`, fromMember, toMember)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, token))
+	require.Equal(t, http.StatusCreated, rr.Code, rr.Body.String())
+	var resp map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	id, ok := resp["id"].(string)
+	require.True(t, ok)
+	return id
+}
+
+func TestSettle_Revert_ByFromMemberZeroesBalanceChange(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	settlementID := revertCreateSettlement(t, env, groupID, bobMemberID, aliceMemberID, bob.Token)
+
+	// Now revert (bob is from_member's user).
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settlements/"+settlementID+"/revert", "", bob.Token))
+	assert.Equal(t, http.StatusNoContent, rr.Code, rr.Body.String())
+
+	// Balances revert to pre-settle (Bob owes Alice 45).
+	rr = env.Do(t, env.AuthRequest(t, "GET", "/api/groups/"+groupID+"/balances", "", alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code)
+	var balances []map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&balances))
+	byMember := indexByMemberID(balances)
+	assert.Equal(t, "45.00", byMember[aliceMemberID]["net_balance"])
+	assert.Equal(t, "-45.00", byMember[bobMemberID]["net_balance"])
+}
+
+func TestSettle_Revert_ByToMemberZeroesBalanceChange(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	settlementID := revertCreateSettlement(t, env, groupID, bobMemberID, aliceMemberID, bob.Token)
+
+	// Alice is to_member's user.
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settlements/"+settlementID+"/revert", "", alice.Token))
+	assert.Equal(t, http.StatusNoContent, rr.Code, rr.Body.String())
+
+	rr = env.Do(t, env.AuthRequest(t, "GET", "/api/groups/"+groupID+"/balances", "", alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code)
+	var balances []map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&balances))
+	byMember := indexByMemberID(balances)
+	assert.Equal(t, "45.00", byMember[aliceMemberID]["net_balance"])
+	assert.Equal(t, "-45.00", byMember[bobMemberID]["net_balance"])
+}
+
+func TestSettle_Revert_ByUnrelatedGroupMemberIsForbidden(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	carolU := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "carol"), "Carol")
+	testutil.AddMember(t, env.Pool, groupID, carolU.ID, "Carol")
+	carolToken := env.MintToken(t, carolU.ID, carolU.Email)
+	testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	settlementID := revertCreateSettlement(t, env, groupID, bobMemberID, aliceMemberID, bob.Token)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settlements/"+settlementID+"/revert", "", carolToken))
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+}
+
+func TestSettle_Revert_OlderThan24hReturnsConflict(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	settlementID := revertCreateSettlement(t, env, groupID, bobMemberID, aliceMemberID, bob.Token)
+
+	// Backdate created_at past the 24h window.
+	_, err := env.Pool.Exec(context.Background(),
+		"UPDATE settlements SET created_at = NOW() - INTERVAL '25 hours' WHERE id = $1", settlementID)
+	require.NoError(t, err)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settlements/"+settlementID+"/revert", "", bob.Token))
+	assert.Equal(t, http.StatusConflict, rr.Code)
+}
+
+func TestSettle_Revert_TwiceReturnsConflict(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	settlementID := revertCreateSettlement(t, env, groupID, bobMemberID, aliceMemberID, bob.Token)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settlements/"+settlementID+"/revert", "", bob.Token))
+	require.Equal(t, http.StatusNoContent, rr.Code, rr.Body.String())
+
+	rr = env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settlements/"+settlementID+"/revert", "", bob.Token))
+	assert.Equal(t, http.StatusConflict, rr.Code)
+}
+
+func TestSettle_Revert_NonExistentReturnsNotFound(t *testing.T) {
+	env, alice, _, groupID, _, _ := setupExpenseEnv(t)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settlements/01HZZNONEXISTENT00000000/revert", "", alice.Token))
+	assert.Equal(t, http.StatusNotFound, rr.Code)
+}
+
+func TestSettle_Revert_WritesActivityLog(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	settlementID := revertCreateSettlement(t, env, groupID, bobMemberID, aliceMemberID, bob.Token)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settlements/"+settlementID+"/revert", "", bob.Token))
+	require.Equal(t, http.StatusNoContent, rr.Code, rr.Body.String())
+
+	activity, err := env.Queries.ListActivityByGroup(context.Background(), db.ListActivityByGroupParams{
+		GroupID: groupID,
+		Limit:   50,
+		Offset:  0,
+	})
+	require.NoError(t, err)
+	found := false
+	for _, a := range activity {
+		if a.EventType == "settlement.reverted" && a.EntityID.String == settlementID {
+			found = true
+		}
+	}
+	assert.True(t, found, "expected settlement.reverted activity entry")
 }

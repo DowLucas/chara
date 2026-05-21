@@ -60,6 +60,7 @@ type SettlementResponse struct {
 	Amount       string    `json:"amount"`
 	Currency     string    `json:"currency"`
 	Note         *string   `json:"note,omitempty"`
+	Method       string    `json:"method"`
 	CreatedByID  string    `json:"created_by_id"`
 	CreatedAt    time.Time `json:"created_at"`
 }
@@ -72,6 +73,15 @@ type settleReq struct {
 	Amount       money.Amount `json:"amount"`
 	Currency     string       `json:"currency"`
 	Note         *string      `json:"note"`
+	Method       *string      `json:"method"`
+}
+
+// validSettlementMethods mirrors the CHECK constraint in migration 000013.
+var validSettlementMethods = map[string]struct{}{
+	"manual":    {},
+	"swish":     {},
+	"vipps":     {},
+	"mobilepay": {},
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -191,6 +201,15 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 		note = pgtype.Text{String: *req.Note, Valid: true}
 	}
 
+	method := "manual"
+	if req.Method != nil {
+		method = *req.Method
+	}
+	if _, ok := validSettlementMethods[method]; !ok {
+		writeError(w, http.StatusBadRequest, "invalid settlement method")
+		return
+	}
+
 	settlement, err := h.queries.CreateSettlement(r.Context(), db.CreateSettlementParams{
 		ID:          ulid.New(),
 		GroupID:     groupID,
@@ -199,6 +218,7 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 		Amount:      int64(req.Amount),
 		Currency:    req.Currency,
 		Note:        note,
+		Method:      method,
 		CreatedByID: claims.UserID,
 	})
 	if err != nil {
@@ -220,6 +240,7 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 		ToMemberID:   settlement.ToMember,
 		Amount:       money.Amount(settlement.Amount).String(),
 		Currency:     settlement.Currency,
+		Method:       settlement.Method,
 		CreatedByID:  settlement.CreatedByID,
 		CreatedAt:    settlement.CreatedAt.Time,
 	}
@@ -303,4 +324,79 @@ func (h *BalancesHandler) ListMyBalances(w http.ResponseWriter, r *http.Request)
 	}
 
 	writeJSON(w, http.StatusOK, resp)
+}
+
+// RevertSettlement soft-reverts a settlement (sets reverted_at). Allowed by
+// either party (from_member's user or to_member's user) within 24h of creation.
+func (h *BalancesHandler) RevertSettlement(w http.ResponseWriter, r *http.Request) {
+	groupID := chi.URLParam(r, "groupID")
+	settlementID := chi.URLParam(r, "settlementID")
+	claims := middleware.ClaimsFromContext(r.Context())
+
+	if _, ok := h.requireMember(w, r, groupID); !ok {
+		return
+	}
+
+	settlement, err := h.queries.GetSettlement(r.Context(), settlementID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "settlement not found")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+	if settlement.GroupID != groupID {
+		writeError(w, http.StatusNotFound, "settlement not found")
+		return
+	}
+
+	// Authorize: caller must be the user behind from_member or to_member.
+	fromM, err := h.queries.GetGroupMember(r.Context(), settlement.FromMember)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+	toM, err := h.queries.GetGroupMember(r.Context(), settlement.ToMember)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+	isFrom := fromM.UserID.Valid && fromM.UserID.String == claims.UserID
+	isTo := toM.UserID.Valid && toM.UserID.String == claims.UserID
+	if !isFrom && !isTo {
+		writeError(w, http.StatusForbidden, "only the payer or payee can revert this settlement")
+		return
+	}
+
+	// Time-gate / already-reverted check via the update query.
+	tx, err := h.pool.Begin(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+	defer tx.Rollback(r.Context())
+	q := db.New(tx)
+
+	if _, err := q.MarkSettlementReverted(r.Context(), settlementID); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// Either already reverted or older than 24h.
+			writeError(w, http.StatusConflict, "settlement cannot be reverted (already reverted or older than 24h)")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	if err := writeActivity(r.Context(), q, groupID, claims.UserID, "settlement.reverted", settlementID, "settlement"); err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	if err := tx.Commit(r.Context()); err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
