@@ -72,15 +72,11 @@ export default function HomeScreen() {
       <TopBar
         title={t('app.name')}
         right={
-          <View style={{ flexDirection: 'row' }}>
-            <IconButton
-              icon="camera"
-              onPress={() => router.push('/groups/scan')}
-              label={t('groupsTab.scanQrLabel')}
-            />
-            <IconButton icon="search" />
-            <IconButton icon="bell" />
-          </View>
+          <IconButton
+            icon="camera"
+            onPress={() => router.push('/groups/scan')}
+            label={t('groupsTab.scanQrLabel')}
+          />
         }
       />
       <ScrollView
