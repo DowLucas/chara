@@ -113,6 +113,14 @@
     "errorEmpty": "Please enter your full name.",
     "errorPhone": "Please enter your phone number."
   },
+  "currencyPicker": {
+    "title": "Currency",
+    "searchPlaceholder": "Search code or name…",
+    "suggested": "suggested",
+    "all": "all",
+    "more": "More…",
+    "empty": "No currencies match."
+  },
   "createGroup": {
     "eyebrow": "new group",
     "headline": "Name your group.",

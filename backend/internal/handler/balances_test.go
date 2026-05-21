@@ -460,9 +460,9 @@ func TestSettle_Revert_WritesActivityLog(t *testing.T) {
 	require.NoError(t, err)
 	found := false
 	for _, a := range activity {
-		if a.EventType == "settlement.reverted" && a.EntityID.String == settlementID {
+		if a.EventType == "settlement_reverted" && a.EntityID.String == settlementID {
 			found = true
 		}
 	}
-	assert.True(t, found, "expected settlement.reverted activity entry")
+	assert.True(t, found, "expected settlement_reverted activity entry")
 }

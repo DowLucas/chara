@@ -210,7 +210,15 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	settlement, err := h.queries.CreateSettlement(r.Context(), db.CreateSettlementParams{
+	tx, err := h.pool.Begin(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+	defer tx.Rollback(r.Context())
+	q := db.New(tx)
+
+	settlement, err := q.CreateSettlement(r.Context(), db.CreateSettlementParams{
 		ID:          ulid.New(),
 		GroupID:     groupID,
 		FromMember:  req.FromMemberID,
@@ -226,11 +234,14 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Activity feed entry. Best-effort: log on failure but don't break the
-	// settle response (the settlement itself succeeded).
-	if err := writeActivity(r.Context(), h.queries, groupID, claims.UserID, "settlement_added", settlement.ID, "settlement"); err != nil {
-		// non-fatal
-		_ = err
+	if err := writeActivity(r.Context(), q, groupID, claims.UserID, "settlement_added", settlement.ID, "settlement"); err != nil {
+		writeError(w, http.StatusInternalServerError, "could not write activity")
+		return
+	}
+
+	if err := tx.Commit(r.Context()); err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
 	}
 
 	resp := SettlementResponse{
@@ -388,7 +399,7 @@ func (h *BalancesHandler) RevertSettlement(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := writeActivity(r.Context(), q, groupID, claims.UserID, "settlement.reverted", settlementID, "settlement"); err != nil {
+	if err := writeActivity(r.Context(), q, groupID, claims.UserID, "settlement_reverted", settlementID, "settlement"); err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
