@@ -12,9 +12,9 @@ import (
 )
 
 const createSettlement = `-- name: CreateSettlement :one
-INSERT INTO settlements (id, group_id, from_member, to_member, amount, currency, note, created_by_id)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-RETURNING id, group_id, from_member, to_member, amount, currency, note, created_by_id, created_at
+INSERT INTO settlements (id, group_id, from_member, to_member, amount, currency, note, method, created_by_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING id, group_id, from_member, to_member, amount, currency, note, created_by_id, created_at, method, external_ref, reverted_at
 `
 
 type CreateSettlementParams struct {
@@ -25,6 +25,7 @@ type CreateSettlementParams struct {
 	Amount      int64       `db:"amount" json:"amount"`
 	Currency    string      `db:"currency" json:"currency"`
 	Note        pgtype.Text `db:"note" json:"note"`
+	Method      string      `db:"method" json:"method"`
 	CreatedByID string      `db:"created_by_id" json:"created_by_id"`
 }
 
@@ -37,6 +38,7 @@ func (q *Queries) CreateSettlement(ctx context.Context, arg CreateSettlementPara
 		arg.Amount,
 		arg.Currency,
 		arg.Note,
+		arg.Method,
 		arg.CreatedByID,
 	)
 	var i Settlement
@@ -50,12 +52,39 @@ func (q *Queries) CreateSettlement(ctx context.Context, arg CreateSettlementPara
 		&i.Note,
 		&i.CreatedByID,
 		&i.CreatedAt,
+		&i.Method,
+		&i.ExternalRef,
+		&i.RevertedAt,
+	)
+	return i, err
+}
+
+const getSettlement = `-- name: GetSettlement :one
+SELECT id, group_id, from_member, to_member, amount, currency, note, created_by_id, created_at, method, external_ref, reverted_at FROM settlements WHERE id = $1
+`
+
+func (q *Queries) GetSettlement(ctx context.Context, id string) (Settlement, error) {
+	row := q.db.QueryRow(ctx, getSettlement, id)
+	var i Settlement
+	err := row.Scan(
+		&i.ID,
+		&i.GroupID,
+		&i.FromMember,
+		&i.ToMember,
+		&i.Amount,
+		&i.Currency,
+		&i.Note,
+		&i.CreatedByID,
+		&i.CreatedAt,
+		&i.Method,
+		&i.ExternalRef,
+		&i.RevertedAt,
 	)
 	return i, err
 }
 
 const listSettlementsByGroup = `-- name: ListSettlementsByGroup :many
-SELECT id, group_id, from_member, to_member, amount, currency, note, created_by_id, created_at FROM settlements
+SELECT id, group_id, from_member, to_member, amount, currency, note, created_by_id, created_at, method, external_ref, reverted_at FROM settlements
 WHERE group_id = $1
 ORDER BY created_at DESC
 `
@@ -79,6 +108,9 @@ func (q *Queries) ListSettlementsByGroup(ctx context.Context, groupID string) ([
 			&i.Note,
 			&i.CreatedByID,
 			&i.CreatedAt,
+			&i.Method,
+			&i.ExternalRef,
+			&i.RevertedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -88,4 +120,38 @@ func (q *Queries) ListSettlementsByGroup(ctx context.Context, groupID string) ([
 		return nil, err
 	}
 	return items, nil
+}
+
+const markSettlementReverted = `-- name: MarkSettlementReverted :one
+UPDATE settlements
+SET reverted_at = NOW()
+WHERE id = $1
+  AND created_at > NOW() - INTERVAL '24 hours'
+  AND reverted_at IS NULL
+RETURNING id, group_id, from_member, to_member, amount, currency, note, created_by_id, created_at, method, external_ref, reverted_at
+`
+
+// Soft-revert a settlement. The caller (handler) is expected to have already
+// enforced authorization (caller must be from_member or to_member's user)
+// before calling this query. The query itself enforces the time gate
+// (< 24h since creation) and the "not already reverted" guard, so a race
+// between two reverts loses cleanly with pgx.ErrNoRows.
+func (q *Queries) MarkSettlementReverted(ctx context.Context, id string) (Settlement, error) {
+	row := q.db.QueryRow(ctx, markSettlementReverted, id)
+	var i Settlement
+	err := row.Scan(
+		&i.ID,
+		&i.GroupID,
+		&i.FromMember,
+		&i.ToMember,
+		&i.Amount,
+		&i.Currency,
+		&i.Note,
+		&i.CreatedByID,
+		&i.CreatedAt,
+		&i.Method,
+		&i.ExternalRef,
+		&i.RevertedAt,
+	)
+	return i, err
 }
