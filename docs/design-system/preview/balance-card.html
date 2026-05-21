@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<title>Balance card</title>
+<style>
+  .card { background: var(--bone); border: 0.5px solid var(--rule-soft); border-radius: 8px; padding: 20px 22px; }
+  .eyebrow { font-family: var(--font-mono); font-size: 11px; color: var(--lead); }
+  .balance { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 500; font-size: 56px; letter-spacing: -0.025em; line-height: 1; color: #8FA055; margin-top: 4px; }
+  .rule { border: 0; border-bottom: 1.5px solid var(--graphite); margin: 14px 0 12px; }
+  .sub { display: flex; justify-content: space-between; }
+  .lbl { font-family: var(--font-body); font-size: 13px; color: var(--lead); }
+  .v { font-family: var(--font-mono); font-size: 13px; color: var(--graphite); }
+</style>
+</head>
+<body>
+<div class="card-frame">
+  <div class="card">
+    <div class="eyebrow">Group balance</div>
+    <div class="balance">+1 240 kr</div>
+    <hr class="rule">
+    <div class="sub"><span class="lbl">You're owed</span><span class="v">1 240 kr</span></div>
+    <div class="sub" style="margin-top:4px"><span class="lbl">You owe</span><span class="v">0 kr</span></div>
+  </div>
+</div>
+</body>
+</html>

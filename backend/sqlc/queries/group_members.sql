@@ -16,6 +16,9 @@ SELECT * FROM group_members WHERE group_id = $1 ORDER BY joined_at ASC;
 -- name: UpdateGroupMemberName :one
 UPDATE group_members SET name = $2 WHERE id = $1 RETURNING *;
 
+-- name: UpdateGroupMemberNamesByUserID :exec
+UPDATE group_members SET name = $2 WHERE user_id = $1;
+
 -- name: DeleteGroupMember :exec
 DELETE FROM group_members WHERE id = $1;
 

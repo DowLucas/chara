@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<title>Rule line</title>
+<style>
+  .specimen { display: flex; flex-direction: column; gap: 28px; }
+  .blk { display: flex; flex-direction: column; gap: 8px; }
+  .eyebrow { font-family: var(--font-mono); font-size: 11px; color: var(--lead); }
+  .h { font-family: var(--font-display); font-weight: 600; font-size: 22px; letter-spacing: -0.028em; color: var(--graphite); }
+  .rule { border: 0; border-bottom: 1.5px solid var(--graphite); margin: 0; }
+  .rule-soft { border-bottom-color: rgba(26,27,31,0.12); }
+  .total { display: flex; justify-content: space-between; align-items: baseline; }
+  .amt { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 500; font-size: 24px; letter-spacing: -0.02em; }
+</style>
+</head>
+<body>
+<div class="card-frame">
+  <div class="specimen">
+    <div class="blk">
+      <span class="eyebrow">Section header</span>
+      <div class="h">Group balance</div>
+      <hr class="rule">
+    </div>
+    <div class="blk">
+      <div class="total"><span class="h" style="font-size:16px">Subtotal</span><span class="amt">1 240 kr</span></div>
+      <hr class="rule-soft">
+      <div class="total"><span class="h" style="font-size:16px">Total</span><span class="amt">1 380 kr</span></div>
+      <hr class="rule">
+    </div>
+  </div>
+</div>
+</body>
+</html>

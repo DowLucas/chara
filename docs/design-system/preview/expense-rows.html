@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<title>Expense rows</title>
+<style>
+  .stack { display: flex; flex-direction: column; gap: 0; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 0; }
+  .row + .row { border-top: 0.5px solid var(--rule-soft); }
+  .ttl { font-family: var(--font-display); font-weight: 600; font-size: 15px; letter-spacing: -0.02em; color: var(--graphite); }
+  .meta { font-family: var(--font-mono); font-size: 11px; color: var(--lead); }
+  .amt { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 500; font-size: 17px; letter-spacing: -0.02em; }
+  .pos { color: #8FA055; }
+  .neg { color: #8A2A2A; }
+  .settled .ttl { text-decoration: line-through; text-decoration-thickness: 1px; color: var(--lead); }
+  .settled .amt { color: var(--lead); }
+  .col { display: flex; flex-direction: column; gap: 2px; }
+</style>
+</head>
+<body>
+<div class="card-frame">
+  <div class="stack">
+    <div class="row"><div class="col"><span class="ttl">Lilla Ego, dinner</span><span class="meta">Fri · split with you and 3 others</span></div><span class="amt neg">−420 kr</span></div>
+    <div class="row"><div class="col"><span class="ttl">Spotify family</span><span class="meta">Mon · split with you and 4 others</span></div><span class="amt pos">+39 kr</span></div>
+    <div class="row"><div class="col"><span class="ttl">Birthday gift, Lina</span><span class="meta">03 May · split between 3 others, not you</span></div><span class="amt pos">+0 kr</span></div>
+    <div class="row settled"><div class="col"><span class="ttl">Train, Stockholm → Malmö</span><span class="meta">14 Apr · split with you and Mo</span></div><span class="amt">−640 kr</span></div>
+  </div>
+</div>
+</body>
+</html>

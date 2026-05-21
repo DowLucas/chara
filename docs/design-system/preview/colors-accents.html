@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<title>Palette — accents</title>
+<style>
+  .swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .sw { display: flex; flex-direction: column; gap: 8px; }
+  .chip { height: 64px; border-radius: 6px; border: 0.5px solid var(--rule-soft); }
+  .name { font-family: var(--font-display); font-weight: 600; font-size: 13px; letter-spacing: -0.02em; color: var(--graphite); }
+  .meta { display: flex; justify-content: space-between; }
+  .role { font-family: var(--font-mono); font-size: 10px; color: var(--lead); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="card-frame">
+  <div class="swatches">
+    <div class="sw"><div class="chip" style="background:#B83D3D"></div><div class="meta"><span class="name">Vermillion</span><span class="hex">#B83D3D</span></div><div class="role">accent · CTA · stamp</div></div>
+    <div class="sw"><div class="chip" style="background:#8FA055"></div><div class="meta"><span class="name">Moss</span><span class="hex">#8FA055</span></div><div class="role">positive balance</div></div>
+    <div class="sw"><div class="chip" style="background:#8A2A2A"></div><div class="meta"><span class="name">Brick</span><span class="hex">#8A2A2A</span></div><div class="role">negative balance</div></div>
+    <div class="sw"><div class="chip" style="background:#E0A040"></div><div class="meta"><span class="name">Citrine</span><span class="hex">#E0A040</span></div><div class="role">highlights</div></div>
+  </div>
+</div>
+</body>
+</html>

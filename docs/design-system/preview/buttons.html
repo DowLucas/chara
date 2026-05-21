@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<title>Buttons</title>
+<style>
+  .stack { display: flex; flex-direction: column; gap: 18px; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .col { display: flex; flex-direction: column; gap: 8px; }
+  .lbl { font-family: var(--font-mono); font-size: 10px; color: var(--lead); letter-spacing: 0.04em; }
+  .btn {
+    font-family: var(--font-body); font-weight: 500; font-size: 14px;
+    letter-spacing: -0.005em; padding: 11px 16px;
+    border-radius: 6px; border: 0.5px solid transparent; cursor: pointer;
+  }
+  .btn-primary { background: var(--vermillion); color: var(--paper); }
+  .btn-primary-hover { background: #9F3434; color: var(--paper); }
+  .btn-primary-pressed { background: #9F3434; color: var(--paper); transform: translateY(0.5px); }
+  .btn-secondary { background: transparent; color: var(--graphite); border-color: var(--graphite); }
+  .btn-ghost { background: transparent; color: var(--graphite); }
+  .btn-disabled { background: var(--bone); color: var(--lead); cursor: not-allowed; border-color: var(--rule-soft); }
+  .divider { border: 0; border-bottom: 0.5px solid var(--rule-soft); margin: 0; }
+</style>
+</head>
+<body>
+<div class="card-frame">
+  <div class="stack">
+    <div class="col">
+      <span class="lbl">variants</span>
+      <div class="row">
+        <button class="btn btn-primary">Send via Swish</button>
+        <button class="btn btn-secondary">Settle later</button>
+        <button class="btn btn-ghost">Cancel</button>
+        <button class="btn btn-disabled">Send via Swish</button>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="col">
+      <span class="lbl">primary · default → hover → pressed</span>
+      <div class="row">
+        <button class="btn btn-primary">Settle</button>
+        <button class="btn btn-primary-hover">Settle</button>
+        <button class="btn btn-primary-pressed">Settle</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

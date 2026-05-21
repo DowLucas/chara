@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<title>Display type</title>
+<style>
+  .specimen { display: flex; flex-direction: column; gap: 14px; }
+  .row { display: flex; align-items: baseline; gap: 24px; }
+  .tag { font-family: var(--font-mono); font-size: 11px; color: var(--lead); width: 86px; flex: none; }
+  .d-xl { font-family: var(--font-display); font-weight: 600; font-size: 48px; letter-spacing: -0.035em; line-height: 1; color: var(--graphite); }
+  .d-l { font-family: var(--font-display); font-weight: 600; font-size: 32px; letter-spacing: -0.03em; line-height: 1.05; color: var(--graphite); }
+  .d-m { font-family: var(--font-display); font-weight: 600; font-size: 22px; letter-spacing: -0.028em; line-height: 1.1; color: var(--graphite); }
+</style>
+</head>
+<body>
+<div class="card-frame">
+  <div class="specimen">
+    <div class="row"><span class="tag">SN Pro 600</span><span class="d-xl">Call it quits.</span></div>
+    <div class="row"><span class="tag">display/l · 32</span><span class="d-l">Split it. Settle it.</span></div>
+    <div class="row"><span class="tag">display/m · 22</span><span class="d-m">Friday at Lilla Ego</span></div>
+  </div>
+</div>
+</body>
+</html>

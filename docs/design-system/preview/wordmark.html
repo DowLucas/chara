@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<title>Wordmark</title>
+<style>
+  .stack { display: flex; flex-direction: column; gap: 18px; }
+  .mark { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.035em; color: var(--graphite); line-height: 1; }
+  .mark.lg { font-size: 64px; }
+  .mark.md { font-size: 32px; }
+  .row { display: flex; align-items: baseline; gap: 28px; }
+  .stamp { display: inline-block; font-family: var(--font-mono); font-weight: 600; font-size: 14px; letter-spacing: 0.08em; color: var(--vermillion); padding: 4px 10px; border: 1.5px solid var(--vermillion); border-radius: 4px; transform: rotate(-2deg); text-transform: uppercase; }
+  .meta { font-family: var(--font-mono); font-size: 11px; color: var(--lead); }
+  .dark { background: #1A130F; padding: 18px 22px; border-radius: 8px; }
+  .dark .mark { color: #F0E5CC; }
+</style>
+</head>
+<body>
+<div class="card-frame">
+  <div class="stack">
+    <div class="row"><span class="mark lg">Quits</span><span class="stamp">QUITS</span></div>
+    <div class="row"><div class="dark"><span class="mark md">Quits</span></div><span class="meta">Inter 600 · -0.035em</span></div>
+  </div>
+</div>
+</body>
+</html>

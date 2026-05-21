@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<title>Palette — brand anchors</title>
+<style>
+  .swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .sw { display: flex; flex-direction: column; gap: 6px; }
+  .chip { height: 76px; border-radius: 6px; border: 0.5px solid var(--rule-soft); }
+  .name { font-family: var(--font-display); font-weight: 600; font-size: 12px; letter-spacing: -0.02em; color: var(--graphite); }
+  .hex  { font-family: var(--font-mono); font-size: 10px; color: var(--lead); }
+  .meta { display: flex; justify-content: space-between; align-items: baseline; }
+  .hsl  { font-family: var(--font-mono); font-size: 9px; color: var(--lead); }
+</style>
+</head>
+<body>
+<div class="card-frame">
+  <div class="swatches">
+    <div class="sw">
+      <div class="chip" style="background:#F0E5CC"></div>
+      <div class="meta"><span class="name">Sand dune</span></div>
+      <span class="hex">#F0E5CC</span>
+      <span class="hsl">hsl 42 · 55 · 87</span>
+    </div>
+    <div class="sw">
+      <div class="chip" style="background:#2D1F1A"></div>
+      <div class="meta"><span class="name">Dark coffee</span></div>
+      <span class="hex">#2D1F1A</span>
+      <span class="hsl">hsl 16 · 27 · 14</span>
+    </div>
+    <div class="sw">
+      <div class="chip" style="background:#B83D3D"></div>
+      <div class="meta"><span class="name">Tomato jam</span></div>
+      <span class="hex">#B83D3D</span>
+      <span class="hsl">hsl 0 · 50 · 48</span>
+    </div>
+    <div class="sw">
+      <div class="chip" style="background:#8FA055"></div>
+      <div class="meta"><span class="name">Palm leaf</span></div>
+      <span class="hex">#8FA055</span>
+      <span class="hsl">hsl 74 · 31 · 48</span>
+    </div>
+    <div class="sw">
+      <div class="chip" style="background:#E0A040"></div>
+      <div class="meta"><span class="name">Honey bronze</span></div>
+      <span class="hex">#E0A040</span>
+      <span class="hsl">hsl 36 · 72 · 56</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

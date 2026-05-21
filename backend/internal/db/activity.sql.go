@@ -92,3 +92,65 @@ func (q *Queries) ListActivityByGroup(ctx context.Context, arg ListActivityByGro
 	}
 	return items, nil
 }
+
+const listActivityForUser = `-- name: ListActivityForUser :many
+SELECT a.id, a.group_id, a.actor_id, a.event_type, a.entity_id, a.entity_type, a.payload, a.created_at,
+       g.name AS group_name,
+       u.display_name AS actor_name
+FROM activity a
+JOIN group_members gm ON gm.group_id = a.group_id AND gm.user_id = $1
+JOIN groups g ON g.id = a.group_id AND NOT g.is_archived
+JOIN users u ON u.id = a.actor_id
+ORDER BY a.created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListActivityForUserParams struct {
+	UserID pgtype.Text `db:"user_id" json:"user_id"`
+	Limit  int32       `db:"limit" json:"limit"`
+	Offset int32       `db:"offset" json:"offset"`
+}
+
+type ListActivityForUserRow struct {
+	ID         string             `db:"id" json:"id"`
+	GroupID    string             `db:"group_id" json:"group_id"`
+	ActorID    string             `db:"actor_id" json:"actor_id"`
+	EventType  string             `db:"event_type" json:"event_type"`
+	EntityID   pgtype.Text        `db:"entity_id" json:"entity_id"`
+	EntityType pgtype.Text        `db:"entity_type" json:"entity_type"`
+	Payload    []byte             `db:"payload" json:"payload"`
+	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	GroupName  string             `db:"group_name" json:"group_name"`
+	ActorName  string             `db:"actor_name" json:"actor_name"`
+}
+
+func (q *Queries) ListActivityForUser(ctx context.Context, arg ListActivityForUserParams) ([]ListActivityForUserRow, error) {
+	rows, err := q.db.Query(ctx, listActivityForUser, arg.UserID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListActivityForUserRow{}
+	for rows.Next() {
+		var i ListActivityForUserRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.GroupID,
+			&i.ActorID,
+			&i.EventType,
+			&i.EntityID,
+			&i.EntityType,
+			&i.Payload,
+			&i.CreatedAt,
+			&i.GroupName,
+			&i.ActorName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

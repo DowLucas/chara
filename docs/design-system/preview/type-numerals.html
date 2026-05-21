@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<title>Numeral type</title>
+<style>
+  .specimen { display: flex; flex-direction: column; gap: 14px; }
+  .row { display: flex; gap: 24px; align-items: baseline; }
+  .tag { font-family: var(--font-mono); font-size: 11px; color: var(--lead); width: 100px; flex: none; }
+  .n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 500; letter-spacing: -0.02em; color: var(--graphite); }
+  .n-xl { font-size: 56px; line-height: 1; }
+  .n-l  { font-size: 28px; }
+  .n-m  { font-size: 18px; }
+  .pos { color: #466B47; }
+  .neg { color: #8E3320; }
+</style>
+</head>
+<body>
+<div class="card-frame">
+  <div class="specimen">
+    <div class="row"><span class="tag">numeral/xl · 56</span><span class="n n-xl pos">+1 240 kr</span></div>
+    <div class="row"><span class="tag">numeral/l · 28</span><span class="n n-l neg">−85,50 kr</span></div>
+    <div class="row"><span class="tag">numeral/m · 18</span><span class="n n-m">SE45 1234 5678 90</span><span class="n n-m" style="color:var(--lead)">14 May 2026</span></div>
+  </div>
+</div>
+</body>
+</html>

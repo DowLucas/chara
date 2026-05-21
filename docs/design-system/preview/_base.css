@@ -1,0 +1,39 @@
+/* Preview-card chrome: minimal, lets the tokens speak */
+@import url("../colors_and_type.css");
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--fg-1);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+}
+.card-frame {
+  width: 700px;
+  box-sizing: border-box;
+  padding: 24px;
+  background: var(--paper);
+}
+.card-frame.dark {
+  background: var(--paper);
+}
+.label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--lead);
+}
+.token {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--lead);
+}
+.hex {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--lead);
+}
+.row { display: flex; align-items: center; gap: 12px; }
+.col { display: flex; flex-direction: column; }
+.rule-line { display: block; height: 0; border: 0; border-bottom: 1.5px solid var(--graphite); }

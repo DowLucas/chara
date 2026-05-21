@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<title>Semantic colors</title>
+<style>
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+  .name { font-family: var(--font-display); font-weight: 600; font-size: 14px; letter-spacing: -0.02em; }
+  .desc { color: var(--lead); font-size: 12px; }
+  .amt { font-family: var(--font-mono); font-weight: 500; font-size: 18px; letter-spacing: -0.02em; margin-left: auto; }
+  .item { display: flex; align-items: center; gap: 12px; }
+</style>
+</head>
+<body>
+<div class="card-frame">
+  <div class="grid">
+    <div class="item"><span class="dot" style="background:#B83D3D"></span><div class="col"><span class="name">Accent · vermillion</span><span class="desc">Primary CTA, the QUITS stamp</span></div></div>
+    <div class="item"><span class="dot" style="background:#E0A040"></span><div class="col"><span class="name">Highlight · citrine</span><span class="desc">Special moments, callouts</span></div></div>
+    <div class="item"><span class="dot" style="background:#8FA055"></span><div class="col"><span class="name">Positive · moss</span><span class="desc">You're owed</span></div><span class="amt" style="color:#8FA055">+240 kr</span></div>
+    <div class="item"><span class="dot" style="background:#8A2A2A"></span><div class="col"><span class="name">Negative · brick</span><span class="desc">You owe</span></div><span class="amt" style="color:#8A2A2A">−85 kr</span></div>
+  </div>
+</div>
+</body>
+</html>

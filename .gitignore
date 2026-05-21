@@ -1,0 +1,7 @@
+.claude/
+.gstack/
+docs/superpowers/
+
+# OS / editor
+.DS_Store
+*.swp

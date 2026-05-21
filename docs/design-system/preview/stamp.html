@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<title>QUITS stamp</title>
+<style>
+  .row { display: flex; gap: 36px; align-items: center; justify-content: center; padding: 12px 0; }
+  .stamp {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: 0.08em;
+    color: var(--vermillion);
+    padding: 6px 14px;
+    border: 1.5px solid var(--vermillion);
+    border-radius: 4px;
+    transform: rotate(-2deg);
+    text-transform: uppercase;
+  }
+  .stamp-sm { font-size: 13px; padding: 3px 9px; border-width: 1.5px; }
+  .lbl { font-family: var(--font-mono); font-size: 11px; color: var(--lead); text-align: center; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="card-frame">
+  <div class="row">
+    <div><div class="row" style="padding:0"><span class="stamp">QUITS</span></div><div class="lbl">large · 22px</div></div>
+    <div><div class="row" style="padding:0"><span class="stamp stamp-sm">QUITS</span></div><div class="lbl">small · 13px</div></div>
+    <div><div class="row" style="padding:0; background:#1A130F; border-radius:6px; padding:14px 20px"><span class="stamp" style="color:#D45050; border-color:#D45050">QUITS</span></div><div class="lbl">on dark</div></div>
+  </div>
+</div>
+</body>
+</html>

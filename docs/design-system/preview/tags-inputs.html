@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="_base.css">
+<title>Tags & inputs</title>
+<style>
+  .group { display: flex; flex-direction: column; gap: 16px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .tag { display: inline-block; font-family: var(--font-mono); font-weight: 500; font-size: 11px; padding: 3px 9px; border-radius: 999px; border: 0.5px solid var(--rule-soft); color: var(--lead); background: transparent; }
+  .tag.solid { background: var(--graphite); color: var(--paper); border-color: var(--graphite); }
+  .tag.accent { color: var(--vermillion); border-color: var(--vermillion); }
+  .input { width: 100%; max-width: 320px; padding: 12px 14px; border: 0.5px solid var(--rule-soft); border-radius: 6px; background: var(--bone); font-family: var(--font-body); font-size: 15px; color: var(--graphite); }
+  .input.focused { border-color: var(--graphite); }
+  .amt-input { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 500; font-size: 24px; letter-spacing: -0.02em; border: 0; background: transparent; border-bottom: 1.5px solid var(--graphite); padding: 6px 0; width: 200px; outline: none; }
+  .label { font-family: var(--font-mono); font-size: 11px; color: var(--lead); }
+</style>
+</head>
+<body>
+<div class="card-frame">
+  <div class="group">
+    <div class="row">
+      <span class="tag">Food</span>
+      <span class="tag">Rent</span>
+      <span class="tag accent">Recurring</span>
+      <span class="tag solid">Settled</span>
+    </div>
+    <div class="row" style="gap:24px">
+      <div class="col"><span class="label">text input</span><input class="input" value="Friday dinner"></div>
+      <div class="col"><span class="label">amount</span><input class="amt-input" value="420 kr"></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

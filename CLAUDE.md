@@ -10,9 +10,11 @@ Quits is an open-source, self-hostable bill-splitting app (Splitwise alternative
 
 This project uses Test-Driven Development. Write the failing test first, then the implementation. No implementation code without a corresponding test written beforehand.
 
-## Planned stack
+## Implementation status
 
-The codebase does not exist yet. When implementation begins, the stack is:
+`docs/implementation-status.md` tracks which milestones are complete and what tests exist. Update it whenever a milestone is finished.
+
+## Stack
 
 | Layer | Choice |
 |-------|--------|
@@ -37,6 +39,16 @@ Google and Apple Sign In are **not available on self-hosted instances**. The app
 
 All monetary values are stored and computed as **int64 minor units** (öre, cents). Decimal strings on the wire. Never use floats for money.
 
+## i18n
+
+The mobile app (`app/`) uses `i18next` + `react-i18next` + `expo-localization`. **All user-facing strings must go through `t()`** — no hardcoded English in JSX, `Alert.alert`, `placeholder`, `accessibilityLabel`, `Share.share`, etc.
+
+- Catalog: `app/lib/locales/<lang>.json`, namespaced by screen (`signIn`, `home`, `groupDetail`, …). English is the only language today; add new locales by dropping a JSON file and registering it in `app/lib/i18n.ts` (`SUPPORTED_LANGUAGES`, `resources`).
+- In components: `const { t } = useTranslation();` then `t('namespace.key', { interpolation })`. Outside React (e.g. `ActionSheet` helpers), `import i18n from '@/lib/i18n'` and call `i18n.t(...)`.
+- Locale-aware formatting helpers live in `app/lib/i18n.ts`: `formatMinorUnits(minor, currency, { relative })`, `formatDate`, `formatTime`, `currentLocale()`. **Never hardcode a locale** (`'sv-SE'`, `'en-US'`) in `toLocaleString` — use `currentLocale()` or the helpers.
+- Currency codes (`SEK`, `EUR`, …) are data, not UI copy — leave them as strings.
+- When adding a new screen or string, add the key to `en.json` in the same commit. PRs that introduce raw English strings are incomplete.
+
 ## Key architectural docs
 
 - `docs/02-product-strategy.md` — MVP scope, feature priority matrix (P0/P1/P2/P3), target audiences
@@ -48,3 +60,5 @@ All monetary values are stored and computed as **int64 minor units** (öre, cent
 ## MVP scope (P0)
 
 Build only what is marked P0. The full feature matrix is in `docs/02-product-strategy.md`. Resist scope creep — if it is not P0, it is not in the MVP.
+
+Next milestone: **Week 8 — Balances and settlement** (see `docs/implementation-status.md`).
