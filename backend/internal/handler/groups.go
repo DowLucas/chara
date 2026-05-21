@@ -31,12 +31,13 @@ func NewGroupHandler(pool *pgxpool.Pool, queries *db.Queries, cfg *config.Config
 // ── Response types ────────────────────────────────────────────────────────────
 
 type MemberResponse struct {
-	ID       string    `json:"id"`
-	UserID   *string   `json:"user_id,omitempty"`
-	Name     string    `json:"name"`
-	Role     string    `json:"role"`
-	IsGhost  bool      `json:"is_ghost"`
-	JoinedAt time.Time `json:"joined_at"`
+	ID          string    `json:"id"`
+	UserID      *string   `json:"user_id,omitempty"`
+	Name        string    `json:"name"`
+	Role        string    `json:"role"`
+	IsGhost     bool      `json:"is_ghost"`
+	JoinedAt    time.Time `json:"joined_at"`
+	SwishNumber *string   `json:"swish_number"`
 }
 
 type GroupResponse struct {
@@ -78,6 +79,24 @@ func memberToResponse(m db.GroupMember) MemberResponse {
 	}
 	if m.UserID.Valid {
 		r.UserID = &m.UserID.String
+	}
+	return r
+}
+
+func memberWithUserToResponse(m db.ListGroupMembersWithUserRow) MemberResponse {
+	r := MemberResponse{
+		ID:       m.ID,
+		Name:     m.Name,
+		Role:     m.Role,
+		IsGhost:  m.IsGhost,
+		JoinedAt: m.JoinedAt.Time,
+	}
+	if m.UserID.Valid {
+		r.UserID = &m.UserID.String
+	}
+	if m.SwishNumber.Valid {
+		s := m.SwishNumber.String
+		r.SwishNumber = &s
 	}
 	return r
 }
@@ -379,4 +398,23 @@ func (h *GroupHandler) JoinViaToken(w http.ResponseWriter, r *http.Request) {
 		GroupResponse: groupToResponse(group),
 		Members:       memberResp,
 	})
+}
+
+// ListMembers returns all members of a group with their (optional) swish_number.
+// Only group members may read.
+func (h *GroupHandler) ListMembers(w http.ResponseWriter, r *http.Request) {
+	groupID := chi.URLParam(r, "groupID")
+	if _, ok := h.requireMember(w, r, groupID); !ok {
+		return
+	}
+	members, err := h.queries.ListGroupMembersWithUser(r.Context(), groupID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+	resp := make([]MemberResponse, len(members))
+	for i, m := range members {
+		resp[i] = memberWithUserToResponse(m)
+	}
+	writeJSON(w, http.StatusOK, resp)
 }

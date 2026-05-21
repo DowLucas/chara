@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/mail"
+	"regexp"
 	"strings"
 	"time"
 
@@ -46,10 +47,28 @@ type verifyRequest struct {
 }
 
 type userResponse struct {
-	ID        string  `json:"id"`
-	Email     string  `json:"email"`
-	Name      string  `json:"name"`
-	AvatarURL *string `json:"avatar_url,omitempty"`
+	ID          string  `json:"id"`
+	Email       string  `json:"email"`
+	Name        string  `json:"name"`
+	AvatarURL   *string `json:"avatar_url,omitempty"`
+	SwishNumber *string `json:"swish_number"`
+}
+
+// swishNumberRegex mirrors the CHECK constraint in migration 000015.
+var swishNumberRegex = regexp.MustCompile(`^\+467[02369]\d{7}$`)
+
+// swishStripRegex matches whitespace and dashes for normalization.
+var swishStripRegex = regexp.MustCompile(`[\s\-]`)
+
+// normalizeSwishNumber strips whitespace/dashes and converts a leading 0
+// to +46 (SE). Returns the normalized value; it does NOT validate against
+// the E.164 regex (caller does that).
+func normalizeSwishNumber(input string) string {
+	s := swishStripRegex.ReplaceAllString(input, "")
+	if strings.HasPrefix(s, "0") {
+		s = "+46" + s[1:]
+	}
+	return s
 }
 
 type tokenResponse struct {
@@ -66,6 +85,10 @@ func userToResponse(u db.User) userResponse {
 	if u.AvatarUrl.Valid {
 		v := u.AvatarUrl.String
 		r.AvatarURL = &v
+	}
+	if u.SwishNumber.Valid {
+		v := u.SwishNumber.String
+		r.SwishNumber = &v
 	}
 	return r
 }
@@ -191,16 +214,18 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, userToResponse(user))
 }
 
-type updateMeRequest struct {
-	Name *string `json:"name"`
-}
-
 const maxDisplayNameLen = 80
 
-// UpdateMe updates the authenticated user's profile. Currently only the
-// display name (full name) is editable. The name is required to be a non-empty
-// trimmed string and is propagated to all group_members rows that reference
-// the user so member lists, expenses, and settlements display the new name.
+// updateMeRequest uses raw json fields so we can distinguish "key absent"
+// from "key present with null value" (needed for swish_number clearing).
+type updateMeRequest struct {
+	Name        json.RawMessage `json:"name,omitempty"`
+	SwishNumber json.RawMessage `json:"swish_number,omitempty"`
+}
+
+// UpdateMe updates the authenticated user's profile. The display name is
+// propagated to all group_members rows referencing the user. swish_number
+// accepts a string (normalized + E.164-SE validated) or null (clears).
 func (h *AuthHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.ClaimsFromContext(r.Context())
 	if claims == nil {
@@ -213,18 +238,52 @@ func (h *AuthHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid JSON body")
 		return
 	}
-	if req.Name == nil {
-		writeError(w, http.StatusBadRequest, "name is required")
-		return
+
+	// Parse name (if present).
+	var (
+		hasName bool
+		name    string
+	)
+	if len(req.Name) > 0 {
+		hasName = true
+		var s string
+		if err := json.Unmarshal(req.Name, &s); err != nil {
+			writeError(w, http.StatusBadRequest, "name must be a string")
+			return
+		}
+		name = strings.TrimSpace(s)
+		if name == "" {
+			writeError(w, http.StatusBadRequest, "name must not be empty")
+			return
+		}
+		if len(name) > maxDisplayNameLen {
+			writeError(w, http.StatusBadRequest, "name too long")
+			return
+		}
 	}
-	name := strings.TrimSpace(*req.Name)
-	if name == "" {
-		writeError(w, http.StatusBadRequest, "name must not be empty")
-		return
-	}
-	if len(name) > maxDisplayNameLen {
-		writeError(w, http.StatusBadRequest, "name too long")
-		return
+
+	// Parse swish_number (if present). May be a JSON string (set) or null (clear).
+	var (
+		hasSwish        bool
+		clearSwish      bool
+		normalizedSwish string
+	)
+	if len(req.SwishNumber) > 0 {
+		hasSwish = true
+		if string(req.SwishNumber) == "null" {
+			clearSwish = true
+		} else {
+			var s string
+			if err := json.Unmarshal(req.SwishNumber, &s); err != nil {
+				writeError(w, http.StatusBadRequest, "swish_number must be a string or null")
+				return
+			}
+			normalizedSwish = normalizeSwishNumber(s)
+			if !swishNumberRegex.MatchString(normalizedSwish) {
+				writeError(w, http.StatusBadRequest, "swish_number must be a valid Swedish mobile number (+46 7X XXX XX XX)")
+				return
+			}
+		}
 	}
 
 	tx, err := h.pool.Begin(r.Context())
@@ -235,27 +294,49 @@ func (h *AuthHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback(r.Context())
 	q := db.New(tx)
 
-	user, err := q.UpdateUser(r.Context(), db.UpdateUserParams{
-		ID:          claims.UserID,
-		DisplayName: pgtype.Text{String: name, Valid: true},
-	})
+	// Always fetch current user so we have something to return when no
+	// fields were provided.
+	user, err := q.GetUserByID(r.Context(), claims.UserID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			writeError(w, http.StatusUnauthorized, "user not found")
 			return
 		}
-		slog.Error("update me: update user failed", "error", err)
-		writeError(w, http.StatusInternalServerError, "update failed")
+		writeError(w, http.StatusInternalServerError, "lookup failed")
 		return
 	}
 
-	if err := q.UpdateGroupMemberNamesByUserID(r.Context(), db.UpdateGroupMemberNamesByUserIDParams{
-		UserID: pgtype.Text{String: claims.UserID, Valid: true},
-		Name:   name,
-	}); err != nil {
-		slog.Error("update me: sync group_members.name failed", "error", err)
-		writeError(w, http.StatusInternalServerError, "sync failed")
-		return
+	if hasName {
+		user, err = q.UpdateUser(r.Context(), db.UpdateUserParams{
+			ID:          claims.UserID,
+			DisplayName: pgtype.Text{String: name, Valid: true},
+		})
+		if err != nil {
+			slog.Error("update me: update user failed", "error", err)
+			writeError(w, http.StatusInternalServerError, "update failed")
+			return
+		}
+		if err := q.UpdateGroupMemberNamesByUserID(r.Context(), db.UpdateGroupMemberNamesByUserIDParams{
+			UserID: pgtype.Text{String: claims.UserID, Valid: true},
+			Name:   name,
+		}); err != nil {
+			slog.Error("update me: sync group_members.name failed", "error", err)
+			writeError(w, http.StatusInternalServerError, "sync failed")
+			return
+		}
+	}
+
+	if hasSwish {
+		params := db.UpdateUserSwishNumberParams{ID: claims.UserID, Clear: clearSwish}
+		if !clearSwish {
+			params.SwishNumber = pgtype.Text{String: normalizedSwish, Valid: true}
+		}
+		user, err = q.UpdateUserSwishNumber(r.Context(), params)
+		if err != nil {
+			slog.Error("update me: update swish_number failed", "error", err)
+			writeError(w, http.StatusInternalServerError, "update failed")
+			return
+		}
 	}
 
 	if err := tx.Commit(r.Context()); err != nil {
