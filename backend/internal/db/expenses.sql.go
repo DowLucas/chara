@@ -13,42 +13,56 @@ import (
 
 const createExpense = `-- name: CreateExpense :one
 
-INSERT INTO expenses (id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, created_by_id)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at
+INSERT INTO expenses (
+    id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
+    expense_date, is_reimbursement, created_by_id,
+    original_amount, original_currency, fx_rate, fx_as_of
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
+          expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
+          original_amount, original_currency, fx_rate, fx_as_of
 `
 
 type CreateExpenseParams struct {
-	ID              string      `db:"id" json:"id"`
-	GroupID         string      `db:"group_id" json:"group_id"`
-	Title           string      `db:"title" json:"title"`
-	Amount          int64       `db:"amount" json:"amount"`
-	Currency        string      `db:"currency" json:"currency"`
-	PaidByID        string      `db:"paid_by_id" json:"paid_by_id"`
-	SplitMethod     string      `db:"split_method" json:"split_method"`
-	Category        string      `db:"category" json:"category"`
-	Notes           pgtype.Text `db:"notes" json:"notes"`
-	ExpenseDate     pgtype.Date `db:"expense_date" json:"expense_date"`
-	IsReimbursement bool        `db:"is_reimbursement" json:"is_reimbursement"`
-	CreatedByID     string      `db:"created_by_id" json:"created_by_id"`
+	ID               string         `db:"id" json:"id"`
+	GroupID          string         `db:"group_id" json:"group_id"`
+	Title            string         `db:"title" json:"title"`
+	Amount           int64          `db:"amount" json:"amount"`
+	Currency         string         `db:"currency" json:"currency"`
+	PaidByID         string         `db:"paid_by_id" json:"paid_by_id"`
+	SplitMethod      string         `db:"split_method" json:"split_method"`
+	Category         string         `db:"category" json:"category"`
+	Notes            pgtype.Text    `db:"notes" json:"notes"`
+	ExpenseDate      pgtype.Date    `db:"expense_date" json:"expense_date"`
+	IsReimbursement  bool           `db:"is_reimbursement" json:"is_reimbursement"`
+	CreatedByID      string         `db:"created_by_id" json:"created_by_id"`
+	OriginalAmount   pgtype.Int8    `db:"original_amount" json:"original_amount"`
+	OriginalCurrency pgtype.Text    `db:"original_currency" json:"original_currency"`
+	FxRate           pgtype.Numeric `db:"fx_rate" json:"fx_rate"`
+	FxAsOf           pgtype.Date    `db:"fx_as_of" json:"fx_as_of"`
 }
 
 type CreateExpenseRow struct {
-	ID              string             `db:"id" json:"id"`
-	GroupID         string             `db:"group_id" json:"group_id"`
-	Title           string             `db:"title" json:"title"`
-	Amount          int64              `db:"amount" json:"amount"`
-	Currency        string             `db:"currency" json:"currency"`
-	PaidByID        string             `db:"paid_by_id" json:"paid_by_id"`
-	SplitMethod     string             `db:"split_method" json:"split_method"`
-	Category        string             `db:"category" json:"category"`
-	Notes           pgtype.Text        `db:"notes" json:"notes"`
-	ExpenseDate     pgtype.Date        `db:"expense_date" json:"expense_date"`
-	IsReimbursement bool               `db:"is_reimbursement" json:"is_reimbursement"`
-	IsDeleted       bool               `db:"is_deleted" json:"is_deleted"`
-	CreatedByID     string             `db:"created_by_id" json:"created_by_id"`
-	CreatedAt       pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	ID               string             `db:"id" json:"id"`
+	GroupID          string             `db:"group_id" json:"group_id"`
+	Title            string             `db:"title" json:"title"`
+	Amount           int64              `db:"amount" json:"amount"`
+	Currency         string             `db:"currency" json:"currency"`
+	PaidByID         string             `db:"paid_by_id" json:"paid_by_id"`
+	SplitMethod      string             `db:"split_method" json:"split_method"`
+	Category         string             `db:"category" json:"category"`
+	Notes            pgtype.Text        `db:"notes" json:"notes"`
+	ExpenseDate      pgtype.Date        `db:"expense_date" json:"expense_date"`
+	IsReimbursement  bool               `db:"is_reimbursement" json:"is_reimbursement"`
+	IsDeleted        bool               `db:"is_deleted" json:"is_deleted"`
+	CreatedByID      string             `db:"created_by_id" json:"created_by_id"`
+	CreatedAt        pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	OriginalAmount   pgtype.Int8        `db:"original_amount" json:"original_amount"`
+	OriginalCurrency pgtype.Text        `db:"original_currency" json:"original_currency"`
+	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
+	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
 }
 
 // Explicit column list everywhere to exclude the generated `search_vector` column,
@@ -67,6 +81,10 @@ func (q *Queries) CreateExpense(ctx context.Context, arg CreateExpenseParams) (C
 		arg.ExpenseDate,
 		arg.IsReimbursement,
 		arg.CreatedByID,
+		arg.OriginalAmount,
+		arg.OriginalCurrency,
+		arg.FxRate,
+		arg.FxAsOf,
 	)
 	var i CreateExpenseRow
 	err := row.Scan(
@@ -85,31 +103,41 @@ func (q *Queries) CreateExpense(ctx context.Context, arg CreateExpenseParams) (C
 		&i.CreatedByID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.OriginalAmount,
+		&i.OriginalCurrency,
+		&i.FxRate,
+		&i.FxAsOf,
 	)
 	return i, err
 }
 
 const getExpenseByID = `-- name: GetExpenseByID :one
-SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at
+SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
+       expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
+       original_amount, original_currency, fx_rate, fx_as_of
 FROM expenses WHERE id = $1 AND NOT is_deleted
 `
 
 type GetExpenseByIDRow struct {
-	ID              string             `db:"id" json:"id"`
-	GroupID         string             `db:"group_id" json:"group_id"`
-	Title           string             `db:"title" json:"title"`
-	Amount          int64              `db:"amount" json:"amount"`
-	Currency        string             `db:"currency" json:"currency"`
-	PaidByID        string             `db:"paid_by_id" json:"paid_by_id"`
-	SplitMethod     string             `db:"split_method" json:"split_method"`
-	Category        string             `db:"category" json:"category"`
-	Notes           pgtype.Text        `db:"notes" json:"notes"`
-	ExpenseDate     pgtype.Date        `db:"expense_date" json:"expense_date"`
-	IsReimbursement bool               `db:"is_reimbursement" json:"is_reimbursement"`
-	IsDeleted       bool               `db:"is_deleted" json:"is_deleted"`
-	CreatedByID     string             `db:"created_by_id" json:"created_by_id"`
-	CreatedAt       pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	ID               string             `db:"id" json:"id"`
+	GroupID          string             `db:"group_id" json:"group_id"`
+	Title            string             `db:"title" json:"title"`
+	Amount           int64              `db:"amount" json:"amount"`
+	Currency         string             `db:"currency" json:"currency"`
+	PaidByID         string             `db:"paid_by_id" json:"paid_by_id"`
+	SplitMethod      string             `db:"split_method" json:"split_method"`
+	Category         string             `db:"category" json:"category"`
+	Notes            pgtype.Text        `db:"notes" json:"notes"`
+	ExpenseDate      pgtype.Date        `db:"expense_date" json:"expense_date"`
+	IsReimbursement  bool               `db:"is_reimbursement" json:"is_reimbursement"`
+	IsDeleted        bool               `db:"is_deleted" json:"is_deleted"`
+	CreatedByID      string             `db:"created_by_id" json:"created_by_id"`
+	CreatedAt        pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	OriginalAmount   pgtype.Int8        `db:"original_amount" json:"original_amount"`
+	OriginalCurrency pgtype.Text        `db:"original_currency" json:"original_currency"`
+	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
+	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
 }
 
 func (q *Queries) GetExpenseByID(ctx context.Context, id string) (GetExpenseByIDRow, error) {
@@ -131,12 +159,18 @@ func (q *Queries) GetExpenseByID(ctx context.Context, id string) (GetExpenseByID
 		&i.CreatedByID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.OriginalAmount,
+		&i.OriginalCurrency,
+		&i.FxRate,
+		&i.FxAsOf,
 	)
 	return i, err
 }
 
 const getExpenseByIDAndGroup = `-- name: GetExpenseByIDAndGroup :one
-SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at
+SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
+       expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
+       original_amount, original_currency, fx_rate, fx_as_of
 FROM expenses WHERE id = $1 AND group_id = $2 AND NOT is_deleted
 `
 
@@ -146,21 +180,25 @@ type GetExpenseByIDAndGroupParams struct {
 }
 
 type GetExpenseByIDAndGroupRow struct {
-	ID              string             `db:"id" json:"id"`
-	GroupID         string             `db:"group_id" json:"group_id"`
-	Title           string             `db:"title" json:"title"`
-	Amount          int64              `db:"amount" json:"amount"`
-	Currency        string             `db:"currency" json:"currency"`
-	PaidByID        string             `db:"paid_by_id" json:"paid_by_id"`
-	SplitMethod     string             `db:"split_method" json:"split_method"`
-	Category        string             `db:"category" json:"category"`
-	Notes           pgtype.Text        `db:"notes" json:"notes"`
-	ExpenseDate     pgtype.Date        `db:"expense_date" json:"expense_date"`
-	IsReimbursement bool               `db:"is_reimbursement" json:"is_reimbursement"`
-	IsDeleted       bool               `db:"is_deleted" json:"is_deleted"`
-	CreatedByID     string             `db:"created_by_id" json:"created_by_id"`
-	CreatedAt       pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	ID               string             `db:"id" json:"id"`
+	GroupID          string             `db:"group_id" json:"group_id"`
+	Title            string             `db:"title" json:"title"`
+	Amount           int64              `db:"amount" json:"amount"`
+	Currency         string             `db:"currency" json:"currency"`
+	PaidByID         string             `db:"paid_by_id" json:"paid_by_id"`
+	SplitMethod      string             `db:"split_method" json:"split_method"`
+	Category         string             `db:"category" json:"category"`
+	Notes            pgtype.Text        `db:"notes" json:"notes"`
+	ExpenseDate      pgtype.Date        `db:"expense_date" json:"expense_date"`
+	IsReimbursement  bool               `db:"is_reimbursement" json:"is_reimbursement"`
+	IsDeleted        bool               `db:"is_deleted" json:"is_deleted"`
+	CreatedByID      string             `db:"created_by_id" json:"created_by_id"`
+	CreatedAt        pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	OriginalAmount   pgtype.Int8        `db:"original_amount" json:"original_amount"`
+	OriginalCurrency pgtype.Text        `db:"original_currency" json:"original_currency"`
+	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
+	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
 }
 
 func (q *Queries) GetExpenseByIDAndGroup(ctx context.Context, arg GetExpenseByIDAndGroupParams) (GetExpenseByIDAndGroupRow, error) {
@@ -182,12 +220,18 @@ func (q *Queries) GetExpenseByIDAndGroup(ctx context.Context, arg GetExpenseByID
 		&i.CreatedByID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.OriginalAmount,
+		&i.OriginalCurrency,
+		&i.FxRate,
+		&i.FxAsOf,
 	)
 	return i, err
 }
 
 const listExpensesByGroup = `-- name: ListExpensesByGroup :many
-SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at
+SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
+       expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
+       original_amount, original_currency, fx_rate, fx_as_of
 FROM expenses
 WHERE group_id = $1 AND NOT is_deleted
 ORDER BY expense_date DESC, created_at DESC
@@ -201,21 +245,25 @@ type ListExpensesByGroupParams struct {
 }
 
 type ListExpensesByGroupRow struct {
-	ID              string             `db:"id" json:"id"`
-	GroupID         string             `db:"group_id" json:"group_id"`
-	Title           string             `db:"title" json:"title"`
-	Amount          int64              `db:"amount" json:"amount"`
-	Currency        string             `db:"currency" json:"currency"`
-	PaidByID        string             `db:"paid_by_id" json:"paid_by_id"`
-	SplitMethod     string             `db:"split_method" json:"split_method"`
-	Category        string             `db:"category" json:"category"`
-	Notes           pgtype.Text        `db:"notes" json:"notes"`
-	ExpenseDate     pgtype.Date        `db:"expense_date" json:"expense_date"`
-	IsReimbursement bool               `db:"is_reimbursement" json:"is_reimbursement"`
-	IsDeleted       bool               `db:"is_deleted" json:"is_deleted"`
-	CreatedByID     string             `db:"created_by_id" json:"created_by_id"`
-	CreatedAt       pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	ID               string             `db:"id" json:"id"`
+	GroupID          string             `db:"group_id" json:"group_id"`
+	Title            string             `db:"title" json:"title"`
+	Amount           int64              `db:"amount" json:"amount"`
+	Currency         string             `db:"currency" json:"currency"`
+	PaidByID         string             `db:"paid_by_id" json:"paid_by_id"`
+	SplitMethod      string             `db:"split_method" json:"split_method"`
+	Category         string             `db:"category" json:"category"`
+	Notes            pgtype.Text        `db:"notes" json:"notes"`
+	ExpenseDate      pgtype.Date        `db:"expense_date" json:"expense_date"`
+	IsReimbursement  bool               `db:"is_reimbursement" json:"is_reimbursement"`
+	IsDeleted        bool               `db:"is_deleted" json:"is_deleted"`
+	CreatedByID      string             `db:"created_by_id" json:"created_by_id"`
+	CreatedAt        pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	OriginalAmount   pgtype.Int8        `db:"original_amount" json:"original_amount"`
+	OriginalCurrency pgtype.Text        `db:"original_currency" json:"original_currency"`
+	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
+	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
 }
 
 func (q *Queries) ListExpensesByGroup(ctx context.Context, arg ListExpensesByGroupParams) ([]ListExpensesByGroupRow, error) {
@@ -243,6 +291,10 @@ func (q *Queries) ListExpensesByGroup(ctx context.Context, arg ListExpensesByGro
 			&i.CreatedByID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.OriginalAmount,
+			&i.OriginalCurrency,
+			&i.FxRate,
+			&i.FxAsOf,
 		); err != nil {
 			return nil, err
 		}
@@ -255,7 +307,9 @@ func (q *Queries) ListExpensesByGroup(ctx context.Context, arg ListExpensesByGro
 }
 
 const searchExpenses = `-- name: SearchExpenses :many
-SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at
+SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
+       expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
+       original_amount, original_currency, fx_rate, fx_as_of
 FROM expenses
 WHERE group_id = $1
   AND NOT is_deleted
@@ -270,21 +324,25 @@ type SearchExpensesParams struct {
 }
 
 type SearchExpensesRow struct {
-	ID              string             `db:"id" json:"id"`
-	GroupID         string             `db:"group_id" json:"group_id"`
-	Title           string             `db:"title" json:"title"`
-	Amount          int64              `db:"amount" json:"amount"`
-	Currency        string             `db:"currency" json:"currency"`
-	PaidByID        string             `db:"paid_by_id" json:"paid_by_id"`
-	SplitMethod     string             `db:"split_method" json:"split_method"`
-	Category        string             `db:"category" json:"category"`
-	Notes           pgtype.Text        `db:"notes" json:"notes"`
-	ExpenseDate     pgtype.Date        `db:"expense_date" json:"expense_date"`
-	IsReimbursement bool               `db:"is_reimbursement" json:"is_reimbursement"`
-	IsDeleted       bool               `db:"is_deleted" json:"is_deleted"`
-	CreatedByID     string             `db:"created_by_id" json:"created_by_id"`
-	CreatedAt       pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	ID               string             `db:"id" json:"id"`
+	GroupID          string             `db:"group_id" json:"group_id"`
+	Title            string             `db:"title" json:"title"`
+	Amount           int64              `db:"amount" json:"amount"`
+	Currency         string             `db:"currency" json:"currency"`
+	PaidByID         string             `db:"paid_by_id" json:"paid_by_id"`
+	SplitMethod      string             `db:"split_method" json:"split_method"`
+	Category         string             `db:"category" json:"category"`
+	Notes            pgtype.Text        `db:"notes" json:"notes"`
+	ExpenseDate      pgtype.Date        `db:"expense_date" json:"expense_date"`
+	IsReimbursement  bool               `db:"is_reimbursement" json:"is_reimbursement"`
+	IsDeleted        bool               `db:"is_deleted" json:"is_deleted"`
+	CreatedByID      string             `db:"created_by_id" json:"created_by_id"`
+	CreatedAt        pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	OriginalAmount   pgtype.Int8        `db:"original_amount" json:"original_amount"`
+	OriginalCurrency pgtype.Text        `db:"original_currency" json:"original_currency"`
+	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
+	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
 }
 
 func (q *Queries) SearchExpenses(ctx context.Context, arg SearchExpensesParams) ([]SearchExpensesRow, error) {
@@ -312,6 +370,10 @@ func (q *Queries) SearchExpenses(ctx context.Context, arg SearchExpensesParams) 
 			&i.CreatedByID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.OriginalAmount,
+			&i.OriginalCurrency,
+			&i.FxRate,
+			&i.FxAsOf,
 		); err != nil {
 			return nil, err
 		}
@@ -344,7 +406,9 @@ SET title        = COALESCE($2, title),
     expense_date = COALESCE($9, expense_date),
     updated_at   = NOW()
 WHERE id = $1
-RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes, expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at
+RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
+          expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
+          original_amount, original_currency, fx_rate, fx_as_of
 `
 
 type UpdateExpenseParams struct {
@@ -360,23 +424,32 @@ type UpdateExpenseParams struct {
 }
 
 type UpdateExpenseRow struct {
-	ID              string             `db:"id" json:"id"`
-	GroupID         string             `db:"group_id" json:"group_id"`
-	Title           string             `db:"title" json:"title"`
-	Amount          int64              `db:"amount" json:"amount"`
-	Currency        string             `db:"currency" json:"currency"`
-	PaidByID        string             `db:"paid_by_id" json:"paid_by_id"`
-	SplitMethod     string             `db:"split_method" json:"split_method"`
-	Category        string             `db:"category" json:"category"`
-	Notes           pgtype.Text        `db:"notes" json:"notes"`
-	ExpenseDate     pgtype.Date        `db:"expense_date" json:"expense_date"`
-	IsReimbursement bool               `db:"is_reimbursement" json:"is_reimbursement"`
-	IsDeleted       bool               `db:"is_deleted" json:"is_deleted"`
-	CreatedByID     string             `db:"created_by_id" json:"created_by_id"`
-	CreatedAt       pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	ID               string             `db:"id" json:"id"`
+	GroupID          string             `db:"group_id" json:"group_id"`
+	Title            string             `db:"title" json:"title"`
+	Amount           int64              `db:"amount" json:"amount"`
+	Currency         string             `db:"currency" json:"currency"`
+	PaidByID         string             `db:"paid_by_id" json:"paid_by_id"`
+	SplitMethod      string             `db:"split_method" json:"split_method"`
+	Category         string             `db:"category" json:"category"`
+	Notes            pgtype.Text        `db:"notes" json:"notes"`
+	ExpenseDate      pgtype.Date        `db:"expense_date" json:"expense_date"`
+	IsReimbursement  bool               `db:"is_reimbursement" json:"is_reimbursement"`
+	IsDeleted        bool               `db:"is_deleted" json:"is_deleted"`
+	CreatedByID      string             `db:"created_by_id" json:"created_by_id"`
+	CreatedAt        pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	OriginalAmount   pgtype.Int8        `db:"original_amount" json:"original_amount"`
+	OriginalCurrency pgtype.Text        `db:"original_currency" json:"original_currency"`
+	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
+	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
 }
 
+// NOTE: fx columns (original_amount, original_currency, fx_rate, fx_as_of)
+// are intentionally not editable via this query — change-amount or
+// change-currency edits will leave the original snapshot pointing at the
+// old conversion. The simpler v1 behaviour is to require a delete+recreate
+// for foreign-currency expenses; a follow-up can plumb fx recomputation.
 func (q *Queries) UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (UpdateExpenseRow, error) {
 	row := q.db.QueryRow(ctx, updateExpense,
 		arg.ID,
@@ -406,6 +479,10 @@ func (q *Queries) UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (U
 		&i.CreatedByID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.OriginalAmount,
+		&i.OriginalCurrency,
+		&i.FxRate,
+		&i.FxAsOf,
 	)
 	return i, err
 }

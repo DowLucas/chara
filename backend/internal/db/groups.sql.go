@@ -12,15 +12,16 @@ import (
 )
 
 const createGroup = `-- name: CreateGroup :one
-INSERT INTO groups (id, name, currency, created_by, invite_token)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at
+INSERT INTO groups (id, name, currency, language, created_by, invite_token)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language
 `
 
 type CreateGroupParams struct {
 	ID          string `db:"id" json:"id"`
 	Name        string `db:"name" json:"name"`
 	Currency    string `db:"currency" json:"currency"`
+	Language    string `db:"language" json:"language"`
 	CreatedBy   string `db:"created_by" json:"created_by"`
 	InviteToken string `db:"invite_token" json:"invite_token"`
 }
@@ -30,6 +31,7 @@ func (q *Queries) CreateGroup(ctx context.Context, arg CreateGroupParams) (Group
 		arg.ID,
 		arg.Name,
 		arg.Currency,
+		arg.Language,
 		arg.CreatedBy,
 		arg.InviteToken,
 	)
@@ -43,12 +45,13 @@ func (q *Queries) CreateGroup(ctx context.Context, arg CreateGroupParams) (Group
 		&i.IsArchived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Language,
 	)
 	return i, err
 }
 
 const getGroupByID = `-- name: GetGroupByID :one
-SELECT id, name, currency, created_by, invite_token, is_archived, created_at, updated_at FROM groups WHERE id = $1
+SELECT id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language FROM groups WHERE id = $1
 `
 
 func (q *Queries) GetGroupByID(ctx context.Context, id string) (Group, error) {
@@ -63,12 +66,13 @@ func (q *Queries) GetGroupByID(ctx context.Context, id string) (Group, error) {
 		&i.IsArchived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Language,
 	)
 	return i, err
 }
 
 const getGroupByInviteToken = `-- name: GetGroupByInviteToken :one
-SELECT id, name, currency, created_by, invite_token, is_archived, created_at, updated_at FROM groups WHERE invite_token = $1
+SELECT id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language FROM groups WHERE invite_token = $1
 `
 
 func (q *Queries) GetGroupByInviteToken(ctx context.Context, inviteToken string) (Group, error) {
@@ -83,12 +87,13 @@ func (q *Queries) GetGroupByInviteToken(ctx context.Context, inviteToken string)
 		&i.IsArchived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Language,
 	)
 	return i, err
 }
 
 const listGroupsByUserID = `-- name: ListGroupsByUserID :many
-SELECT g.id, g.name, g.currency, g.created_by, g.invite_token, g.is_archived, g.created_at, g.updated_at FROM groups g
+SELECT g.id, g.name, g.currency, g.created_by, g.invite_token, g.is_archived, g.created_at, g.updated_at, g.language FROM groups g
 JOIN group_members gm ON gm.group_id = g.id
 WHERE gm.user_id = $1 AND NOT g.is_archived
 ORDER BY g.updated_at DESC
@@ -112,6 +117,7 @@ func (q *Queries) ListGroupsByUserID(ctx context.Context, userID pgtype.Text) ([
 			&i.IsArchived,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Language,
 		); err != nil {
 			return nil, err
 		}
@@ -126,7 +132,7 @@ func (q *Queries) ListGroupsByUserID(ctx context.Context, userID pgtype.Text) ([
 const regenerateInviteToken = `-- name: RegenerateInviteToken :one
 UPDATE groups SET invite_token = $2, updated_at = NOW()
 WHERE id = $1
-RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at
+RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language
 `
 
 type RegenerateInviteTokenParams struct {
@@ -146,6 +152,7 @@ func (q *Queries) RegenerateInviteToken(ctx context.Context, arg RegenerateInvit
 		&i.IsArchived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Language,
 	)
 	return i, err
 }
@@ -154,16 +161,18 @@ const updateGroup = `-- name: UpdateGroup :one
 UPDATE groups
 SET name        = COALESCE($2, name),
     currency    = COALESCE($3, currency),
-    is_archived = COALESCE($4, is_archived),
+    language    = COALESCE($4, language),
+    is_archived = COALESCE($5, is_archived),
     updated_at  = NOW()
 WHERE id = $1
-RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at
+RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language
 `
 
 type UpdateGroupParams struct {
 	ID         string      `db:"id" json:"id"`
 	Name       pgtype.Text `db:"name" json:"name"`
 	Currency   pgtype.Text `db:"currency" json:"currency"`
+	Language   pgtype.Text `db:"language" json:"language"`
 	IsArchived pgtype.Bool `db:"is_archived" json:"is_archived"`
 }
 
@@ -172,6 +181,7 @@ func (q *Queries) UpdateGroup(ctx context.Context, arg UpdateGroupParams) (Group
 		arg.ID,
 		arg.Name,
 		arg.Currency,
+		arg.Language,
 		arg.IsArchived,
 	)
 	var i Group
@@ -184,6 +194,7 @@ func (q *Queries) UpdateGroup(ctx context.Context, arg UpdateGroupParams) (Group
 		&i.IsArchived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Language,
 	)
 	return i, err
 }

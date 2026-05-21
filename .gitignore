@@ -6,3 +6,7 @@ docs/superpowers/
 # OS / editor
 .DS_Store
 *.swp
+
+# Local secret overrides — never commit
+**/.env.local
+**/.env.*.local

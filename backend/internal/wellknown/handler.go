@@ -50,7 +50,7 @@ func buildInfo(cfg *config.Config, version string) InstanceInfo {
 		Features: Features{
 			GoogleAuth: cfg.IsHosted() && cfg.HasGoogle(),
 			AppleAuth:  cfg.IsHosted() && cfg.HasApple(),
-			OCR:        false,
+			OCR:        cfg.HasGemini(),
 		},
 	}
 }

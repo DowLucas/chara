@@ -19,6 +19,7 @@ import (
 	"github.com/DowLucas/quits/internal/auth"
 	"github.com/DowLucas/quits/internal/config"
 	"github.com/DowLucas/quits/internal/db"
+	"github.com/DowLucas/quits/internal/fx"
 	"github.com/DowLucas/quits/internal/server"
 )
 
@@ -71,9 +72,17 @@ func main() {
 		}
 	}()
 
+	// FX sync runs alongside the HTTP server. Failures are logged but never
+	// crash the process — a stale-rate cache is preferable to refusing to
+	// serve any request because ECB is down.
+	syncerCtx, cancelSyncer := context.WithCancel(context.Background())
+	go (&fx.Syncer{Pool: pool}).Run(syncerCtx)
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
+
+	cancelSyncer()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

@@ -13,6 +13,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/DowLucas/quits/internal/config"
+	"github.com/DowLucas/quits/internal/currency"
+	"github.com/DowLucas/quits/internal/language"
 	"github.com/DowLucas/quits/internal/db"
 	"github.com/DowLucas/quits/internal/middleware"
 	"github.com/DowLucas/quits/internal/ulid"
@@ -43,6 +45,10 @@ type GroupResponse struct {
 	ID          string    `json:"id"`
 	Name        string    `json:"name"`
 	Currency    string    `json:"currency"`
+	// Language is an ISO 639-1 code (en, sv, ja, …). Used to localise
+	// AI-generated content like receipt-scan titles into a consistent
+	// language regardless of which member uploaded the receipt.
+	Language    string    `json:"language"`
 	CreatedBy   string    `json:"created_by"`
 	InviteToken string    `json:"invite_token"`
 	IsArchived  bool      `json:"is_archived"`
@@ -60,6 +66,7 @@ func groupToResponse(g db.Group) GroupResponse {
 		ID:          g.ID,
 		Name:        g.Name,
 		Currency:    g.Currency,
+		Language:    g.Language,
 		CreatedBy:   g.CreatedBy,
 		InviteToken: g.InviteToken,
 		IsArchived:  g.IsArchived,
@@ -94,6 +101,13 @@ func writeError(w http.ResponseWriter, code int, msg string) {
 	writeJSON(w, code, map[string]string{"error": msg})
 }
 
+// isSupportedLanguage is a thin alias so the handler reads cleanly. Empty
+// values are caller's responsibility to coerce to a default before this is
+// called.
+func isSupportedLanguage(code string) bool {
+	return language.IsSupported(code)
+}
+
 // requireMember looks up the authenticated user's membership in groupID.
 // Returns the member and true on success; writes the error response and returns false on failure.
 func (h *GroupHandler) requireMember(w http.ResponseWriter, r *http.Request, groupID string) (db.GroupMember, bool) {
@@ -121,6 +135,7 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Name     string `json:"name"`
 		Currency string `json:"currency"`
+		Language string `json:"language"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -132,6 +147,19 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.Currency == "" {
 		req.Currency = "SEK"
+	}
+	normalized, ok := currency.Normalize(req.Currency)
+	if !ok {
+		writeError(w, http.StatusBadRequest, "unknown currency code")
+		return
+	}
+	req.Currency = normalized
+	if req.Language == "" {
+		req.Language = "en"
+	}
+	if !isSupportedLanguage(req.Language) {
+		writeError(w, http.StatusBadRequest, "unsupported language code")
+		return
 	}
 
 	tx, err := h.pool.Begin(r.Context())
@@ -147,6 +175,7 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 		ID:          ulid.New(),
 		Name:        req.Name,
 		Currency:    req.Currency,
+		Language:    req.Language,
 		CreatedBy:   claims.UserID,
 		InviteToken: ulid.New(),
 	})
@@ -248,6 +277,7 @@ func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Name     *string `json:"name"`
 		Currency *string `json:"currency"`
+		Language *string `json:"language"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -259,7 +289,19 @@ func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) {
 		params.Name = pgtype.Text{String: *req.Name, Valid: true}
 	}
 	if req.Currency != nil {
-		params.Currency = pgtype.Text{String: *req.Currency, Valid: true}
+		normalized, ok := currency.Normalize(*req.Currency)
+		if !ok {
+			writeError(w, http.StatusBadRequest, "unknown currency code")
+			return
+		}
+		params.Currency = pgtype.Text{String: normalized, Valid: true}
+	}
+	if req.Language != nil {
+		if !isSupportedLanguage(*req.Language) {
+			writeError(w, http.StatusBadRequest, "unsupported language code")
+			return
+		}
+		params.Language = pgtype.Text{String: *req.Language, Valid: true}
 	}
 
 	group, err := h.queries.UpdateGroup(r.Context(), params)

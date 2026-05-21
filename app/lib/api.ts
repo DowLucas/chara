@@ -132,6 +132,9 @@ export interface Group {
   id: string;
   name: string;
   currency: string;
+  /** ISO 639-1 code used to localise AI-generated content (e.g. receipt
+   *  scan titles) for the whole group. Defaults to "en" on the server. */
+  language: string;
   invite_token: string;
   created_at: string;
 }
@@ -154,16 +157,17 @@ export function getGroup(id: string) {
   return request<GroupDetail>(`/api/groups/${id}`);
 }
 
-export function createGroup(name: string, currency: string) {
+export function createGroup(name: string, currency: string, language?: string) {
   return request<Group>('/api/groups', {
     method: 'POST',
-    body: JSON.stringify({ name, currency }),
+    body: JSON.stringify({ name, currency, ...(language ? { language } : {}) }),
   });
 }
 
 export interface UpdateGroupInput {
   name?: string;
   currency?: string;
+  language?: string;
 }
 
 export function updateGroup(id: string, input: UpdateGroupInput) {
@@ -225,6 +229,14 @@ export interface Expense {
   created_at: string;
   updated_at: string;
   splits?: ExpenseSplit[];
+  /** Set when the user paid in a currency other than the group's. Decimal
+   *  string in the original currency's minor-unit format. */
+  original_amount?: string;
+  original_currency?: string;
+  /** "1 original_currency = fx_rate currency", decimal string. */
+  fx_rate?: string;
+  /** ISO date the FX rate was sourced for. */
+  fx_as_of?: string;
 }
 
 export interface ExpenseSplit {
@@ -352,4 +364,85 @@ export function listMyActivity(limit = 50, offset = 0) {
   return request<ActivityEvent[]>(
     `/api/me/activity?limit=${limit}&offset=${offset}`,
   );
+}
+
+// Instance info — published by the backend at /.well-known/quits-instance.
+// Result is cached for the session; the feature set is fixed at server boot.
+export interface InstanceFeatures {
+  google_auth: boolean;
+  apple_auth: boolean;
+  ocr: boolean;
+}
+
+export interface InstanceInfo {
+  mode: 'hosted' | 'selfhost';
+  version: string;
+  auth_methods: string[];
+  features: InstanceFeatures;
+}
+
+let instanceCache: Promise<InstanceInfo> | null = null;
+export function getInstanceInfo(): Promise<InstanceInfo> {
+  if (instanceCache) return instanceCache;
+  instanceCache = (async () => {
+    const res = await fetch(`${BASE_URL}/.well-known/quits-instance`);
+    if (!res.ok) throw new ApiError(res.status, await res.text());
+    return res.json() as Promise<InstanceInfo>;
+  })().catch((e) => {
+    // Don't poison the cache forever on transient failures.
+    instanceCache = null;
+    throw e;
+  });
+  return instanceCache;
+}
+
+// Receipt OCR
+export interface ScannedReceipt {
+  /** AI-generated short natural-language description, e.g. "Groceries at ICA
+   *  Maxi". Falls back to the merchant name if the model omitted it. */
+  title: string;
+  merchant: string;
+  date?: string;
+  currency: string;
+  total_minor: number;
+  subtotal_minor?: number;
+  tax_minor?: number;
+  tip_minor?: number;
+}
+
+export function scanReceipt(imageBase64: string, mimeType: string, language?: string) {
+  return request<ScannedReceipt>('/api/receipts/scan', {
+    method: 'POST',
+    body: JSON.stringify({
+      image_base64: imageBase64,
+      mime_type: mimeType,
+      ...(language ? { language } : {}),
+    }),
+  });
+}
+
+// FX
+export interface FxConvertResponse {
+  from: string;
+  to: string;
+  amount_minor: number;
+  result_minor: number;
+  rate: string;
+  as_of: string;
+  source: string;
+}
+
+export function convertFx(input: {
+  from: string;
+  to: string;
+  amountMinor: number;
+  asOf?: string;
+}) {
+  const params = new URLSearchParams({
+    from: input.from,
+    to: input.to,
+    amount_minor: String(input.amountMinor),
+  });
+  if (input.asOf) params.set('as_of', input.asOf);
+  return request<FxConvertResponse>(`/api/fx/convert?${params.toString()}`);
 }

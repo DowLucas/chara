@@ -20,22 +20,26 @@ type Activity struct {
 }
 
 type Expense struct {
-	ID              string             `db:"id" json:"id"`
-	GroupID         string             `db:"group_id" json:"group_id"`
-	Title           string             `db:"title" json:"title"`
-	Amount          int64              `db:"amount" json:"amount"`
-	Currency        string             `db:"currency" json:"currency"`
-	PaidByID        string             `db:"paid_by_id" json:"paid_by_id"`
-	SplitMethod     string             `db:"split_method" json:"split_method"`
-	Category        string             `db:"category" json:"category"`
-	Notes           pgtype.Text        `db:"notes" json:"notes"`
-	ExpenseDate     pgtype.Date        `db:"expense_date" json:"expense_date"`
-	IsReimbursement bool               `db:"is_reimbursement" json:"is_reimbursement"`
-	IsDeleted       bool               `db:"is_deleted" json:"is_deleted"`
-	CreatedByID     string             `db:"created_by_id" json:"created_by_id"`
-	CreatedAt       pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
-	SearchVector    interface{}        `db:"search_vector" json:"search_vector"`
+	ID               string             `db:"id" json:"id"`
+	GroupID          string             `db:"group_id" json:"group_id"`
+	Title            string             `db:"title" json:"title"`
+	Amount           int64              `db:"amount" json:"amount"`
+	Currency         string             `db:"currency" json:"currency"`
+	PaidByID         string             `db:"paid_by_id" json:"paid_by_id"`
+	SplitMethod      string             `db:"split_method" json:"split_method"`
+	Category         string             `db:"category" json:"category"`
+	Notes            pgtype.Text        `db:"notes" json:"notes"`
+	ExpenseDate      pgtype.Date        `db:"expense_date" json:"expense_date"`
+	IsReimbursement  bool               `db:"is_reimbursement" json:"is_reimbursement"`
+	IsDeleted        bool               `db:"is_deleted" json:"is_deleted"`
+	CreatedByID      string             `db:"created_by_id" json:"created_by_id"`
+	CreatedAt        pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	SearchVector     interface{}        `db:"search_vector" json:"search_vector"`
+	OriginalAmount   pgtype.Int8        `db:"original_amount" json:"original_amount"`
+	OriginalCurrency pgtype.Text        `db:"original_currency" json:"original_currency"`
+	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
+	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
 }
 
 type ExpenseAttachment struct {
@@ -54,6 +58,15 @@ type ExpenseSplit struct {
 	Share     int64  `db:"share" json:"share"`
 }
 
+type FxRate struct {
+	Base      string             `db:"base" json:"base"`
+	Quote     string             `db:"quote" json:"quote"`
+	Rate      pgtype.Numeric     `db:"rate" json:"rate"`
+	AsOf      pgtype.Date        `db:"as_of" json:"as_of"`
+	Source    string             `db:"source" json:"source"`
+	CreatedAt pgtype.Timestamptz `db:"created_at" json:"created_at"`
+}
+
 type Group struct {
 	ID          string             `db:"id" json:"id"`
 	Name        string             `db:"name" json:"name"`
@@ -63,6 +76,7 @@ type Group struct {
 	IsArchived  bool               `db:"is_archived" json:"is_archived"`
 	CreatedAt   pgtype.Timestamptz `db:"created_at" json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	Language    string             `db:"language" json:"language"`
 }
 
 type GroupMember struct {

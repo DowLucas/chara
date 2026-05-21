@@ -11,6 +11,7 @@ import (
 	"github.com/DowLucas/quits/internal/db"
 	"github.com/DowLucas/quits/internal/handler"
 	"github.com/DowLucas/quits/internal/middleware"
+	"github.com/DowLucas/quits/internal/receipt"
 	"github.com/DowLucas/quits/internal/wellknown"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -41,6 +42,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 	expenseH := handler.NewExpenseHandler(pool, queries)
 	balancesH := handler.NewBalancesHandler(pool, queries)
 	activityH := handler.NewActivityHandler(pool, queries)
+	fxH := handler.NewFxHandler(queries)
 
 	// Authenticated routes
 	r.Group(func(r chi.Router) {
@@ -69,6 +71,17 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 		r.Get("/api/groups/{groupID}/settle-suggestions", balancesH.SuggestSettlements)
 		r.Get("/api/me/balances", balancesH.ListMyBalances)
 		r.Get("/api/me/activity", activityH.ListMyActivity)
+
+		r.Get("/api/fx/rates", fxH.Rates)
+		r.Get("/api/fx/convert", fxH.Convert)
+
+		// Receipt OCR is only mounted when a Gemini key is configured. Self-hosters
+		// who skip GEMINI_API_KEY simply do not see the feature (the instance
+		// advertises features.ocr=false via /.well-known/quits-instance).
+		if cfg.HasGemini() {
+			receiptH := handler.NewReceiptHandler(receipt.NewGemini(cfg.GeminiAPIKey))
+			r.Post("/api/receipts/scan", receiptH.Scan)
+		}
 	})
 
 	// Hosted-only routes (Google, Apple auth)

@@ -55,6 +55,11 @@ type Config struct {
 	OIDCIssuerURL    string
 	OIDCClientID     string
 	OIDCClientSecret string
+
+	// Gemini — multimodal receipt OCR. Optional. When unset the OCR feature
+	// is hidden (instance advertises features.ocr=false and the /receipts
+	// route is not mounted).
+	GeminiAPIKey string
 }
 
 func Load() (*Config, error) {
@@ -95,6 +100,8 @@ func Load() (*Config, error) {
 		OIDCIssuerURL:    getEnv("OIDC_ISSUER_URL", ""),
 		OIDCClientID:     getEnv("OIDC_CLIENT_ID", ""),
 		OIDCClientSecret: getEnv("OIDC_CLIENT_SECRET", ""),
+
+		GeminiAPIKey: getEnv("GEMINI_API_KEY", ""),
 	}
 
 	if err := cfg.validate(); err != nil {
@@ -124,6 +131,7 @@ func (c *Config) IsSelfHost() bool  { return c.InstanceMode == "selfhost" }
 func (c *Config) HasGoogle() bool   { return c.GoogleClientID != "" && c.GoogleClientSecret != "" }
 func (c *Config) HasApple() bool    { return c.AppleBundleID != "" }
 func (c *Config) HasOIDC() bool     { return c.OIDCIssuerURL != "" && c.OIDCClientID != "" }
+func (c *Config) HasGemini() bool   { return c.GeminiAPIKey != "" }
 
 func getEnv(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {

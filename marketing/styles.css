@@ -2,24 +2,44 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
 
 :root {
-  --sand-dune:    #F0E5CC;
-  --dark-coffee:  #2D1F1A;
-  --tomato-jam:   #B83D3D;
-  --palm-leaf:    #8FA055;
-  --honey-bronze: #E0A040;
+  /* Palette 1 — Tōkaidō Night (creative inversion: deep Hokusai indigo canvas,
+     cream prints laid on top). Sampled from IMG_9948, then flipped. */
 
+  /* ── 5 brand anchors ── */
+  --sand-dune:    #ECE0C2;   /* warm aged-paper */
+  --dark-coffee:  #1F2530;   /* cold ink */
+  --tomato-jam:   #D9A55E;   /* lacquer gold — primary accent */
+  --palm-leaf:    #9CAE63;   /* sage from hillside foliage */
+  --honey-bronze: #C9A36B;   /* sienna highlight */
+
+  /* ── Surfaces ── */
+  --canvas:       #142536;   /* deep Hokusai night — page bg */
+  --canvas-fg:    var(--sand-dune);
+  --canvas-hover: #0E1B29;
   --paper:        var(--sand-dune);
-  --bone:         #E6D9BB;
+  --bone:         #DCC9A4;   /* raised card surface */
+  --card-hover:   #E4D2AC;   /* warmed bone for card hover */
   --graphite:     var(--dark-coffee);
-  --lead:         #6B5A4E;
+
+  /* ── Aliases ── */
   --vermillion:   var(--tomato-jam);
   --moss:         var(--palm-leaf);
-  --brick:        #8A2A2A;
   --citrine:      var(--honey-bronze);
+  --brick:        #C46A4F;   /* warm coral negative — reads on dark */
+  --accent:       var(--vermillion);
+  --accent-hover: #E8B873;
 
-  --rule:         var(--graphite);
-  --rule-soft:    rgba(45, 31, 26, 0.14);
-  --fg-on-accent: #F4F1E6;
+  /* ── Context-aware tokens ──
+     Defaults assume canvas (dark) context. Cards override below. */
+  --lead:         #8A95A4;                       /* light slate */
+  --rule:         var(--canvas-fg);              /* cream rule */
+  --rule-soft:    rgba(236, 224, 194, 0.18);
+
+  --lead-on-card: #6B7480;                       /* cool stone */
+  --rule-on-card: var(--graphite);
+  --rule-soft-on-card: rgba(31, 37, 48, 0.16);
+
+  --fg-on-accent: var(--graphite);               /* dark ink on gold */
 
   --font-display: "Inter", system-ui, sans-serif;
   --font-body:    "Inter", system-ui, sans-serif;
@@ -36,11 +56,25 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Anywhere we're on a cream surface, the context-aware tokens flip to their
+   on-card values. Component CSS uses var(--lead) / var(--rule) / var(--rule-soft)
+   regardless of context. */
+.balance-card,
+.values,
+.value-cell,
+.feature,
+.article {
+  --lead: var(--lead-on-card);
+  --rule: var(--rule-on-card);
+  --rule-soft: var(--rule-soft-on-card);
+  color: var(--graphite);
+}
+
 html { scroll-behavior: smooth; }
 
 body {
-  background: var(--paper);
-  color: var(--graphite);
+  background: var(--canvas);
+  color: var(--canvas-fg);
   font-family: var(--font-body);
   font-size: 17px;
   line-height: 1.55;
@@ -61,7 +95,7 @@ section { padding: 96px 0; position: relative; }
 .nav {
   position: sticky; top: 0; z-index: 50;
   backdrop-filter: blur(14px);
-  background: rgba(240, 229, 204, 0.78);
+  background: color-mix(in srgb, var(--canvas) 82%, transparent);
   border-bottom: 0.5px solid var(--rule-soft);
 }
 .nav-inner {
@@ -79,21 +113,21 @@ section { padding: 96px 0; position: relative; }
   background: var(--vermillion); color: var(--fg-on-accent);
   display: grid; place-items: center;
   font-family: var(--font-mono); font-weight: 600; font-size: 13px;
-  box-shadow: 0 6px 18px -8px rgba(184, 61, 61, 0.7);
+  box-shadow: 0 6px 18px -8px color-mix(in srgb, var(--accent) 60%, transparent);
 }
 .nav-links { display: flex; gap: 28px; align-items: center; }
 .nav-links a {
   font-size: 14px; color: var(--lead);
   transition: color var(--dur-fast) var(--ease);
 }
-.nav-links a:hover { color: var(--graphite); }
+.nav-links a:hover { color: var(--canvas-fg); }
 .nav-cta {
-  background: var(--graphite); color: var(--fg-on-accent);
+  background: var(--vermillion); color: var(--fg-on-accent);
   padding: 10px 18px; border-radius: 8px;
   font-size: 14px; font-weight: 500;
   transition: transform var(--dur-fast) var(--ease), background var(--dur) var(--ease);
 }
-.nav-cta:hover { background: var(--vermillion); transform: translateY(-1px); }
+.nav-cta:hover { background: var(--accent-hover); transform: translateY(-1px); }
 @media (max-width: 720px) { .nav-links a:not(.nav-cta) { display: none; } }
 
 /* ── Hero ───────────────────────────────────── */
@@ -159,14 +193,14 @@ h1.hero-title {
 }
 .btn-primary {
   background: var(--vermillion); color: var(--fg-on-accent);
-  box-shadow: 0 14px 30px -14px rgba(184, 61, 61, 0.7);
+  box-shadow: 0 14px 30px -14px color-mix(in srgb, var(--accent) 60%, transparent);
 }
-.btn-primary:hover { transform: translateY(-2px); background: #A33333; }
+.btn-primary:hover { transform: translateY(-2px); background: var(--accent-hover); }
 .btn-ghost {
-  background: transparent; color: var(--graphite);
+  background: transparent; color: var(--canvas-fg);
   border-color: var(--rule);
 }
-.btn-ghost:hover { background: var(--graphite); color: var(--fg-on-accent); }
+.btn-ghost:hover { background: var(--canvas-fg); color: var(--canvas); }
 .btn .arrow { transition: transform var(--dur) var(--ease); }
 .btn:hover .arrow { transform: translateX(4px); }
 
@@ -188,8 +222,8 @@ h1.hero-title {
   padding: 36px 36px 32px;
   position: relative;
   box-shadow:
-    0 40px 80px -40px rgba(45, 31, 26, 0.35),
-    0 8px 16px -8px rgba(45, 31, 26, 0.15);
+    0 40px 80px -40px color-mix(in srgb, var(--canvas-hover) 50%, transparent),
+    0 8px 16px -8px color-mix(in srgb, var(--canvas-hover) 25%, transparent);
   transform: rotate(-1.2deg);
   animation: floaty 6s ease-in-out infinite;
 }
@@ -285,7 +319,7 @@ h1.hero-title {
   display: flex; flex-direction: column; gap: 14px;
   transition: background var(--dur) var(--ease);
 }
-.value-cell:hover { background: var(--paper); }
+.value-cell:hover { background: var(--card-hover); }
 .value-num {
   font-family: var(--font-mono); font-size: 13px;
   letter-spacing: 0.2em; color: var(--vermillion);
@@ -312,7 +346,7 @@ h1.hero-title {
 }
 .feature:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px -20px rgba(45, 31, 26, 0.3);
+  box-shadow: 0 20px 40px -20px color-mix(in srgb, var(--canvas-hover) 45%, transparent);
 }
 .feature .icon {
   width: 44px; height: 44px; border-radius: 10px;
@@ -330,18 +364,18 @@ h1.hero-title {
 /* ── Compare table ─────────────────────────── */
 .compare {
   background: var(--graphite);
-  color: var(--fg-on-accent);
+  color: var(--canvas-fg);
   border-radius: 18px;
   padding: 56px 48px;
   position: relative;
   overflow: hidden;
 }
-.compare .section-head h2 { color: var(--fg-on-accent); }
-.compare .section-head p { color: rgba(244, 241, 230, 0.65); }
+.compare .section-head h2 { color: var(--canvas-fg); }
+.compare .section-head p { color: color-mix(in srgb, var(--canvas-fg) 65%, transparent); }
 .compare-grid {
   display: grid; grid-template-columns: 1.6fr repeat(3, 1fr);
   gap: 1px;
-  background: rgba(244, 241, 230, 0.12);
+  background: color-mix(in srgb, var(--canvas-fg) 12%, transparent);
   border-radius: 12px; overflow: hidden;
   font-size: 15px;
 }
@@ -353,10 +387,10 @@ h1.hero-title {
 .compare-grid .head {
   font-family: var(--font-mono);
   font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
-  color: rgba(244, 241, 230, 0.55);
+  color: color-mix(in srgb, var(--canvas-fg) 55%, transparent);
 }
 .compare-grid .us {
-  background: rgba(224, 160, 64, 0.08);
+  background: color-mix(in srgb, var(--citrine) 14%, transparent);
   position: relative;
 }
 .compare-grid .head.us {
@@ -369,11 +403,11 @@ h1.hero-title {
 }
 .compare-grid .feat {
   font-weight: 500;
-  color: rgba(244, 241, 230, 0.92);
+  color: color-mix(in srgb, var(--canvas-fg) 92%, transparent);
 }
 .yes { color: var(--moss); font-weight: 500; }
 .us .yes { color: var(--citrine); font-weight: 600; }
-.no { color: rgba(244, 241, 230, 0.45); }
+.no { color: color-mix(in srgb, var(--canvas-fg) 45%, transparent); }
 .limit { color: var(--citrine); opacity: 0.85; }
 @media (max-width: 820px) {
   .compare { padding: 40px 20px; }
@@ -388,7 +422,7 @@ h1.hero-title {
 @media (max-width: 820px) { .selfhost { grid-template-columns: 1fr; } }
 .code-card {
   background: var(--graphite);
-  color: #E6D9BB;
+  color: var(--bone);
   padding: 28px 32px;
   border-radius: 12px;
   font-family: var(--font-mono); font-size: 14px;
@@ -398,7 +432,7 @@ h1.hero-title {
 }
 .code-card::before {
   content: "● ● ●"; position: absolute; top: 14px; left: 18px;
-  font-size: 8px; color: rgba(230, 217, 187, 0.4); letter-spacing: 6px;
+  font-size: 8px; color: color-mix(in srgb, var(--bone) 50%, transparent); letter-spacing: 6px;
 }
 .code-card pre { padding-top: 24px; white-space: pre-wrap; }
 .code-card .c { color: var(--lead); }
@@ -452,14 +486,14 @@ h1.hero-title {
   margin-bottom: 18px;
 }
 .cta-final p { font-size: 18px; opacity: 0.85; max-width: 540px; margin: 0 auto 32px; }
-.cta-final .btn-primary { background: var(--graphite); color: var(--fg-on-accent); box-shadow: 0 14px 30px -14px rgba(0,0,0,0.4); }
-.cta-final .btn-primary:hover { background: #1c130f; }
-.cta-final .btn-ghost { border-color: rgba(244, 241, 230, 0.4); color: var(--fg-on-accent); }
+.cta-final .btn-primary { background: var(--graphite); color: var(--canvas-fg); box-shadow: 0 14px 30px -14px color-mix(in srgb, var(--graphite) 60%, transparent); }
+.cta-final .btn-primary:hover { background: var(--canvas-hover); }
+.cta-final .btn-ghost { border-color: color-mix(in srgb, var(--canvas-fg) 40%, transparent); color: var(--fg-on-accent); }
 .cta-final .btn-ghost:hover { background: var(--fg-on-accent); color: var(--vermillion); }
 .cta-final::before {
   content: ""; position: absolute;
   width: 600px; height: 600px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(224, 160, 64, 0.45), transparent 60%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--citrine) 55%, transparent), transparent 60%);
   top: -300px; right: -200px; pointer-events: none;
 }
 
@@ -496,18 +530,23 @@ footer {
 .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.8s var(--ease), transform 0.8s var(--ease); }
 .reveal.in { opacity: 1; transform: translateY(0); }
 
-/* ── Article (legal) pages ────────────────── */
+/* ── Article (legal) pages — a single cream print on the desk ── */
 .article {
-  max-width: 760px; margin: 0 auto; padding: 56px 24px 96px;
+  max-width: 760px; margin: 56px auto; padding: 64px 56px 80px;
+  background: var(--paper);
+  border: 1.5px solid var(--rule);
+  border-radius: 14px;
+  box-shadow: 0 40px 80px -40px color-mix(in srgb, var(--canvas-hover) 80%, transparent);
 }
 .article h1 { font-family: var(--font-display); font-weight: 600; font-size: 44px; letter-spacing: -0.03em; margin-bottom: 8px; }
 .article .updated { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--lead); margin-bottom: 40px; }
 .article h2 { font-family: var(--font-display); font-weight: 600; font-size: 24px; letter-spacing: -0.02em; margin: 32px 0 12px; }
-.article p, .article li { color: var(--graphite); font-size: 16px; line-height: 1.65; margin-bottom: 12px; }
+.article p, .article li { font-size: 16px; line-height: 1.65; margin-bottom: 12px; }
 .article ul, .article ol { padding-left: 22px; margin-bottom: 16px; }
 .article a { color: var(--vermillion); border-bottom: 1px solid currentColor; }
 .article .back { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--lead); display: inline-flex; align-items: center; gap: 8px; margin-bottom: 32px; }
 .article .back:hover { color: var(--vermillion); }
+@media (max-width: 720px) { .article { padding: 40px 28px; margin: 24px 12px; } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

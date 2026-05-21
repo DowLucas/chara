@@ -26,6 +26,7 @@ export default function EditGroupScreen() {
   const [group, setGroup] = useState<Group | null>(null);
   const [name, setName] = useState('');
   const [currency, setCurrency] = useState('');
+  const [language, setLanguage] = useState('en');
   const [submitting, setSubmitting] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const suggested = SUGGESTED_CURRENCY_CODES.includes(currency as typeof SUGGESTED_CURRENCY_CODES[number])
@@ -40,10 +41,15 @@ export default function EditGroupScreen() {
       setGroup(g);
       setName(g.name);
       setCurrency(g.currency);
+      setLanguage(g.language || 'en');
     });
   }, [id]);
 
-  const dirty = !!group && (name.trim() !== group.name || currency !== group.currency);
+  const dirty =
+    !!group &&
+    (name.trim() !== group.name ||
+      currency !== group.currency ||
+      language !== (group.language || 'en'));
   const canSubmit = !!group && name.trim().length > 0 && dirty && !submitting;
 
   async function handleSave() {
@@ -53,6 +59,7 @@ export default function EditGroupScreen() {
       await updateGroup(group.id, {
         name: name.trim() !== group.name ? name.trim() : undefined,
         currency: currency !== group.currency ? currency : undefined,
+        language: language !== (group.language || 'en') ? language : undefined,
       });
       router.back();
     } catch (e: any) {
@@ -130,6 +137,28 @@ export default function EditGroupScreen() {
         onSelect={setCurrency}
       />
 
+      <View style={styles.field}>
+        <Text style={styles.fieldLabel}>{t('editGroup.languageLabel')}</Text>
+        <Text style={styles.fieldHint}>{t('editGroup.languageHint')}</Text>
+        <View style={styles.chipRow}>
+          {GROUP_LANGUAGES.map((lang) => {
+            const active = lang.code === language;
+            return (
+              <TouchableOpacity
+                key={lang.code}
+                style={[styles.chip, active && styles.chipActive]}
+                onPress={() => setLanguage(lang.code)}
+                activeOpacity={0.85}
+              >
+                <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
+                  {lang.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
       <View style={{ flex: 1 }} />
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
@@ -145,6 +174,27 @@ export default function EditGroupScreen() {
     </KeyboardAvoidingView>
   );
 }
+
+// Mirrors backend/internal/language/language.go — keep them in sync. Labels
+// are the user-facing names; the wire value (lang.code) is the ISO 639-1
+// code persisted on the group row.
+const GROUP_LANGUAGES: Array<{ code: string; label: string }> = [
+  { code: 'en', label: 'English' },
+  { code: 'sv', label: 'Svenska' },
+  { code: 'da', label: 'Dansk' },
+  { code: 'no', label: 'Norsk' },
+  { code: 'fi', label: 'Suomi' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'fr', label: 'Français' },
+  { code: 'es', label: 'Español' },
+  { code: 'it', label: 'Italiano' },
+  { code: 'pt', label: 'Português' },
+  { code: 'nl', label: 'Nederlands' },
+  { code: 'pl', label: 'Polski' },
+  { code: 'ja', label: '日本語' },
+  { code: 'zh', label: '中文' },
+  { code: 'ko', label: '한국어' },
+];
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper, paddingHorizontal: spacing.s5 },
@@ -170,6 +220,13 @@ const styles = StyleSheet.create({
     fontSize: fontSize.caption,
     color: colors.lead,
     letterSpacing: 0.3,
+  },
+  fieldHint: {
+    fontFamily: fontBody,
+    fontSize: fontSize.bodyS,
+    color: colors.lead,
+    lineHeight: 18,
+    marginTop: -4,
   },
   input: {
     fontFamily: fontBody,
