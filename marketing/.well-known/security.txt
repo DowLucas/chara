@@ -1,0 +1,5 @@
+Contact: mailto:security@quits.app
+Expires: 2027-05-21T00:00:00.000Z
+Preferred-Languages: en, sv
+Canonical: https://quits.app/.well-known/security.txt
+Policy: https://quits.app/security.html

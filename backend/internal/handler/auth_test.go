@@ -143,107 +143,28 @@ func TestUpdateMe_SyncsGroupMemberNames(t *testing.T) {
 	assert.Equal(t, "Bob", gotBob.Name, "other users' names must not be touched")
 }
 
-// ── Swish number ─────────────────────────────────────────────────────────────
-
-func TestUpdateMe_SwishNumber_PersistsCanonical(t *testing.T) {
+func TestUpdateMe_SetsPhone(t *testing.T) {
 	env := newAuthEnv(t)
-	user := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "u"), "Alice")
+	user := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "u"), "Carl")
 	token := env.MintToken(t, user.ID, user.Email)
 
-	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/me", `{"swish_number":"+46701234567"}`, token))
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/me", `{"phone":"+46 70 123 45 67"}`, token))
 	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
 
-	rr = env.Do(t, env.AuthRequest(t, "GET", "/api/me", "", token))
-	require.Equal(t, http.StatusOK, rr.Code)
-	var resp map[string]any
+	var resp struct {
+		Phone string `json:"phone"`
+		Name  string `json:"name"`
+	}
 	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
-	assert.Equal(t, "+46701234567", resp["swish_number"])
+	assert.Equal(t, "+46 70 123 45 67", resp.Phone)
+	assert.Equal(t, "Carl", resp.Name, "name must be preserved when only phone is sent")
 }
 
-func TestUpdateMe_SwishNumber_NormalizesLeadingZero(t *testing.T) {
+func TestUpdateMe_RejectsBlankPhone(t *testing.T) {
 	env := newAuthEnv(t)
-	user := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "u"), "Alice")
+	user := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "u"), "Carl")
 	token := env.MintToken(t, user.ID, user.Email)
 
-	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/me", `{"swish_number":"0701234567"}`, token))
-	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
-
-	var resp map[string]any
-	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
-	assert.Equal(t, "+46701234567", resp["swish_number"])
-}
-
-func TestUpdateMe_SwishNumber_StripsWhitespaceAndDashes(t *testing.T) {
-	env := newAuthEnv(t)
-	user := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "u"), "Alice")
-	token := env.MintToken(t, user.ID, user.Email)
-
-	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/me", `{"swish_number":"070-123 45 67"}`, token))
-	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
-
-	var resp map[string]any
-	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
-	assert.Equal(t, "+46701234567", resp["swish_number"])
-}
-
-func TestUpdateMe_SwishNumber_RejectsGarbage(t *testing.T) {
-	env := newAuthEnv(t)
-	user := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "u"), "Alice")
-	token := env.MintToken(t, user.ID, user.Email)
-
-	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/me", `{"swish_number":"012-broken"}`, token))
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/me", `{"phone":"   "}`, token))
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
-
-	var resp map[string]any
-	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
-	assert.NotEmpty(t, resp["error"])
-}
-
-func TestUpdateMe_SwishNumber_RejectsNonSE(t *testing.T) {
-	env := newAuthEnv(t)
-	user := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "u"), "Alice")
-	token := env.MintToken(t, user.ID, user.Email)
-
-	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/me", `{"swish_number":"+15551234567"}`, token))
-	assert.Equal(t, http.StatusBadRequest, rr.Code)
-}
-
-func TestUpdateMe_SwishNumber_NullClears(t *testing.T) {
-	env := newAuthEnv(t)
-	user := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "u"), "Alice")
-	token := env.MintToken(t, user.ID, user.Email)
-
-	// Set first.
-	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/me", `{"swish_number":"+46701234567"}`, token))
-	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
-
-	// Now clear.
-	rr = env.Do(t, env.AuthRequest(t, "PATCH", "/api/me", `{"swish_number":null}`, token))
-	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
-
-	rr = env.Do(t, env.AuthRequest(t, "GET", "/api/me", "", token))
-	require.Equal(t, http.StatusOK, rr.Code)
-	var resp map[string]any
-	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
-	assert.Nil(t, resp["swish_number"])
-}
-
-func TestUpdateMe_OmittingSwishNumberLeavesValueUnchanged(t *testing.T) {
-	env := newAuthEnv(t)
-	user := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "u"), "Alice")
-	token := env.MintToken(t, user.ID, user.Email)
-
-	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/me", `{"swish_number":"+46701234567"}`, token))
-	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
-
-	// PATCH only name; swish_number should persist.
-	rr = env.Do(t, env.AuthRequest(t, "PATCH", "/api/me", `{"name":"Bob"}`, token))
-	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
-
-	rr = env.Do(t, env.AuthRequest(t, "GET", "/api/me", "", token))
-	require.Equal(t, http.StatusOK, rr.Code)
-	var resp map[string]any
-	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
-	assert.Equal(t, "+46701234567", resp["swish_number"])
-	assert.Equal(t, "Bob", resp["name"])
 }

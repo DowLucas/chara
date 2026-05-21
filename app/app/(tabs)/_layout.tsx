@@ -31,8 +31,10 @@ export default function TabsLayout() {
   }, [user?.id]);
 
   if (!loading && !user) return <Redirect href="/(auth)/sign-in" />;
-  // Full name is required before the user can see the app.
-  if (user && !user.name.trim()) return <Redirect href="/onboarding/name" />;
+  // Full name and phone are required before the user can see the app.
+  if (user && (!user.name.trim() || !user.phone?.trim())) {
+    return <Redirect href="/onboarding/name" />;
+  }
   if (user && (groupCount === null || skipped === null)) {
     // Still resolving — render an empty paper-coloured screen to avoid a flash.
     return <View style={{ flex: 1, backgroundColor: colors.paper }} />;

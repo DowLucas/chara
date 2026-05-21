@@ -98,6 +98,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  phone?: string;
   avatar_url?: string;
 }
 
@@ -119,7 +120,7 @@ export function getMe() {
   return request<User>('/api/me');
 }
 
-export function updateMe(input: { name: string }) {
+export function updateMe(input: { name?: string; phone?: string }) {
   return request<User>('/api/me', {
     method: 'PATCH',
     body: JSON.stringify(input),

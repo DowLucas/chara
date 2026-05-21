@@ -13,16 +13,6 @@ WHERE group_id = $1 AND user_id = $2;
 -- name: ListGroupMembers :many
 SELECT * FROM group_members WHERE group_id = $1 ORDER BY joined_at ASC;
 
--- name: ListGroupMembersWithUser :many
--- Group members joined with each member's user.swish_number for the
--- members API. Ghost members (no user_id) get NULL swish_number.
-SELECT gm.id, gm.group_id, gm.user_id, gm.name, gm.role, gm.is_ghost, gm.joined_at,
-       u.swish_number
-FROM group_members gm
-LEFT JOIN users u ON u.id = gm.user_id
-WHERE gm.group_id = $1
-ORDER BY gm.joined_at ASC;
-
 -- name: UpdateGroupMemberName :one
 UPDATE group_members SET name = $2 WHERE id = $1 RETURNING *;
 

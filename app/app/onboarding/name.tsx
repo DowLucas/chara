@@ -21,31 +21,29 @@ export default function OnboardingNameScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { user, setUser } = useAuth();
-  // Lock the input if a name was already set on entry — users can confirm
-  // their existing name but can edit it from the You tab, not here.
-  const [locked] = useState(() => !!user?.name?.trim());
   const [name, setName] = useState(user?.name ?? '');
+  const [phone, setPhone] = useState(user?.phone ?? '');
   const [submitting, setSubmitting] = useState(false);
 
-  const canSubmit = name.trim().length > 0 && !submitting;
+  const canSubmit = name.trim().length > 0 && phone.trim().length > 0 && !submitting;
 
   async function handleSubmit() {
-    const trimmed = name.trim();
-    if (!trimmed) {
+    const trimmedName = name.trim();
+    const trimmedPhone = phone.trim();
+    if (!trimmedName) {
       Alert.alert(t('onboardingName.errorTitle'), t('onboardingName.errorEmpty'));
       return;
     }
-    // No-op network call when the input is locked — the name is already saved
-    // server-side, so we just advance to the next step.
-    if (locked) {
-      router.replace('/onboarding');
+    if (!trimmedPhone) {
+      Alert.alert(t('onboardingName.errorTitle'), t('onboardingName.errorPhone'));
       return;
     }
     setSubmitting(true);
     try {
-      const updated = await updateMe({ name: trimmed });
+      const updated = await updateMe({ name: trimmedName, phone: trimmedPhone });
       setUser(updated);
-      router.replace('/onboarding');
+      if (router.canGoBack()) router.back();
+      else router.replace('/onboarding');
     } catch (e: any) {
       Alert.alert(t('onboardingName.errorTitle'), e?.message || String(e));
     } finally {
@@ -71,20 +69,34 @@ export default function OnboardingNameScreen() {
           onChangeText={setName}
           placeholder={t('onboardingName.placeholder')}
           placeholderTextColor={colors.lead}
-          editable={!locked}
-          autoFocus={!locked}
+          autoFocus={!user?.name}
           autoCapitalize="words"
           autoCorrect={false}
           autoComplete="name"
           textContentType="name"
           maxLength={80}
+          returnKeyType="next"
+          style={styles.input}
+        />
+      </View>
+
+      <View style={[styles.field, { marginTop: spacing.s4 }]}>
+        <Text style={styles.fieldLabel}>{t('onboardingName.phoneLabel')}</Text>
+        <TextInput
+          value={phone}
+          onChangeText={setPhone}
+          placeholder={t('onboardingName.phonePlaceholder')}
+          placeholderTextColor={colors.lead}
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="tel"
+          textContentType="telephoneNumber"
+          keyboardType="phone-pad"
+          maxLength={32}
           returnKeyType="done"
           onSubmitEditing={handleSubmit}
-          style={[styles.input, locked && styles.inputLocked]}
+          style={styles.input}
         />
-        {locked ? (
-          <Text style={styles.lockedHint}>{t('onboardingName.lockedHint')}</Text>
-        ) : null}
       </View>
 
       <View style={{ flex: 1 }} />
@@ -139,17 +151,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: spacing.s4,
     paddingVertical: spacing.s3,
-  },
-  inputLocked: {
-    backgroundColor: colors.bone,
-    color: colors.lead,
-  },
-  lockedHint: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
-    letterSpacing: 0.3,
-    marginTop: spacing.s1,
   },
   footer: { paddingTop: spacing.s3 },
   cta: {
