@@ -55,6 +55,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 		r.Patch("/api/groups/{groupID}", groupH.Update)
 		r.Delete("/api/groups/{groupID}", groupH.Archive)
 		r.Get("/api/groups/{groupID}/invite-link", groupH.GetInviteLink)
+		r.Get("/api/groups/{groupID}/members", groupH.ListMembers)
 		r.Post("/api/groups/join/{token}", groupH.JoinViaToken)
 
 		r.Post("/api/groups/{groupID}/expenses", expenseH.Create)
@@ -65,6 +66,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 
 		r.Get("/api/groups/{groupID}/balances", balancesH.ListGroupBalances)
 		r.Post("/api/groups/{groupID}/settle", balancesH.Settle)
+		r.Post("/api/groups/{groupID}/settlements/{settlementID}/revert", balancesH.RevertSettlement)
 		r.Get("/api/groups/{groupID}/settle-suggestions", balancesH.SuggestSettlements)
 		r.Get("/api/me/balances", balancesH.ListMyBalances)
 		r.Get("/api/me/activity", activityH.ListMyActivity)

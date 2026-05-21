@@ -113,6 +113,9 @@ type Settlement struct {
 	Note        pgtype.Text        `db:"note" json:"note"`
 	CreatedByID string             `db:"created_by_id" json:"created_by_id"`
 	CreatedAt   pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	Method      string             `db:"method" json:"method"`
+	ExternalRef pgtype.Text        `db:"external_ref" json:"external_ref"`
+	RevertedAt  pgtype.Timestamptz `db:"reverted_at" json:"reverted_at"`
 }
 
 type User struct {
@@ -124,4 +127,5 @@ type User struct {
 	Locale      string             `db:"locale" json:"locale"`
 	CreatedAt   pgtype.Timestamptz `db:"created_at" json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	SwishNumber pgtype.Text        `db:"swish_number" json:"swish_number"`
 }
