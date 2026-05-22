@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Image, StyleSheet, ImageURISource } from 'react-native';
 import { colors, typography, fontSize } from '@/lib/theme';
 import { Text } from './Text';
 
@@ -8,10 +8,22 @@ interface AvatarProps {
   size?: 'sm' | 'md';
   stack?: boolean;
   style?: object;
+  /** Optional remote image source. When provided, the image is rendered;
+   *  on load failure (or null), it falls back to the `initials` view. */
+  source?: ImageURISource | null;
 }
 
-export function Avatar({ initials, size = 'md', stack = false, style }: AvatarProps) {
+export function Avatar({ initials, size = 'md', stack = false, style, source }: AvatarProps) {
   const dim = size === 'sm' ? 26 : 34;
+  const [failed, setFailed] = useState(false);
+  // A new source resets the error state — otherwise switching avatars after a
+  // previous load failure would never re-attempt.
+  useEffect(() => {
+    setFailed(false);
+  }, [source?.uri]);
+
+  const showImage = !!source?.uri && !failed;
+
   return (
     <View
       style={[
@@ -21,7 +33,15 @@ export function Avatar({ initials, size = 'md', stack = false, style }: AvatarPr
         style,
       ]}
     >
-      <Text style={[styles.text, size === 'sm' && styles.textSm]}>{initials}</Text>
+      {showImage ? (
+        <Image
+          source={source as ImageURISource}
+          style={{ width: dim, height: dim, borderRadius: dim / 2 }}
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <Text style={[styles.text, size === 'sm' && styles.textSm]}>{initials}</Text>
+      )}
     </View>
   );
 }
@@ -49,6 +69,7 @@ const styles = StyleSheet.create({
     borderColor: colors.ruleSoft,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   stack: {
     marginLeft: -8,

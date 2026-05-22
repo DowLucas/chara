@@ -8,8 +8,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/DowLucas/quits/internal/db"
-	"github.com/DowLucas/quits/internal/middleware"
+	"github.com/DowLucas/chara/internal/db"
+	"github.com/DowLucas/chara/internal/middleware"
 )
 
 type ActivityHandler struct {

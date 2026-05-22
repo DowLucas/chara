@@ -4,14 +4,24 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/DowLucas/quits/internal/config"
+	"github.com/DowLucas/chara/internal/config"
 )
 
+// ProtocolVersion is the single wire-protocol the current server build speaks.
+// Bump only when adding a required new endpoint or making a breaking shape
+// change. Additive/optional changes do not bump — they're advertised via
+// instance.features. See
+// docs/superpowers/specs/2026-05-22-multi-server-accounts-design.md §9.
+const ProtocolVersion = 1
+
 type InstanceInfo struct {
-	Mode        string   `json:"mode"`
-	Version     string   `json:"version"`
-	AuthMethods []string `json:"auth_methods"`
-	Features    Features `json:"features"`
+	Mode            string   `json:"mode"`
+	Version         string   `json:"version"`
+	ProtocolVersion int      `json:"protocol_version"`
+	MinAppProtocol  int      `json:"min_app_protocol"`
+	MaxAppProtocol  int      `json:"max_app_protocol"`
+	AuthMethods     []string `json:"auth_methods"`
+	Features        Features `json:"features"`
 }
 
 type Features struct {
@@ -44,9 +54,12 @@ func buildInfo(cfg *config.Config, version string) InstanceInfo {
 	}
 
 	return InstanceInfo{
-		Mode:        cfg.InstanceMode,
-		Version:     version,
-		AuthMethods: methods,
+		Mode:            cfg.InstanceMode,
+		Version:         version,
+		ProtocolVersion: ProtocolVersion,
+		MinAppProtocol:  cfg.MinAppProtocol,
+		MaxAppProtocol:  cfg.MaxAppProtocol,
+		AuthMethods:     methods,
 		Features: Features{
 			GoogleAuth: cfg.IsHosted() && cfg.HasGoogle(),
 			AppleAuth:  cfg.IsHosted() && cfg.HasApple(),

@@ -8,7 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/DowLucas/quits/internal/db"
+	"github.com/DowLucas/chara/internal/db"
 )
 
 // Syncer fetches the daily ECB snapshot and writes it to fx_rates. The

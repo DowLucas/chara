@@ -15,7 +15,7 @@ export function TopBar({ title, left, right }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.inner}>
-        <View style={styles.side}>{left}</View>
+        <View style={[styles.side, styles.leftSide]}>{left}</View>
         <View style={styles.center}>
           {title === appName ? (
             <View style={styles.wordmark}>
@@ -23,7 +23,9 @@ export function TopBar({ title, left, right }: Props) {
               <View style={styles.wordmarkRule} />
             </View>
           ) : title ? (
-            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.title} numberOfLines={1}>
+              {title}
+            </Text>
           ) : null}
         </View>
         <View style={[styles.side, styles.rightSide]}>{right}</View>
@@ -45,17 +47,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   side: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     minWidth: 60,
+    // Keep the left/right slots from forcing the wordmark off-centre when
+    // they contain unusually wide content — they shrink before pushing.
+    flexShrink: 1,
+  },
+  leftSide: {
+    justifyContent: 'flex-start',
   },
   rightSide: {
     justifyContent: 'flex-end',
   },
   center: {
-    flex: 1,
+    // `flex: 0` lets the centered wordmark sit at its natural width, with
+    // left/right slots growing equally around it (true optical centre).
+    flex: 0,
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
   },
   wordmark: {
     flexDirection: 'row',

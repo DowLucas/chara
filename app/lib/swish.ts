@@ -15,8 +15,8 @@ const SE_MOBILE_PREFIXES = ['70', '72', '73', '76', '79'] as const;
 const SE_NATIONAL_LENGTH = 10;
 
 const MAX_GROUP_NAME_LEN = 40;
-const MESSAGE_PREFIX = 'Quits · ';
-const CALLBACK_URL_BASE = 'quits://settle/swish/return';
+const MESSAGE_PREFIX = 'Chara · ';
+const CALLBACK_URL_BASE = 'chara://settle/swish/return';
 
 /**
  * Normalizes a Swedish mobile number to canonical E.164 (`+46XXXXXXXXX`).
@@ -155,7 +155,7 @@ function formatMinorAsDecimal(minor: number): string {
   return negative ? `-${body}` : body;
 }
 
-/** `"Quits · " + groupName` with the group portion truncated to 40 chars. */
+/** `"Chara · " + groupName` with the group portion truncated to 40 chars. */
 function buildMessage(groupName: string): string {
   const truncated = groupName.length > MAX_GROUP_NAME_LEN
     ? groupName.slice(0, MAX_GROUP_NAME_LEN)

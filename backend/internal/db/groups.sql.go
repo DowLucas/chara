@@ -72,7 +72,7 @@ func (q *Queries) GetGroupByID(ctx context.Context, id string) (Group, error) {
 }
 
 const getGroupByInviteToken = `-- name: GetGroupByInviteToken :one
-SELECT id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language FROM groups WHERE invite_token = $1
+SELECT id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language FROM groups WHERE invite_token = $1 AND NOT is_archived
 `
 
 func (q *Queries) GetGroupByInviteToken(ctx context.Context, inviteToken string) (Group, error) {

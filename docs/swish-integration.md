@@ -11,12 +11,12 @@ multi-platform behavior. It is the contract Phase-2 implementation will follow.
 These constrain every decision below; if a future change conflicts, the
 principle wins.
 
-1. **Quits never holds or moves money.** Swish is invoked client-side via its
+1. **Chara never holds or moves money.** Swish is invoked client-side via its
    `swish://` deep link. No merchant agreement, no Getswish API key, no funds
    custody, no KYC obligation. (`docs/02-product-strategy.md` §1.2)
 2. **Optimistic, user-confirmed.** Swish does not call us back. The
    settlement is recorded only when the user explicitly confirms "yes, I
-   sent it" after returning to Quits. No background guessing.
+   sent it" after returning to Chara. No background guessing.
 3. **Reversible by default.** Because step 2 is on the honor system, every
    Swish-method settlement must be one-tap undo for both parties for a grace
    window (24 h).
@@ -64,16 +64,16 @@ isn't there.
 
 In non-SEK groups Swish is not offered at all, even if a payee has a
 Swish number — paying SEK into a EUR-denominated debt would require an
-FX call that Quits explicitly avoids.
+FX call that Chara explicitly avoids.
 
 ### 2.3 Happy path
 
 ```mermaid
 sequenceDiagram
     participant U as User (payer)
-    participant Q as Quits app
+    participant Q as Chara app
     participant S as Swish app
-    participant API as Quits backend
+    participant API as Chara backend
 
     U->>Q: Tap "Settle 240 SEK with Swish"
     Q->>Q: Build swish:// URL (client-side)
@@ -81,7 +81,7 @@ sequenceDiagram
     S-->>U: Pre-filled payment screen
     U->>S: Confirm with BankID
     S-->>U: Payment sent
-    S->>Q: Open callbackurl (quits://settle/swish/return?pendingId=…)
+    S->>Q: Open callbackurl (chara://settle/swish/return?pendingId=…)
     Q-->>U: "Did the payment go through?" sheet (auto-opened)
     U->>Q: Tap "Yes, mark settled"
     Q->>API: POST /settlements {method:"swish", …}
@@ -96,7 +96,7 @@ sequenceDiagram
 | `Linking.canOpenURL("swish://")` returns false | Show "Swish app not installed" sheet with a link to the App Store / Play Store. Do not record a settlement. |
 | User returns and taps "No, it didn't work" | Close the sheet, leave balances untouched. Surface "Copy details" as a fallback. |
 | Swish never redirects back (user cancelled, callback URL unsupported, or app crashed) | The pending-settle in AsyncStorage is the safety net. On next foreground of the group screen, the banner appears: "You started a Swish settle for 240 SEK 3 minutes ago. Did it go through?" Banner clears after 24 h. |
-| User backgrounds Quits and never confirms | Same as above — banner on next foreground. |
+| User backgrounds Chara and never confirms | Same as above — banner on next foreground. |
 | Payee disputes ("I never got it") | Either party taps the settlement in the activity feed → "Undo settlement". Available for 24 h after creation. Older settlements require a manual reversing entry. |
 
 ### 2.5 Phone number capture
@@ -113,7 +113,7 @@ A new "Swish number" field is added to the existing profile screen
 
 ## 3. Deep link specification
 
-Quits builds the link client-side; nothing crosses the backend.
+Chara builds the link client-side; nothing crosses the backend.
 
 ```
 swish://payment?data=<urlSafeBase64(json)>
@@ -126,8 +126,8 @@ The JSON payload follows the Swish "Send via App-Switch" spec (v1):
   "version": 1,
   "payee":   { "value": "0701234567" },
   "amount":  { "value": "240.00", "editable": false },
-  "message": { "value": "Quits · Friday dinner",  "editable": false },
-  "callbackurl": "quits://settle/swish/return?pendingId=01HGZ…"
+  "message": { "value": "Chara · Friday dinner",  "editable": false },
+  "callbackurl": "chara://settle/swish/return?pendingId=01HGZ…"
 }
 ```
 
@@ -142,15 +142,15 @@ in the Swish app. It is purely a return-to-app mechanism:
 - We use it solely to **auto-open the confirmation sheet**, replacing the
   worst friction of the optimistic model (user forgets to switch back).
 - The settlement is still recorded only on explicit "Yes, mark settled"
-  inside Quits — see §2.3.
+  inside Chara — see §2.3.
 
 The `pendingId` opaquely binds the callback back to the AsyncStorage
 entry written when the link was opened (group, payer, payee, amount,
-timestamp). Quits looks the entry up, validates it's < 15 min old, and
-shows the confirmation sheet. If the entry is missing or stale, Quits
+timestamp). Chara looks the entry up, validates it's < 15 min old, and
+shows the confirmation sheet. If the entry is missing or stale, Chara
 silently lands on the group screen — Swish callbacks are best-effort.
 
-True payment-status callbacks (Swish → Quits server with `PAID`) require
+True payment-status callbacks (Swish → Chara server with `PAID`) require
 the merchant API; see §9.
 
 Notes:
@@ -160,7 +160,7 @@ Notes:
 - `amount.value` is a decimal string with exactly 2 fraction digits. We
   convert from internal `int64` minor units at link build time (the only
   place outside money formatting where we render minor units as decimal).
-- `message.value` is `"Quits · {group name truncated to 40 chars}"` —
+- `message.value` is `"Chara · {group name truncated to 40 chars}"` —
   identifies the source but doesn't leak emails or member names.
 - `editable: false` locks both fields so the user cannot accidentally send
   the wrong amount to the right person.
@@ -289,7 +289,7 @@ On press:
    indexed by `groupId` for the banner). Includes group, payer, payee,
    amount, currency, `createdAt`.
 4. `await Linking.openURL(link)` with `callbackurl` set to
-   `quits://settle/swish/return?pendingId={pendingId}`.
+   `chara://settle/swish/return?pendingId={pendingId}`.
 5. Two paths back to the confirmation sheet:
    - **Callback path (happy)**: Expo Router deep-link handler at
      `app/settle/swish/return.tsx` reads `pendingId`, looks up the
@@ -413,7 +413,7 @@ easiest piece to test exhaustively before any UI lands.
   - phone: `+46701234567` → `0701234567` in payload
   - phone: invalid prefix → builder throws (caller should have gated
     with `isSwishEligible` first)
-  - message: 60-char group name truncated to 40 chars + `"Quits · "`
+  - message: 60-char group name truncated to 40 chars + `"Chara · "`
   - base64: round-trip decodes to the right JSON
   - eligibility: SEK + iOS + valid number + positive amount → true; any
     one missing → false
@@ -445,12 +445,12 @@ This is the user-visible feature. Everything before this is plumbing.
   - `Linking.canOpenURL` check
   - generate `pendingId` (ULID)
   - write `pendingSwishSettle/{pendingId}` to AsyncStorage
-  - build link with `callbackurl: quits://settle/swish/return?pendingId={pendingId}`
+  - build link with `callbackurl: chara://settle/swish/return?pendingId={pendingId}`
   - `Linking.openURL` with the built link
 - New Expo Router screen `app/settle/swish/return.tsx` handling the
   callback — looks up the pending entry, navigates back to the group,
   opens the confirmation sheet. Universal-link / custom-scheme config
-  in `app.json` (`scheme: "quits"`, already set; verify).
+  in `app.json` (`scheme: "chara"`, already set; verify).
 - `AppState` listener on the group screen: when state → `active` and
   a pending settle exists, show the confirmation sheet.
 - Confirmation sheet:
@@ -497,7 +497,7 @@ Folded in alongside PR 5 (could be the first commit on that branch):
   the URL, resolves the pending settle from AsyncStorage, and routes
   to `/groups/{groupId}` with a flag that triggers the confirmation
   sheet on mount.
-- Verify `scheme: "quits"` in `app.json`; add if missing.
+- Verify `scheme: "chara"` in `app.json`; add if missing.
 - Unit test for the route handler with a fake AsyncStorage:
   - valid pendingId → navigates and opens sheet
   - missing pendingId → navigates to groups list, no sheet
@@ -517,7 +517,7 @@ own Swish number rounds-trips and the balance updates."
 ## 9. Optional: real auto-settle via Swish Merchant (Phase 3+)
 
 The app-switch + callback URL flow described above is **optimistic +
-user-confirmed**: Quits never knows for certain whether the money moved.
+user-confirmed**: Chara never knows for certain whether the money moved.
 The Swish Merchant API (Swish Handel / Swish Företag) is the only way to
 get a *real* payment-status callback — a server-to-server `POST` from
 Swish's backend with `status: "PAID"`, the amount, and a payment ID.
@@ -533,7 +533,7 @@ merchant agreement requires:
 - Per-transaction fees (currently ~2 SEK)
 
 That contradicts principle #1 of §1 (no merchant agreements, no
-custody-adjacent regulatory exposure) for **Quits-the-project**. But it
+custody-adjacent regulatory exposure) for **Chara-the-project**. But it
 does **not** contradict it for self-hosters who happen to already be
 Swish merchants — small businesses, housing co-ops (BRF), sports clubs,
 restaurants splitting a tab among colleagues. For them, plugging in a
@@ -549,11 +549,11 @@ SWISH_MERCHANT_ENABLED=true
 SWISH_MERCHANT_NUMBER=1234567890
 SWISH_MERCHANT_CERT_PATH=/run/secrets/swish.p12
 SWISH_MERCHANT_CERT_PASSWORD=…
-SWISH_MERCHANT_CALLBACK_URL=https://quits.example.com/api/swish/callback
+SWISH_MERCHANT_CALLBACK_URL=https://chara.example.com/api/swish/callback
 SWISH_MERCHANT_API_BASE=https://cpc.getswish.net/swish-cpcapi/api/v2
 ```
 
-The `/.well-known/quits-instance` endpoint adds `"swish_merchant": true`
+The `/.well-known/chara-instance` endpoint adds `"swish_merchant": true`
 when enabled so the mobile client can render the merchant-flow CTA. The
 hosted instance always returns `false`.
 
@@ -562,8 +562,8 @@ hosted instance always returns `false`.
 ```mermaid
 sequenceDiagram
     participant U as User (payer)
-    participant Q as Quits app
-    participant API as Quits backend
+    participant Q as Chara app
+    participant API as Chara backend
     participant SW as Swish backend
     participant S as Swish app
 
@@ -609,7 +609,7 @@ Key differences from the deep-link flow:
 - Schema additions in a Phase-3 migration: `settlements.status TEXT`
   with values (`paid`, `pending`, `failed`), and the pending row exists
   before the callback fires.
-- Mobile: feature-detected by `/.well-known/quits-instance`. When
+- Mobile: feature-detected by `/.well-known/chara-instance`. When
   `swish_merchant == true`, SettleScreen calls the new payment-request
   endpoint instead of building the link client-side; no confirmation
   sheet; activity feed shows "Settled via Swish" with a "Refund via
@@ -629,7 +629,7 @@ Key differences from the deep-link flow:
 Build §9 if and only if **at least one** of the following is true:
 
 - We hear from ≥ 3 BRF or small-business self-hosters that they have a
-  Swish-handel agreement and would use Quits if Phase 3 shipped.
+  Swish-handel agreement and would use Chara if Phase 3 shipped.
 - The deep-link flow's "false settle" rate (settlements undone within
   24 h) exceeds 5% of Swish settlements over a quarter.
 - A direct competitor ships true auto-settle and starts winning Nordic

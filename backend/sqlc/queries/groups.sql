@@ -7,7 +7,7 @@ RETURNING *;
 SELECT * FROM groups WHERE id = $1;
 
 -- name: GetGroupByInviteToken :one
-SELECT * FROM groups WHERE invite_token = $1;
+SELECT * FROM groups WHERE invite_token = $1 AND NOT is_archived;
 
 -- name: ListGroupsByUserID :many
 SELECT g.* FROM groups g

@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/DowLucas/quits/internal/server"
-	"github.com/DowLucas/quits/testutil"
+	"github.com/DowLucas/chara/internal/server"
+	"github.com/DowLucas/chara/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -18,7 +18,7 @@ import (
 func setupEnv(t *testing.T) *testutil.Env {
 	t.Helper()
 	env := testutil.NewEnv(t)
-	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT)
+	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil)
 	return env
 }
 
@@ -351,4 +351,74 @@ func TestGroups_Join_AlreadyMember(t *testing.T) {
 	req := env.AuthRequest(t, "POST", fmt.Sprintf("/api/groups/join/%s", group.InviteToken), "", aliceToken)
 	rr := env.Do(t, req)
 	assert.Equal(t, http.StatusConflict, rr.Code)
+}
+
+func TestJoinViaToken_RejectsArchivedGroup(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, "alice_arch_owner@example.com", "Alice")
+	bob := testutil.CreateUser(t, env.Pool, "bob_arch_joiner@example.com", "Bob")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Archived Trip", "SEK", alice.ID, "Alice")
+
+	aliceToken := env.MintToken(t, alice.ID, alice.Email)
+	archRR := env.Do(t, env.AuthRequest(t, "DELETE", "/api/groups/"+group.ID, "", aliceToken))
+	require.Equal(t, http.StatusNoContent, archRR.Code)
+
+	bobToken := env.MintToken(t, bob.ID, bob.Email)
+	req := env.AuthRequest(t, "POST", fmt.Sprintf("/api/groups/join/%s", group.InviteToken), "", bobToken)
+	rr := env.Do(t, req)
+	assert.Equal(t, http.StatusNotFound, rr.Code)
+
+	members, err := env.Queries.ListGroupMembers(context.Background(), group.ID)
+	require.NoError(t, err)
+	assert.Len(t, members, 1)
+	assert.Equal(t, alice.ID, members[0].UserID.String)
+}
+
+// ── Regenerate invite token ───────────────────────────────────────────────────
+
+func TestRegenerateInviteToken_OwnerOnly(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, "alice_rot_owner@example.com", "Alice")
+	bob := testutil.CreateUser(t, env.Pool, "bob_rot_member@example.com", "Bob")
+	carol := testutil.CreateUser(t, env.Pool, "carol_rot_joiner@example.com", "Carol")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Rotate Trip", "SEK", alice.ID, "Alice")
+	testutil.AddMember(t, env.Pool, group.ID, bob.ID, "Bob")
+
+	oldToken := group.InviteToken
+
+	bobToken := env.MintToken(t, bob.ID, bob.Email)
+	rrBob := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+group.ID+"/invite-link/regenerate", "", bobToken))
+	assert.Equal(t, http.StatusForbidden, rrBob.Code)
+
+	aliceToken := env.MintToken(t, alice.ID, alice.Email)
+	rrAlice := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+group.ID+"/invite-link/regenerate", "", aliceToken))
+	assert.Equal(t, http.StatusOK, rrAlice.Code)
+
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(rrAlice.Body).Decode(&body))
+	newToken, _ := body["invite_token"].(string)
+	assert.NotEmpty(t, newToken)
+	assert.NotEqual(t, oldToken, newToken)
+
+	carolToken := env.MintToken(t, carol.ID, carol.Email)
+	rrOld := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/join/"+oldToken, "", carolToken))
+	assert.Equal(t, http.StatusNotFound, rrOld.Code)
+
+	rrNew := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/join/"+newToken, "", carolToken))
+	assert.Equal(t, http.StatusOK, rrNew.Code)
+
+	members, err := env.Queries.ListGroupMembers(context.Background(), group.ID)
+	require.NoError(t, err)
+	assert.Len(t, members, 3)
+}
+
+func TestRegenerateInviteToken_NonMemberForbidden(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, "alice_rot_nm_owner@example.com", "Alice")
+	stranger := testutil.CreateUser(t, env.Pool, "stranger_rot@example.com", "Stranger")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Closed Group", "SEK", alice.ID, "Alice")
+
+	strangerToken := env.MintToken(t, stranger.ID, stranger.Email)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+group.ID+"/invite-link/regenerate", "", strangerToken))
+	assert.Equal(t, http.StatusForbidden, rr.Code)
 }

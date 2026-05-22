@@ -42,6 +42,9 @@ export interface ReceiptScanResult {
     source: string;
     original_total_minor: number;
   };
+  /** Captured image bytes the parent can persist as an attachment after
+   *  the expense is saved. Set on every successful scan. */
+  image?: { base64: string; mime_type: string };
 }
 
 interface Props {
@@ -70,7 +73,13 @@ function inferMimeFromUri(uri: string): string | null {
 type Phase =
   | { kind: 'camera' }
   | { kind: 'analyzing'; photoUri: string }
-  | { kind: 'result'; photoUri: string; receipt: ScannedReceipt }
+  | {
+      kind: 'result';
+      photoUri: string;
+      receipt: ScannedReceipt;
+      imageBase64: string;
+      imageMime: string;
+    }
   | { kind: 'error'; photoUri: string; message: string };
 
 /**
@@ -153,7 +162,7 @@ export function ReceiptScanner({ groupCurrency, groupLanguage, onScanned, onCanc
     setPhase({ kind: 'analyzing', photoUri });
     try {
       const receipt = await scanReceipt(base64, mimeType, groupLanguage);
-      setPhase({ kind: 'result', photoUri, receipt });
+      setPhase({ kind: 'result', photoUri, receipt, imageBase64: base64, imageMime: mimeType });
     } catch (e) {
       const message =
         e instanceof ApiError && e.status === 422
@@ -275,13 +284,15 @@ export function ReceiptScanner({ groupCurrency, groupLanguage, onScanned, onCanc
   }
 
   // phase.kind === 'result'
+  const imageBase64 = phase.imageBase64;
+  const imageMime = phase.imageMime;
   return (
     <View style={styles.container}>
       <ResultView
         photoUri={phase.photoUri}
         receipt={phase.receipt}
         groupCurrency={groupCurrency}
-        onUse={onScanned}
+        onUse={(r) => onScanned({ ...r, image: { base64: imageBase64, mime_type: imageMime } })}
         onRetake={() => setPhase({ kind: 'camera' })}
         topPad={insets.top + spacing.s7}
         bottomPad={insets.bottom + spacing.s4}

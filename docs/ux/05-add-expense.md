@@ -317,32 +317,32 @@ stateDiagram-v2
 
 ## 5.11 Add Expense from iOS Share Sheet  `P1`
 
-User selects a receipt photo in Photos app, taps Share, finds Quits in the share sheet, opens Add Expense with the image pre-attached. OCR is automatically triggered on attachment without user prompt.
+User selects a receipt photo in Photos app, taps Share, finds Chara in the share sheet, opens Add Expense with the image pre-attached. OCR is automatically triggered on attachment without user prompt.
 
 ```mermaid
 sequenceDiagram
     participant Photos as Photos App
     participant ShareSheet as iOS Share Sheet
-    participant Quits as Quits App
+    participant Chara as Chara App
     participant OCR as Gemini Flash OCR
     
     Photos->>Photos: User selects receipt image
     Photos->>ShareSheet: Tap Share
-    ShareSheet-->>Quits: Quits available in sheet
+    ShareSheet-->>Chara: Chara available in sheet
     
-    User->>ShareSheet: Tap "Quits"
-    ShareSheet->>Quits: Pass image via App Link/Share Extension
+    User->>ShareSheet: Tap "Chara"
+    ShareSheet->>Chara: Pass image via App Link/Share Extension
     
-    Quits->>Quits: Open Add Expense screen
-    Quits->>Quits: Attach image directly
-    Quits->>Quits: ⏳ Auto-trigger OCR
+    Chara->>Chara: Open Add Expense screen
+    Chara->>Chara: Attach image directly
+    Chara->>Chara: ⏳ Auto-trigger OCR
     
-    Quits->>OCR: Send image for processing
-    OCR-->>Quits: Return amount, title, date
+    Chara->>OCR: Send image for processing
+    OCR-->>Chara: Return amount, title, date
     
-    Quits-->>Photos: Return to Photos (if needed)
-    Quits->>User: Show pre-filled Add Expense form
-    User->>Quits: Confirm or edit OCR results
+    Chara-->>Photos: Return to Photos (if needed)
+    Chara->>User: Show pre-filled Add Expense form
+    User->>Chara: Confirm or edit OCR results
 ```
 
 ---

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/DowLucas/quits/internal/auth"
+	"github.com/DowLucas/chara/internal/auth"
 )
 
 type contextKey string

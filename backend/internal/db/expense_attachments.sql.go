@@ -43,6 +43,15 @@ func (q *Queries) CreateExpenseAttachment(ctx context.Context, arg CreateExpense
 	return i, err
 }
 
+const deleteAttachment = `-- name: DeleteAttachment :exec
+DELETE FROM expense_attachments WHERE id = $1
+`
+
+func (q *Queries) DeleteAttachment(ctx context.Context, id string) error {
+	_, err := q.db.Exec(ctx, deleteAttachment, id)
+	return err
+}
+
 const deleteAttachmentsByExpense = `-- name: DeleteAttachmentsByExpense :exec
 DELETE FROM expense_attachments WHERE expense_id = $1
 `
@@ -50,6 +59,24 @@ DELETE FROM expense_attachments WHERE expense_id = $1
 func (q *Queries) DeleteAttachmentsByExpense(ctx context.Context, expenseID string) error {
 	_, err := q.db.Exec(ctx, deleteAttachmentsByExpense, expenseID)
 	return err
+}
+
+const getExpenseAttachment = `-- name: GetExpenseAttachment :one
+SELECT id, expense_id, s3_key, mime_type, size_bytes, created_at FROM expense_attachments WHERE id = $1
+`
+
+func (q *Queries) GetExpenseAttachment(ctx context.Context, id string) (ExpenseAttachment, error) {
+	row := q.db.QueryRow(ctx, getExpenseAttachment, id)
+	var i ExpenseAttachment
+	err := row.Scan(
+		&i.ID,
+		&i.ExpenseID,
+		&i.S3Key,
+		&i.MimeType,
+		&i.SizeBytes,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const listAttachmentsByExpense = `-- name: ListAttachmentsByExpense :many

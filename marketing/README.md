@@ -1,6 +1,6 @@
-# Quits — marketing site
+# Chara — marketing site
 
-Static marketing site for [quits.app](https://quits.app). Plain HTML + CSS + a tiny bit of JS — no build step, no framework. Designed to be portable to Astro later (per `CLAUDE.md`'s stated stack) without rewrites.
+Static marketing site for [chara.app](https://chara.app). Plain HTML + CSS + a tiny bit of JS — no build step, no framework. Designed to be portable to Astro later (per `CLAUDE.md`'s stated stack) without rewrites.
 
 ## Run locally
 
@@ -51,16 +51,16 @@ Any static host works — Cloudflare Pages, Netlify, Vercel, S3+CloudFront, Cadd
 
 ```sh
 # Cloudflare Pages example
-wrangler pages deploy ./marketing --project-name=quits-marketing
+wrangler pages deploy ./marketing --project-name=chara-marketing
 ```
 
 ## Before launch — checklist
 
-- [ ] Replace placeholder GitHub link (`lucasdow/quits`) with the real org URL once published
+- [ ] Replace placeholder GitHub link (`lucasdow/chara`) with the real org URL once published
 - [ ] Add Open Graph image at `/assets/og.png` (1200×630)
 - [ ] Add favicon set (`/favicon.svg`, `/apple-touch-icon.png`)
-- [ ] Confirm Quits AB legal entity name + registered address in `privacy.html` / `terms.html`
+- [ ] Confirm Chara AB legal entity name + registered address in `privacy.html` / `terms.html`
 - [ ] Confirm processor list in `privacy.html` and `dpa.html` matches the deployed stack
 - [ ] Publish security PGP key referenced by `.well-known/security.txt`
-- [ ] Hook up `status.quits.app` and `app.quits.app` DNS
+- [ ] Hook up `status.chara.app` and `app.chara.app` DNS
 - [ ] Set up the inboxes referenced (`hello@`, `privacy@`, `security@`, `press@`)

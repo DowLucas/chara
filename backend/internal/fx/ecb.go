@@ -21,7 +21,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 
-	"github.com/DowLucas/quits/internal/db"
+	"github.com/DowLucas/chara/internal/db"
 )
 
 // SourceID is recorded in fx_rates.source for every row we ingest. Bumping

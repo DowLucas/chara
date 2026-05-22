@@ -90,6 +90,65 @@ func TestGeminiScanner_Scan_StripsCodeFence(t *testing.T) {
 	assert.Equal(t, "EUR", got.Currency)
 }
 
+func TestGeminiScanner_Scan_ParsesItems(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(geminiTextResponse(t,
+			`{"title":"Dinner at Café","merchant":"Café","date":"2026-05-20","currency":"SEK","total":"245.00","subtotal":"220.00","tax":"25.00","tip":"",`+
+				`"items":[`+
+				`{"description":"Burger","qty":1,"unit_price":"120.00","total":"120.00"},`+
+				`{"description":"Salad","qty":1,"unit_price":"60.00","total":"60.00"},`+
+				`{"description":"Beer","qty":2,"unit_price":"20.00","total":"40.00"}`+
+				`]}`,
+		))
+	}))
+	defer srv.Close()
+
+	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "")
+	require.NoError(t, err)
+	require.Len(t, got.Items, 3)
+	assert.Equal(t, "Burger", got.Items[0].Description)
+	assert.EqualValues(t, 1, got.Items[0].Qty)
+	assert.EqualValues(t, 12000, got.Items[0].UnitPriceMinor)
+	assert.EqualValues(t, 12000, got.Items[0].TotalMinor)
+	assert.Equal(t, "Beer", got.Items[2].Description)
+	assert.EqualValues(t, 2, got.Items[2].Qty)
+	assert.EqualValues(t, 4000, got.Items[2].TotalMinor)
+}
+
+func TestGeminiScanner_Scan_ItemsOptional(t *testing.T) {
+	// Older responses with no `items` field should parse fine with empty
+	// Items slice. The mobile app must tolerate this.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(geminiTextResponse(t,
+			`{"merchant":"X","date":"","currency":"SEK","total":"50.00","subtotal":"","tax":"","tip":""}`,
+		))
+	}))
+	defer srv.Close()
+
+	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "")
+	require.NoError(t, err)
+	assert.Empty(t, got.Items)
+}
+
+func TestGeminiScanner_Scan_ItemDefaults(t *testing.T) {
+	// Qty defaults to 1 if Gemini omits or sends 0. unit_price defaults to
+	// total when unit_price is omitted.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(geminiTextResponse(t,
+			`{"merchant":"X","date":"","currency":"SEK","total":"30.00","subtotal":"","tax":"","tip":"",`+
+				`"items":[{"description":"Coffee","total":"30.00"}]}`,
+		))
+	}))
+	defer srv.Close()
+
+	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "")
+	require.NoError(t, err)
+	require.Len(t, got.Items, 1)
+	assert.EqualValues(t, 1, got.Items[0].Qty)
+	assert.EqualValues(t, 3000, got.Items[0].TotalMinor)
+	assert.EqualValues(t, 3000, got.Items[0].UnitPriceMinor)
+}
+
 func TestGeminiScanner_Scan_TitleFallsBackToMerchant(t *testing.T) {
 	// Model omits title (older prompt cache, partial response, etc.) — we
 	// should still produce a usable form prefill rather than an empty field.

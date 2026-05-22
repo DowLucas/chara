@@ -6,13 +6,13 @@ The GTM has three phases, in order of compounding leverage: build credibility wi
 
 ### The one-liner
 
-> Quits is an open source bill splitter you can run on your own server, with real native apps and Swish support.
+> Chara is an open source bill splitter you can run on your own server, with real native apps and Swish support.
 
 ### The 30-second version
 
-> Splitwise paywalled adding expenses. Steven keeps going down. Tricount is owned by a bank. Quits is open source under AGPLv3, runs on a Raspberry Pi or our hosted service, has native iOS and Android apps, and is the only bill splitter with first-class Swish integration. Migrate from Splitwise in one click.
+> Splitwise paywalled adding expenses. Steven keeps going down. Tricount is owned by a bank. Chara is open source under AGPLv3, runs on a Raspberry Pi or our hosted service, has native iOS and Android apps, and is the only bill splitter with first-class Swish integration. Migrate from Splitwise in one click.
 
-### The categories Quits is in (by audience)
+### The categories Chara is in (by audience)
 
 | Audience | Category framing |
 |----------|------------------|
@@ -29,8 +29,8 @@ Pick the framing per channel. Never lead with all four; the message dilutes.
 
 No public marketing. Build the MVP. The only outward activity is:
 
-- Reserve the domain (quits.app, quits.se, quits.io as fallbacks)
-- Reserve the GitHub org (`quits-app` or similar; `quits` is taken)
+- Reserve the domain (chara.app, chara.se, chara.io as fallbacks)
+- Reserve the GitHub org (`chara-app` or similar; `chara` is taken)
 - Reserve social handles (Mastodon FOSS, Twitter/X, Bluesky)
 - Set up the empty repo with a "coming soon" README that says exactly what is being built and links to a notify list
 - Set up a Discord or Matrix room from day one for early followers
@@ -52,7 +52,7 @@ Sequence:
 1. **Soft post on r/selfhosted** with "Show me your homelab" / "I made a Splitwise alternative" framing. Don't beg. Show screenshots, the Compose file, the comparison table. Stay in the comments for 48 hours answering every question.
 2. **Submit to awesome-selfhosted** repo as a PR.
 3. **Mastodon FOSS thread** with the same content tuned for the audience.
-4. **HackerNews Show HN** ~10 days after the Reddit post once you have feedback to incorporate. Title: "Show HN: Quits, open source self-hostable Splitwise alternative with native apps."
+4. **HackerNews Show HN** ~10 days after the Reddit post once you have feedback to incorporate. Title: "Show HN: Chara, open source self-hostable Splitwise alternative with native apps."
 5. **Outreach to selfhost YouTubers**: NetworkChuck, TechHut, Sloth's selfhosted channel, Tailscale's Jaco. One-paragraph email with a one-line setup demo and an offer to do a video walkthrough call. Expect 1 in 5 to bite.
 6. **Sponsor the Self-Hosted podcast** ($500-1000 for an episode mention) once there is traction; do not pay up front.
 
@@ -60,7 +60,7 @@ Success metric for Phase 1: 500+ GitHub stars, 100+ active self-hosted instances
 
 ### Phase 2: Nordic wedge (Months 6-9, overlapping Phase 1)
 
-This is where the unique value compounds. While the global self-host audience finds Quits through Phase 1 channels, the Swedish audience is acquired with a parallel campaign.
+This is where the unique value compounds. While the global self-host audience finds Chara through Phase 1 channels, the Swedish audience is acquired with a parallel campaign.
 
 **Localization commitments before launching to Nordic users:**
 
@@ -71,7 +71,7 @@ This is where the unique value compounds. While the global self-host audience fi
 
 **Swedish content engine:**
 
-- LinkedIn posts in Swedish on Lucas's existing audience: "Bygger Quits: en öppen källkods-Splitwise med riktig Swish-integration"
+- LinkedIn posts in Swedish on Lucas's existing audience: "Bygger Chara: en öppen källkods-Splitwise med riktig Swish-integration"
 - Blog series in Swedish on the project site: technical and product posts
 - Outreach to Swedish tech press: Breakit, Di Digital, Computer Sweden, Ny Teknik. Pitch: "KTH-student bygger öppen källkods-alternativ till Steven, kompletterad med Swish och självhostning"
 - r/sweden post once there is something to show
@@ -92,10 +92,10 @@ Once the product is stable, the Splitwise importer works smoothly, and Phase 2 h
 
 **Tactics:**
 
-- **Comparison content**: an honest, detailed Quits vs Splitwise page. Mention what Splitwise does better. This is more credible than puffery and ranks well.
+- **Comparison content**: an honest, detailed Chara vs Splitwise page. Mention what Splitwise does better. This is more credible than puffery and ranks well.
 - **SEO push**: blog posts targeting "Splitwise alternative", "free Splitwise alternative", "Splitwise without ads", "self-hosted Splitwise". Each post 1500-2500 words, internally linked.
 - **Product Hunt launch**: only when you have ~5000 GitHub stars and ~10k active users. PH is a one-shot opportunity; do not waste it early. Target #1 of the day.
-- **Reddit Splitwise refugee threads**: r/Splitwise has a steady stream of "Splitwise made me angry" threads. Be helpful, not promotional, in comments. Mention Quits only when relevant.
+- **Reddit Splitwise refugee threads**: r/Splitwise has a steady stream of "Splitwise made me angry" threads. Be helpful, not promotional, in comments. Mention Chara only when relevant.
 - **Influencer YouTube**: r/personalfinance-adjacent creators, "I moved off Splitwise" reviews. Offer 2-month hosted tier for their audience as a giveaway.
 
 Success metric for Phase 3: 25k GitHub stars, 50k hosted-tier signups, top-3 Google result for "splitwise alternative".
@@ -110,14 +110,14 @@ Audience: technical evaluators, self-hosters, contributors. Post cadence: 1 per 
 
 Topics in roughly priority order:
 
-1. "Money math in Quits: why we use int64 minor units everywhere"
+1. "Money math in Chara: why we use int64 minor units everywhere"
 2. "Building a Splitwise importer that actually works"
 3. "The Swish deep-link rabbit hole"
 4. "Why we chose Go + sqlc over a Node.js ORM"
 5. "Local-first sync with Zero: the v2 architecture"
 6. "How debt simplification really works"
 7. "OIDC integration with Authentik in 5 minutes"
-8. "Self-hosting Quits on a Raspberry Pi 5"
+8. "Self-hosting Chara on a Raspberry Pi 5"
 
 ### Stream B: Founder build-in-public (LinkedIn + Twitter/X + Bluesky)
 
@@ -127,7 +127,7 @@ Format: short, specific, no preamble.
 
 Examples:
 
-- "Receipt OCR works on Quits now. 87% accuracy on Swedish receipts with Gemini Flash, 91% with the prompt I'm testing tomorrow."
+- "Receipt OCR works on Chara now. 87% accuracy on Swedish receipts with Gemini Flash, 91% with the prompt I'm testing tomorrow."
 - "Self-hosted instances passed 50 this week. Average install seems to take 11 minutes per the welcome flow analytics."
 - "Steven went down for 6 days last week. Migration imports doubled."
 
@@ -137,15 +137,15 @@ Audience: people considering switching. Post cadence: 1 per month.
 
 Topics:
 
-- "Splitwise vs Quits: an honest comparison"
+- "Splitwise vs Chara: an honest comparison"
 - "How to leave Splitwise without losing your history"
-- "Why Steven users are switching to Quits"
+- "Why Steven users are switching to Chara"
 - "Self-hosting bill splitting: a beginner's guide"
 - "The Nordic guide to settling bills with friends"
 
 ## Community seeding
 
-The audience for Quits overlaps almost perfectly with these communities. Pre-launch, be a real participant. Don't show up with a launch announcement to a community you have never contributed to.
+The audience for Chara overlaps almost perfectly with these communities. Pre-launch, be a real participant. Don't show up with a launch announcement to a community you have never contributed to.
 
 ### Tier 1 (engage 6 months before launch)
 
@@ -174,18 +174,18 @@ The single highest-leverage feature for acquisition is a one-click Splitwise imp
 
 1. **Make it one click.** User pastes their Splitwise credentials or uploads their JSON, sees a preview ("we found 8 groups, 247 expenses"), confirms, and is done in under 60 seconds.
 2. **Preserve everything.** Group names, member names (even ghost members), expense history, dates, categories, notes, attachments if accessible.
-3. **Show, don't tell.** A 90-second video of "Splitwise → Quits in 60 seconds" is the single best marketing asset Quits can produce.
+3. **Show, don't tell.** A 90-second video of "Splitwise → Chara in 60 seconds" is the single best marketing asset Chara can produce.
 4. **Steven importer is a second-priority project but high-ROI in Sweden.** Steven does not have a public export; this will require either UI automation against the Steven app/web, or a privately-developed importer based on community-contributed data.
 
 ## Trust signals to build early
 
-The audience for Quits cares about trust signals more than feature lists. Build these signals deliberately:
+The audience for Chara cares about trust signals more than feature lists. Build these signals deliberately:
 
 - **Transparent funding page** showing donations received, hosted-tier revenue, and what it's spent on. Immich does this well; copy the pattern.
 - **Public roadmap** on GitHub Projects. Show what's coming and how decisions are made.
-- **Threat model document** explaining what Quits protects against, what it doesn't, where data lives, who can access what.
+- **Threat model document** explaining what Chara protects against, what it doesn't, where data lives, who can access what.
 - **Open governance from early on.** No "BDFL" framing. Even with one maintainer, structure decisions as RFCs that anyone can comment on.
-- **Visible uptime page** for the hosted tier with historical metrics. Steven users have lived through opacity; Quits's reliability story is part of the marketing.
+- **Visible uptime page** for the hosted tier with historical metrics. Steven users have lived through opacity; Chara's reliability story is part of the marketing.
 - **CLA that is transparent and minimal.** Apache-style, not Canonical-style. Permits relicensing but doesn't transfer copyright entirely.
 
 ## Anti-patterns to avoid
@@ -197,7 +197,7 @@ These are mistakes other OSS projects have made. Avoid them.
 3. **Don't badmouth Splitwise or Steven publicly.** "We are open and they are closed" is fine. "Steven is collapsing" is not, even if true. Be the gracious alternative.
 4. **Don't promise federation early.** It is the OSS holy grail and almost always fails to deliver. If it ever ships, it ships in P3 with a working demo, not as a Discord roadmap promise.
 5. **Don't accept a hostile fork's narrative.** AGPL is the license. SaaS forks that try to circumvent the AGPL will exist. Respond once, calmly, then ignore.
-6. **Don't oversell the AI features.** Receipt OCR is a P1 nice-to-have, not the headline. The audience for Quits is skeptical of AI-washing; it can backfire.
+6. **Don't oversell the AI features.** Receipt OCR is a P1 nice-to-have, not the headline. The audience for Chara is skeptical of AI-washing; it can backfire.
 
 ## Phase 1 launch checklist
 
@@ -233,7 +233,7 @@ A concrete checklist for the soft launch moment, drawn from observing Immich, Sp
 
 ## Long-term marketing posture
 
-Quits's brand should be: **calm, technical, regional pride.** Not loud, not snarky, not VC-funded-feeling. The reference brands:
+Chara's brand should be: **calm, technical, regional pride.** Not loud, not snarky, not VC-funded-feeling. The reference brands:
 
 - **Immich**: technical, transparent, mission-driven
 - **Bitwarden**: trustworthy, professional, slightly boring (in a good way)
@@ -246,7 +246,7 @@ Avoid the brand notes of:
 - **Many a16z-funded fintech**: emoji-laden, "we are disrupting" framing
 - **Cluttered SaaS landing pages**: testimonials, logo strips, "join 10,000+ teams"
 
-A clean quits.app with one screenshot, three sentences, two buttons (Self-host, Try hosted), and the comparison table. Nothing else above the fold.
+A clean chara.app with one screenshot, three sentences, two buttons (Self-host, Try hosted), and the comparison table. Nothing else above the fold.
 
 ### Color palette
 

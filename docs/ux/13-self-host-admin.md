@@ -95,12 +95,12 @@ flowchart TD
     A --> B["CLI Path"]
     A --> C["Admin UI Path"]
     
-    B --> B1["quits backup"]
+    B --> B1["chara backup"]
     B1 --> B2["Create encrypted zip<br/>Postgres dump + MinIO"]
     B2 --> B3["Save to configured path"]
     B3 --> B4["Backup complete"]
     
-    B4 --> B5["quits restore<br/>path/to/backup.zip"]
+    B4 --> B5["chara restore<br/>path/to/backup.zip"]
     B5 --> B6["Decrypt & restore<br/>Postgres + MinIO"]
     B6 --> B7["Restore complete"]
     
@@ -132,11 +132,11 @@ stateDiagram-v2
     HostChoice: "Hosted or self-hosted?"
     
     HostChoice --> SelfHosted: Tap "Self-hosted"
-    HostChoice --> Hosted: Tap "Use quits.app"
+    HostChoice --> Hosted: Tap "Use chara.app"
     
     SelfHosted --> URLEntry: Show URL input screen
     
-    URLEntry --> URLInput: User enters URL<br/>e.g. https://quits.myserver.com
+    URLEntry --> URLInput: User enters URL<br/>e.g. https://chara.myserver.com
     
     URLInput --> Validate: Submit
     

@@ -1,68 +1,10 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { clearToken, getMe, setToken, User } from './api';
+/**
+ * DEPRECATED — this module is a compatibility shim that re-exports the
+ * AccountsProvider / useAuth surface from `./accounts.tsx`. The Wave 2D
+ * route refactor migrates every call site to `useAccounts()` /
+ * `useAccount(serverUrl)` and then deletes this file.
+ *
+ * Spec: docs/superpowers/specs/2026-05-22-multi-server-accounts-design.md §17.
+ */
 
-interface AuthState {
-  user: User | null;
-  token: string | null;
-  loading: boolean;
-  signIn: (token: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  setUser: (user: User) => void;
-  refreshUser: () => Promise<User | null>;
-}
-
-const AuthContext = createContext<AuthState>({
-  user: null,
-  token: null,
-  loading: true,
-  signIn: async () => {},
-  signOut: async () => {},
-  setUser: () => {},
-  refreshUser: async () => null,
-});
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setTokenState] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getMe()
-      .then((u) => setUser(u))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
-  }, []);
-
-  async function signIn(t: string) {
-    await setToken(t);
-    setTokenState(t);
-    const u = await getMe();
-    setUser(u);
-  }
-
-  async function signOut() {
-    await clearToken();
-    setTokenState(null);
-    setUser(null);
-  }
-
-  async function refreshUser() {
-    try {
-      const u = await getMe();
-      setUser(u);
-      return u;
-    } catch {
-      return null;
-    }
-  }
-
-  return (
-    <AuthContext.Provider value={{ user, token, loading, signIn, signOut, setUser, refreshUser }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
-
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export { AuthProvider, useAuth } from './accounts';

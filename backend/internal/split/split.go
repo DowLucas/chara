@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/DowLucas/quits/internal/money"
+	"github.com/DowLucas/chara/internal/money"
 )
 
 // MemberShare associates a split amount with a group member.

@@ -60,6 +60,14 @@ type Config struct {
 	// is hidden (instance advertises features.ocr=false and the /receipts
 	// route is not mounted).
 	GeminiAPIKey string
+
+	// Protocol bounds — see docs/superpowers/specs/2026-05-22-multi-server-accounts-design.md §9.
+	// MinAppProtocol is the minimum X-Chara-App-Protocol header value accepted on
+	// authenticated /api/* requests. Defaults to 0 so legacy app builds (which
+	// don't send the header) keep working during rollout (§19 step 1).
+	// MaxAppProtocol is the upper bound; clients above this get a 426.
+	MinAppProtocol int
+	MaxAppProtocol int
 }
 
 func Load() (*Config, error) {
@@ -80,10 +88,10 @@ func Load() (*Config, error) {
 		SMTPPort:     getEnvInt("SMTP_PORT", 587),
 		SMTPUser:     getEnv("SMTP_USER", ""),
 		SMTPPass:     getEnv("SMTP_PASS", ""),
-		SMTPFrom:     getEnv("SMTP_FROM", "noreply@quits.app"),
+		SMTPFrom:     getEnv("SMTP_FROM", "noreply@chara.app"),
 
 		S3Endpoint:  getEnv("S3_ENDPOINT", ""),
-		S3Bucket:    getEnv("S3_BUCKET", "quits"),
+		S3Bucket:    getEnv("S3_BUCKET", "chara"),
 		S3AccessKey: getEnv("S3_ACCESS_KEY", ""),
 		S3SecretKey: getEnv("S3_SECRET_KEY", ""),
 		S3Region:    getEnv("S3_REGION", "us-east-1"),
@@ -102,6 +110,9 @@ func Load() (*Config, error) {
 		OIDCClientSecret: getEnv("OIDC_CLIENT_SECRET", ""),
 
 		GeminiAPIKey: getEnv("GEMINI_API_KEY", ""),
+
+		MinAppProtocol: getEnvInt("MIN_APP_PROTOCOL", 0),
+		MaxAppProtocol: getEnvInt("MAX_APP_PROTOCOL", 1),
 	}
 
 	if err := cfg.validate(); err != nil {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -9,41 +9,211 @@ import {
   Platform,
   Alert,
 } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/lib/auth';
-import { requestMagicLink, verifyMagicLink } from '@/lib/api';
-import { colors, fontDisplay, fontBody, fontBodyMedium, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { useAccount, useAccounts } from '@/lib/accounts';
+import { clearStatus, type AccountInstanceInfo } from '@/lib/accounts-store';
+import { apiFor, publicApi } from '@/lib/api';
+import { legacyHostedUrl } from '@/lib/legacy-hosted-url';
+import { parseInviteUrl } from '@/lib/invite-url';
+import { parseInstanceInfo } from '@/lib/discovery';
+import { registerForAccount } from '@/lib/push';
+import {
+  colors,
+  fontBody,
+  fontDisplay,
+  fontMono,
+  fontSize,
+  spacing,
+} from '@/lib/theme';
+
+type Mode = 'first-launch' | 'settings' | 'invite' | 'reauth';
+
+function decodeMaybe(value: string | undefined | null): string | null {
+  if (!value) return null;
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
 
 export default function SignInScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const { signIn } = useAuth();
+  const params = useLocalSearchParams<{
+    server?: string;
+    mode?: Mode;
+    pendingInvite?: string;
+  }>();
+
+  const mode: Mode = (params.mode as Mode) ?? 'first-launch';
+  const serverUrl = useMemo(() => {
+    return decodeMaybe(params.server ?? null) ?? legacyHostedUrl();
+  }, [params.server]);
+  const pendingInviteUrl = useMemo(() => decodeMaybe(params.pendingInvite ?? null), [
+    params.pendingInvite,
+  ]);
+
+  const account = useAccount(serverUrl);
+  const { addAccount, updateAccount } = useAccounts();
+
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [authMethods, setAuthMethods] = useState<string[] | null>(
+    account?.instance?.auth_methods ?? null,
+  );
+
+  // For non-first-launch modes, opportunistically fetch auth_methods if we
+  // don't already have them cached on the account. Failures are silently
+  // ignored — the email path always works.
+  useEffect(() => {
+    if (mode === 'first-launch') return;
+    if (authMethods !== null) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const raw = await publicApi(serverUrl).instanceInfo();
+        const parsed = parseInstanceInfo(raw);
+        if (cancelled) return;
+        if (parsed) setAuthMethods(parsed.auth_methods);
+      } catch {
+        /* swallow — leave authMethods null; email button always renders */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [serverUrl, mode, authMethods]);
+
+  // For reauth on an existing account, keep authMethods synced with the
+  // cached instance whenever it changes.
+  useEffect(() => {
+    if (account?.instance?.auth_methods) {
+      setAuthMethods(account.instance.auth_methods);
+    }
+  }, [account?.instance?.auth_methods]);
+
+  const showGoogle = authMethods === null
+    ? mode === 'first-launch' // preserve legacy first-launch UI which always showed Google
+    : authMethods.includes('google');
 
   async function handleMagicLink() {
     if (!email.trim()) return;
     setLoading(true);
     try {
-      const res = await requestMagicLink(email.trim());
-      // Dev mode: the server returns the raw token so we can sign in immediately.
+      const api = publicApi(serverUrl);
+      const res = await api.requestMagicLink(email.trim());
+      // Dev mode: server returns the raw token so we can sign in immediately.
       if (res.token) {
-        const { token } = await verifyMagicLink(res.token);
-        await signIn(token);
+        const verify = await api.verifyMagicLink(res.token);
+        await onTokenIssued(verify.token);
         return;
       }
       setSent(true);
-    } catch (e: any) {
-      const msg = e?.message || String(e);
-      console.warn('[quits] sign-in failed', msg);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.warn('[chara] sign-in failed', msg);
       Alert.alert(t('signIn.couldNotSend'), msg);
     } finally {
       setLoading(false);
     }
   }
+
+  /**
+   * Common path after a magic-link verify yields a JWT. Splits by mode:
+   *   - reauth: updateAccount in place, clear status, return.
+   *   - other:  addAccount; optionally redeem pendingInvite; navigate home.
+   */
+  async function onTokenIssued(token: string) {
+    const now = new Date().toISOString();
+
+    if (mode === 'reauth') {
+      await updateAccount(serverUrl, { token, lastUsedAt: now });
+      await clearStatus(serverUrl);
+      if (router.canGoBack()) router.back();
+      else router.replace('/(tabs)');
+      return;
+    }
+
+    // Try to fetch /api/me + instance info for the new account. Failures
+    // leave placeholders; the per-account refresh path heals them.
+    let user: import('@/lib/accounts-store').AccountUser = {
+      id: '',
+      email: email.trim(),
+      name: '',
+      phone: '',
+      avatar_url: null,
+    };
+    let instance: AccountInstanceInfo | null = null;
+
+    try {
+      // /api/me requires the token; build a transient client by writing the
+      // account first, then refreshing.
+      await addAccount({
+        serverUrl,
+        token,
+        user,
+        instance: account?.instance ?? null,
+        addedAt: account?.addedAt ?? now,
+        lastUsedAt: now,
+      });
+      // Spec §15: register the device's Expo push token with the new server.
+      // Best-effort — the user doesn't wait for this.
+      void registerForAccount(serverUrl);
+      try {
+        user = await apiFor(serverUrl).getMe();
+        await updateAccount(serverUrl, { user });
+      } catch {
+        /* leave placeholder */
+      }
+      try {
+        const raw = await publicApi(serverUrl).instanceInfo();
+        instance = parseInstanceInfo(raw);
+        if (instance) await updateAccount(serverUrl, { instance });
+      } catch {
+        /* leave instance null */
+      }
+    } catch (e) {
+      console.warn('[chara] addAccount failed', e);
+    }
+
+    // Optional invite redemption.
+    if (pendingInviteUrl) {
+      try {
+        const parsed = parseInviteUrl(pendingInviteUrl);
+        if ('token' in parsed) {
+          const group = await apiFor(serverUrl).joinGroupByToken(parsed.token);
+          router.replace(
+            `/groups/${encodeURIComponent(serverUrl)}/${group.id}`,
+          );
+          return;
+        }
+      } catch (e) {
+        console.warn('[chara] invite redemption failed', e);
+        // Non-blocking: fall through to home; account stays added.
+      }
+    }
+
+    router.replace('/(tabs)');
+  }
+
+  let host = serverUrl;
+  try {
+    host = new URL(serverUrl).host;
+  } catch {
+    /* keep */
+  }
+
+  const isReauth = mode === 'reauth';
+  // Reauth eyebrow lives in the sibling-owned `accounts.*` namespace; fall
+  // back gracefully if the sibling hasn't shipped that key yet.
+  const eyebrow = isReauth
+    ? t('accounts.reauthEyebrow', { defaultValue: 're-authenticate' })
+    : t('signIn.eyebrow');
 
   return (
     <KeyboardAvoidingView
@@ -58,9 +228,17 @@ export default function SignInScreen() {
 
       {/* Tagline */}
       <View style={styles.tagline}>
-        <Text style={styles.eyebrow}>{t('signIn.eyebrow')}</Text>
+        <Text style={styles.eyebrow}>{eyebrow}</Text>
         <Text style={styles.headline}>{t('signIn.headline')}</Text>
       </View>
+
+      {/* Server host (visible whenever a non-default server is in play). */}
+      {(mode !== 'first-launch' || params.server) && (
+        <View style={styles.serverRow}>
+          <Feather name="server" size={12} color={colors.lead} />
+          <Text style={styles.serverText}>{host}</Text>
+        </View>
+      )}
 
       <View style={{ flex: 1 }} />
 
@@ -73,7 +251,6 @@ export default function SignInScreen() {
         </View>
       ) : (
         <View style={styles.authButtons}>
-          {/* Email input */}
           <View style={styles.emailField}>
             <TextInput
               value={email}
@@ -99,23 +276,38 @@ export default function SignInScreen() {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.authBtn, styles.authBtnSecondary]} activeOpacity={0.85}>
-            <Feather name="chrome" size={18} color={colors.graphite} />
-            <Text style={[styles.authBtnLabel, styles.authBtnLabelDefault]}>
-              {t('signIn.continueGoogle')}
-            </Text>
-          </TouchableOpacity>
+          {showGoogle && (
+            <TouchableOpacity
+              style={[styles.authBtn, styles.authBtnSecondary]}
+              activeOpacity={0.85}
+            >
+              <Feather name="chrome" size={18} color={colors.graphite} />
+              <Text style={[styles.authBtnLabel, styles.authBtnLabelDefault]}>
+                {t('signIn.continueGoogle')}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
 
-      {/* Self-host footer */}
-      <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
-        <View style={styles.footerRule} />
-        <View style={styles.footerRow}>
-          <Text style={styles.footerLeft}>{t('signIn.hostedBy')}</Text>
-          <Text style={styles.footerRight}>{t('signIn.useMyServer')}</Text>
+      {/* Self-host footer — only on the first-launch path with no explicit server. */}
+      {mode === 'first-launch' && !params.server && (
+        <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
+          <View style={styles.footerRule} />
+          <View style={styles.footerRow}>
+            <Text style={styles.footerLeft}>{t('signIn.hostedBy')}</Text>
+            <TouchableOpacity
+              onPress={() => router.push('/(auth)/add-server?mode=first-launch')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.footerRight}>{t('signIn.useMyServer')}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      )}
+      {(mode !== 'first-launch' || params.server) && (
+        <View style={{ paddingBottom: insets.bottom + spacing.s4 }} />
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -159,6 +351,17 @@ const styles = StyleSheet.create({
     letterSpacing: -1.3,
     lineHeight: 38,
     color: colors.graphite,
+  },
+  serverRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: spacing.s3,
+  },
+  serverText: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
   },
   sentWrap: {
     alignItems: 'center',

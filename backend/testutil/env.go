@@ -8,9 +8,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/DowLucas/quits/internal/auth"
-	"github.com/DowLucas/quits/internal/config"
-	"github.com/DowLucas/quits/internal/db"
+	"github.com/DowLucas/chara/internal/auth"
+	"github.com/DowLucas/chara/internal/config"
+	"github.com/DowLucas/chara/internal/db"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/require"
@@ -43,7 +43,7 @@ func NewEnv(t *testing.T) *Env {
 		InstanceMode: "selfhost",
 		JWTSecret:    testJWTSecret,
 		BaseURL:      "http://localhost:8080",
-		S3Bucket:     "quits",
+		S3Bucket:     "chara",
 	}
 
 	return &Env{

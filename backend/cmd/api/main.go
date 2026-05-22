@@ -16,11 +16,12 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/DowLucas/quits/internal/auth"
-	"github.com/DowLucas/quits/internal/config"
-	"github.com/DowLucas/quits/internal/db"
-	"github.com/DowLucas/quits/internal/fx"
-	"github.com/DowLucas/quits/internal/server"
+	"github.com/DowLucas/chara/internal/auth"
+	"github.com/DowLucas/chara/internal/config"
+	"github.com/DowLucas/chara/internal/db"
+	"github.com/DowLucas/chara/internal/fx"
+	"github.com/DowLucas/chara/internal/server"
+	"github.com/DowLucas/chara/internal/storage"
 )
 
 func main() {
@@ -56,9 +57,34 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Object storage is optional in dev (handlers fall through to 503 if
+	// the bucket isn't reachable), but should be configured for any real
+	// instance. Boot-time fast-fail is acceptable in this dev profile;
+	// see /backend/.env.example for the env vars.
+	var store *storage.Client
+	if cfg.S3Endpoint != "" {
+		storeCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		s, err := storage.New(storeCtx, storage.Config{
+			Endpoint:  cfg.S3Endpoint,
+			Bucket:    cfg.S3Bucket,
+			AccessKey: cfg.S3AccessKey,
+			SecretKey: cfg.S3SecretKey,
+			Region:    cfg.S3Region,
+		})
+		cancel()
+		if err != nil {
+			slog.Error("storage init failed", "error", err)
+			os.Exit(1)
+		}
+		store = s
+		slog.Info("storage ready", "bucket", store.Bucket(), "endpoint", cfg.S3Endpoint)
+	} else {
+		slog.Warn("S3_ENDPOINT not set; receipt attachments will be unavailable")
+	}
+
 	srv := &http.Server{
 		Addr:         cfg.Addr,
-		Handler:      server.New(cfg, pool, queries, jwtSvc),
+		Handler:      server.New(cfg, pool, queries, jwtSvc, store),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  60 * time.Second,

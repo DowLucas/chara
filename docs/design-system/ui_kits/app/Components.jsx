@@ -56,7 +56,7 @@ const AvatarStack = ({ people, max = 4 }) => {
 };
 
 const Stamp = ({ size = "sm", style }) => (
-  <span className={"stamp " + (size === "lg" ? "stamp-lg" : "")} style={style}>QUITS</span>
+  <span className={"stamp " + (size === "lg" ? "stamp-lg" : "")} style={style}>CHARA</span>
 );
 
 const ListRow = ({ title, meta, amount, amountTone, settled, onClick, right }) => (

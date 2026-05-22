@@ -1,0 +1,318 @@
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
+import { TopBar } from '@/components/TopBar';
+import { IconButton } from '@/components/IconButton';
+import { Avatar } from '@/components/Avatar';
+import { useTranslation } from 'react-i18next';
+import { useAccounts } from '@/lib/accounts';
+import { apiFor } from '@/lib/api';
+import { hasOpenBalance } from '@/lib/balance-utils';
+import { unregisterForAccount } from '@/lib/push';
+import { initialsOf } from '@/lib/name';
+import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import type { Account } from '@/lib/accounts-store';
+
+function hostFor(serverUrl: string): string {
+  return serverUrl.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+}
+
+export default function AccountsScreen() {
+  const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
+  const { accounts, defaultAccount, removeAccount, setDefault } = useAccounts();
+
+  const ordered = React.useMemo(
+    () => [...accounts].sort((a, b) => (a.addedAt < b.addedAt ? -1 : 1)),
+    [accounts],
+  );
+
+  async function handleRemove(account: Account) {
+    // Block removal when the user has open balances on this server — we don't
+    // want someone to accidentally drop an account they still owe money on /
+    // are owed money in. The check fetches /api/me/balances; on network
+    // failure we block too (better than silently allowing a removal we can't
+    // verify).
+    let balances;
+    try {
+      balances = await apiFor(account.serverUrl).listMyBalances();
+    } catch {
+      Alert.alert(
+        t('accounts.removeBalanceCheckFailedTitle'),
+        t('accounts.removeBalanceCheckFailedBody'),
+      );
+      return;
+    }
+    if (hasOpenBalance(balances)) {
+      Alert.alert(
+        t('accounts.removeBlockedOpenBalanceTitle'),
+        t('accounts.removeBlockedOpenBalanceBody', { host: hostFor(account.serverUrl) }),
+      );
+      return;
+    }
+
+    Alert.alert(
+      t('accounts.removeConfirmTitle'),
+      t('accounts.removeConfirmBody'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('accounts.removeConfirm'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await apiFor(account.serverUrl).logout();
+            } catch {
+              /* best-effort */
+            }
+            // Spec §15: deregister this device's push token from the server.
+            // `unregisterForAccount` swallows internally — safe to await.
+            await unregisterForAccount(account.serverUrl);
+            await removeAccount(account.serverUrl);
+            if (accounts.length <= 1) {
+              router.replace('/(auth)/sign-in');
+            }
+          },
+        },
+      ],
+    );
+  }
+
+  function handleSetDefault(serverUrl: string) {
+    void setDefault(serverUrl);
+  }
+
+  function handleStatusTap(serverUrl: string) {
+    router.push(
+      `/(auth)/sign-in?server=${encodeURIComponent(serverUrl)}&mode=reauth` as never,
+    );
+  }
+
+  return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <TopBar
+        title={t('accounts.title')}
+        left={
+          <IconButton icon="chevron-left" onPress={() => router.back()} label={t('common.back')} />
+        }
+      />
+      <ScrollView contentContainerStyle={styles.scroll}>
+        {ordered.map((account) => {
+          const isDefault = defaultAccount?.serverUrl === account.serverUrl;
+          return (
+            <AccountCard
+              key={account.serverUrl}
+              account={account}
+              isDefault={isDefault}
+              onMakeDefault={() => handleSetDefault(account.serverUrl)}
+              onStatusTap={() => handleStatusTap(account.serverUrl)}
+              onRemove={() => handleRemove(account)}
+              onEditProfile={() => router.push('/onboarding/name')}
+            />
+          );
+        })}
+
+        <TouchableOpacity
+          style={styles.addRow}
+          onPress={() => router.push('/(auth)/add-server?mode=settings' as never)}
+          activeOpacity={0.7}
+        >
+          <Feather name="plus" size={18} color={colors.graphite} />
+          <Text style={styles.addRowLabel}>{t('accounts.add')}</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
+  );
+}
+
+interface AccountCardProps {
+  account: Account;
+  isDefault: boolean;
+  onMakeDefault: () => void;
+  onStatusTap: () => void;
+  onRemove: () => void;
+  onEditProfile: () => void;
+}
+
+function AccountCard({
+  account,
+  isDefault,
+  onMakeDefault,
+  onStatusTap,
+  onRemove,
+  onEditProfile,
+}: AccountCardProps) {
+  const { t } = useTranslation();
+  const initials = initialsOf(account.user.name);
+  const host = hostFor(account.serverUrl);
+  const status = account.status;
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <Avatar initials={initials} size="md" />
+        <View style={styles.cardIdentity}>
+          <Text style={styles.cardName} numberOfLines={1}>
+            {account.user.name || t('common.dash')}
+          </Text>
+          <Text style={styles.cardEmail} numberOfLines={1}>
+            {account.user.email || t('common.dash')}
+          </Text>
+          <Text style={styles.cardHost} numberOfLines={1}>
+            {host}
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          onPress={isDefault ? undefined : onMakeDefault}
+          disabled={isDefault}
+          activeOpacity={isDefault ? 1 : 0.7}
+          accessibilityLabel={t('accounts.default')}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={styles.defaultBadgeWrap}
+        >
+          <Feather
+            name="disc"
+            size={18}
+            color={isDefault ? colors.graphite : colors.ruleSoft}
+          />
+        </TouchableOpacity>
+      </View>
+
+      {status && (
+        <TouchableOpacity
+          style={styles.statusChip}
+          onPress={onStatusTap}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.statusChipLabel}>
+            {status === 'reauth_required'
+              ? t('accounts.statusReauth')
+              : t('accounts.statusIncompatible')}
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      <View style={styles.cardActions}>
+        <TouchableOpacity
+          onPress={onEditProfile}
+          activeOpacity={0.7}
+          style={styles.cardActionBtn}
+        >
+          <Text style={styles.cardActionLabel}>{t('accounts.editProfile')}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={onRemove}
+          activeOpacity={0.7}
+          style={styles.cardActionBtn}
+        >
+          <Text style={styles.cardActionDestructive}>{t('accounts.remove')}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.paper },
+  scroll: {
+    paddingHorizontal: spacing.s5,
+    paddingTop: spacing.s5,
+    paddingBottom: spacing.s7,
+    gap: spacing.s4,
+  },
+  card: {
+    borderWidth: 1,
+    borderColor: colors.ruleSoft,
+    borderRadius: 8,
+    padding: spacing.s4,
+    backgroundColor: colors.paper,
+    gap: spacing.s3,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.s3,
+  },
+  cardIdentity: {
+    flex: 1,
+    gap: 2,
+  },
+  cardName: {
+    fontFamily: fontDisplay,
+    fontSize: fontSize.bodyL,
+    color: colors.graphite,
+    letterSpacing: -0.2,
+  },
+  cardEmail: {
+    fontFamily: fontBody,
+    fontSize: fontSize.bodyS,
+    color: colors.lead,
+  },
+  cardHost: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    letterSpacing: 0.3,
+    marginTop: 2,
+  },
+  defaultBadgeWrap: {
+    paddingTop: 2,
+  },
+  statusChip: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.vermillion,
+    paddingVertical: spacing.s1,
+    paddingHorizontal: spacing.s2,
+    borderRadius: 4,
+  },
+  statusChipLabel: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.fgOnAccent,
+    letterSpacing: 0.3,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: colors.ruleSoft,
+    paddingTop: spacing.s3,
+    gap: spacing.s4,
+  },
+  cardActionBtn: {
+    paddingVertical: spacing.s1,
+  },
+  cardActionLabel: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.graphite,
+    letterSpacing: 0.3,
+  },
+  cardActionDestructive: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.vermillion,
+    letterSpacing: 0.3,
+  },
+  addRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.s2,
+    paddingVertical: spacing.s3,
+    paddingHorizontal: spacing.s4,
+    borderWidth: 0.5,
+    borderColor: colors.graphite,
+    borderRadius: 6,
+    backgroundColor: colors.bone,
+  },
+  addRowLabel: {
+    fontFamily: fontBody,
+    fontSize: fontSize.body,
+    color: colors.graphite,
+  },
+});

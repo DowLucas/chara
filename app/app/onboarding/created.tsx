@@ -6,11 +6,15 @@ import { Feather } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import { useTranslation } from 'react-i18next';
 import { getGroup, inviteDeepLink, Group } from '@/lib/api';
+import { useDefaultAccount } from '@/lib/accounts';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 
 export default function GroupCreatedScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  // Wave 4: the home tab will know the per-row serverUrl. For now,
+  // creation happens against the default account.
+  const defaultServerUrl = useDefaultAccount()?.serverUrl ?? '';
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const [group, setGroup] = useState<Group | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +78,13 @@ export default function GroupCreatedScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.secondary}
-          onPress={() => router.replace(`/groups/${group.id}`)}
+          onPress={() => {
+            if (!defaultServerUrl) {
+              router.replace('/(tabs)');
+              return;
+            }
+            router.replace(`/groups/${encodeURIComponent(defaultServerUrl)}/${group.id}`);
+          }}
           activeOpacity={0.85}
         >
           <Text style={styles.secondaryLabel}>{t('groupCreated.open')}</Text>

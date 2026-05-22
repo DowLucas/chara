@@ -1,10 +1,10 @@
-# Quits — Design System
+# Chara — Design System
 
-> Split it. Settle it. Call it quits.
+> Split it. Settle it. Call it chara.
 
-Quits is a bill-splitting app built around the phrase **"call it quits"**: the moment of decisive completion. The visual heritage is architectural drafting, modernist ledger design, and the confident restraint of brands like Mercury, Linear, and Aesop.
+Chara is a bill-splitting app built around the phrase **"call it chara"**: the moment of decisive completion. The visual heritage is architectural drafting, modernist ledger design, and the confident restraint of brands like Mercury, Linear, and Aesop.
 
-The deliberate position: **the opposite of fintech.** Cool, structural, type-first. Not warm, not editorial. Decisive and architectural. Every other app in this category looks like a finance product. Quits looks like a well-designed object.
+The deliberate position: **the opposite of fintech.** Cool, structural, type-first. Not warm, not editorial. Decisive and architectural. Every other app in this category looks like a finance product. Chara looks like a well-designed object.
 
 ## Sources
 
@@ -32,7 +32,7 @@ This system was authored from a brand brief only — no codebase, no Figma file,
 
 **Person.** Default to imperatives and the implicit "you" — "Add a friend," "Settle up." Avoid second-person pep ("You got this!"). Use first person plural sparingly, only when the app is acting on the user's behalf ("We rounded to the nearest krona").
 
-**Casing.** Sentence case everywhere. **Never Title Case.** **Never ALL CAPS** — with exactly one exception: the word `QUITS` inside the stamp signature. This is the rule that does the heaviest brand lifting; do not break it.
+**Casing.** Sentence case everywhere. **Never Title Case.** **Never ALL CAPS** — with exactly one exception: the word `CHARA` inside the stamp signature. This is the rule that does the heaviest brand lifting; do not break it.
 
 **Punctuation.** Periods are allowed. Exclamation points are not. Em dashes for asides. Avoid the Oxford comma only when it harms clarity.
 
@@ -40,9 +40,9 @@ This system was authored from a brand brief only — no codebase, no Figma file,
 
 **Sample copy.**
 
-- Tagline: *"Split it. Settle it. Call it quits."*
+- Tagline: *"Split it. Settle it. Call it chara."*
 - Empty state: *"Nothing to settle yet."*
-- Completion: *"Quits. Nice."*
+- Completion: *"Chara. Nice."*
 - Primary CTA: *"Send via Swish"* / *"Settle"* / *"Add expense"*
 - Error: *"That didn't go through. Try again."*
 - Confirmation: *"Marked as paid."*
@@ -96,15 +96,15 @@ The brief specified five anchors: `#F0E5CC`, `#2D1F1A`, `#B83D3D`, `#8FA055`, `#
 
 **No gradients. No drop shadows. No glass effects. No blur.** Flat planes only.
 
-There are no hero images, illustrations, or background textures in the brand language. Surfaces are paint chips — `--paper` over `--bone` over `--graphite` — and the visual interest comes from typography, the rule line, and the QUITS stamp.
+There are no hero images, illustrations, or background textures in the brand language. Surfaces are paint chips — `--paper` over `--bone` over `--graphite` — and the visual interest comes from typography, the rule line, and the CHARA stamp.
 
 ### The rule line
 
 The structural backbone. A `1.5px` solid graphite horizontal line under section headers, totals, and balance amounts. Borrowed directly from accounting ledgers. It appears more times per screen than any other element, and it is what makes the brand look like a *drawn object* rather than a SaaS app.
 
-### The QUITS stamp
+### The CHARA stamp
 
-The most share-worthy brand moment. A rotated vermillion-bordered tag containing the word `QUITS` in mono. Specifications:
+The most share-worthy brand moment. A rotated vermillion-bordered tag containing the word `CHARA` in mono. Specifications:
 
 - **Border:** 1.5px solid vermillion
 - **Padding:** 2–6px vertical, 8–12px horizontal
@@ -130,7 +130,7 @@ A subtle 1px strike-through on the **title** of fully reconciled expenses (never
 - Duration: `120ms` fast / `200ms` default / `320ms` slow.
 - **Hover:** filled buttons darken via `color-mix(... 88%, black)`. Ghost buttons drop to `0.7` opacity. No scaling on hover.
 - **Press:** `translateY(0.5px)`. No scale-down. No spring.
-- **Settled animation:** the QUITS stamp rotates into view from `-6deg` to `-2deg` over 320ms, then sits still.
+- **Settled animation:** the CHARA stamp rotates into view from `-6deg` to `-2deg` over 320ms, then sits still.
 - No fades on route changes. No bounces. The app feels engraved, not buoyant.
 
 ### Layout
@@ -153,7 +153,7 @@ Stroke-based, **1.5px weight, outline only.** The reference set is **Tabler Outl
 - **Source.** No icon assets were provided with the brief. This system links **Lucide** from CDN (`https://unpkg.com/lucide@latest`) as the closest match by stroke weight and corner geometry. **Substitution flagged** — if you have a custom icon set, drop the SVGs into `assets/icons/` and update `ui_kits/app/Icon.jsx`.
 - **Emoji.** Never.
 - **Unicode glyphs.** Not used as icons. `kr` (currency) is set in mono type, not as a glyph.
-- **Logo.** `assets/quits-wordmark.svg` — the wordmark is just the word `Quits` set in Inter 600 at -0.03em, in graphite. There is no symbol mark.
+- **Logo.** `assets/chara-wordmark.svg` — the wordmark is just the word `Chara` set in Inter 600 at -0.03em, in graphite. There is no symbol mark.
 
 ---
 
@@ -166,7 +166,7 @@ Stroke-based, **1.5px weight, outline only.** The reference set is **Tabler Outl
 - ❌ Default shadcn cool grays (Spliit / SplitPro territory)
 - ❌ Gradients, glass, soft shadows
 - ❌ Title Case anywhere
-- ❌ ALL CAPS outside the QUITS stamp
+- ❌ ALL CAPS outside the CHARA stamp
 - ❌ Serif typefaces (this is the deliberate departure from the earlier "Kvitt" direction)
 - ❌ Emoji
 - ❌ Exclamation points

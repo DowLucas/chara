@@ -133,12 +133,14 @@ type Settlement struct {
 }
 
 type User struct {
-	ID          string             `db:"id" json:"id"`
-	Email       string             `db:"email" json:"email"`
-	DisplayName string             `db:"display_name" json:"display_name"`
-	AvatarUrl   pgtype.Text        `db:"avatar_url" json:"avatar_url"`
-	Phone       pgtype.Text        `db:"phone" json:"phone"`
-	Locale      string             `db:"locale" json:"locale"`
-	CreatedAt   pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	UpdatedAt   pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	ID              string             `db:"id" json:"id"`
+	Email           string             `db:"email" json:"email"`
+	DisplayName     string             `db:"display_name" json:"display_name"`
+	AvatarUrl       pgtype.Text        `db:"avatar_url" json:"avatar_url"`
+	Phone           pgtype.Text        `db:"phone" json:"phone"`
+	Locale          string             `db:"locale" json:"locale"`
+	CreatedAt       pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	AvatarObjectKey pgtype.Text        `db:"avatar_object_key" json:"avatar_object_key"`
+	AvatarUpdatedAt pgtype.Timestamptz `db:"avatar_updated_at" json:"avatar_updated_at"`
 }

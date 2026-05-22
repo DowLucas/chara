@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/DowLucas/quits/internal/receipt"
+	"github.com/DowLucas/chara/internal/receipt"
 )
 
 // fakeScanner is a hand-rolled stub. Tests inject the response or error

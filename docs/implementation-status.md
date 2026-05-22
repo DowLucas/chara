@@ -19,8 +19,8 @@ Last updated: 2026-05-13 (auth endpoints + dev-mode mock login)
 
 ```
 cd backend
-docker run -d --name quits-postgres -e POSTGRES_DB=quits -e POSTGRES_USER=quits \
-  -e POSTGRES_PASSWORD=quits -p 5433:5432 postgres:16-alpine
+docker run -d --name chara-postgres -e POSTGRES_DB=chara -e POSTGRES_USER=chara \
+  -e POSTGRES_PASSWORD=chara -p 5433:5432 postgres:16-alpine
 set -a && . ./.env.local && set +a
 go run ./cmd/api
 ```
@@ -33,7 +33,7 @@ go run ./cmd/api
 
 - Go + Chi router scaffolded (`backend/`)
 - JWT auth middleware (`internal/auth/`, `internal/middleware/`)
-- `/.well-known/quits-instance` endpoint
+- `/.well-known/chara-instance` endpoint
 - Health endpoints (`/api/health/liveness`, `/api/health/readiness`)
 - Postgres migrations via golang-migrate (`backend/migrations/`)
 - sqlc codegen configured (`backend/sqlc/`)
@@ -86,7 +86,7 @@ Commit: `TBD`
   Returns the parsed `Receipt`. 422 if Gemini cannot find a total, 413
   if the image > 6 MB, 502 on upstream errors.
 - **Config**: `GEMINI_API_KEY` env var. When unset, the route is not
-  mounted and `/.well-known/quits-instance` advertises `features.ocr=false`,
+  mounted and `/.well-known/chara-instance` advertises `features.ocr=false`,
   so self-hosters without a Gemini key simply do not see the UI.
 - **Mobile**: new `components/ReceiptScanner.tsx` (full-screen `CameraView`
   with viewfinder + shutter). `add-expense.tsx` shows a "Scan receipt"
@@ -95,6 +95,84 @@ Commit: `TBD`
   group's setting.
 - **Tests**: 7 unit tests for the Gemini scanner (HTTP-mocked) + 9
   handler tests with a fake scanner. All green.
+
+### Multi-server accounts ✅
+
+The app now holds N independent server-accounts and aggregates their data
+into one UI ("aggregator", not "federation" — servers don't talk to each
+other). Full design:
+`docs/superpowers/specs/2026-05-22-multi-server-accounts-design.md`.
+
+**Backend (purely additive):**
+
+- `/.well-known/chara-instance` extended with `protocol_version`,
+  `min_app_protocol`, `max_app_protocol`. Deprecated alias
+  `/.well-known/quits-instance` kept for one release.
+- New Chi middleware (`internal/middleware/protocol.go`) on `/api/*`
+  reads `X-Chara-App-Protocol`; returns `426` when out of range. Mounted
+  on the authenticated group only; well-known stays reachable from
+  incompatible clients so they can discover the new min/max.
+- New endpoints: `POST/DELETE /api/me/push-token` (fan-out registration
+  target), `POST /api/me/logout` (advisory no-op; hook for future
+  revocation work).
+- New env: `MIN_APP_PROTOCOL` (default `0` for rollout safety),
+  `MAX_APP_PROTOCOL` (default `1`).
+
+**App:**
+
+- Composite `(serverUrl, groupId)` keys everywhere. Routes moved to
+  `app/app/groups/[server]/[id]/...` and `app/app/expenses/[server]/[id]`.
+- `app/lib/accounts-store.ts` — non-React source of truth for the
+  `chara.accounts` SecureStore blob (atomic read/write, status
+  persistence, subscribe/snapshot for both React and non-React consumers).
+- `app/lib/accounts.tsx` — `AccountsProvider`, `useAccounts()`,
+  `useAccount(serverUrl)`, `useDefaultAccount()`. Replaces `AuthProvider`;
+  `useAuth()` lives on as a backward-compat shim resolving to the default
+  account.
+- `app/lib/api.ts` — `apiFor(serverUrl)` + `publicApi(serverUrl)` factories
+  for per-server access. `requestOn(serverUrl, ...)` injects
+  `X-Chara-App-Protocol` and flips account status on 401 / 426. Flat
+  exports (`listGroups()`, `createExpense()`, …) stay as shims that route
+  through the default account.
+- `app/lib/aggregated-reads.ts` — `useAggregatedGroups()`,
+  `useAggregatedBalances()`, `useAggregatedActivity()` hooks with parallel
+  fan-out (`Promise.allSettled`), per-account status, SWR cache via
+  `app/lib/cache.ts`, foreground + focus-based refresh.
+- `app/lib/compat-recovery.ts` — cold-launch + foreground probe that
+  clears `incompatible` status when a server is upgraded.
+- `app/lib/push.ts` — Expo push token bootstrap + per-account fan-out
+  registration + token-rotation re-fanout + throttled silent retry.
+- `app/lib/migrate-legacy-auth.ts` — one-shot crash-safe migration from
+  the legacy single-token SecureStore key into the new blob.
+- Settings → Accounts list (`app/app/settings/accounts.tsx`), Add Server
+  flow (`app/app/(auth)/add-server.tsx`), sign-in screen parametrised by
+  `server`/`mode`/`pendingInvite`, cross-server invite handler
+  (`app/lib/invite-handler.ts`), deep-link routing in `app/_layout.tsx`.
+- Remove Account is blocked when the user has any non-zero balance on the
+  server (`app/lib/balance-utils.ts`); same precheck on "Sign out of
+  everything".
+
+**Test counts:** 16 jest suites / 238 tests in the app
+(`server-url`, `protocol`, `invite-url`, `cache`, `migrate-legacy-auth`,
+`accounts-store`, `request-on`, `discovery`, `aggregated-reads`,
+`compat-recovery`, `push`, `invite-handler`, `balance-utils`, plus
+existing `security-code`, `store-url`, `swish`). Backend: all packages
+green including new `wellknown`, `middleware/protocol_test.go`,
+`handler/push_tokens_test.go`, `handler/auth_test.go` (logout).
+
+**Rollout note:** servers initially deploy with `MIN_APP_PROTOCOL=0` so
+legacy app builds keep working. Bump to `1` is a separate later deploy
+once the multi-server app build reaches the install-base threshold.
+
+**Carried follow-ups** (not blocking; tracked in spec §20 and waves):
+
+- `/onboarding/name` doesn't yet accept a `?server=` param — per-account
+  profile editing routes to default account today.
+- Spec §14's "Apply to others" CTA after profile save not built.
+- `Group.last_activity_at` not yet returned by `/api/groups`; home tab
+  sorts by `created_at`.
+- Production `HOSTED_SERVER_URL` constant still placeholder until DNS
+  flips during the Quits → Chara rename.
 
 ### Week 8.5 — Settle-up suggestions ✅
 
@@ -152,6 +230,7 @@ cd backend && go test -tags integration ./...
 - Activity feed UI
 - Full-text search (basic ilike query acceptable for Phase 1)
 - Image attachments (Phase 2)
-- Push notifications (Phase 2)
 - Splitwise importer (Phase 2)
 - Social auth — Google OAuth, Apple Sign In (hosted tier only, Phase 2)
+- JWT server-side revocation (Phase 2; advisory `POST /api/me/logout` already in place as a hook)
+- Federation between Chara instances (P3 per `docs/02-product-strategy.md`; the multi-server work above is aggregator-only)

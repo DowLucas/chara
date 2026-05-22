@@ -2,7 +2,7 @@
 
 A 12-month plan, phased into 4 quarters. Each phase has explicit exit criteria. Falling behind on these is a signal to cut scope, not to push the schedule.
 
-This roadmap assumes Quits is built around Lucas's existing commitments (Fidify full-time, Eventfold founder, KTH degree, consulting). Realistic time budget: 10-15 hours per week. Anything more is the danger zone for burnout.
+This roadmap assumes Chara is built around Lucas's existing commitments (Fidify full-time, Eventfold founder, KTH degree, consulting). Realistic time budget: 10-15 hours per week. Anything more is the danger zone for burnout.
 
 ## Phase 0: Decisions and spike (Weeks 0-2)
 
@@ -10,7 +10,7 @@ Goal: confirm or reject the assumptions in these docs.
 
 ### Tasks
 
-- [ ] Pick the final name and lock domain (quits.app first choice; verify trademark)
+- [ ] Pick the final name and lock domain (chara.app first choice; verify trademark)
 - [ ] Reserve GitHub org and social handles
 - [ ] Deploy SplitPro on Lucas's homelab and use it daily for 1 week with a real expense group
 - [ ] Read SplitPro's data model and money math implementation in detail
@@ -133,7 +133,7 @@ Goal: public Phase 1 launch per the GTM doc. Get to first 1000 users and 500 Git
 ### Milestones
 
 **Week 25**: Launch site and content prep.
-- quits.app landing page live
+- chara.app landing page live
 - Comparison page (vs Splitwise, vs SplitPro, vs Spliit) live
 - "Migrate from Splitwise" page with the 90-second video
 - Threat model and privacy doc published
@@ -146,7 +146,7 @@ Goal: public Phase 1 launch per the GTM doc. Get to first 1000 users and 500 Git
 
 **Week 28**: HN Show HN.
 - Submitted on a Tuesday morning EU time
-- Title: "Show HN: Quits, open source self-hostable Splitwise alternative with native apps"
+- Title: "Show HN: Chara, open source self-hostable Splitwise alternative with native apps"
 - 48-hour comment availability
 
 **Week 30**: Awesome-selfhosted PR merged.
@@ -179,14 +179,14 @@ Goal: launch in Sweden, ship the hosted tier, hit 1000 paying signups.
 - EU region only for GDPR
 
 **Week 34**: Hosted tier public.
-- Sign up at quits.app, free tier with stated limits
+- Sign up at chara.app, free tier with stated limits
 - Pricing page live: €2 / 25 SEK, family plan €5 / 50 SEK
 - First 50 paying users
 
 **Week 36**: Nordic-localized content push.
 - Swedish UI translation 100%
 - Norwegian Bokmål + Danish at 80%+
-- Swedish landing page version (quits.app/sv)
+- Swedish landing page version (chara.app/sv)
 - "Migrera från Steven" page with reverse-engineered import (P1 feature, may slip)
 
 **Week 38**: Swedish press outreach.
@@ -236,20 +236,20 @@ The honest list of what can kill this project, with mitigations.
 
 ### Risk: Lucas's bandwidth fragments
 
-**Likelihood: High.** Fidify, Eventfold, KTH degree, consulting, Quits = five major commitments. Each one has a credible claim on Lucas's attention.
+**Likelihood: High.** Fidify, Eventfold, KTH degree, consulting, Chara = five major commitments. Each one has a credible claim on Lucas's attention.
 
 **Mitigation**:
-- Hard time-budget: max 12 hours/week on Quits during weeks with Fidify work
+- Hard time-budget: max 12 hours/week on Chara during weeks with Fidify work
 - Phase exit criteria are about deliverables, not dates; allow phases to take 50% longer than estimated
 - Bring on a co-maintainer by Month 6 even part-time
-- If Eventfold accelerates or Fidify equity negotiations intensify, Quits explicitly de-prioritizes
+- If Eventfold accelerates or Fidify equity negotiations intensify, Chara explicitly de-prioritizes
 
 ### Risk: Steven recovers
 
 **Likelihood: Low-medium.** Steven has the team and the Swish integration. If they fix the reliability and ship one good update, the Swedish wedge weakens.
 
 **Mitigation**:
-- Move fast on Phase 4 to establish Quits as the alternative before Steven recovers
+- Move fast on Phase 4 to establish Chara as the alternative before Steven recovers
 - Build relationships with churned Steven users; they have already paid the switching cost
 - Even if Steven recovers, the self-hosting community wedge stands independently
 
@@ -264,7 +264,7 @@ The honest list of what can kill this project, with mitigations.
 
 ### Risk: AGPL chosen wrong
 
-**Likelihood: Low.** The Immich and Grafana track records are strong. But if Quits wants to be embedded in commercial products at some point, AGPL is harder to relicense without all contributor sign-off.
+**Likelihood: Low.** The Immich and Grafana track records are strong. But if Chara wants to be embedded in commercial products at some point, AGPL is harder to relicense without all contributor sign-off.
 
 **Mitigation**:
 - CLA from day 1 preserves relicensing optionality
@@ -276,7 +276,7 @@ The honest list of what can kill this project, with mitigations.
 
 **Mitigation**:
 - Hosted tier is positioned for non-technical users, not the GitHub audience
-- Splitwise migration is the funnel: someone leaving Splitwise looks for "where do I go?" and ends up on quits.app
+- Splitwise migration is the funnel: someone leaving Splitwise looks for "where do I go?" and ends up on chara.app
 - Sponsor income + grants supplement until hosted tier scales
 
 ### Risk: GDPR / Swedish compliance complexity
@@ -291,7 +291,7 @@ The honest list of what can kill this project, with mitigations.
 
 ### Risk: Swish merchant integration becomes required
 
-**Likelihood: Low.** Current plan uses Swish deep-linking, which doesn't require merchant integration. But if Swish changes the URL scheme or limits it to merchants, Quits loses its core SE feature.
+**Likelihood: Low.** Current plan uses Swish deep-linking, which doesn't require merchant integration. But if Swish changes the URL scheme or limits it to merchants, Chara loses its core SE feature.
 
 **Mitigation**:
 - Test the deep-link approach exhaustively during Phase 2
@@ -309,7 +309,7 @@ The honest list of what can kill this project, with mitigations.
 
 ### Risk: Project becomes a job, not a hobby
 
-**Likelihood: Inevitable if successful.** Once there are paying users, support tickets, and uptime expectations, Quits stops being a passion project.
+**Likelihood: Inevitable if successful.** Once there are paying users, support tickets, and uptime expectations, Chara stops being a passion project.
 
 **Mitigation**:
 - Set explicit support SLAs and stick to them ("email support: 3 business days, hosted tier")

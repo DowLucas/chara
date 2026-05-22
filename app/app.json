@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "Quits",
-    "slug": "quits",
+    "name": "Chara",
+    "slug": "chara",
     "version": "1.0.0",
-    "scheme": "quits",
+    "scheme": "chara",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -12,13 +12,16 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "app.quits"
+      "bundleIdentifier": "app.chara",
+      "infoPlist": {
+        "NSUserNotificationsUsageDescription": "Chara sends push notifications when group members add expenses or settle up."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#F0E5CC"
       },
-      "package": "app.quits"
+      "package": "app.chara"
     },
     "web": {
       "bundler": "metro",
@@ -41,13 +44,13 @@
       [
         "expo-secure-store",
         {
-          "faceIDPermission": "Allow Quits to access Face ID."
+          "faceIDPermission": "Allow Chara to access Face ID."
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Quits to use the camera to scan group QR codes."
+          "cameraPermission": "Allow Chara to use the camera to scan group QR codes."
         }
       ],
       "expo-localization",

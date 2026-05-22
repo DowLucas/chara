@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/DowLucas/quits/internal/db"
-	"github.com/DowLucas/quits/testutil"
+	"github.com/DowLucas/chara/internal/db"
+	"github.com/DowLucas/chara/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -134,6 +134,34 @@ func TestSettle_Create_RejectsMemberFromAnotherGroup(t *testing.T) {
 	body := fmt.Sprintf(`{"from_member_id":%q,"to_member_id":%q,"amount":"10.00","currency":"SEK"}`, carolMem.ID, aliceMemberID)
 	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, alice.Token))
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+// TestSettle_GenericMemberError guards against information disclosure: the
+// response for a member ID from a different group must be identical to the
+// response for a totally bogus ID, so a client can't probe whether a member
+// exists anywhere in the system.
+func TestSettle_GenericMemberError(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, _ := setupExpenseEnv(t)
+
+	carolU := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "carol"), "Carol")
+	_, carolMem := testutil.CreateGroup(t, env.Pool, "Other Group", "SEK", carolU.ID, "Carol")
+
+	bogusMemberID := "01HZZNONEXISTENT00000000"
+
+	otherGroupBody := fmt.Sprintf(`{"from_member_id":%q,"to_member_id":%q,"amount":"10.00","currency":"SEK"}`, carolMem.ID, aliceMemberID)
+	otherGroupRR := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", otherGroupBody, alice.Token))
+
+	bogusBody := fmt.Sprintf(`{"from_member_id":%q,"to_member_id":%q,"amount":"10.00","currency":"SEK"}`, bogusMemberID, aliceMemberID)
+	bogusRR := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", bogusBody, alice.Token))
+
+	require.Equal(t, http.StatusBadRequest, otherGroupRR.Code)
+	require.Equal(t, http.StatusBadRequest, bogusRR.Code)
+
+	var otherGroupResp, bogusResp map[string]any
+	require.NoError(t, json.NewDecoder(otherGroupRR.Body).Decode(&otherGroupResp))
+	require.NoError(t, json.NewDecoder(bogusRR.Body).Decode(&bogusResp))
+	assert.Equal(t, otherGroupResp["error"], bogusResp["error"],
+		"settle error message must not differ between cross-group and non-existent member IDs")
 }
 
 // ── SuggestSettlements ────────────────────────────────────────────────────────

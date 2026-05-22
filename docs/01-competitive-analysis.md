@@ -42,7 +42,7 @@ This document is the unvarnished view of every meaningful competitor. The goal i
 - No native Nordic payment rail integration (no Swish, no Vipps, no MobilePay)
 - Bank integration is US-only and limited
 
-**Strategic takeaway:** Splitwise is feature-rich but commercially aggressive. Its free tier is now bad enough that users are actively looking for alternatives. This is the global comparison product. Quits's marketing should always have a "vs Splitwise" page.
+**Strategic takeaway:** Splitwise is feature-rich but commercially aggressive. Its free tier is now bad enough that users are actively looking for alternatives. This is the global comparison product. Chara's marketing should always have a "vs Splitwise" page.
 
 ## Steven (the Swedish incumbent)
 
@@ -82,7 +82,7 @@ This document is the unvarnished view of every meaningful competitor. The goal i
 - Fintech monetization has soaked development capacity
 - Closed source, no self-host option, single point of failure
 
-**Strategic takeaway:** Steven is the most important competitor for Quits because (a) the Nordic wedge is the strongest GTM path, (b) Steven users are actively churning right now, and (c) Steven is unlikely to recover because the company appears resource-constrained. Quits's Swedish positioning is "the open source bill splitter that doesn't go down."
+**Strategic takeaway:** Steven is the most important competitor for Chara because (a) the Nordic wedge is the strongest GTM path, (b) Steven users are actively churning right now, and (c) Steven is unlikely to recover because the company appears resource-constrained. Chara's Swedish positioning is "the open source bill splitter that doesn't go down."
 
 ## Spliit (OSS, sebastien castiel)
 
@@ -164,7 +164,7 @@ This document is the unvarnished view of every meaningful competitor. The goal i
 - No charts/insights
 - No widgets, no Apple Watch, no Wear OS
 
-**Strategic takeaway:** SplitPro is Quits's closest comp and the most useful reference codebase. The architecture is sound; the gap is native mobile and Nordic payments. Worth seriously considering whether to fork rather than greenfield (see [03-technical-architecture.md](./03-technical-architecture.md) for the analysis).
+**Strategic takeaway:** SplitPro is Chara's closest comp and the most useful reference codebase. The architecture is sound; the gap is native mobile and Nordic payments. Worth seriously considering whether to fork rather than greenfield (see [03-technical-architecture.md](./03-technical-architecture.md) for the analysis).
 
 ## Splito (OSS, canopas)
 
@@ -188,7 +188,7 @@ This document is the unvarnished view of every meaningful competitor. The goal i
 - No web client
 - Less active than SplitPro
 
-**Strategic takeaway:** Splito is a UI reference, not a strategic competitor. The Firebase choice is a dealbreaker for self-hosting. The architecture cannot be evolved into what Quits needs to be.
+**Strategic takeaway:** Splito is a UI reference, not a strategic competitor. The Firebase choice is a dealbreaker for self-hosting. The architecture cannot be evolved into what Chara needs to be.
 
 ## Tricount (BNP Paribas, free)
 
@@ -212,7 +212,7 @@ This document is the unvarnished view of every meaningful competitor. The goal i
 - No self-hosting
 - No native Nordic payment rails
 
-**Strategic takeaway:** Tricount is the "good enough and free" choice for casual users. Quits's MVP should match Tricount's frictionless group-link model as a feature, not compete with it on simplicity. Tricount users are not Quits's target.
+**Strategic takeaway:** Tricount is the "good enough and free" choice for casual users. Chara's MVP should match Tricount's frictionless group-link model as a feature, not compete with it on simplicity. Tricount users are not Chara's target.
 
 ## Other apps worth knowing exist
 
@@ -221,11 +221,11 @@ This document is the unvarnished view of every meaningful competitor. The goal i
 - **Splid** (formerly Splidshare): German, popular for trips, web + mobile, free with ads.
 - **Cospender**, **Splittr**, **Plates**, **Beem It**: smaller players, mostly mobile-only.
 
-None of these threaten Quits's positioning.
+None of these threaten Chara's positioning.
 
 ## Feature matrix summary
 
-| Feature | Splitwise Pro | Steven Premium | Spliit | SplitPro | Splito | Tricount | **Quits target** |
+| Feature | Splitwise Pro | Steven Premium | Spliit | SplitPro | Splito | Tricount | **Chara target** |
 |---------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | Open source | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ | ✅ |
 | Self-hostable | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ |
@@ -254,6 +254,6 @@ None of these threaten Quits's positioning.
 
 ## Conclusion
 
-Quits's defensible positioning is the intersection of: open source, self-hostable, native iOS + Android, and Nordic payment rails. No other product hits all four. Splitwise hits two (native apps + web). Steven hits two (native apps + Swish). The OSS field hits one or two each but none all four.
+Chara's defensible positioning is the intersection of: open source, self-hostable, native iOS + Android, and Nordic payment rails. No other product hits all four. Splitwise hits two (native apps + web). Steven hits two (native apps + Swish). The OSS field hits one or two each but none all four.
 
 The Nordic wedge is the most defensible because Steven is the only competitor in that intersection and Steven is collapsing. The global play comes after.

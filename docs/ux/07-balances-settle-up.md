@@ -34,7 +34,7 @@ User initiates settlement by tapping settle button, confirming the pre-filled am
 ```mermaid
 sequenceDiagram
     participant User as User<br/>(Payer)
-    participant App as Quits App
+    participant App as Chara App
     participant DB as Database
     participant Notif as Notification<br/>Service
     participant Payee as Payee
@@ -55,16 +55,16 @@ sequenceDiagram
 ---
 
 ## 7.3 Settle Up with Swish Flow  `P0`
-User taps Swish payment option, Quits builds a Swish deep link with payee phone, amount, and message, opens the Swish app, then prompts for confirmation upon return.
+User taps Swish payment option, Chara builds a Swish deep link with payee phone, amount, and message, opens the Swish app, then prompts for confirmation upon return.
 
 ```mermaid
 flowchart TD
-    A["User taps<br/>Settle with Swish"] --> B["Quits builds swish:// URL<br/>payee_phone + amount + message"]
+    A["User taps<br/>Settle with Swish"] --> B["Chara builds swish:// URL<br/>payee_phone + amount + message"]
     B --> C["System opens Swish app"]
     C --> D{Swish<br/>installed?}
     D -->|Yes| E["User confirms payment<br/>in Swish app"]
     D -->|No| F["Fallback: show Swish<br/>not installed message"]
-    E --> G["User returns to Quits<br/>or Swish redirects"]
+    E --> G["User returns to Chara<br/>or Swish redirects"]
     G --> H["Show Mark as Paid prompt"]
     H --> I["User confirms payment"]
     I --> J["Create settlement record<br/>Update balances<br/>Send notification"]
@@ -79,16 +79,16 @@ flowchart TD
 ---
 
 ## 7.4 Settle Up with Vipps Flow  `P1`
-Identical to Swish flow: Quits builds a vipps://send deep link, opens the app, handles fallback to web URL if app unavailable, then prompts for confirmation.
+Identical to Swish flow: Chara builds a vipps://send deep link, opens the app, handles fallback to web URL if app unavailable, then prompts for confirmation.
 
 ```mermaid
 flowchart TD
-    A["User taps<br/>Settle with Vipps"] --> B["Quits builds vipps://send URL<br/>payee_phone + amount"]
+    A["User taps<br/>Settle with Vipps"] --> B["Chara builds vipps://send URL<br/>payee_phone + amount"]
     B --> C["System opens Vipps app"]
     C --> D{Vipps<br/>installed?}
     D -->|Yes| E["User confirms payment<br/>in Vipps app"]
     D -->|No| F["Fallback: open Vipps<br/>web URL in browser"]
-    E --> G["User returns to Quits"]
+    E --> G["User returns to Chara"]
     F --> G2["User completes<br/>web-based payment"]
     G --> H["Show Mark as Paid prompt"]
     G2 --> H
@@ -104,15 +104,15 @@ flowchart TD
 ---
 
 ## 7.5 Settle Up with PayPal Flow  `P1`
-Opens paypal.me/{user}/{amount} in browser. No in-app callback; user manually marks settlement after confirming payment outside Quits.
+Opens paypal.me/{user}/{amount} in browser. No in-app callback; user manually marks settlement after confirming payment outside Chara.
 
 ```mermaid
 flowchart TD
-    A["User taps<br/>Settle with PayPal"] --> B["Quits constructs<br/>paypal.me/username/amount"]
+    A["User taps<br/>Settle with PayPal"] --> B["Chara constructs<br/>paypal.me/username/amount"]
     B --> C["System opens URL<br/>in browser"]
     C --> D["PayPal login page<br/>or payment confirmation"]
     D --> E["User confirms payment<br/>in PayPal"]
-    E --> F["User returns to Quits<br/>manually"]
+    E --> F["User returns to Chara<br/>manually"]
     F --> G["Show Mark as Paid prompt"]
     G --> H["User confirms settlement"]
     H --> I["Create settlement record<br/>Update balances<br/>Send notification"]
@@ -131,7 +131,7 @@ Amount field is editable on the settle-up screen. User can pay less than the ful
 ```mermaid
 sequenceDiagram
     participant User as User
-    participant App as Quits App
+    participant App as Chara App
     participant DB as Database
     
     User->>App: Tap "Settle up with Alice"
@@ -161,7 +161,7 @@ flowchart TD
     
     C --> C1["Receiving user<br/>gets push:<br/>Alice paid you 240 SEK"]
     
-    C1 --> C2["User opens Quits<br/>via push tap"]
+    C1 --> C2["User opens Chara<br/>via push tap"]
     C2 --> C3["Balances updated<br/>Settlement visible"]
     
     B2 -.->|sync| C3

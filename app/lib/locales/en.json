@@ -12,7 +12,30 @@
     "dash": "—"
   },
   "app": {
-    "name": "Quits"
+    "name": "Chara"
+  },
+  "addServer": {
+    "title": "Add a server",
+    "eyebrow": "add server",
+    "headline": "Connect to a Chara server.",
+    "body": "Sign in to a Chara server to see groups, expenses, and balances from that instance. You can link as many servers as you like.",
+    "urlLabel": "Server URL",
+    "urlPlaceholder": "https://your-server.example",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "connecting": "Connecting to {{host}}…",
+    "confirmHeadline": "Connecting to {{host}}",
+    "confirmMode": "mode",
+    "confirmVersion": "version",
+    "confirmMethods": "sign-in methods",
+    "confirmContinue": "Continue",
+    "validateInvalidUrl": "That URL doesn't look right. Use the form https://your-server.example.",
+    "validateUnreachable": "Couldn't reach that server.",
+    "validateNotChara": "That doesn't look like a Chara server.",
+    "appTooOld": "This server needs a newer Chara. Update the app.",
+    "appTooNew": "This server is older than Chara supports. Ask the host to update.",
+    "serverTooOld": "This server is too old for this app version.",
+    "serverTooNew": "This server is newer than this app supports."
   },
   "signIn": {
     "eyebrow": "sign in",
@@ -24,65 +47,135 @@
     "checkEmail": "Check your email",
     "checkEmailBody": "We sent a magic link to {{email}}. Tap it to sign in.",
     "couldNotSend": "Could not send magic link",
-    "hostedBy": "hosted by quits.app",
+    "hostedBy": "hosted by chara.app",
     "useMyServer": "use my server →"
   },
   "tabs": {
     "home": "Home",
-    "groups": "Groups",
-    "activity": "Activity",
     "you": "You"
   },
   "home": {
-    "netBalance": "net balance · this month",
-    "youAreOwed": "You're owed",
-    "youOwe": "You owe",
+    "netBalance": "net balance",
     "groupsCount": "your groups · {{count}}",
-    "seeAll": "see all →",
     "noGroupsTitle": "No groups yet",
     "noGroupsBody": "Create a group to start splitting expenses.",
+    "noGroupsCta": "Create your first group",
     "youreOwedStamp": "you're owed",
     "youOweStamp": "you owe",
     "statusActive": "active",
     "statusSettled": "settled",
     "statusNew": "no expenses yet",
     "recentCount": "recent · {{count}}",
-    "activityLink": "activity →",
-    "noActivity": "No activity yet."
-  },
-  "activity": {
-    "title": "Activity",
-    "emptyTitle": "No activity yet",
-    "emptyBody": "Add expenses to a group and activity will appear here.",
-    "today": "today",
-    "yesterday": "yesterday",
-    "you": "You",
-    "event_expense_added": "{{actor}} added an expense in {{group}}",
-    "event_expense_updated": "{{actor}} edited an expense in {{group}}",
-    "event_expense_deleted": "{{actor}} deleted an expense in {{group}}",
-    "event_settlement_added": "{{actor}} recorded a settlement in {{group}}",
-    "event_member_joined": "{{actor}} joined {{group}}",
-    "event_member_left": "{{actor}} left {{group}}",
-    "event_generic": "{{actor}} · {{event}} in {{group}}"
+    "noActivity": "No activity yet.",
+    "hostChip": "on {{host}}",
+    "errorStrip": "{{host}} unavailable",
+    "retry": "Retry",
+    "balancesEmpty": "Nothing settled or owed yet.",
+    "balancesAcrossCurrencies": "{{count}} currencies",
+    "statusReauthShort": "re-auth needed",
+    "statusIncompatibleShort": "version mismatch"
   },
   "groupsTab": {
-    "title": "Groups",
-    "netBalance": "net balance",
     "scanQrLabel": "Scan QR to join group",
-    "newGroupLabel": "New group",
-    "groupsCount": "groups · {{count}}",
-    "sortRecent": "sort: recent",
-    "emptyTitle": "No groups yet",
-    "emptyBody": "Tap + to create your first group."
+    "newGroupLabel": "New group"
+  },
+  "accounts": {
+    "title": "Accounts",
+    "eyebrow": "accounts",
+    "countOne": "1 account",
+    "countMany": "{{count}} accounts",
+    "addAnother": "Add another",
+    "add": "Add account",
+    "manage": "Manage accounts",
+    "remove": "Remove account",
+    "removeConfirmTitle": "Remove this account?",
+    "removeConfirmBody": "Your data stays on the server. You can add the account back any time.",
+    "removeConfirm": "Remove",
+    "removeBlockedOpenBalanceTitle": "Settle up first",
+    "removeBlockedOpenBalanceBody": "You still have open balances in groups on {{host}}. Settle them before removing this account.",
+    "removeBalanceCheckFailedTitle": "Couldn't check balances",
+    "removeBalanceCheckFailedBody": "We need to check your balances on this server before removing the account. Try again when you're online.",
+    "signOutAll": "Sign out of everything",
+    "signOutAllConfirmTitle": "Sign out of every account?",
+    "signOutAllConfirmBody": "You'll go back to the sign-in screen. Your data stays on each server.",
+    "signOutAllBlockedBody": "You still have open balances on {{hosts}}. Settle them before signing out of everything.",
+    "statusReauth": "re-auth needed",
+    "statusIncompatible": "version mismatch",
+    "default": "default",
+    "editProfile": "Edit profile"
   },
   "you": {
     "title": "You",
     "signOut": "Sign out",
+    "signOutAll": "Sign out of everything",
+    "accountsRowSingle": "Accounts · 1",
+    "accountsRowMany": "Accounts · {{count}}",
     "editProfile": "Edit profile",
     "phoneLabel": "phone",
     "phoneMissing": "not set",
     "devEyebrow": "dev tools",
-    "replayOnboarding": "Replay onboarding"
+    "replayOnboarding": "Replay onboarding",
+    "settingsEyebrow": "settings",
+    "createSecurityCode": "Create a security code",
+    "changeSecurityCode": "Change security code",
+    "codeOn": "On",
+    "codeOff": "Off",
+    "faceIdRowLabel": "Confirm payments with Face ID",
+    "faceIdPrompt": "Confirm to enable Face ID for payments",
+    "faceIdUnavailableShort": "Not available on this device",
+    "faceIdUnavailableTitle": "Face ID unavailable",
+    "faceIdUnavailableBody": "Your device doesn't support biometric authentication, or none is enrolled.",
+    "about": "About the app",
+    "tellFriend": "Tell a friend",
+    "rateAppStore": "Rate us on the App Store",
+    "ratePlayStore": "Rate us on the Play Store",
+    "rateStore": "Rate us",
+    "rateUnavailableTitle": "Not available yet",
+    "rateUnavailableBody": "Chara isn't published to a store yet.",
+    "shareMessage": "I've been splitting bills with Chara — check it out: https://chara.app",
+    "avatar": {
+      "chooseTitle": "Profile photo",
+      "choosePhoto": "Choose from library",
+      "takePhoto": "Take a photo",
+      "remove": "Remove photo",
+      "uploading": "Uploading…",
+      "tooLargeTitle": "Photo too large",
+      "tooLargeBody": "Pick a photo under 5 MB.",
+      "permissionTitle": "Permission needed",
+      "permissionBody": "Grant photo or camera access in Settings to change your profile photo."
+    }
+  },
+  "securityCode": {
+    "title": "Security code",
+    "eyebrow": "security",
+    "createCode": "Create a code.",
+    "createBody": "Choose a 4 or 6 digit code. You'll enter it to open Chara.",
+    "enterCurrent": "Enter current code.",
+    "enterCurrentBody": "Confirm your current code to make changes.",
+    "enterNew": "Enter a new code.",
+    "confirmCode": "Confirm code.",
+    "confirmBody": "Re-enter the code to make sure it matches.",
+    "continue": "Continue",
+    "disable": "Turn off security code",
+    "disableTitle": "Turn off security code?",
+    "disableBody": "Anyone with access to your phone will be able to open Chara.",
+    "disableConfirm": "Turn off",
+    "savedTitle": "Code saved",
+    "savedBody": "Your security code is set.",
+    "errorTitle": "Couldn't save",
+    "errorFormat": "Enter a 4 or 6 digit code.",
+    "errorWrong": "That code isn't right.",
+    "errorMismatch": "The codes didn't match. Try again."
+  },
+  "about": {
+    "title": "About",
+    "eyebrow": "about",
+    "tagline": "Split it. Settle it. Call it quits.",
+    "version": "version",
+    "build": "build",
+    "body": "Chara is an open-source, self-hostable way to split bills with friends. Make a group, add expenses, settle up — no ads, no upsells, no data harvesting.",
+    "website": "Website",
+    "source": "Source code"
   },
   "onboarding": {
     "eyebrow": "set up",
@@ -140,12 +233,15 @@
     "errorTitle": "Something went wrong",
     "errorLoad": "Failed to load group",
     "goToGroups": "Go to groups",
-    "shareMessage": "Join \"{{name}}\" on Quits: {{link}}"
+    "shareMessage": "Join \"{{name}}\" on Chara: {{link}}"
   },
   "scanJoin": {
-    "invalidQr": "That doesn't look like a Quits invite QR. Try again.",
+    "invalidQr": "That doesn't look like a Chara invite QR. Try again.",
     "joining": "Joining…",
-    "couldNotJoin": "Could not join group"
+    "couldNotJoin": "Could not join group",
+    "unreachable": "Couldn't reach {{host}}. The invite link may be old, or the server may be down.",
+    "chooseAccount": "Join with which account?",
+    "addAccountPrompt": "This invite is on {{host}}. Add an account?"
   },
   "groupDetail": {
     "eyebrow": "group",
@@ -159,11 +255,18 @@
     "namePaid": "{{name}} paid",
     "splitWays": "split {{count}} ways",
     "tabOverview": "overview",
-    "tabBalances": "balances",
+    "tabPayments": "payments",
     "tabStandings": "standings",
-    "balancesHeading": "member",
-    "balancesEmptyTitle": "No balances yet",
-    "balancesEmptyBody": "Add an expense to see each member's balance.",
+    "paymentsHeading": "payments · {{count}}",
+    "paymentsEmptyTitle": "No payments yet",
+    "paymentsEmptyBody": "Settlements between members will show up here.",
+    "paymentRow": "{{from}} → {{to}}",
+    "paymentReverted": "reverted",
+    "paymentRevertTitle": "Revert this payment?",
+    "paymentRevertBody": "{{from}} paid {{to}} {{amount}}. Reverting puts this balance back.",
+    "paymentRevert": "Revert",
+    "paymentRevertError": "Could not revert",
+    "memberNoExpenses": "No expenses paid by this member.",
     "standingsCount": "members · {{count}}",
     "standingsEmptyTitle": "No standings yet",
     "standingsEmptyBody": "Add an expense to see who owes what.",
@@ -187,7 +290,10 @@
     "archive": "Archive group",
     "archivePromptTitle": "Archive {{name}}?",
     "archivePromptBody": "The group will be hidden from your list. You can still view archived groups later.",
-    "archiveError": "Could not archive"
+    "archiveError": "Could not archive",
+    "sortTitle": "Sort expenses",
+    "sortByExpenseDate": "Expense date",
+    "sortByCreatedAt": "Date added"
   },
   "members": {
     "eyebrow": "members of",
@@ -201,7 +307,7 @@
     "emptyBody": "Invite friends to start splitting.",
     "inviteCta": "Invite via QR",
     "shareCta": "Share link",
-    "shareMessage": "Join \"{{name}}\" on Quits: {{link}}"
+    "shareMessage": "Join \"{{name}}\" on Chara: {{link}}"
   },
   "editGroup": {
     "eyebrow": "edit group",
@@ -213,6 +319,10 @@
     "saving": "Saving…",
     "submit": "Save changes",
     "errorTitle": "Could not save changes"
+  },
+  "expenseSaved": {
+    "headline": "Expense added.",
+    "continue": "Continue"
   },
   "addExpense": {
     "title": "New expense",
@@ -268,7 +378,30 @@
     "invalidAmountTitle": "Invalid amount",
     "invalidAmountBody": "Please enter a valid amount.",
     "saveErrorTitle": "Error",
-    "saveErrorBody": "Could not save the expense. Please try again."
+    "saveErrorBody": "Could not save the expense. Please try again.",
+    "dupWarning": "Looks like a duplicate of \"{{title}}\".",
+    "dupView": "View"
+  },
+  "scanItems": {
+    "title": "Items on this receipt",
+    "subtitle": "Tap an item to assign it to people.",
+    "skip": "Skip — split equally",
+    "shareEqually": "Share everything equally",
+    "assignTo": "Assigned to",
+    "unassigned": "Unassigned",
+    "assignSheetTitle": "Who shared this item?",
+    "assignSheetHint": "Select one or more people. Tap again to remove.",
+    "done": "Done",
+    "cancel": "Cancel",
+    "qty": "× {{count}}",
+    "unassignedWarning": "{{count}} item is unassigned — its amount will split equally.",
+    "unassignedWarning_plural": "{{count}} items are unassigned — their amounts will split equally.",
+    "totalMismatch": "Items + tax + tip don't match the receipt total. Adjust amounts before continuing.",
+    "continue": "Use these splits",
+    "perPerson": "Per person",
+    "taxLine": "Tax (prorated)",
+    "tipLine": "Tip (prorated)",
+    "everyone": "Everyone"
   },
   "keypad": {
     "placeholder": "0",
@@ -295,7 +428,7 @@
     "body": "Friends scan this to join.",
     "share": "Share invite link",
     "errorLoad": "Failed to load group",
-    "shareMessage": "Join \"{{name}}\" on Quits: {{link}}"
+    "shareMessage": "Join \"{{name}}\" on Chara: {{link}}"
   },
   "settle": {
     "title": "Settle up",
@@ -308,7 +441,7 @@
     "unknownUser": "Unknown",
     "allQuitsTitle": "All quits.",
     "allQuitsBody": "No transfers needed in this group.",
-    "settledTitle": "Quits. Nice.",
+    "settledTitle": "Settled. Nice.",
     "settledBody": "{{amount}} settled with {{name}}.",
     "errorTitle": "Error",
     "errorBody": "Settlement failed. Please try again."
@@ -349,20 +482,21 @@
     "eachOwes": "{{amount}} each",
     "you": "You",
     "receipt": "receipt",
-    "tapToView": "tap to view",
+    "viewReceipt": "View receipt",
+    "noReceipt": "No receipt attached.",
     "activityHeader": "created {{created}}, {{time}}",
     "commentsLabel": "Comments",
     "menuLabel": "Expense menu"
   },
   "scanner": {
     "permissionDeniedTitle": "Camera access denied",
-    "permissionDeniedBody": "Quits needs the camera to scan invite QR codes. Enable it in Settings, then come back.",
+    "permissionDeniedBody": "Chara needs the camera to scan invite QR codes. Enable it in Settings, then come back.",
     "goBack": "Go back",
-    "hint": "point at a Quits group QR"
+    "hint": "point at a Chara group QR"
   },
   "receiptScanner": {
     "permissionDeniedTitle": "Camera access denied",
-    "permissionDeniedBody": "Quits needs the camera to scan receipts. Enable it in Settings, then come back.",
+    "permissionDeniedBody": "Chara needs the camera to scan receipts. Enable it in Settings, then come back.",
     "hint": "Frame the receipt and tap to capture",
     "capture": "Capture receipt",
     "pickFromLibrary": "Pick from photos",

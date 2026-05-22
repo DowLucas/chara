@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,7 +8,9 @@ import { AvatarStack } from '@/components/Avatar';
 import { Stamp } from '@/components/Stamp';
 import { EmptyState } from '@/components/EmptyState';
 import { useTranslation } from 'react-i18next';
-import { listGroups, listMyBalances, Group, MyBalance } from '@/lib/api';
+import { Group, MyBalance } from '@/lib/api';
+import { useAccounts } from '@/lib/accounts';
+import { useAggregatedGroups, useAggregatedBalances } from '@/lib/aggregated-reads';
 import { formatMinorUnits, decimalToMinor } from '@/lib/i18n';
 import { initialsOf } from '@/lib/name';
 import {
@@ -33,50 +35,108 @@ function groupInitials(g: Group): string[] {
   return [i || '·'];
 }
 
+/** Extract hostname from a server URL for the host chip. */
+function hostOf(serverUrl: string): string {
+  try {
+    return new URL(serverUrl).host;
+  } catch {
+    return serverUrl;
+  }
+}
+
+interface MergedGroup {
+  group: Group;
+  serverUrl: string;
+  balance: MyBalance | null;
+}
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [balances, setBalances] = useState<MyBalance[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
+  const { accounts } = useAccounts();
 
-  const load = useCallback(async () => {
-    try {
-      const [g, b] = await Promise.all([listGroups(), listMyBalances()]);
-      setGroups(g);
-      setBalances(b);
-    } catch {}
-  }, []);
+  const groupReads = useAggregatedGroups();
+  const balanceReads = useAggregatedBalances();
 
-  useEffect(() => { load(); }, [load]);
+  // Host chip rule (spec §14): only when ≥ 2 accounts.
+  const showHostChip = accounts.length >= 2;
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await load();
-    setRefreshing(false);
-  }, [load]);
+  // Refresh state — composite across both reads.
+  const refreshing = groupReads.some((r) => r.status === 'loading') ||
+    balanceReads.some((r) => r.status === 'loading');
 
-  const balanceMap = Object.fromEntries(balances.map((b) => [b.group_id, b]));
+  // Merge: concatenate all groups, attach matching per-account balance.
+  const mergedGroups: MergedGroup[] = useMemo(() => {
+    const balanceByKey = new Map<string, MyBalance>();
+    for (const br of balanceReads) {
+      for (const b of br.data ?? []) {
+        balanceByKey.set(`${br.serverUrl}::${b.group_id}`, b);
+      }
+    }
+    const rows: MergedGroup[] = [];
+    for (const gr of groupReads) {
+      for (const g of gr.data ?? []) {
+        rows.push({
+          group: g,
+          serverUrl: gr.serverUrl,
+          balance: balanceByKey.get(`${gr.serverUrl}::${g.id}`) ?? null,
+        });
+      }
+    }
+    // Sort by created_at desc (Group type lacks last_activity_at today).
+    rows.sort((a, b) => (b.group.created_at ?? '').localeCompare(a.group.created_at ?? ''));
+    return rows;
+  }, [groupReads, balanceReads]);
 
-  const totalOwed = balances
-    .filter((b) => decimalToMinor(b.net_balance) > 0)
-    .reduce((s, b) => s + decimalToMinor(b.net_balance), 0);
-  const totalOwe = balances
-    .filter((b) => decimalToMinor(b.net_balance) < 0)
-    .reduce((s, b) => s + decimalToMinor(b.net_balance), 0);
-  const net = totalOwed + totalOwe;
-  const currency = balances[0]?.currency ?? 'SEK';
+  // Per-currency net totals across all accounts.
+  const netByCurrency = useMemo(() => {
+    const totals = new Map<string, number>();
+    for (const br of balanceReads) {
+      for (const b of br.data ?? []) {
+        totals.set(b.currency, (totals.get(b.currency) ?? 0) + decimalToMinor(b.net_balance));
+      }
+    }
+    return [...totals.entries()]
+      .map(([currency, minor]) => ({ currency, minor }))
+      .sort((a, b) => Math.abs(b.minor) - Math.abs(a.minor));
+  }, [balanceReads]);
+
+  const primaryCurrency = netByCurrency[0]?.currency ?? 'SEK';
+  const primaryNet = netByCurrency[0]?.minor ?? 0;
+
+  const onRefresh = () => {
+    // Refresh is automatic via the hook's foreground trigger. The pull-to-refresh
+    // gesture is mostly for affordance; the hook will re-fire on the next data
+    // change. A future iteration could expose an imperative refresh from the
+    // hook — out of scope for this wave.
+  };
+
+  // Failing-account strips, one per failing account per section.
+  const failingGroupAccounts = groupReads.filter((r) => r.status === 'error');
+  const failingBalanceAccounts = balanceReads.filter((r) => r.status === 'error');
+
+  // Status-strip rows: accounts not queried because reauth_required or incompatible.
+  const statusRows = accounts.filter(
+    (a) => a.status === 'reauth_required' || a.status === 'incompatible',
+  );
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <TopBar
         title={t('app.name')}
         right={
-          <IconButton
-            icon="camera"
-            onPress={() => router.push('/groups/scan')}
-            label={t('groupsTab.scanQrLabel')}
-          />
+          <View style={{ flexDirection: 'row' }}>
+            <IconButton
+              icon="camera"
+              onPress={() => router.push('/groups/scan')}
+              label={t('groupsTab.scanQrLabel')}
+            />
+            <IconButton
+              icon="plus"
+              onPress={() => router.push('/onboarding/create')}
+              label={t('groupsTab.newGroupLabel')}
+            />
+          </View>
         }
       />
       <ScrollView
@@ -87,55 +147,71 @@ export default function HomeScreen() {
         {/* Net balance hero */}
         <View style={styles.hero}>
           <Text style={styles.eyebrow}>{t('home.netBalance')}</Text>
-          <Text style={[styles.heroBalance, { color: net >= 0 ? colors.moss : colors.brick }]}>
-            {fmtBalance(String(net), currency)}
-          </Text>
-          <View style={styles.rule} />
-          <View style={styles.heroRow}>
-            <Text style={styles.heroLabel}>{t('home.youAreOwed')}</Text>
-            <Text style={[styles.heroValue, { color: colors.moss }]}>
-              {fmtBalance(String(totalOwed), currency)}
+          {netByCurrency.length === 0 ? (
+            <Text style={[styles.heroBalance, { color: colors.lead }]}>
+              {fmtBalance('0', primaryCurrency)}
             </Text>
-          </View>
-          <View style={styles.heroRow}>
-            <Text style={styles.heroLabel}>{t('home.youOwe')}</Text>
-            <Text style={[styles.heroValue, { color: colors.brick }]}>
-              {fmtBalance(String(totalOwe), currency)}
+          ) : (
+            <Text
+              style={[
+                styles.heroBalance,
+                { color: primaryNet >= 0 ? colors.moss : colors.brick },
+              ]}
+            >
+              {fmtBalance(String(primaryNet), primaryCurrency)}
             </Text>
-          </View>
+          )}
+          {/* Multi-currency totals: stacked Stamps, sorted by absolute amount desc. */}
+          {netByCurrency.length > 1 && (
+            <View style={styles.multiCurrencyRow}>
+              {netByCurrency.slice(1).map((c) => (
+                <View key={c.currency} style={styles.currencyChip}>
+                  <Text
+                    style={[
+                      styles.currencyChipAmt,
+                      { color: c.minor >= 0 ? colors.moss : colors.brick },
+                    ]}
+                  >
+                    {fmtBalance(String(c.minor), c.currency)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
 
         {/* Your groups card */}
-        {groups.length === 0 ? (
+        {mergedGroups.length === 0 ? (
           <View style={{ paddingHorizontal: spacing.s5 }}>
             <EmptyState title={t('home.noGroupsTitle')} body={t('home.noGroupsBody')} />
+            <TouchableOpacity
+              style={styles.emptyCta}
+              onPress={() => router.push('/onboarding/create')}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+            >
+              <Text style={styles.emptyCtaLabel}>{t('home.noGroupsCta')}</Text>
+            </TouchableOpacity>
           </View>
         ) : (
-          <View style={styles.cardWrap}>
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardEyebrow}>
-                  {t('home.groupsCount', { count: groups.length })}
-                </Text>
-                <TouchableOpacity onPress={() => router.push('/(tabs)/groups')}>
-                  <Text style={styles.cardLink}>{t('home.seeAll')}</Text>
-                </TouchableOpacity>
-              </View>
-              {groups.slice(0, 5).map((g, i) => {
-                const bal = balanceMap[g.id];
-                // Three states:
-                //   - no balance row → group has no expenses yet (brand new)
-                //   - balance row with net === 0 → had activity, now settled up
-                //   - balance row with net !== 0 → you owe or are owed
-                const hasActivity = bal !== undefined;
+          <>
+            <View style={styles.groupsHeader}>
+              <Text style={styles.groupsHeaderLabel}>
+                {t('home.groupsCount', { count: mergedGroups.length })}
+              </Text>
+            </View>
+            <View style={styles.cardWrap}>
+              {mergedGroups.map(({ group: g, serverUrl, balance: bal }) => {
+                const hasActivity = bal !== null;
                 const n = bal ? decimalToMinor(bal.net_balance) : 0;
                 const settled = hasActivity && n === 0;
-                const isLast = i === Math.min(groups.length, 5) - 1;
                 return (
                   <TouchableOpacity
-                    key={g.id}
-                    style={[styles.groupRow, !isLast && styles.groupRowDivider]}
-                    onPress={() => router.push(`/groups/${g.id}`)}
+                    key={`${serverUrl}::${g.id}`}
+                    style={styles.groupCard}
+                    onPress={() =>
+                      router.push(`/groups/${encodeURIComponent(serverUrl)}/${g.id}`)
+                    }
                     activeOpacity={0.7}
                   >
                     <AvatarStack people={groupInitials(g)} />
@@ -151,6 +227,11 @@ export default function HomeScreen() {
                             : t('home.statusActive')
                           : t('home.statusNew')}
                       </Text>
+                      {showHostChip && (
+                        <Text style={styles.hostChip} numberOfLines={1}>
+                          {t('home.hostChip', { host: hostOf(serverUrl) })}
+                        </Text>
+                      )}
                     </View>
                     <View style={styles.groupRight}>
                       {!hasActivity ? (
@@ -178,19 +259,82 @@ export default function HomeScreen() {
                 );
               })}
             </View>
+          </>
+        )}
+
+        {/* Per-account error strips */}
+        {(failingGroupAccounts.length > 0 ||
+          failingBalanceAccounts.length > 0 ||
+          statusRows.length > 0) && (
+          <View style={styles.stripWrap}>
+            {failingGroupAccounts.map((r) => (
+              <ErrorStrip
+                key={`g-${r.serverUrl}`}
+                label={t('home.errorStrip', { host: hostOf(r.serverUrl) })}
+                cta={t('home.retry')}
+              />
+            ))}
+            {failingBalanceAccounts
+              .filter((r) => !failingGroupAccounts.some((g) => g.serverUrl === r.serverUrl))
+              .map((r) => (
+                <ErrorStrip
+                  key={`b-${r.serverUrl}`}
+                  label={t('home.errorStrip', { host: hostOf(r.serverUrl) })}
+                  cta={t('home.retry')}
+                />
+              ))}
+            {statusRows.map((a) => (
+              <TouchableOpacity
+                key={`s-${a.serverUrl}`}
+                style={styles.errorStrip}
+                onPress={() => {
+                  if (a.status === 'reauth_required') {
+                    router.push(
+                      `/(auth)/sign-in?server=${encodeURIComponent(a.serverUrl)}&mode=reauth`,
+                    );
+                  } else {
+                    router.push('/settings/accounts');
+                  }
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.errorStripText} numberOfLines={1}>
+                  {hostOf(a.serverUrl)} ·{' '}
+                  {a.status === 'reauth_required'
+                    ? t('home.statusReauthShort')
+                    : t('home.statusIncompatibleShort')}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
         )}
 
-        {/* Recent activity (placeholder until we expose an activity feed) */}
+        {/* Recent activity (placeholder until we wire useAggregatedActivity here) */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>{t('home.recentCount', { count: 0 })}</Text>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/activity')}>
-            <Text style={styles.sectionLink}>{t('home.activityLink')}</Text>
-          </TouchableOpacity>
         </View>
         <View style={styles.sectionRule} />
         <Text style={styles.noActivity}>{t('home.noActivity')}</Text>
       </ScrollView>
+    </View>
+  );
+}
+
+/**
+ * Per-account error strip (spec §12).
+ *
+ * Retry is currently a visual affordance only — the aggregated-reads
+ * hook auto-retries on every foreground transition (60s floor). A
+ * follow-up wave is expected to expose an imperative per-server
+ * `refresh()` from the hook so this CTA can wire to it directly.
+ */
+function ErrorStrip({ label, cta }: { label: string; cta: string }) {
+  return (
+    <View style={styles.errorStrip}>
+      <Text style={styles.errorStripText} numberOfLines={1}>
+        {label}
+      </Text>
+      <Text style={styles.errorStripCta}>{cta}</Text>
     </View>
   );
 }
@@ -220,67 +364,55 @@ const styles = StyleSheet.create({
     textAlignVertical: 'center',
     paddingTop: 4,
   },
-  rule: {
-    height: 1.5,
-    backgroundColor: colors.graphite,
-    marginVertical: spacing.s3,
-  },
-  heroRow: {
+  multiCurrencyRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  heroLabel: {
-    fontFamily: fontBody,
-    fontSize: fontSize.bodyS,
-    color: colors.lead,
-  },
-  heroValue: {
-    fontFamily: fontMono,
-    fontSize: fontSize.bodyS,
-    fontVariant: ['tabular-nums'],
-  },
-
-  // Groups card
-  cardWrap: {
-    paddingHorizontal: spacing.s5,
+    flexWrap: 'wrap',
+    gap: spacing.s2,
     marginTop: spacing.s2,
   },
-  card: {
-    backgroundColor: colors.bone,
-    borderRadius: 10,
+  currencyChip: {
+    paddingHorizontal: spacing.s3,
+    paddingVertical: spacing.s1,
     borderWidth: 0.5,
     borderColor: colors.ruleSoft,
-    paddingHorizontal: spacing.s4,
-    paddingTop: spacing.s3,
-    paddingBottom: spacing.s2,
+    borderRadius: 6,
+    backgroundColor: colors.bone,
   },
-  cardHeader: {
+  currencyChipAmt: {
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.bodyS,
+    letterSpacing: -0.2,
+    fontVariant: ['tabular-nums'],
+  },
+  // Groups section
+  groupsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'baseline',
-    marginBottom: spacing.s3,
+    paddingHorizontal: spacing.s5,
+    paddingTop: spacing.s3,
+    paddingBottom: spacing.s2,
   },
-  cardEyebrow: {
+  groupsHeaderLabel: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
     color: colors.lead,
     letterSpacing: 0.3,
   },
-  cardLink: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.vermillion,
+  cardWrap: {
+    paddingHorizontal: spacing.s5,
+    gap: spacing.s2,
   },
-  groupRow: {
+  groupCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.s3,
+    backgroundColor: colors.bone,
+    borderRadius: 10,
+    borderWidth: 0.5,
+    borderColor: colors.ruleSoft,
+    paddingHorizontal: spacing.s4,
     paddingVertical: spacing.s3,
-  },
-  groupRowDivider: {
-    borderBottomWidth: 0.5,
-    borderBottomColor: colors.ruleSoft,
   },
   groupMid: {
     flex: 1,
@@ -305,6 +437,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
     letterSpacing: 0.3,
   },
+  hostChip: {
+    fontFamily: fontMono,
+    fontSize: 10,
+    color: colors.lead,
+    marginTop: 2,
+    letterSpacing: 0.4,
+  },
   groupRight: {
     alignItems: 'flex-end',
     minWidth: 92,
@@ -324,6 +463,38 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
 
+  // Error strips
+  stripWrap: {
+    paddingHorizontal: spacing.s5,
+    paddingTop: spacing.s3,
+    gap: spacing.s2,
+  },
+  errorStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.s4,
+    paddingVertical: spacing.s3,
+    borderRadius: 8,
+    borderWidth: 0.5,
+    borderColor: colors.ruleSoft,
+    backgroundColor: colors.bone,
+  },
+  errorStripText: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.graphite,
+    flex: 1,
+    minWidth: 0,
+    marginRight: spacing.s3,
+  },
+  errorStripCta: {
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.caption,
+    color: colors.vermillion,
+    letterSpacing: 0.3,
+  },
+
   // Recent section
   sectionHeader: {
     flexDirection: 'row',
@@ -338,11 +509,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize.caption,
     color: colors.lead,
   },
-  sectionLink: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.vermillion,
-  },
   sectionRule: {
     height: 1.5,
     backgroundColor: colors.graphite,
@@ -354,5 +520,19 @@ const styles = StyleSheet.create({
     color: colors.lead,
     paddingHorizontal: spacing.s5,
     paddingTop: spacing.s3,
+  },
+  emptyCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 52,
+    borderRadius: 6,
+    backgroundColor: colors.vermillion,
+    marginTop: spacing.s4,
+  },
+  emptyCtaLabel: {
+    fontFamily: fontBody,
+    fontSize: fontSize.body,
+    color: colors.fgOnAccent,
   },
 });

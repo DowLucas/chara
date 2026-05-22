@@ -1,4 +1,4 @@
-# Quits — Marketing site UI kit
+# Chara — Marketing site UI kit
 
 A single-page marketing site at 1280px design width. Static HTML — the layout vocabulary is fully encoded in CSS, no React needed.
 
@@ -8,7 +8,7 @@ A single-page marketing site at 1280px design width. Static HTML — the layout 
 3. **Features** — three-column numbered ledger
 4. **How it works** — three steps with rule-line headers
 5. **Quote** — large pull quote, sentence case
-6. **CTA band** — dark coffee on sand dune with the QUITS stamp
+6. **CTA band** — dark coffee on sand dune with the CHARA stamp
 7. **Footer** — single line, low-contrast
 
 ## Notes
