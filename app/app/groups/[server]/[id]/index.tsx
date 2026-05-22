@@ -139,15 +139,24 @@ export default function GroupDetailScreen() {
   const isOwner = me?.role === 'owner';
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuOptions = isOwner
-    ? [
-        {
-          label: t('groupDetail.edit'),
-          onPress: () => router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/edit`),
-        },
-        { label: t('groupDetail.archive'), destructive: true, onPress: confirmArchive },
-      ]
-    : [];
+  const menuOptions = [
+    // Visible to every member — the per-group activity feed has no
+    // owner gate on the backend.
+    {
+      label: t('groupDetail.activity'),
+      onPress: () =>
+        router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/activity`),
+    },
+    ...(isOwner
+      ? [
+          {
+            label: t('groupDetail.edit'),
+            onPress: () => router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/edit`),
+          },
+          { label: t('groupDetail.archive'), destructive: true, onPress: confirmArchive },
+        ]
+      : []),
+  ];
   function openMenu() {
     if (!id || menuOptions.length === 0) return;
     if (openNativeActionSheet(group?.name, menuOptions)) return;

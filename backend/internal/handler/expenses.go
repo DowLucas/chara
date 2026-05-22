@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -298,20 +299,6 @@ func writeSplits(ctx context.Context, q *db.Queries, expenseID string, shares []
 	return out, nil
 }
 
-func writeActivity(ctx context.Context, q *db.Queries, groupID, actorID, eventType, entityID, entityType string) error {
-	payload, _ := json.Marshal(map[string]string{"entity_id": entityID})
-	_, err := q.CreateActivity(ctx, db.CreateActivityParams{
-		ID:         ulid.New(),
-		GroupID:    groupID,
-		ActorID:    actorID,
-		EventType:  eventType,
-		EntityID:   pgtype.Text{String: entityID, Valid: true},
-		EntityType: pgtype.Text{String: entityType, Valid: true},
-		Payload:    payload,
-	})
-	return err
-}
-
 // ── Handlers ──────────────────────────────────────────────────────────────────
 
 func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -470,7 +457,14 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := writeActivity(r.Context(), q, groupID, claims.UserID, "expense_added", expense.ID, "expense"); err != nil {
+	if err := writeActivity(r.Context(), q, groupID, claims.UserID,
+		EventExpenseAdded, expense.ID, EntityExpense,
+		&ActivityPayload{Snapshot: ExpenseSnapshot{
+			Title:         expense.Title,
+			Amount:        expense.Amount,
+			Currency:      expense.Currency,
+			PayerMemberID: expense.PaidByID,
+		}}); err != nil {
 		writeError(w, http.StatusInternalServerError, "could not write activity")
 		return
 	}
@@ -594,6 +588,14 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Author-only gate. 404 stays for non-members (existing membership check
+	// above); 403 here means "you can see this row but you didn't create it,
+	// so you can't change it." Admin-override is a future feature.
+	if existing.CreatedByID != claims.UserID {
+		writeError(w, http.StatusForbidden, "only the author may edit this expense")
+		return
+	}
+
 	var req updateExpenseReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
@@ -623,21 +625,10 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 	if req.Title != nil {
 		params.Title = pgtype.Text{String: *req.Title, Valid: true}
 	}
-	if req.Amount != nil {
-		if *req.Amount <= 0 {
-			writeError(w, http.StatusBadRequest, "amount must be positive")
-			return
-		}
-		params.Amount = pgtype.Int8{Int64: int64(*req.Amount), Valid: true}
-	}
-	if req.Currency != nil {
-		normalized, ok := currency.Normalize(*req.Currency)
-		if !ok {
-			writeError(w, http.StatusBadRequest, "unknown currency code")
-			return
-		}
-		params.Currency = pgtype.Text{String: normalized, Valid: true}
-	}
+	// Default-init: req.Amount and req.Currency are persisted via the explicit
+	// FX-aware path below — we leave params.Amount/Currency unset here so
+	// UpdateExpense doesn't write the un-converted foreign value to the
+	// canonical column.
 	if req.PaidByID != nil {
 		params.PaidByID = pgtype.Text{String: *req.PaidByID, Valid: true}
 	}
@@ -648,8 +639,98 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		params.Category = pgtype.Text{String: *req.Category, Valid: true}
 	}
 
+	// Validate amount/currency up front so we can short-circuit before
+	// opening the tx.
+	if req.Amount != nil && *req.Amount <= 0 {
+		writeError(w, http.StatusBadRequest, "amount must be positive")
+		return
+	}
+	var normalizedNewCurrency string
+	if req.Currency != nil {
+		n, ok := currency.Normalize(*req.Currency)
+		if !ok {
+			writeError(w, http.StatusBadRequest, "unknown currency code")
+			return
+		}
+		normalizedNewCurrency = n
+	}
+
+	// Determine whether amount or currency is changing, and what FX state
+	// the row should end in. We compare against `existing` — its `currency`
+	// column holds the canonical (group) currency, while OriginalCurrency
+	// (if set) is what the user originally entered.
+	amountChanging := req.Amount != nil
+	currencyChanging := req.Currency != nil
+
+	// The "input currency" is what the user typed on the form. Default to
+	// the original currency if FX-snapshotted, else the canonical currency.
+	previousInputCurrency := existing.Currency
+	if existing.OriginalCurrency.Valid {
+		previousInputCurrency = existing.OriginalCurrency.String
+	}
+	inputCurrency := previousInputCurrency
+	if currencyChanging {
+		inputCurrency = normalizedNewCurrency
+	}
+
+	// Input amount (in inputCurrency minor units).
+	previousInputAmount := existing.Amount
+	if existing.OriginalAmount.Valid {
+		previousInputAmount = existing.OriginalAmount.Int64
+	}
+	inputAmount := previousInputAmount
+	if amountChanging {
+		inputAmount = int64(*req.Amount)
+	}
+
 	// Recalculate splits if needed
 	needsSplitUpdate := len(req.Participants) > 0 || len(req.Splits) > 0
+
+	// Resolve the group currency to know whether FX is needed.
+	group, err := h.queries.GetGroupByID(r.Context(), groupID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not load group")
+		return
+	}
+
+	// Compute the new canonical amount and FX snapshot. If the input currency
+	// equals the group currency, FX is cleared. Otherwise we re-run
+	// fx.Convert so the canonical amount stays consistent with
+	// original_amount × fx_rate, mirroring Create.
+	var (
+		newCanonicalAmount    = inputAmount
+		fxOriginalAmount      pgtype.Int8
+		fxOriginalCurrency    pgtype.Text
+		fxRateNumeric         pgtype.Numeric
+		fxAsOfDate            pgtype.Date
+		needsFxSnapshotUpdate bool
+	)
+	if amountChanging || currencyChanging {
+		needsFxSnapshotUpdate = true
+		if inputCurrency != group.Currency {
+			conv, err := fx.Convert(r.Context(), h.queries, inputAmount, inputCurrency, group.Currency, existing.ExpenseDate.Time)
+			if err != nil {
+				if errors.Is(err, fx.ErrRateUnavailable) {
+					writeError(w, http.StatusUnprocessableEntity, "fx rate unavailable for "+inputCurrency+"→"+group.Currency)
+					return
+				}
+				writeError(w, http.StatusInternalServerError, "fx conversion failed")
+				return
+			}
+			newCanonicalAmount = conv.AmountMinor
+			fxOriginalAmount = pgtype.Int8{Int64: inputAmount, Valid: true}
+			fxOriginalCurrency = pgtype.Text{String: inputCurrency, Valid: true}
+			var n pgtype.Numeric
+			if err := n.Scan(conv.Rate.Text('f', 10)); err != nil {
+				writeError(w, http.StatusInternalServerError, "encode fx rate")
+				return
+			}
+			fxRateNumeric = n
+			fxAsOfDate = pgtype.Date{Time: conv.AsOf, Valid: true}
+		}
+		// Canonical currency is always the group currency for the stored row.
+		params.Currency = pgtype.Text{String: group.Currency, Valid: true}
+	}
 
 	tx, err := h.pool.Begin(r.Context())
 	if err != nil {
@@ -668,6 +749,30 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusInternalServerError, "internal error")
 		}
 		return
+	}
+
+	if needsFxSnapshotUpdate {
+		fxRow, err := q.UpdateExpenseFxSnapshot(r.Context(), db.UpdateExpenseFxSnapshotParams{
+			ID:               expenseID,
+			Amount:           newCanonicalAmount,
+			OriginalAmount:   fxOriginalAmount,
+			OriginalCurrency: fxOriginalCurrency,
+			FxRate:           fxRateNumeric,
+			FxAsOf:           fxAsOfDate,
+		})
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+		// Reflect the FX snapshot writes onto the row we return to the
+		// caller — UpdateExpense ran first so `updated` still holds the
+		// pre-snapshot values.
+		updated.Amount = fxRow.Amount
+		updated.OriginalAmount = fxRow.OriginalAmount
+		updated.OriginalCurrency = fxRow.OriginalCurrency
+		updated.FxRate = fxRow.FxRate
+		updated.FxAsOf = fxRow.FxAsOf
+		updated.UpdatedAt = fxRow.UpdatedAt
 	}
 
 	var splitResp []SplitResponse
@@ -694,6 +799,41 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusInternalServerError, "could not create expense splits")
 			return
 		}
+	} else if amountChanging || currencyChanging {
+		// Amount changed but the caller didn't resend participants — rebuild
+		// splits proportionally to the new canonical amount so the row stays
+		// internally consistent. Use the existing split structure.
+		oldSplits, err := q.ListSplitsByExpense(r.Context(), expenseID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+		participants := make([]string, len(oldSplits))
+		for i, s := range oldSplits {
+			participants[i] = s.MemberID
+		}
+		method := updated.SplitMethod
+		shares, err := computeSplits(money.Amount(updated.Amount), method, participants, nil)
+		if err != nil {
+			// Non-equal old method without explicit splits — leave splits
+			// untouched and let the caller resend if needed.
+			dbSplits, listErr := h.queries.ListSplitsByExpense(r.Context(), expenseID)
+			if listErr != nil {
+				writeError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			splitResp = dbSplitsToResponse(dbSplits)
+		} else {
+			if err := q.DeleteSplitsByExpense(r.Context(), expenseID); err != nil {
+				writeError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			splitResp, err = writeSplits(r.Context(), q, expenseID, shares)
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, "could not create expense splits")
+				return
+			}
+		}
 	} else {
 		dbSplits, err := h.queries.ListSplitsByExpense(r.Context(), expenseID)
 		if err != nil {
@@ -704,9 +844,17 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		_ = existing
 	}
 
-	if err := writeActivity(r.Context(), q, groupID, claims.UserID, "expense_updated", expenseID, "expense"); err != nil {
-		writeError(w, http.StatusInternalServerError, "could not write activity")
-		return
+	// Build the diff of which user-facing fields actually changed. Comparison
+	// is against the row we read up front (`existing`). We only emit an
+	// activity row when something actually changed — a no-op PATCH (empty body
+	// or values identical to the current row) must not spam the feed. See
+	// spec §"Activity payload".
+	changedFields := diffExpenseFields(existing, req, normalizedNewCurrency, previousInputAmount, previousInputCurrency)
+	if len(changedFields) > 0 {
+		if err := writeExpenseUpdatedActivity(r.Context(), q, h.queries, groupID, claims.UserID, expenseID, changedFields); err != nil {
+			writeError(w, http.StatusInternalServerError, "could not write activity")
+			return
+		}
 	}
 
 	if err := tx.Commit(r.Context()); err != nil {
@@ -724,6 +872,174 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// diffExpenseFields returns a sorted, deduped list of user-facing field names
+// that this PATCH actually changes. Comparison is in *input-currency* terms
+// (what the user typed): for an FX-snapshotted row the previous "amount" is
+// the original currency value, not the canonical group-currency value.
+// "splits" is reported when the request asked to recompute splits — the
+// distinction between "asked but identical result" and "actually changed" is
+// not worth the complexity for the activity-feed signal.
+func diffExpenseFields(
+	existing db.GetExpenseByIDAndGroupRow,
+	req updateExpenseReq,
+	normalizedNewCurrency string,
+	previousInputAmount int64,
+	previousInputCurrency string,
+) []string {
+	changed := make(map[string]struct{})
+
+	if req.Title != nil && *req.Title != existing.Title {
+		changed["title"] = struct{}{}
+	}
+	if req.Amount != nil && int64(*req.Amount) != previousInputAmount {
+		changed["amount"] = struct{}{}
+	}
+	if req.Currency != nil && normalizedNewCurrency != previousInputCurrency {
+		changed["currency"] = struct{}{}
+	}
+	if req.PaidByID != nil && *req.PaidByID != existing.PaidByID {
+		changed["paid_by_id"] = struct{}{}
+	}
+	if req.SplitMethod != nil && *req.SplitMethod != existing.SplitMethod {
+		changed["split_method"] = struct{}{}
+	}
+	if req.Category != nil && *req.Category != existing.Category {
+		changed["category"] = struct{}{}
+	}
+	if req.Notes != nil {
+		existingNotes := ""
+		if existing.Notes.Valid {
+			existingNotes = existing.Notes.String
+		}
+		if *req.Notes != existingNotes {
+			changed["notes"] = struct{}{}
+		}
+	}
+	if len(req.Participants) > 0 || len(req.Splits) > 0 {
+		changed["splits"] = struct{}{}
+	}
+
+	out := make([]string, 0, len(changed))
+	for k := range changed {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// writeExpenseUpdatedActivity writes (or merges into) the expense_edited
+// activity row for this PATCH. Payload shape:
+//
+//	{ "entity_id": "...", "entity_type": "expense",
+//	  "changed_fields": ["amount","title"], "actor_display_name": "Alice" }
+//
+// If the same actor wrote such a row for the same expense within the last
+// 5 minutes, the new `changed_fields` are merged into the existing row's set
+// (union, deduped) and its `created_at` is bumped so it floats to the top of
+// the feed — see spec §"Activity row collapsing".
+//
+// `qtx` is the transaction-bound Queries; `qread` is the pool-bound Queries
+// used for the read-only display-name lookup (cheap, doesn't need the tx).
+func writeExpenseUpdatedActivity(
+	ctx context.Context,
+	qtx *db.Queries,
+	qread *db.Queries,
+	groupID, actorUserID, expenseID string,
+	changedFields []string,
+) error {
+	// Display-name lookup is best-effort: a missing user row is logically
+	// impossible here (the actor just authenticated) but we don't want a
+	// transient DB hiccup on this read to break the PATCH.
+	var actorDisplayName string
+	if u, err := qread.GetUserByID(ctx, actorUserID); err == nil {
+		actorDisplayName = u.DisplayName
+	}
+
+	// Snapshot the post-edit expense so the renderer can produce a rich
+	// summary ("Alice edited 'Dinner'") without re-querying. Errors here
+	// are non-fatal — a missing snapshot falls back to the generic copy.
+	var snapshot *ExpenseSnapshot
+	if exp, err := qtx.GetExpenseByID(ctx, expenseID); err == nil {
+		snapshot = &ExpenseSnapshot{
+			Title:         exp.Title,
+			Amount:        exp.Amount,
+			Currency:      exp.Currency,
+			PayerMemberID: exp.PaidByID,
+		}
+	}
+
+	payload := map[string]any{
+		"entity_id":          expenseID,
+		"entity_type":        EntityExpense,
+		"changed_fields":     changedFields,
+		"actor_display_name": actorDisplayName,
+	}
+	if snapshot != nil {
+		payload["snapshot"] = snapshot
+	}
+
+	recent, err := qtx.GetRecentExpenseUpdateActivity(ctx, db.GetRecentExpenseUpdateActivityParams{
+		ActorID:  actorUserID,
+		EntityID: pgtype.Text{String: expenseID, Valid: true},
+	})
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return err
+	}
+	if err == nil {
+		// Merge: union the changed_fields sets, bump created_at.
+		payload["changed_fields"] = mergeChangedFields(recent.Payload, changedFields)
+		raw, mErr := json.Marshal(payload)
+		if mErr != nil {
+			return mErr
+		}
+		return qtx.UpdateActivityPayload(ctx, db.UpdateActivityPayloadParams{
+			ID:      recent.ID,
+			Payload: raw,
+		})
+	}
+
+	raw, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	_, err = qtx.CreateActivity(ctx, db.CreateActivityParams{
+		ID:         ulid.New(),
+		GroupID:    groupID,
+		ActorID:    actorUserID,
+		EventType:  EventExpenseEdited,
+		EntityID:   pgtype.Text{String: expenseID, Valid: true},
+		EntityType: pgtype.Text{String: EntityExpense, Valid: true},
+		Payload:    raw,
+	})
+	return err
+}
+
+// mergeChangedFields returns the union of an existing payload's
+// `changed_fields` list with a new set, sorted and deduped. A malformed or
+// missing existing payload is treated as empty so callers degrade to the new
+// fields rather than failing.
+func mergeChangedFields(existingPayload []byte, newFields []string) []string {
+	seen := make(map[string]struct{}, len(newFields))
+	if len(existingPayload) > 0 {
+		var p struct {
+			ChangedFields []string `json:"changed_fields"`
+		}
+		_ = json.Unmarshal(existingPayload, &p)
+		for _, f := range p.ChangedFields {
+			seen[f] = struct{}{}
+		}
+	}
+	for _, f := range newFields {
+		seen[f] = struct{}{}
+	}
+	out := make([]string, 0, len(seen))
+	for k := range seen {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
+}
+
 func (h *ExpenseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "groupID")
 	expenseID := chi.URLParam(r, "expenseID")
@@ -733,7 +1049,7 @@ func (h *ExpenseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := h.queries.GetExpenseByIDAndGroup(r.Context(), db.GetExpenseByIDAndGroupParams{
+	existing, err := h.queries.GetExpenseByIDAndGroup(r.Context(), db.GetExpenseByIDAndGroupParams{
 		ID:      expenseID,
 		GroupID: groupID,
 	})
@@ -743,6 +1059,13 @@ func (h *ExpenseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		} else {
 			writeError(w, http.StatusInternalServerError, "internal error")
 		}
+		return
+	}
+
+	// Author-only gate (mirrors Update). 403 communicates "you're in the group
+	// but you didn't create this row".
+	if existing.CreatedByID != claims.UserID {
+		writeError(w, http.StatusForbidden, "only the author may delete this expense")
 		return
 	}
 
@@ -784,7 +1107,14 @@ func (h *ExpenseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := writeActivity(r.Context(), q, groupID, claims.UserID, "expense_deleted", expenseID, "expense"); err != nil {
+	if err := writeActivity(r.Context(), q, groupID, claims.UserID,
+		EventExpenseDeleted, expenseID, EntityExpense,
+		&ActivityPayload{Snapshot: ExpenseSnapshot{
+			Title:         existing.Title,
+			Amount:        existing.Amount,
+			Currency:      existing.Currency,
+			PayerMemberID: existing.PaidByID,
+		}}); err != nil {
 		writeError(w, http.StatusInternalServerError, "could not write activity")
 		return
 	}

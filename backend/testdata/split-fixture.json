@@ -1,0 +1,271 @@
+[
+  {
+    "name": "equal/divisible",
+    "method": "equal",
+    "amountMinor": 100,
+    "participants": [
+      "a",
+      "b"
+    ],
+    "expected": [
+      {
+        "memberId": "a",
+        "amountMinor": 50
+      },
+      {
+        "memberId": "b",
+        "amountMinor": 50
+      }
+    ]
+  },
+  {
+    "name": "equal/remainder-one",
+    "method": "equal",
+    "amountMinor": 100,
+    "participants": [
+      "user_b",
+      "user_a",
+      "user_c"
+    ],
+    "expected": [
+      {
+        "memberId": "user_a",
+        "amountMinor": 34
+      },
+      {
+        "memberId": "user_b",
+        "amountMinor": 33
+      },
+      {
+        "memberId": "user_c",
+        "amountMinor": 33
+      }
+    ]
+  },
+  {
+    "name": "equal/remainder-two",
+    "method": "equal",
+    "amountMinor": 101,
+    "participants": [
+      "c",
+      "a",
+      "b"
+    ],
+    "expected": [
+      {
+        "memberId": "a",
+        "amountMinor": 34
+      },
+      {
+        "memberId": "b",
+        "amountMinor": 34
+      },
+      {
+        "memberId": "c",
+        "amountMinor": 33
+      }
+    ]
+  },
+  {
+    "name": "equal/zero",
+    "method": "equal",
+    "amountMinor": 0,
+    "participants": [
+      "a",
+      "b",
+      "c"
+    ],
+    "expected": [
+      {
+        "memberId": "a",
+        "amountMinor": 0
+      },
+      {
+        "memberId": "b",
+        "amountMinor": 0
+      },
+      {
+        "memberId": "c",
+        "amountMinor": 0
+      }
+    ]
+  },
+  {
+    "name": "equal/large",
+    "method": "equal",
+    "amountMinor": 1000000,
+    "participants": [
+      "alice",
+      "bob",
+      "carol",
+      "dave"
+    ],
+    "expected": [
+      {
+        "memberId": "alice",
+        "amountMinor": 250000
+      },
+      {
+        "memberId": "bob",
+        "amountMinor": 250000
+      },
+      {
+        "memberId": "carol",
+        "amountMinor": 250000
+      },
+      {
+        "memberId": "dave",
+        "amountMinor": 250000
+      }
+    ]
+  },
+  {
+    "name": "exact/3-members",
+    "method": "exact",
+    "amountMinor": 100,
+    "exactShares": [
+      {
+        "memberId": "a",
+        "amountMinor": 50
+      },
+      {
+        "memberId": "b",
+        "amountMinor": 30
+      },
+      {
+        "memberId": "c",
+        "amountMinor": 20
+      }
+    ],
+    "expected": [
+      {
+        "memberId": "a",
+        "amountMinor": 50
+      },
+      {
+        "memberId": "b",
+        "amountMinor": 30
+      },
+      {
+        "memberId": "c",
+        "amountMinor": 20
+      }
+    ]
+  },
+  {
+    "name": "exact/2-members-uneven",
+    "method": "exact",
+    "amountMinor": 9999,
+    "exactShares": [
+      {
+        "memberId": "x",
+        "amountMinor": 3333
+      },
+      {
+        "memberId": "y",
+        "amountMinor": 6666
+      }
+    ],
+    "expected": [
+      {
+        "memberId": "x",
+        "amountMinor": 3333
+      },
+      {
+        "memberId": "y",
+        "amountMinor": 6666
+      }
+    ]
+  },
+  {
+    "name": "percentage/50-50",
+    "method": "percentage",
+    "amountMinor": 100,
+    "percentageShares": [
+      {
+        "memberId": "a",
+        "basisPoints": 5000
+      },
+      {
+        "memberId": "b",
+        "basisPoints": 5000
+      }
+    ],
+    "expected": [
+      {
+        "memberId": "a",
+        "amountMinor": 50
+      },
+      {
+        "memberId": "b",
+        "amountMinor": 50
+      }
+    ]
+  },
+  {
+    "name": "percentage/thirds",
+    "method": "percentage",
+    "amountMinor": 100,
+    "percentageShares": [
+      {
+        "memberId": "a",
+        "basisPoints": 3334
+      },
+      {
+        "memberId": "b",
+        "basisPoints": 3333
+      },
+      {
+        "memberId": "c",
+        "basisPoints": 3333
+      }
+    ],
+    "expected": [
+      {
+        "memberId": "a",
+        "amountMinor": 34
+      },
+      {
+        "memberId": "b",
+        "amountMinor": 33
+      },
+      {
+        "memberId": "c",
+        "amountMinor": 33
+      }
+    ]
+  },
+  {
+    "name": "percentage/asymmetric",
+    "method": "percentage",
+    "amountMinor": 10000,
+    "percentageShares": [
+      {
+        "memberId": "a",
+        "basisPoints": 1000
+      },
+      {
+        "memberId": "b",
+        "basisPoints": 2500
+      },
+      {
+        "memberId": "c",
+        "basisPoints": 6500
+      }
+    ],
+    "expected": [
+      {
+        "memberId": "a",
+        "amountMinor": 1000
+      },
+      {
+        "memberId": "b",
+        "amountMinor": 2500
+      },
+      {
+        "memberId": "c",
+        "amountMinor": 6500
+      }
+    ]
+  }
+]

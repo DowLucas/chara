@@ -10,7 +10,11 @@ import { EmptyState } from '@/components/EmptyState';
 import { useTranslation } from 'react-i18next';
 import { Group, MyBalance } from '@/lib/api';
 import { useAccounts } from '@/lib/accounts';
-import { useAggregatedGroups, useAggregatedBalances } from '@/lib/aggregated-reads';
+import {
+  useAggregatedGroups,
+  useAggregatedBalances,
+  useAggregatedActivity,
+} from '@/lib/aggregated-reads';
 import { formatMinorUnits, decimalToMinor } from '@/lib/i18n';
 import { initialsOf } from '@/lib/name';
 import {
@@ -57,6 +61,21 @@ export default function HomeScreen() {
 
   const groupReads = useAggregatedGroups();
   const balanceReads = useAggregatedBalances();
+  // Top-3 recent activity preview. Same hook the Activity tab uses, so a
+  // foreground refresh hydrates both surfaces without a second fetch.
+  const activityReads = useAggregatedActivity(50);
+  const recentActivity = useMemo(() => {
+    const all: { event: import('@/lib/api').ActivityEvent; serverUrl: string }[] = [];
+    for (const r of activityReads) {
+      for (const e of r.data ?? []) all.push({ event: e, serverUrl: r.serverUrl });
+    }
+    all.sort(
+      (a, b) =>
+        new Date(b.event.created_at).getTime() -
+        new Date(a.event.created_at).getTime(),
+    );
+    return all.slice(0, 3);
+  }, [activityReads]);
 
   // Host chip rule (spec §14): only when ≥ 2 accounts.
   const showHostChip = accounts.length >= 2;
@@ -309,12 +328,39 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* Recent activity (placeholder until we wire useAggregatedActivity here) */}
+        {/* Recent activity — top 3 across every linked account, click-through
+            to the dedicated Activity tab. */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>{t('home.recentCount', { count: 0 })}</Text>
+          <Text style={styles.sectionLabel}>
+            {t('home.recentCount', { count: recentActivity.length })}
+          </Text>
+          {recentActivity.length > 0 && (
+            <TouchableOpacity
+              onPress={() => router.push('/(tabs)/activity')}
+              hitSlop={8}
+            >
+              <Text style={styles.seeAllLink}>{t('home.seeAll')}</Text>
+            </TouchableOpacity>
+          )}
         </View>
         <View style={styles.sectionRule} />
-        <Text style={styles.noActivity}>{t('home.noActivity')}</Text>
+        {recentActivity.length === 0 ? (
+          <Text style={styles.noActivity}>{t('home.noActivity')}</Text>
+        ) : (
+          recentActivity.map((r) => (
+            <TouchableOpacity
+              key={r.event.id}
+              activeOpacity={0.7}
+              onPress={() => router.push('/(tabs)/activity')}
+              style={styles.activityRow}
+            >
+              <Text style={styles.activityText} numberOfLines={2}>
+                {summariseActivity(r.event, t)}
+              </Text>
+              <Text style={styles.activityMeta}>{r.event.group_name ?? ''}</Text>
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
     </View>
   );
@@ -328,6 +374,62 @@ export default function HomeScreen() {
  * follow-up wave is expected to expose an imperative per-server
  * `refresh()` from the hook so this CTA can wire to it directly.
  */
+/**
+ * Compact one-liner for the home-screen recent-activity preview. The
+ * full templates with deep-link affordances live on the Activity tab —
+ * this view's role is "what just happened across all my groups" so we
+ * favour brevity over precision.
+ */
+function summariseActivity(
+  e: import('@/lib/api').ActivityEvent,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): string {
+  const actor = e.actor_name || t('common.dash');
+  const group = e.group_name ?? '';
+  const s = (e.payload?.snapshot ?? {}) as {
+    title?: string;
+    amount?: number;
+    currency?: string;
+    from_member_name?: string;
+    to_member_name?: string;
+  };
+  switch (e.event_type) {
+    case 'expense_added':
+      return t('activity.event_expense_added', {
+        actor,
+        group,
+        title: s.title ?? '',
+        amount: s.amount != null && s.currency ? formatMinorUnits(s.amount, s.currency) : '',
+      });
+    case 'expense_edited':
+      return t('activity.event_expense_edited', { actor, group, title: s.title ?? '' });
+    case 'expense_deleted':
+      return t('activity.event_expense_deleted', { actor, group, title: s.title ?? '' });
+    case 'settlement_added':
+      return t('activity.event_settlement_added', {
+        actor,
+        group,
+        from: s.from_member_name ?? actor,
+        to: s.to_member_name ?? t('common.dash'),
+        amount: s.amount != null && s.currency ? formatMinorUnits(s.amount, s.currency) : '',
+      });
+    case 'settlement_reverted':
+      return t('activity.event_settlement_reverted', { actor, group });
+    case 'member_joined':
+      return t('activity.event_member_joined', { actor, group });
+    case 'group_created':
+      return t('activity.event_group_created', { actor, group });
+    case 'group_archived':
+      return t('activity.event_group_archived', { actor, group });
+    default:
+      return t('activity.event_generic', {
+        actor,
+        group,
+        event: e.event_type,
+      });
+  }
+}
+
 function ErrorStrip({ label, cta }: { label: string; cta: string }) {
   return (
     <View style={styles.errorStrip}>
@@ -520,6 +622,31 @@ const styles = StyleSheet.create({
     color: colors.lead,
     paddingHorizontal: spacing.s5,
     paddingTop: spacing.s3,
+  },
+  seeAllLink: {
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.caption,
+    color: colors.graphite,
+    letterSpacing: 0.3,
+  },
+  activityRow: {
+    paddingVertical: 10,
+    paddingHorizontal: spacing.s5,
+    borderBottomWidth: 0.5,
+    borderBottomColor: colors.ruleSoft,
+  },
+  activityText: {
+    fontFamily: fontDisplay,
+    fontSize: 14,
+    color: colors.graphite,
+    lineHeight: 19,
+  },
+  activityMeta: {
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    marginTop: 2,
+    letterSpacing: 0.3,
   },
   emptyCta: {
     flexDirection: 'row',

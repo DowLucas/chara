@@ -4,6 +4,7 @@ package testutil
 
 import (
 	"context"
+	"strconv"
 	"testing"
 	"time"
 
@@ -76,6 +77,28 @@ func AddMember(t *testing.T, pool *pgxpool.Pool, groupID, userID, name string) d
 type ExpenseFixture struct {
 	Expense db.CreateExpenseRow
 	Splits  []db.ExpenseSplit
+}
+
+// SeedFxRate inserts an ECB-style EUR→quote rate for the given date. Useful
+// for FX integration tests that don't want to hit the network.
+func SeedFxRate(t *testing.T, pool *pgxpool.Pool, quote string, rate float64, asOf time.Time) {
+	t.Helper()
+	q := db.New(pool)
+	var n pgtype.Numeric
+	// Up to 10 decimal places matches the NUMERIC(20,10) column.
+	require.NoError(t, n.Scan(formatFloatFixed(rate)))
+	require.NoError(t, q.UpsertFxRate(context.Background(), db.UpsertFxRateParams{
+		Base:   "EUR",
+		Quote:  quote,
+		Rate:   n,
+		AsOf:   pgtype.Date{Time: asOf, Valid: true},
+		Source: "ecb-test",
+	}))
+}
+
+func formatFloatFixed(f float64) string {
+	// Avoid scientific notation; 10 decimals matches the column scale.
+	return strconv.FormatFloat(f, 'f', 10, 64)
 }
 
 // CreateExpense inserts an expense with equal splits across memberIDs directly in the DB.

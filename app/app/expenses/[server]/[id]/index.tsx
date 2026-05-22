@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, Modal, Linking } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Avatar } from '@/components/Avatar';
+import { ActionSheet, ActionSheetOption, openNativeActionSheet } from '@/components/ActionSheet';
+import { SettlementImpactSheet } from '@/components/SettlementImpactSheet';
 import { useTranslation } from 'react-i18next';
 import {
   apiFor,
@@ -15,9 +17,11 @@ import {
   ExpenseAttachment,
   GroupDetail,
   GroupMember,
+  Settlement,
 } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
-import { currentLocale, formatMinorUnits } from '@/lib/i18n';
+import { useAccount } from '@/lib/accounts';
+import { currentLocale, formatDate, formatMinorUnits } from '@/lib/i18n';
+import { computeBalanceImpact } from '@/lib/balance-impact';
 import { initialsOf } from '@/lib/name';
 import { colors, fontDisplay, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
 
@@ -31,7 +35,8 @@ export default function ExpenseDetailScreen() {
   const api = apiFor(serverUrl);
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const account = useAccount(serverUrl);
+  const user = account?.user ?? null;
   const [expense, setExpense] = useState<Expense | null>(null);
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
@@ -40,6 +45,12 @@ export default function ExpenseDetailScreen() {
     null,
   );
   const [token, setToken] = useState<string | null>(null);
+  const [actionSheetVisible, setActionSheetVisible] = useState(false);
+  const [deleteSheetVisible, setDeleteSheetVisible] = useState(false);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [settlements, setSettlements] = useState<Settlement[]>([]);
+  const isAuthor = !!user && !!expense && user.id === expense.created_by_id;
 
   useEffect(() => {
     let cancelled = false;
@@ -51,21 +62,93 @@ export default function ExpenseDetailScreen() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!id || !groupId || !serverUrl) return;
-    Promise.allSettled([
-      api.getExpense(groupId, id),
-      api.getGroup(groupId),
-      api.listExpenseAttachments(groupId, id),
-    ]).then(([eRes, gRes, aRes]) => {
-      if (eRes.status === 'fulfilled') setExpense(eRes.value);
-      if (gRes.status === 'fulfilled') {
-        setGroup(gRes.value);
-        setMembers(gRes.value.members);
-      }
-      if (aRes.status === 'fulfilled') setAttachments(aRes.value);
+  // Load on focus so returning from the edit screen reflects fresh data.
+  // The project has no SWR/React Query layer — this is the cheapest
+  // mechanism that keeps the detail screen in sync after a save.
+  useFocusEffect(
+    useCallback(() => {
+      if (!id || !groupId || !serverUrl) return;
+      let cancelled = false;
+      Promise.allSettled([
+        api.getExpense(groupId, id),
+        api.getGroup(groupId),
+        api.listExpenseAttachments(groupId, id),
+        api.listSettlements(groupId),
+      ]).then(([eRes, gRes, aRes, sRes]) => {
+        if (cancelled) return;
+        if (eRes.status === 'fulfilled') setExpense(eRes.value);
+        if (gRes.status === 'fulfilled') {
+          setGroup(gRes.value);
+          setMembers(gRes.value.members);
+        }
+        if (aRes.status === 'fulfilled') setAttachments(aRes.value);
+        if (sRes.status === 'fulfilled') setSettlements(sRes.value);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [id, groupId, serverUrl]),
+  );
+
+  function openMenu() {
+    if (!isAuthor) return;
+    const options: ActionSheetOption[] = [
+      {
+        label: t('expenseDetail.actions.edit'),
+        onPress: () => {
+          if (!id || !groupId) return;
+          router.push({
+            pathname: '/expenses/[server]/[id]/edit',
+            params: { server: encodeURIComponent(serverUrl), id, groupId },
+          });
+        },
+      },
+      {
+        label: t('expenseDetail.actions.delete'),
+        destructive: true,
+        onPress: () => setDeleteSheetVisible(true),
+      },
+    ];
+    if (openNativeActionSheet(undefined, options)) return;
+    setActionSheetVisible(true);
+  }
+
+  // Compute the delete impact lazily — we need it when the user opens the
+  // delete confirm sheet. Returns empty arrays during loading.
+  function computeDeleteImpact() {
+    if (!expense) {
+      return { deltas: [], affectedSettlements: [], newCurrency: '' };
+    }
+    const splits = expense.splits ?? [];
+    return computeBalanceImpact({
+      expense,
+      currentSplits: splits,
+      // Delete = "set all new shares to zero." Pass zero payer + empty
+      // participants; the impl interprets the absence as full reversal.
+      newAmountMinor: 0n,
+      newPayerId: expense.paid_by_id,
+      newSplitMethod: 'equal',
+      newParticipants: [],
+      newSplits: [],
+      members,
+      settlements,
     });
-  }, [id, groupId, serverUrl]);
+  }
+
+  async function handleConfirmDelete() {
+    if (!id || !groupId || !expense) return;
+    setDeleteSubmitting(true);
+    setDeleteError(null);
+    try {
+      await api.deleteExpense(groupId, id);
+      setDeleteSheetVisible(false);
+      router.back();
+    } catch (e: any) {
+      setDeleteError(e?.message || t('impactSheet.deleteErrorGeneric'));
+    } finally {
+      setDeleteSubmitting(false);
+    }
+  }
 
   if (!expense) {
     return (
@@ -94,7 +177,13 @@ export default function ExpenseDetailScreen() {
         right={
           <View style={{ flexDirection: 'row' }}>
             <IconButton icon="message-square" label={t('expenseDetail.commentsLabel')} />
-            <IconButton icon="more-horizontal" label={t('expenseDetail.menuLabel')} />
+            {isAuthor && (
+              <IconButton
+                icon="more-vertical"
+                label={t('expenseDetail.actions.menu')}
+                onPress={openMenu}
+              />
+            )}
           </View>
         }
       />
@@ -109,6 +198,24 @@ export default function ExpenseDetailScreen() {
             <Text style={styles.amount}>{amountDisplay}</Text>
             <Text style={styles.currency}>{expense.currency}</Text>
           </View>
+          {/* FX snapshot: original-currency amount, converted canonical
+              amount, and the rate's source/as_of. Only rendered when the
+              backend tagged this expense with a foreign-currency snapshot. */}
+          {expense.original_currency &&
+          expense.original_amount &&
+          expense.original_currency !== expense.currency ? (
+            <Text style={styles.fxLine} numberOfLines={1}>
+              {t('expenseDetail.fx.originalLine', {
+                amount: formatMinorUnits(
+                  Math.round(parseFloat(expense.original_amount) * 100),
+                  expense.original_currency,
+                ),
+                converted: formatMinorUnits(amountMinor, expense.currency),
+                source: t('expenseDetail.fx.sourceECB'),
+                asOf: expense.fx_as_of ? formatDate(expense.fx_as_of) : '',
+              })}
+            </Text>
+          ) : null}
           <View style={styles.rule} />
 
           {/* Meta strip */}
@@ -258,6 +365,49 @@ export default function ExpenseDetailScreen() {
           <View style={styles.activityRule} />
         </View>
       </ScrollView>
+
+      <ActionSheet
+        visible={actionSheetVisible}
+        onClose={() => setActionSheetVisible(false)}
+        options={[
+          {
+            label: t('expenseDetail.actions.edit'),
+            onPress: () => {
+              if (!id || !groupId) return;
+              router.push({
+                pathname: '/expenses/[server]/[id]/edit',
+                params: { server: encodeURIComponent(serverUrl), id, groupId },
+              });
+            },
+          },
+          {
+            label: t('expenseDetail.actions.delete'),
+            destructive: true,
+            onPress: () => setDeleteSheetVisible(true),
+          },
+        ]}
+      />
+
+      {/* Delete confirm — always uses SettlementImpactSheet (mode=delete).
+          When no settlements are affected the sheet still renders, but with
+          the plain lead and zero settlement rows. */}
+      {expense && (
+        <SettlementImpactSheet
+          visible={deleteSheetVisible}
+          mode="delete"
+          deltas={computeDeleteImpact().deltas}
+          affectedSettlements={computeDeleteImpact().affectedSettlements}
+          members={members}
+          currency={expense.currency}
+          submitting={deleteSubmitting}
+          error={deleteError}
+          onCancel={() => {
+            setDeleteSheetVisible(false);
+            setDeleteError(null);
+          }}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
     </View>
   );
 }
@@ -317,6 +467,13 @@ const styles = StyleSheet.create({
     lineHeight: 52,
   },
   currency: { fontFamily: fontMono, fontSize: 22, color: colors.lead },
+  fxLine: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    marginTop: 6,
+    fontVariant: ['tabular-nums'],
+  },
   rule: { height: 1.5, backgroundColor: colors.graphite, marginTop: 14 },
   metaStrip: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, gap: 8 },
   metaCol: { flex: 1 },

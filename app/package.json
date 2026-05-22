@@ -14,7 +14,8 @@
     "preset": "ts-jest",
     "testEnvironment": "node",
     "testMatch": [
-      "**/__tests__/**/*.test.ts"
+      "**/__tests__/**/*.test.ts",
+      "**/__tests__/**/*.test.tsx"
     ]
   },
   "overrides": {
@@ -28,6 +29,7 @@
     "expo-application": "~7.0.8",
     "expo-camera": "~17.0.10",
     "expo-constants": "~18.0.13",
+    "expo-crypto": "~15.0.9",
     "expo-device": "~8.0.10",
     "expo-font": "~14.0.11",
     "expo-image-picker": "~17.0.11",
@@ -41,6 +43,7 @@
     "expo-status-bar": "~3.0.9",
     "expo-system-ui": "~6.0.9",
     "i18next": "^26.1.0",
+    "posthog-react-native": "^4.45.14",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-i18next": "^17.0.7",

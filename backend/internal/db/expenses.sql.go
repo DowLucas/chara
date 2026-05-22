@@ -11,6 +11,21 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countActiveExpensesByGroup = `-- name: CountActiveExpensesByGroup :one
+SELECT COUNT(*) FROM expenses WHERE group_id = $1 AND NOT is_deleted
+`
+
+// Active = not soft-deleted. Used to lock the group currency once any real
+// expense exists, since the member_balances view groups by expenses.currency
+// and changing it mid-flight would fragment balances into per-currency
+// buckets.
+func (q *Queries) CountActiveExpensesByGroup(ctx context.Context, groupID string) (int64, error) {
+	row := q.db.QueryRow(ctx, countActiveExpensesByGroup, groupID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createExpense = `-- name: CreateExpense :one
 
 INSERT INTO expenses (
@@ -463,6 +478,90 @@ func (q *Queries) UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (U
 		arg.ExpenseDate,
 	)
 	var i UpdateExpenseRow
+	err := row.Scan(
+		&i.ID,
+		&i.GroupID,
+		&i.Title,
+		&i.Amount,
+		&i.Currency,
+		&i.PaidByID,
+		&i.SplitMethod,
+		&i.Category,
+		&i.Notes,
+		&i.ExpenseDate,
+		&i.IsReimbursement,
+		&i.IsDeleted,
+		&i.CreatedByID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.OriginalAmount,
+		&i.OriginalCurrency,
+		&i.FxRate,
+		&i.FxAsOf,
+	)
+	return i, err
+}
+
+const updateExpenseFxSnapshot = `-- name: UpdateExpenseFxSnapshot :one
+UPDATE expenses
+SET amount            = $2,
+    original_amount   = $3,
+    original_currency = $4,
+    fx_rate           = $5,
+    fx_as_of          = $6,
+    updated_at        = NOW()
+WHERE id = $1
+RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
+          expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
+          original_amount, original_currency, fx_rate, fx_as_of
+`
+
+type UpdateExpenseFxSnapshotParams struct {
+	ID               string         `db:"id" json:"id"`
+	Amount           int64          `db:"amount" json:"amount"`
+	OriginalAmount   pgtype.Int8    `db:"original_amount" json:"original_amount"`
+	OriginalCurrency pgtype.Text    `db:"original_currency" json:"original_currency"`
+	FxRate           pgtype.Numeric `db:"fx_rate" json:"fx_rate"`
+	FxAsOf           pgtype.Date    `db:"fx_as_of" json:"fx_as_of"`
+}
+
+type UpdateExpenseFxSnapshotRow struct {
+	ID               string             `db:"id" json:"id"`
+	GroupID          string             `db:"group_id" json:"group_id"`
+	Title            string             `db:"title" json:"title"`
+	Amount           int64              `db:"amount" json:"amount"`
+	Currency         string             `db:"currency" json:"currency"`
+	PaidByID         string             `db:"paid_by_id" json:"paid_by_id"`
+	SplitMethod      string             `db:"split_method" json:"split_method"`
+	Category         string             `db:"category" json:"category"`
+	Notes            pgtype.Text        `db:"notes" json:"notes"`
+	ExpenseDate      pgtype.Date        `db:"expense_date" json:"expense_date"`
+	IsReimbursement  bool               `db:"is_reimbursement" json:"is_reimbursement"`
+	IsDeleted        bool               `db:"is_deleted" json:"is_deleted"`
+	CreatedByID      string             `db:"created_by_id" json:"created_by_id"`
+	CreatedAt        pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	OriginalAmount   pgtype.Int8        `db:"original_amount" json:"original_amount"`
+	OriginalCurrency pgtype.Text        `db:"original_currency" json:"original_currency"`
+	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
+	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
+}
+
+// Explicitly sets the FX snapshot columns and the canonical amount. The
+// regular UpdateExpense query uses COALESCE narg semantics which cannot
+// *clear* these columns to NULL; this query exists so the handler can
+// recompute FX on edits and clear the snapshot when the new currency
+// equals the group currency.
+func (q *Queries) UpdateExpenseFxSnapshot(ctx context.Context, arg UpdateExpenseFxSnapshotParams) (UpdateExpenseFxSnapshotRow, error) {
+	row := q.db.QueryRow(ctx, updateExpenseFxSnapshot,
+		arg.ID,
+		arg.Amount,
+		arg.OriginalAmount,
+		arg.OriginalCurrency,
+		arg.FxRate,
+		arg.FxAsOf,
+	)
+	var i UpdateExpenseFxSnapshotRow
 	err := row.Scan(
 		&i.ID,
 		&i.GroupID,

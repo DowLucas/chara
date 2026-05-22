@@ -109,6 +109,7 @@ func TruncateAll(t *testing.T, pool *pgxpool.Pool) {
 		"group_members",
 		"groups",
 		"users",
+		"fx_rates",
 	}
 	_, err := pool.Exec(context.Background(),
 		"TRUNCATE TABLE "+strings.Join(tables, ", ")+" RESTART IDENTITY CASCADE",

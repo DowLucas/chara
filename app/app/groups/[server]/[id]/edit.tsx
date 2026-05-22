@@ -14,7 +14,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { apiFor, Group } from '@/lib/api';
+import { apiFor, ApiError, Group } from '@/lib/api';
 import { CurrencyPicker } from '@/components/CurrencyPicker';
 import { SUGGESTED_CURRENCY_CODES } from '@/lib/currencies';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
@@ -65,6 +65,24 @@ export default function EditGroupScreen() {
       });
       router.back();
     } catch (e: any) {
+      // Surface the backend's group_currency_locked code as a clear,
+      // localised explanation rather than a raw JSON error blob. The
+      // server returns 409 with body `{"code":"group_currency_locked",…}`.
+      if (e instanceof ApiError && e.status === 409) {
+        let parsed: { code?: string } | null = null;
+        try {
+          parsed = JSON.parse(e.message);
+        } catch {
+          parsed = null;
+        }
+        if (parsed?.code === 'group_currency_locked') {
+          Alert.alert(
+            t('editGroup.errors.currencyLockedTitle'),
+            t('editGroup.errors.currencyLockedBody'),
+          );
+          return;
+        }
+      }
       Alert.alert(t('editGroup.errorTitle'), e?.message || String(e));
     } finally {
       setSubmitting(false);

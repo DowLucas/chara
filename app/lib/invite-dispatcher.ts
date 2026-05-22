@@ -11,6 +11,7 @@
 import { Alert } from 'react-native';
 import { router } from 'expo-router';
 import i18n from './i18n';
+import * as analytics from './analytics';
 import { apiFor, ApiError, publicApi } from './api';
 import { runDiscoveryHandshake } from './discovery';
 import { checkProtocolCompat } from './protocol';
@@ -22,6 +23,13 @@ export type DispatchResult =
   /** Handled — navigation / alert already fired. */
   | { kind: 'handled' };
 
+/**
+ * Where the dispatch was triggered from. Used to gate `onboarding_finished`
+ * — only joins that originate inside the onboarding scanner conclude the
+ * onboarding funnel. Deep links and the tab-bar scanner do not.
+ */
+export type DispatchSource = 'onboarding' | 'deep_link' | 'scanner';
+
 function hostFor(serverUrl: string): string {
   try {
     return new URL(serverUrl).host;
@@ -30,29 +38,54 @@ function hostFor(serverUrl: string): string {
   }
 }
 
-async function joinOn(server: string, token: string): Promise<DispatchResult> {
+/** Short, stable error code for `group_join_failed` analytics. */
+function joinFailureCode(e: unknown): string {
+  if (e instanceof ApiError) return `http_${e.status}`;
+  // Fetch network failures show up as TypeError on RN.
+  if (e instanceof TypeError) return 'network';
+  return 'unknown';
+}
+
+async function joinOn(
+  server: string,
+  token: string,
+  source: DispatchSource | undefined,
+): Promise<DispatchResult> {
   try {
     const group = await apiFor(server).joinGroupByToken(token);
+    analytics.track('group_joined');
+    if (source === 'onboarding') {
+      analytics.track('onboarding_finished', { path: 'scan' });
+    }
     router.replace(`/groups/${encodeURIComponent(server)}/${group.id}`);
     return { kind: 'handled' };
   } catch (e: any) {
     if (e instanceof ApiError && e.status === 409) {
-      // Already a member — bounce to home.
+      // Already a member — treat as a successful join for funnel purposes
+      // and bounce to home.
+      analytics.track('group_joined');
+      if (source === 'onboarding') {
+        analytics.track('onboarding_finished', { path: 'scan' });
+      }
       router.replace('/(tabs)');
       return { kind: 'handled' };
     }
+    analytics.track('group_join_failed', { code: joinFailureCode(e) });
     Alert.alert(i18n.t('scanJoin.couldNotJoin'), e?.message || String(e));
     return { kind: 'handled' };
   }
 }
 
-export async function dispatchInviteIntent(intent: InviteIntent): Promise<DispatchResult> {
+export async function dispatchInviteIntent(
+  intent: InviteIntent,
+  source?: DispatchSource,
+): Promise<DispatchResult> {
   switch (intent.kind) {
     case 'invalid':
       return { kind: 'invalid', reason: intent.reason };
 
     case 'join-with-account':
-      return joinOn(intent.accountServerUrl, intent.token);
+      return joinOn(intent.accountServerUrl, intent.token, source);
 
     case 'choose-account': {
       // TODO(Wave 6+): replace with the design's chooser sheet when
@@ -64,7 +97,7 @@ export async function dispatchInviteIntent(intent: InviteIntent): Promise<Dispat
         const buttons = intent.candidateServerUrls.map((url) => ({
           text: hostFor(url),
           onPress: () => {
-            void joinOn(url, intent.token).then(resolve);
+            void joinOn(url, intent.token, source).then(resolve);
           },
         }));
         // Pre-selected default first per spec §10.

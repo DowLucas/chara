@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/DowLucas/chara/internal/db"
 	"github.com/DowLucas/chara/internal/server"
 	"github.com/DowLucas/chara/testutil"
 	"github.com/stretchr/testify/assert"
@@ -228,6 +229,92 @@ func TestGroups_Update_NonMemberCannotUpdate(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, rr.Code)
 }
 
+// ── Update: currency lock once expenses exist ────────────────────────────────
+
+func TestUpdateGroup_AllowsCurrencyChange_WhenNoExpenses(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_fxlock_empty"), "Alice")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Trip", "SEK", alice.ID, "Alice")
+
+	token := env.MintToken(t, alice.ID, alice.Email)
+	req := env.AuthRequest(t, "PATCH", "/api/groups/"+group.ID, `{"currency":"EUR"}`, token)
+	rr := env.Do(t, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&body))
+	assert.Equal(t, "EUR", body["currency"])
+
+	updated, err := env.Queries.GetGroupByID(context.Background(), group.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "EUR", updated.Currency)
+}
+
+func TestUpdateGroup_RefusesCurrencyChange_WhenExpensesExist(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_fxlock_with"), "Alice")
+	group, aliceMem := testutil.CreateGroup(t, env.Pool, "Trip", "SEK", alice.ID, "Alice")
+	testutil.CreateExpense(t, env.Pool, group.ID, "Dinner", 9000, "SEK", aliceMem.ID, alice.ID, []string{aliceMem.ID})
+
+	token := env.MintToken(t, alice.ID, alice.Email)
+	req := env.AuthRequest(t, "PATCH", "/api/groups/"+group.ID, `{"currency":"EUR"}`, token)
+	rr := env.Do(t, req)
+
+	assert.Equal(t, http.StatusConflict, rr.Code)
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&body))
+	assert.Equal(t, "group_currency_locked", body["code"])
+
+	updated, err := env.Queries.GetGroupByID(context.Background(), group.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "SEK", updated.Currency)
+}
+
+func TestUpdateGroup_RefusesCurrencyChange_IgnoresSoftDeletedExpenses(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_fxlock_softdel"), "Alice")
+	group, aliceMem := testutil.CreateGroup(t, env.Pool, "Trip", "SEK", alice.ID, "Alice")
+	fix := testutil.CreateExpense(t, env.Pool, group.ID, "Dinner", 9000, "SEK", aliceMem.ID, alice.ID, []string{aliceMem.ID})
+
+	token := env.MintToken(t, alice.ID, alice.Email)
+	delRR := env.Do(t, env.AuthRequest(t, "DELETE", "/api/groups/"+group.ID+"/expenses/"+fix.Expense.ID, "", token))
+	require.Equal(t, http.StatusNoContent, delRR.Code)
+
+	req := env.AuthRequest(t, "PATCH", "/api/groups/"+group.ID, `{"currency":"EUR"}`, token)
+	rr := env.Do(t, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
+func TestUpdateGroup_AllowsOtherEdits_WhenExpensesExist(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_fxlock_other"), "Alice")
+	group, aliceMem := testutil.CreateGroup(t, env.Pool, "Trip", "SEK", alice.ID, "Alice")
+	testutil.CreateExpense(t, env.Pool, group.ID, "Dinner", 9000, "SEK", aliceMem.ID, alice.ID, []string{aliceMem.ID})
+
+	token := env.MintToken(t, alice.ID, alice.Email)
+	req := env.AuthRequest(t, "PATCH", "/api/groups/"+group.ID, `{"name":"Sweden Trip","language":"sv"}`, token)
+	rr := env.Do(t, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&body))
+	assert.Equal(t, "Sweden Trip", body["name"])
+	assert.Equal(t, "sv", body["language"])
+	assert.Equal(t, "SEK", body["currency"])
+}
+
+func TestUpdateGroup_AllowsCurrencyToSameValue_WhenExpensesExist(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_fxlock_same"), "Alice")
+	group, aliceMem := testutil.CreateGroup(t, env.Pool, "Trip", "SEK", alice.ID, "Alice")
+	testutil.CreateExpense(t, env.Pool, group.ID, "Dinner", 9000, "SEK", aliceMem.ID, alice.ID, []string{aliceMem.ID})
+
+	token := env.MintToken(t, alice.ID, alice.Email)
+	req := env.AuthRequest(t, "PATCH", "/api/groups/"+group.ID, `{"currency":"SEK"}`, token)
+	rr := env.Do(t, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
 // ── Archive ───────────────────────────────────────────────────────────────────
 
 func TestGroups_Archive_OwnerCanArchive(t *testing.T) {
@@ -421,4 +508,201 @@ func TestRegenerateInviteToken_NonMemberForbidden(t *testing.T) {
 	strangerToken := env.MintToken(t, stranger.ID, stranger.Email)
 	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+group.ID+"/invite-link/regenerate", "", strangerToken))
 	assert.Equal(t, http.StatusForbidden, rr.Code)
+}
+
+// ── Activity writers (group lifecycle) ────────────────────────────────────────
+
+func TestCreateGroup_WritesActivity(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_actcre"), "Alice")
+	token := env.MintToken(t, alice.ID, alice.Email)
+
+	req := env.AuthRequest(t, "POST", "/api/groups", `{"name":"Bali Trip","currency":"USD"}`, token)
+	rr := env.Do(t, req)
+	require.Equal(t, http.StatusCreated, rr.Code)
+
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&body))
+	groupID := body["id"].(string)
+
+	activity, err := env.Queries.ListActivityByGroup(context.Background(), db.ListActivityByGroupParams{
+		GroupID: groupID, Limit: 10, Offset: 0,
+	})
+	require.NoError(t, err)
+	require.Len(t, activity, 2, "expected group_created + member_joined")
+
+	// Newest-first: member_joined was written after group_created.
+	memberJoined, groupCreated := activity[0], activity[1]
+	if memberJoined.EventType != "member_joined" {
+		memberJoined, groupCreated = groupCreated, memberJoined
+	}
+	assert.Equal(t, "group_created", groupCreated.EventType)
+	assert.Equal(t, "group", groupCreated.EntityType.String)
+	assert.Equal(t, groupID, groupCreated.EntityID.String)
+	require.NotEmpty(t, groupCreated.Payload)
+	var gc struct {
+		EntityType string `json:"entity_type"`
+		Snapshot   struct {
+			Name string `json:"name"`
+		} `json:"snapshot"`
+	}
+	require.NoError(t, json.Unmarshal(groupCreated.Payload, &gc))
+	assert.Equal(t, "group", gc.EntityType)
+	assert.Equal(t, "Bali Trip", gc.Snapshot.Name)
+
+	assert.Equal(t, "member_joined", memberJoined.EventType)
+	assert.Equal(t, "member", memberJoined.EntityType.String)
+	require.NotEmpty(t, memberJoined.Payload)
+	var mj struct {
+		EntityType string `json:"entity_type"`
+		Snapshot   struct {
+			MemberID    string `json:"member_id"`
+			DisplayName string `json:"display_name"`
+		} `json:"snapshot"`
+	}
+	require.NoError(t, json.Unmarshal(memberJoined.Payload, &mj))
+	assert.Equal(t, "member", mj.EntityType)
+	assert.Equal(t, "Alice", mj.Snapshot.DisplayName)
+	assert.NotEmpty(t, mj.Snapshot.MemberID)
+}
+
+func TestJoinViaToken_WritesMemberJoined(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_joinact"), "Alice")
+	bob := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "bob_joinact"), "Bob")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Open Group", "SEK", alice.ID, "Alice")
+
+	bobToken := env.MintToken(t, bob.ID, bob.Email)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/join/"+group.InviteToken, "", bobToken))
+	require.Equal(t, http.StatusOK, rr.Code)
+
+	activity, err := env.Queries.ListActivityByGroup(context.Background(), db.ListActivityByGroupParams{
+		GroupID: group.ID, Limit: 10, Offset: 0,
+	})
+	require.NoError(t, err)
+	var found bool
+	for _, a := range activity {
+		if a.EventType == "member_joined" && a.ActorID == bob.ID {
+			found = true
+			require.NotEmpty(t, a.Payload)
+			var p struct {
+				EntityType string `json:"entity_type"`
+				Snapshot   struct {
+					DisplayName string `json:"display_name"`
+				} `json:"snapshot"`
+			}
+			require.NoError(t, json.Unmarshal(a.Payload, &p))
+			assert.Equal(t, "member", p.EntityType)
+			assert.Equal(t, "Bob", p.Snapshot.DisplayName)
+		}
+	}
+	assert.True(t, found, "expected member_joined for Bob")
+}
+
+func TestUpdateGroup_WritesGroupUpdated_OnNameChange(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_upd"), "Alice")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Old Name", "SEK", alice.ID, "Alice")
+	token := env.MintToken(t, alice.ID, alice.Email)
+
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+group.ID, `{"name":"New Name"}`, token))
+	require.Equal(t, http.StatusOK, rr.Code)
+
+	activity, err := env.Queries.ListActivityByGroup(context.Background(), db.ListActivityByGroupParams{
+		GroupID: group.ID, Limit: 10, Offset: 0,
+	})
+	require.NoError(t, err)
+	var found bool
+	for _, a := range activity {
+		if a.EventType == "group_updated" {
+			found = true
+			require.NotEmpty(t, a.Payload)
+			var p struct {
+				EntityType string `json:"entity_type"`
+				Snapshot   struct {
+					Name    string   `json:"name"`
+					OldName string   `json:"old_name"`
+					Changed []string `json:"changed"`
+				} `json:"snapshot"`
+			}
+			require.NoError(t, json.Unmarshal(a.Payload, &p))
+			assert.Equal(t, "New Name", p.Snapshot.Name)
+			assert.Equal(t, "Old Name", p.Snapshot.OldName)
+			assert.Contains(t, p.Snapshot.Changed, "name")
+		}
+	}
+	assert.True(t, found, "expected group_updated activity entry")
+}
+
+func TestUpdateGroup_NoChange_NoActivity(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_noop"), "Alice")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Same Name", "SEK", alice.ID, "Alice")
+	token := env.MintToken(t, alice.ID, alice.Email)
+
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+group.ID, `{"name":"Same Name"}`, token))
+	require.Equal(t, http.StatusOK, rr.Code)
+
+	activity, err := env.Queries.ListActivityByGroup(context.Background(), db.ListActivityByGroupParams{
+		GroupID: group.ID, Limit: 10, Offset: 0,
+	})
+	require.NoError(t, err)
+	for _, a := range activity {
+		assert.NotEqual(t, "group_updated", a.EventType, "must not log a no-op")
+	}
+}
+
+func TestArchiveGroup_WritesGroupArchived(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_arch"), "Alice")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Closing", "SEK", alice.ID, "Alice")
+	token := env.MintToken(t, alice.ID, alice.Email)
+
+	rr := env.Do(t, env.AuthRequest(t, "DELETE", "/api/groups/"+group.ID, "", token))
+	require.Equal(t, http.StatusNoContent, rr.Code)
+
+	activity, err := env.Queries.ListActivityByGroup(context.Background(), db.ListActivityByGroupParams{
+		GroupID: group.ID, Limit: 10, Offset: 0,
+	})
+	require.NoError(t, err)
+	var found bool
+	for _, a := range activity {
+		if a.EventType == "group_archived" {
+			found = true
+			require.NotEmpty(t, a.Payload)
+			var p struct {
+				EntityType string `json:"entity_type"`
+				Snapshot   struct {
+					Name string `json:"name"`
+				} `json:"snapshot"`
+			}
+			require.NoError(t, json.Unmarshal(a.Payload, &p))
+			assert.Equal(t, "group", p.EntityType)
+			assert.Equal(t, "Closing", p.Snapshot.Name)
+		}
+	}
+	assert.True(t, found, "expected group_archived activity entry")
+}
+
+func TestRotateInvite_WritesActivity(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_rotact"), "Alice")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Rotating", "SEK", alice.ID, "Alice")
+	token := env.MintToken(t, alice.ID, alice.Email)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+group.ID+"/invite-link/regenerate", "", token))
+	require.Equal(t, http.StatusOK, rr.Code)
+
+	activity, err := env.Queries.ListActivityByGroup(context.Background(), db.ListActivityByGroupParams{
+		GroupID: group.ID, Limit: 10, Offset: 0,
+	})
+	require.NoError(t, err)
+	var found bool
+	for _, a := range activity {
+		if a.EventType == "invite_link_rotated" {
+			found = true
+			assert.Equal(t, alice.ID, a.ActorID)
+		}
+	}
+	assert.True(t, found, "expected invite_link_rotated activity entry")
 }

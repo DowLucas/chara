@@ -51,6 +51,37 @@ func (q *Queries) CreateActivity(ctx context.Context, arg CreateActivityParams) 
 	return i, err
 }
 
+const getRecentExpenseUpdateActivity = `-- name: GetRecentExpenseUpdateActivity :one
+SELECT id, payload, created_at FROM activity
+WHERE actor_id = $1
+  AND entity_id = $2
+  AND event_type = 'expense_edited'
+  AND created_at > NOW() - INTERVAL '5 minutes'
+ORDER BY created_at DESC
+LIMIT 1
+`
+
+type GetRecentExpenseUpdateActivityParams struct {
+	ActorID  string      `db:"actor_id" json:"actor_id"`
+	EntityID pgtype.Text `db:"entity_id" json:"entity_id"`
+}
+
+type GetRecentExpenseUpdateActivityRow struct {
+	ID        string             `db:"id" json:"id"`
+	Payload   []byte             `db:"payload" json:"payload"`
+	CreatedAt pgtype.Timestamptz `db:"created_at" json:"created_at"`
+}
+
+// Find a recent expense_edited activity row by the same actor on the same
+// expense within the last 5 minutes. Used to collapse rapid edits into a
+// single feed row.
+func (q *Queries) GetRecentExpenseUpdateActivity(ctx context.Context, arg GetRecentExpenseUpdateActivityParams) (GetRecentExpenseUpdateActivityRow, error) {
+	row := q.db.QueryRow(ctx, getRecentExpenseUpdateActivity, arg.ActorID, arg.EntityID)
+	var i GetRecentExpenseUpdateActivityRow
+	err := row.Scan(&i.ID, &i.Payload, &i.CreatedAt)
+	return i, err
+}
+
 const listActivityByGroup = `-- name: ListActivityByGroup :many
 SELECT id, group_id, actor_id, event_type, entity_id, entity_type, payload, created_at FROM activity
 WHERE group_id = $1
@@ -82,6 +113,64 @@ func (q *Queries) ListActivityByGroup(ctx context.Context, arg ListActivityByGro
 			&i.EntityType,
 			&i.Payload,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listActivityByGroupWithActor = `-- name: ListActivityByGroupWithActor :many
+SELECT a.id, a.group_id, a.actor_id, a.event_type, a.entity_id, a.entity_type, a.payload, a.created_at,
+       u.display_name AS actor_name
+FROM activity a
+JOIN users u ON u.id = a.actor_id
+WHERE a.group_id = $1
+ORDER BY a.created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListActivityByGroupWithActorParams struct {
+	GroupID string `db:"group_id" json:"group_id"`
+	Limit   int32  `db:"limit" json:"limit"`
+	Offset  int32  `db:"offset" json:"offset"`
+}
+
+type ListActivityByGroupWithActorRow struct {
+	ID         string             `db:"id" json:"id"`
+	GroupID    string             `db:"group_id" json:"group_id"`
+	ActorID    string             `db:"actor_id" json:"actor_id"`
+	EventType  string             `db:"event_type" json:"event_type"`
+	EntityID   pgtype.Text        `db:"entity_id" json:"entity_id"`
+	EntityType pgtype.Text        `db:"entity_type" json:"entity_type"`
+	Payload    []byte             `db:"payload" json:"payload"`
+	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	ActorName  string             `db:"actor_name" json:"actor_name"`
+}
+
+func (q *Queries) ListActivityByGroupWithActor(ctx context.Context, arg ListActivityByGroupWithActorParams) ([]ListActivityByGroupWithActorRow, error) {
+	rows, err := q.db.Query(ctx, listActivityByGroupWithActor, arg.GroupID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListActivityByGroupWithActorRow{}
+	for rows.Next() {
+		var i ListActivityByGroupWithActorRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.GroupID,
+			&i.ActorID,
+			&i.EventType,
+			&i.EntityID,
+			&i.EntityType,
+			&i.Payload,
+			&i.CreatedAt,
+			&i.ActorName,
 		); err != nil {
 			return nil, err
 		}
@@ -153,4 +242,22 @@ func (q *Queries) ListActivityForUser(ctx context.Context, arg ListActivityForUs
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateActivityPayload = `-- name: UpdateActivityPayload :exec
+UPDATE activity
+SET payload = $2, created_at = NOW()
+WHERE id = $1
+`
+
+type UpdateActivityPayloadParams struct {
+	ID      string `db:"id" json:"id"`
+	Payload []byte `db:"payload" json:"payload"`
+}
+
+// Replace the payload of an existing activity row and refresh its created_at
+// so the row floats to the top of the feed.
+func (q *Queries) UpdateActivityPayload(ctx context.Context, arg UpdateActivityPayloadParams) error {
+	_, err := q.db.Exec(ctx, updateActivityPayload, arg.ID, arg.Payload)
+	return err
 }

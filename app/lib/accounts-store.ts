@@ -14,6 +14,23 @@ import type { MigrationStorage } from './migrate-legacy-auth';
 import { ACCOUNTS_KEY } from './migrate-legacy-auth';
 import { evictServer } from './cache';
 
+export type AddAccountMethod = 'magic_link' | 'google' | 'apple';
+
+/**
+ * Lazy analytics accessor. `analytics.ts` imports `react-native`, which
+ * blows up the node-environment unit tests for this store unless we defer
+ * the require until first call. The wrapper itself is no-op-by-default,
+ * so callers don't need to know whether analytics is wired.
+ */
+function analyticsModule(): typeof import('./analytics') | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return require('./analytics') as typeof import('./analytics');
+  } catch {
+    return null;
+  }
+}
+
 export interface AccountUser {
   id: string;
   email: string;
@@ -145,7 +162,11 @@ export function defaultAccount(): Account | null {
   return accountFor(blob.defaultServerUrl) ?? blob.accounts[0] ?? null;
 }
 
-export async function addAccount(account: Account): Promise<void> {
+export async function addAccount(
+  account: Account,
+  method?: AddAccountMethod,
+): Promise<void> {
+  const preCount = blob.accounts.length;
   const existing = blob.accounts.findIndex((a) => a.serverUrl === account.serverUrl);
   const accounts = [...blob.accounts];
   if (existing >= 0) {
@@ -159,6 +180,21 @@ export async function addAccount(account: Account): Promise<void> {
     defaultServerUrl: blob.defaultServerUrl ?? account.serverUrl,
     lastUsedCreateServerUrl: blob.lastUsedCreateServerUrl ?? account.serverUrl,
   });
+
+  // Analytics: fire-and-forget. Wrapper swallows errors and no-ops when the
+  // PostHog API key isn't set, so this is safe to call unconditionally.
+  const analytics = analyticsModule();
+  if (analytics) {
+    if (preCount === 0) {
+      // First account on this device — identify the install.
+      void analytics.identify(account.user.id, account.serverUrl);
+    }
+    const accountIndex = existing >= 0 ? existing : accounts.length - 1;
+    analytics.track('auth_completed', {
+      method,
+      account_index: accountIndex,
+    });
+  }
 }
 
 export async function removeAccount(serverUrl: string): Promise<void> {
