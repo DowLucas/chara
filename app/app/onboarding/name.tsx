@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
 import { updateMe } from '@/lib/api';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import * as analytics from '@/lib/analytics';
 
 export default function OnboardingNameScreen() {
   const insets = useSafeAreaInsets();
@@ -42,6 +43,7 @@ export default function OnboardingNameScreen() {
     try {
       const updated = await updateMe({ name: trimmedName, phone: trimmedPhone });
       setUser(updated);
+      analytics.track('user_name_entered');
       if (router.canGoBack()) router.back();
       else router.replace('/onboarding');
     } catch (e: any) {

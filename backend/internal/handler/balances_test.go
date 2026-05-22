@@ -490,7 +490,60 @@ func TestSettle_Revert_WritesActivityLog(t *testing.T) {
 	for _, a := range activity {
 		if a.EventType == "settlement_reverted" && a.EntityID.String == settlementID {
 			found = true
+			require.NotEmpty(t, a.Payload, "settlement_reverted must carry payload")
+			var env1 struct {
+				EntityType string `json:"entity_type"`
+				Snapshot   struct {
+					FromMemberID string `json:"from_member_id"`
+					ToMemberID   string `json:"to_member_id"`
+					Amount       int64  `json:"amount"`
+					Currency     string `json:"currency"`
+				} `json:"snapshot"`
+			}
+			require.NoError(t, json.Unmarshal(a.Payload, &env1))
+			assert.Equal(t, "settlement", env1.EntityType)
+			assert.Equal(t, bobMemberID, env1.Snapshot.FromMemberID)
+			assert.Equal(t, aliceMemberID, env1.Snapshot.ToMemberID)
+			assert.Equal(t, "SEK", env1.Snapshot.Currency)
+			assert.Greater(t, env1.Snapshot.Amount, int64(0))
 		}
 	}
 	assert.True(t, found, "expected settlement_reverted activity entry")
+}
+
+func TestSettle_Create_WritesActivityWithPayload(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	body := fmt.Sprintf(`{"from_member_id":%q,"to_member_id":%q,"amount":"45.00","currency":"SEK"}`, bobMemberID, aliceMemberID)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, bob.Token))
+	require.Equal(t, http.StatusCreated, rr.Code)
+
+	activity, err := env.Queries.ListActivityByGroup(context.Background(), db.ListActivityByGroupParams{
+		GroupID: groupID, Limit: 50, Offset: 0,
+	})
+	require.NoError(t, err)
+	var found bool
+	for _, a := range activity {
+		if a.EventType == "settlement_added" {
+			found = true
+			require.NotEmpty(t, a.Payload, "settlement_added must carry payload")
+			var env1 struct {
+				EntityType string `json:"entity_type"`
+				Snapshot   struct {
+					FromMemberID string `json:"from_member_id"`
+					ToMemberID   string `json:"to_member_id"`
+					Amount       int64  `json:"amount"`
+					Currency     string `json:"currency"`
+				} `json:"snapshot"`
+			}
+			require.NoError(t, json.Unmarshal(a.Payload, &env1))
+			assert.Equal(t, "settlement", env1.EntityType)
+			assert.Equal(t, bobMemberID, env1.Snapshot.FromMemberID)
+			assert.Equal(t, aliceMemberID, env1.Snapshot.ToMemberID)
+			assert.Equal(t, int64(4500), env1.Snapshot.Amount)
+			assert.Equal(t, "SEK", env1.Snapshot.Currency)
+		}
+	}
+	assert.True(t, found, "expected settlement_added activity entry")
 }

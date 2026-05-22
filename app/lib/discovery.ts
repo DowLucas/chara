@@ -18,6 +18,20 @@
 import type { AccountInstanceInfo } from './accounts-store';
 import type { CompatResult } from './protocol';
 
+/**
+ * Lazy analytics accessor — `analytics.ts` imports `react-native`, which
+ * doesn't load in the node-environment unit tests for this module unless
+ * deferred. The wrapper is no-op when the PostHog key isn't set.
+ */
+function analyticsModule(): typeof import('./analytics') | null {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return require('./analytics') as typeof import('./analytics');
+  } catch {
+    return null;
+  }
+}
+
 export const DISCOVERY_TIMEOUT_MS = 5000;
 
 export type DiscoveryResult =
@@ -108,6 +122,22 @@ export function parseInstanceInfo(raw: unknown): AccountInstanceInfo | null {
  * Race a promise against a timeout. Resolves with the promise's value or
  * rejects with a sentinel timeout error.
  */
+/**
+ * Map a fetchInstanceInfo() rejection to a short stable code for analytics.
+ * Conservative: anything we can't recognise becomes `'network'`.
+ */
+function classifyDiscoveryError(err: unknown): string {
+  if (err instanceof Error && err.message === 'timeout') return 'timeout';
+  // Some callers throw an object with a `status` (HTTP error from fetch).
+  if (typeof err === 'object' && err !== null && 'status' in err) {
+    const status = (err as { status?: unknown }).status;
+    if (typeof status === 'number' && Number.isFinite(status)) {
+      return `http_${status}`;
+    }
+  }
+  return 'network';
+}
+
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const handle = setTimeout(() => reject(new Error('timeout')), ms);
@@ -130,12 +160,18 @@ export async function runDiscoveryHandshake(deps: DiscoveryDeps): Promise<Discov
   let raw: unknown;
   try {
     raw = await withTimeout(deps.fetchInstanceInfo(), timeoutMs);
-  } catch {
+  } catch (err) {
+    // Try to classify: HTTP status from a fetch-like error, timeout, or
+    // generic network failure. The deps.fetchInstanceInfo contract only
+    // requires it to reject, so we sniff conservatively.
+    const code = classifyDiscoveryError(err);
+    analyticsModule()?.track('discovery_error', { code });
     return { ok: false, reason: 'unreachable' };
   }
 
   const parsed = parseInstanceInfo(raw);
   if (!parsed) {
+    analyticsModule()?.track('discovery_error', { code: 'parse' });
     return { ok: false, reason: 'not_chara' };
   }
 

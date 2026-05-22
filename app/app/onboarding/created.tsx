@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { getGroup, inviteDeepLink, Group } from '@/lib/api';
 import { useDefaultAccount } from '@/lib/accounts';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import * as analytics from '@/lib/analytics';
 
 export default function GroupCreatedScreen() {
   const insets = useSafeAreaInsets();
@@ -79,6 +80,7 @@ export default function GroupCreatedScreen() {
         <TouchableOpacity
           style={styles.secondary}
           onPress={() => {
+            analytics.track('onboarding_finished', { path: 'create' });
             if (!defaultServerUrl) {
               router.replace('/(tabs)');
               return;

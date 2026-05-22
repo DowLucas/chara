@@ -9,6 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AccountsProvider } from '@/lib/accounts';
 import { snapshot as accountsSnapshot } from '@/lib/accounts-store';
+import * as analytics from '@/lib/analytics';
 import { runRecoveryProbes } from '@/lib/compat-recovery';
 import { bootstrapPush, retryPendingRegistrations } from '@/lib/push';
 import { REFRESH_FLOOR_MS } from '@/lib/aggregated-reads-internal';
@@ -88,6 +89,15 @@ export default function RootLayout() {
     // Spec §15: push token bootstrap + per-account fan-out. Idempotent;
     // shares the AppState `'active'` listener for silent retries.
     void bootstrapPush();
+    // PostHog analytics: fire-and-forget init; the wrapper buffers any
+    // events fired before init() resolves. No-op when POSTHOG_API_KEY
+    // is unset (forks / dev builds).
+    void analytics.init();
+    {
+      const snap = accountsSnapshot();
+      const isFirstLaunch = snap.accounts.length === 0 && !snap.defaultServerUrl;
+      analytics.track('app_opened', { is_first_launch: isFirstLaunch });
+    }
     lastProbeRef.current = Date.now();
 
     // Cold-launch deep link (e.g. tapped an invite while the app was killed).

@@ -378,6 +378,7 @@ export default function YouScreen() {
             disabled={!biometricAvailable}
             hint={!biometricAvailable ? t('you.faceIdUnavailableShort') : undefined}
           />
+          <NavRow label={t('privacy.title')} onPress={() => router.push('/settings/privacy')} />
           <NavRow label={t('you.about')} onPress={() => router.push('/settings/about')} />
           <NavRow label={t('you.tellFriend')} onPress={handleTellFriend} />
           <NavRow label={rateLabel} onPress={handleRate} />

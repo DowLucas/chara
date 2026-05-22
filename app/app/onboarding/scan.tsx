@@ -1,27 +1,67 @@
 // Onboarding scanner. Shares all join logic with `app/groups/scan.tsx`
 // via `useInviteJoin()` — cross-server branches, multi-account chooser,
 // and the §8 discovery handshake all live in the hook.
-import React, { useState } from 'react';
+//
+// This screen inlines classify + dispatch (rather than calling the hook)
+// so it can pass `source: 'onboarding'` through to the dispatcher; that
+// gates the `onboarding_finished` analytics event to the onboarding path.
+import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { QRScanner } from '@/components/QRScanner';
-import { useInviteJoin } from '@/lib/use-invite-join';
+import { useAccounts } from '@/lib/accounts';
+import * as analytics from '@/lib/analytics';
+import { classifyInvite } from '@/lib/invite-handler';
+import { dispatchInviteIntent } from '@/lib/invite-dispatcher';
 import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+
+/**
+ * Map a classifier `invalid.reason` (free-text) to the small enum we send
+ * in the `invite_invalid` analytics event. The classifier today only
+ * surfaces parse failures (see `parseInviteUrl`), so most reasons fall
+ * under `malformed`; a server-URL rejection is grouped as `unknown_server`.
+ */
+function mapInvalidReason(
+  reason: string,
+): 'expired' | 'unknown_server' | 'malformed' | 'incompatible' {
+  const r = reason.toLowerCase();
+  if (r.includes('server url')) return 'unknown_server';
+  return 'malformed';
+}
 
 export default function ScanToJoinScreen() {
   const { t } = useTranslation();
-  const { busy, handle } = useInviteJoin();
+  const { accounts } = useAccounts();
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleScanned(data: string) {
-    const result = await handle(data);
-    if (result.kind === 'invalid') {
-      setError(t('scanJoin.invalidQr'));
-      // re-arm after a moment so the user can retry without backing out
-      setTimeout(() => setError(null), 1800);
-    }
-  }
+  const handleScanned = useCallback(
+    async (data: string) => {
+      if (busy) return;
+      setBusy(true);
+      try {
+        // The user did the work of producing a scan; record it before
+        // classification so we can see drop-off between scan and join.
+        analytics.track('qr_scanned');
+
+        const intent = classifyInvite(data, { accounts });
+        const result = await dispatchInviteIntent(intent, 'onboarding');
+
+        if (result.kind === 'invalid') {
+          analytics.track('invite_invalid', {
+            reason: mapInvalidReason(result.reason),
+          });
+          setError(t('scanJoin.invalidQr'));
+          // re-arm after a moment so the user can retry without backing out
+          setTimeout(() => setError(null), 1800);
+        }
+      } finally {
+        setBusy(false);
+      }
+    },
+    [accounts, busy, t],
+  );
 
   return (
     <View style={styles.container}>

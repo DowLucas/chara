@@ -198,7 +198,7 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 		displayName = user.DisplayName
 	}
 
-	_, err = q.CreateGroupMember(r.Context(), db.CreateGroupMemberParams{
+	ownerMember, err := q.CreateGroupMember(r.Context(), db.CreateGroupMemberParams{
 		ID:      ulid.New(),
 		GroupID: group.ID,
 		UserID:  pgtype.Text{String: claims.UserID, Valid: true},
@@ -208,6 +208,22 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not create group member")
+		return
+	}
+
+	if err := writeActivity(r.Context(), q, group.ID, claims.UserID,
+		EventGroupCreated, group.ID, EntityGroup,
+		&ActivityPayload{Snapshot: GroupSnapshot{Name: group.Name}}); err != nil {
+		writeError(w, http.StatusInternalServerError, "could not write activity")
+		return
+	}
+	if err := writeActivity(r.Context(), q, group.ID, claims.UserID,
+		EventMemberJoined, ownerMember.ID, EntityMember,
+		&ActivityPayload{Snapshot: MemberSnapshot{
+			MemberID:    ownerMember.ID,
+			DisplayName: ownerMember.Name,
+		}}); err != nil {
+		writeError(w, http.StatusInternalServerError, "could not write activity")
 		return
 	}
 
@@ -271,6 +287,7 @@ func (h *GroupHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "groupID")
+	claims := middleware.ClaimsFromContext(r.Context())
 
 	member, ok := h.requireMember(w, r, groupID)
 	if !ok {
@@ -291,27 +308,10 @@ func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params := db.UpdateGroupParams{ID: groupID}
-	if req.Name != nil {
-		params.Name = pgtype.Text{String: *req.Name, Valid: true}
-	}
-	if req.Currency != nil {
-		normalized, ok := currency.Normalize(*req.Currency)
-		if !ok {
-			writeError(w, http.StatusBadRequest, "unknown currency code")
-			return
-		}
-		params.Currency = pgtype.Text{String: normalized, Valid: true}
-	}
-	if req.Language != nil {
-		if !isSupportedLanguage(*req.Language) {
-			writeError(w, http.StatusBadRequest, "unsupported language code")
-			return
-		}
-		params.Language = pgtype.Text{String: *req.Language, Valid: true}
-	}
-
-	group, err := h.queries.UpdateGroup(r.Context(), params)
+	// Load the previous state once. We use it both for the currency-lock
+	// check and to compute the activity diff (so the snapshot can record
+	// the old → new values).
+	prev, err := h.queries.GetGroupByID(r.Context(), groupID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			writeError(w, http.StatusNotFound, "group not found")
@@ -321,11 +321,94 @@ func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	params := db.UpdateGroupParams{ID: groupID}
+	snapshot := GroupSnapshot{}
+
+	if req.Name != nil && *req.Name != prev.Name {
+		params.Name = pgtype.Text{String: *req.Name, Valid: true}
+		snapshot.Changed = append(snapshot.Changed, "name")
+		snapshot.Name = *req.Name
+		snapshot.OldName = prev.Name
+	}
+	if req.Currency != nil {
+		normalized, ok := currency.Normalize(*req.Currency)
+		if !ok {
+			writeError(w, http.StatusBadRequest, "unknown currency code")
+			return
+		}
+		if normalized != prev.Currency {
+			// Lock currency once any active expense exists — the member_balances
+			// view groups by expenses.currency, so changing it mid-flight would
+			// fragment balances into per-currency buckets.
+			count, err := h.queries.CountActiveExpensesByGroup(r.Context(), groupID)
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			if count > 0 {
+				writeJSON(w, http.StatusConflict, map[string]string{
+					"code":  "group_currency_locked",
+					"error": "currency is locked once a group has expenses",
+				})
+				return
+			}
+			params.Currency = pgtype.Text{String: normalized, Valid: true}
+			snapshot.Changed = append(snapshot.Changed, "currency")
+			snapshot.Currency = normalized
+			snapshot.OldCurrency = prev.Currency
+		}
+	}
+	if req.Language != nil {
+		if !isSupportedLanguage(*req.Language) {
+			writeError(w, http.StatusBadRequest, "unsupported language code")
+			return
+		}
+		if *req.Language != prev.Language {
+			params.Language = pgtype.Text{String: *req.Language, Valid: true}
+			snapshot.Changed = append(snapshot.Changed, "language")
+			snapshot.Language = *req.Language
+			snapshot.OldLanguage = prev.Language
+		}
+	}
+
+	tx, err := h.pool.Begin(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+	defer tx.Rollback(context.Background())
+	q := db.New(tx)
+
+	group, err := q.UpdateGroup(r.Context(), params)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "group not found")
+		} else {
+			writeError(w, http.StatusInternalServerError, "internal error")
+		}
+		return
+	}
+
+	if len(snapshot.Changed) > 0 {
+		if err := writeActivity(r.Context(), q, groupID, claims.UserID,
+			EventGroupUpdated, groupID, EntityGroup,
+			&ActivityPayload{Snapshot: snapshot}); err != nil {
+			writeError(w, http.StatusInternalServerError, "could not write activity")
+			return
+		}
+	}
+
+	if err := tx.Commit(r.Context()); err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
 	writeJSON(w, http.StatusOK, groupToResponse(group))
 }
 
 func (h *GroupHandler) Archive(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "groupID")
+	claims := middleware.ClaimsFromContext(r.Context())
 
 	member, ok := h.requireMember(w, r, groupID)
 	if !ok {
@@ -336,12 +419,32 @@ func (h *GroupHandler) Archive(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tx, err := h.pool.Begin(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+	defer tx.Rollback(context.Background())
+	q := db.New(tx)
+
 	archived := true
-	_, err := h.queries.UpdateGroup(r.Context(), db.UpdateGroupParams{
+	g, err := q.UpdateGroup(r.Context(), db.UpdateGroupParams{
 		ID:         groupID,
 		IsArchived: pgtype.Bool{Bool: archived, Valid: true},
 	})
 	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	if err := writeActivity(r.Context(), q, groupID, claims.UserID,
+		EventGroupArchived, groupID, EntityGroup,
+		&ActivityPayload{Snapshot: GroupSnapshot{Name: g.Name}}); err != nil {
+		writeError(w, http.StatusInternalServerError, "could not write activity")
+		return
+	}
+
+	if err := tx.Commit(r.Context()); err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
@@ -382,7 +485,17 @@ func (h *GroupHandler) RegenerateInviteToken(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	group, err := h.queries.RegenerateInviteToken(r.Context(), db.RegenerateInviteTokenParams{
+	claims := middleware.ClaimsFromContext(r.Context())
+
+	tx, err := h.pool.Begin(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+	defer tx.Rollback(context.Background())
+	q := db.New(tx)
+
+	group, err := q.RegenerateInviteToken(r.Context(), db.RegenerateInviteTokenParams{
 		ID:          groupID,
 		InviteToken: ulid.New(),
 	})
@@ -392,6 +505,19 @@ func (h *GroupHandler) RegenerateInviteToken(w http.ResponseWriter, r *http.Requ
 		} else {
 			writeError(w, http.StatusInternalServerError, "internal error")
 		}
+		return
+	}
+
+	// No snapshot needed — the new token itself is sensitive and the actor
+	// + timestamp is the audit-worthy info.
+	if err := writeActivity(r.Context(), q, groupID, claims.UserID,
+		EventInviteLinkRotated, groupID, EntityGroup, nil); err != nil {
+		writeError(w, http.StatusInternalServerError, "could not write activity")
+		return
+	}
+
+	if err := tx.Commit(r.Context()); err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
 
@@ -433,7 +559,15 @@ func (h *GroupHandler) JoinViaToken(w http.ResponseWriter, r *http.Request) {
 		displayName = user.DisplayName
 	}
 
-	_, err = h.queries.CreateGroupMember(r.Context(), db.CreateGroupMemberParams{
+	tx, err := h.pool.Begin(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+	defer tx.Rollback(context.Background())
+	q := db.New(tx)
+
+	newMember, err := q.CreateGroupMember(r.Context(), db.CreateGroupMemberParams{
 		ID:      ulid.New(),
 		GroupID: group.ID,
 		UserID:  pgtype.Text{String: claims.UserID, Valid: true},
@@ -443,6 +577,21 @@ func (h *GroupHandler) JoinViaToken(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not join group")
+		return
+	}
+
+	if err := writeActivity(r.Context(), q, group.ID, claims.UserID,
+		EventMemberJoined, newMember.ID, EntityMember,
+		&ActivityPayload{Snapshot: MemberSnapshot{
+			MemberID:    newMember.ID,
+			DisplayName: newMember.Name,
+		}}); err != nil {
+		writeError(w, http.StatusInternalServerError, "could not write activity")
+		return
+	}
+
+	if err := tx.Commit(r.Context()); err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
 

@@ -17,6 +17,7 @@ import { createGroup } from '@/lib/api';
 import { CurrencyPicker } from '@/components/CurrencyPicker';
 import { SUGGESTED_CURRENCY_CODES } from '@/lib/currencies';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import * as analytics from '@/lib/analytics';
 
 export default function CreateGroupScreen() {
   const insets = useSafeAreaInsets();
@@ -38,8 +39,17 @@ export default function CreateGroupScreen() {
     setSubmitting(true);
     try {
       const group = await createGroup(name.trim(), currency);
+      analytics.track('group_created');
       router.replace(`/onboarding/created?groupId=${group.id}`);
     } catch (e: any) {
+      const status = typeof e?.status === 'number' ? e.status : undefined;
+      let code: string = 'unknown';
+      if (status) {
+        code = `http_${status}`;
+      } else if (e?.message && /network|fetch|timeout/i.test(String(e.message))) {
+        code = 'network';
+      }
+      analytics.track('group_create_failed', { code });
       Alert.alert(t('createGroup.errorTitle'), e?.message || String(e));
     } finally {
       setSubmitting(false);

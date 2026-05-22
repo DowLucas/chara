@@ -260,7 +260,18 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := writeActivity(r.Context(), q, groupID, claims.UserID, "settlement_added", settlement.ID, "settlement"); err != nil {
+	fromM, _ := q.GetGroupMember(r.Context(), settlement.FromMember)
+	toM, _ := q.GetGroupMember(r.Context(), settlement.ToMember)
+	if err := writeActivity(r.Context(), q, groupID, claims.UserID,
+		EventSettlementAdded, settlement.ID, EntitySettlement,
+		&ActivityPayload{Snapshot: SettlementSnapshot{
+			FromMemberID:   settlement.FromMember,
+			FromMemberName: fromM.Name,
+			ToMemberID:     settlement.ToMember,
+			ToMemberName:   toM.Name,
+			Amount:         settlement.Amount,
+			Currency:       settlement.Currency,
+		}}); err != nil {
 		writeError(w, http.StatusInternalServerError, "could not write activity")
 		return
 	}
@@ -433,7 +444,16 @@ func (h *BalancesHandler) RevertSettlement(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := writeActivity(r.Context(), q, groupID, claims.UserID, "settlement_reverted", settlementID, "settlement"); err != nil {
+	if err := writeActivity(r.Context(), q, groupID, claims.UserID,
+		EventSettlementReverted, settlementID, EntitySettlement,
+		&ActivityPayload{Snapshot: SettlementSnapshot{
+			FromMemberID:   settlement.FromMember,
+			FromMemberName: fromM.Name,
+			ToMemberID:     settlement.ToMember,
+			ToMemberName:   toM.Name,
+			Amount:         settlement.Amount,
+			Currency:       settlement.Currency,
+		}}); err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error")
 		return
 	}

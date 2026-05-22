@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,12 +7,17 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
 import { setFlag, FLAG_ONBOARDING_SKIPPED } from '@/lib/storage';
 import { colors, fontBody, fontBodyMedium, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import * as analytics from '@/lib/analytics';
 
 export default function OnboardingHome() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { user } = useAuth();
   const greeting = user?.name ? t('onboarding.greetingNamed', { name: user.name }) : t('onboarding.greetingAnon');
+
+  useEffect(() => {
+    analytics.track('onboarding_seen');
+  }, []);
 
   async function handleSkip() {
     // Persist so the (tabs) gate stops bouncing the user back here when they
@@ -45,7 +50,10 @@ export default function OnboardingHome() {
           eyebrow={t('onboarding.createEyebrow')}
           title={t('onboarding.createTitle')}
           body={t('onboarding.createBody')}
-          onPress={() => router.push('/onboarding/create')}
+          onPress={() => {
+            analytics.track('onboarding_create_chosen');
+            router.push('/onboarding/create');
+          }}
         />
         <ChoiceCard
           accent={colors.graphite}
@@ -53,7 +61,10 @@ export default function OnboardingHome() {
           eyebrow={t('onboarding.scanEyebrow')}
           title={t('onboarding.scanTitle')}
           body={t('onboarding.scanBody')}
-          onPress={() => router.push('/onboarding/scan')}
+          onPress={() => {
+            analytics.track('onboarding_scan_chosen');
+            router.push('/onboarding/scan');
+          }}
         />
         <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.7}>
           <Text style={styles.skipLabel}>{t('onboarding.skip')}</Text>

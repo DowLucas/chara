@@ -14,12 +14,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useAccount, useAccounts } from '@/lib/accounts';
-import { clearStatus, type AccountInstanceInfo } from '@/lib/accounts-store';
+import {
+  addAccount as storeAddAccount,
+  clearStatus,
+  type AccountInstanceInfo,
+} from '@/lib/accounts-store';
 import { apiFor, publicApi } from '@/lib/api';
 import { legacyHostedUrl } from '@/lib/legacy-hosted-url';
 import { parseInviteUrl } from '@/lib/invite-url';
 import { parseInstanceInfo } from '@/lib/discovery';
 import { registerForAccount } from '@/lib/push';
+import * as analytics from '@/lib/analytics';
 import {
   colors,
   fontBody,
@@ -30,6 +35,28 @@ import {
 } from '@/lib/theme';
 
 type Mode = 'first-launch' | 'settings' | 'invite' | 'reauth';
+
+/**
+ * Map an auth-flow rejection to a short stable code for analytics. Kept
+ * deliberately coarse — we only want enough buckets to tell drop-off apart
+ * from breakage in the funnel.
+ */
+function classifyAuthError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err ?? '');
+  const lower = msg.toLowerCase();
+  if (typeof err === 'object' && err !== null && 'status' in err) {
+    const status = (err as { status?: unknown }).status;
+    if (typeof status === 'number' && Number.isFinite(status)) {
+      if (status === 401 || status === 403) return 'invalid_link';
+      return `http_${status}`;
+    }
+  }
+  if (lower.includes('network') || lower.includes('timeout') || lower.includes('fetch')) {
+    return 'network';
+  }
+  if (lower.includes('invalid') || lower.includes('expired')) return 'invalid_link';
+  return 'unknown';
+}
 
 function decodeMaybe(value: string | undefined | null): string | null {
   if (!value) return null;
@@ -58,7 +85,10 @@ export default function SignInScreen() {
   ]);
 
   const account = useAccount(serverUrl);
-  const { addAccount, updateAccount } = useAccounts();
+  // Note: we call the store's addAccount directly (not the context shim) so we
+  // can pass the optional `method` analytics arg. updateAccount still comes
+  // from the context to stay consistent with the rest of the file.
+  const { updateAccount } = useAccounts();
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -66,6 +96,17 @@ export default function SignInScreen() {
   const [authMethods, setAuthMethods] = useState<string[] | null>(
     account?.instance?.auth_methods ?? null,
   );
+
+  // Fire `auth_screen_seen` once per mount. Modes other than first-launch
+  // (settings/invite/reauth) all originate from inside the app, so they map
+  // to `add_account`. Pure first-launch onboarding maps to `first_launch`.
+  useEffect(() => {
+    analytics.track('auth_screen_seen', {
+      entry: mode === 'first-launch' ? 'first_launch' : 'add_account',
+    });
+    // We only want one event per mount; mode is read once for entry classification.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // For non-first-launch modes, opportunistically fetch auth_methods if we
   // don't already have them cached on the account. Failures are silently
@@ -103,20 +144,26 @@ export default function SignInScreen() {
 
   async function handleMagicLink() {
     if (!email.trim()) return;
+    analytics.track('auth_method_selected', { method: 'magic_link' });
     setLoading(true);
     try {
       const api = publicApi(serverUrl);
       const res = await api.requestMagicLink(email.trim());
+      analytics.track('magic_link_requested');
       // Dev mode: server returns the raw token so we can sign in immediately.
       if (res.token) {
         const verify = await api.verifyMagicLink(res.token);
-        await onTokenIssued(verify.token);
+        await onTokenIssued(verify.token, 'magic_link');
         return;
       }
       setSent(true);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       console.warn('[chara] sign-in failed', msg);
+      analytics.track('auth_error', {
+        method: 'magic_link',
+        code: classifyAuthError(e),
+      });
       Alert.alert(t('signIn.couldNotSend'), msg);
     } finally {
       setLoading(false);
@@ -128,7 +175,10 @@ export default function SignInScreen() {
    *   - reauth: updateAccount in place, clear status, return.
    *   - other:  addAccount; optionally redeem pendingInvite; navigate home.
    */
-  async function onTokenIssued(token: string) {
+  async function onTokenIssued(
+    token: string,
+    method?: 'magic_link' | 'google' | 'apple',
+  ) {
     const now = new Date().toISOString();
 
     if (mode === 'reauth') {
@@ -153,14 +203,17 @@ export default function SignInScreen() {
     try {
       // /api/me requires the token; build a transient client by writing the
       // account first, then refreshing.
-      await addAccount({
-        serverUrl,
-        token,
-        user,
-        instance: account?.instance ?? null,
-        addedAt: account?.addedAt ?? now,
-        lastUsedAt: now,
-      });
+      await storeAddAccount(
+        {
+          serverUrl,
+          token,
+          user,
+          instance: account?.instance ?? null,
+          addedAt: account?.addedAt ?? now,
+          lastUsedAt: now,
+        },
+        method,
+      );
       // Spec §15: register the device's Expo push token with the new server.
       // Best-effort — the user doesn't wait for this.
       void registerForAccount(serverUrl);
@@ -280,6 +333,11 @@ export default function SignInScreen() {
             <TouchableOpacity
               style={[styles.authBtn, styles.authBtnSecondary]}
               activeOpacity={0.85}
+              onPress={() => {
+                // Google OAuth isn't wired yet; still emit the funnel event
+                // so we can see drop-off vs. magic-link before shipping it.
+                analytics.track('auth_method_selected', { method: 'google' });
+              }}
             >
               <Feather name="chrome" size={18} color={colors.graphite} />
               <Text style={[styles.authBtnLabel, styles.authBtnLabelDefault]}>

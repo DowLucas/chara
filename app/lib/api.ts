@@ -358,6 +358,21 @@ export interface CreateExpenseInput {
   splits?: Array<{ member_id: string; share?: string; basis_points?: number }>;
 }
 
+// PATCH /api/groups/{groupID}/expenses/{expenseID}.
+// All fields optional — the server applies a partial update.
+export interface UpdateExpenseInput {
+  title?: string;
+  amount?: string;
+  currency?: string;
+  paid_by_id?: string;
+  split_method?: 'equal' | 'exact' | 'percentage';
+  category?: string;
+  notes?: string;
+  expense_date?: string;
+  participants?: string[];
+  splits?: Array<{ member_id: string; share?: string; basis_points?: number }>;
+}
+
 export function listExpenses(groupId: string) {
   return request<Expense[]>(`/api/groups/${groupId}/expenses`);
 }
@@ -369,6 +384,13 @@ export function getExpense(groupId: string, expenseId: string) {
 export function createExpense(groupId: string, input: CreateExpenseInput) {
   return request<Expense>(`/api/groups/${groupId}/expenses`, {
     method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export function updateExpense(groupId: string, expenseId: string, input: UpdateExpenseInput) {
+  return request<Expense>(`/api/groups/${groupId}/expenses/${expenseId}`, {
+    method: 'PATCH',
     body: JSON.stringify(input),
   });
 }
@@ -452,28 +474,93 @@ export function listMyBalances() {
   return request<MyBalance[]>('/api/me/balances');
 }
 
+// Canonical activity event names. Mirrors backend constants in
+// internal/handler/activity_write.go and the schema comment in
+// migrations/000007_create_activity.up.sql.
+export type ActivityEventType =
+  | 'expense_added'
+  | 'expense_edited'
+  | 'expense_deleted'
+  | 'settlement_added'
+  | 'settlement_reverted'
+  | 'member_joined'
+  | 'group_created'
+  | 'group_updated'
+  | 'group_archived'
+  | 'invite_link_rotated';
+
+// Minimal payload snapshots — written at the time the activity row is
+// created so the feed can render the row without re-querying the
+// underlying entity. Clients must tolerate missing fields.
+export interface ExpenseActivitySnapshot {
+  title?: string;
+  amount?: number;
+  currency?: string;
+  payer_member_id?: string;
+}
+
+export interface SettlementActivitySnapshot {
+  from_member_id?: string;
+  from_member_name?: string;
+  to_member_id?: string;
+  to_member_name?: string;
+  amount?: number;
+  currency?: string;
+}
+
+export interface GroupActivitySnapshot {
+  name?: string;
+  changed?: string[];
+  old_name?: string;
+  currency?: string;
+  old_currency?: string;
+  language?: string;
+  old_language?: string;
+}
+
+export interface MemberActivitySnapshot {
+  member_id?: string;
+  display_name?: string;
+}
+
+export interface ActivityPayload {
+  entity_type?: 'expense' | 'settlement' | 'group' | 'member';
+  snapshot?:
+    | ExpenseActivitySnapshot
+    | SettlementActivitySnapshot
+    | GroupActivitySnapshot
+    | MemberActivitySnapshot;
+  // The richer expense-edit collapse writer (see backend
+  // writeExpenseUpdatedActivity) emits a flat shape with
+  // `changed_fields` and `actor_display_name` instead of `snapshot`.
+  changed_fields?: string[];
+  actor_display_name?: string;
+  entity_id?: string;
+}
+
 export interface ActivityEvent {
   id: string;
   group_id: string;
-  group_name: string;
+  /** Set on /api/me/activity (cross-group feed); omitted on per-group feed. */
+  group_name?: string;
   actor_id: string;
   actor_name: string;
-  event_type:
-    | 'expense_added'
-    | 'expense_updated'
-    | 'expense_deleted'
-    | 'settlement_added'
-    | 'member_joined'
-    | 'member_left'
-    | string;
+  event_type: ActivityEventType | string;
   entity_id?: string;
   entity_type?: string;
+  payload?: ActivityPayload;
   created_at: string;
 }
 
 export function listMyActivity(limit = 50, offset = 0) {
   return request<ActivityEvent[]>(
     `/api/me/activity?limit=${limit}&offset=${offset}`,
+  );
+}
+
+export function listGroupActivity(groupId: string, limit = 50, offset = 0) {
+  return request<ActivityEvent[]>(
+    `/api/groups/${groupId}/activity?limit=${limit}&offset=${offset}`,
   );
 }
 
@@ -706,6 +793,11 @@ export function apiFor(serverUrl: string) {
         method: 'POST',
         body: JSON.stringify(input),
       }),
+    updateExpense: (groupId: string, expenseId: string, input: UpdateExpenseInput) =>
+      requestOn<Expense>(serverUrl, `/api/groups/${groupId}/expenses/${expenseId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(input),
+      }),
     deleteExpense: (groupId: string, expenseId: string) =>
       requestOn<void>(serverUrl, `/api/groups/${groupId}/expenses/${expenseId}`, {
         method: 'DELETE',
@@ -783,6 +875,11 @@ export function apiFor(serverUrl: string) {
       requestOn<ActivityEvent[]>(
         serverUrl,
         `/api/me/activity?limit=${limit}&offset=${offset}`,
+      ),
+    listGroupActivity: (groupId: string, limit = 50, offset = 0) =>
+      requestOn<ActivityEvent[]>(
+        serverUrl,
+        `/api/groups/${groupId}/activity?limit=${limit}&offset=${offset}`,
       ),
 
     // Push tokens (Wave 5)

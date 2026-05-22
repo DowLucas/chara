@@ -52,7 +52,34 @@
   },
   "tabs": {
     "home": "Home",
+    "activity": "Activity",
     "you": "You"
+  },
+  "activity": {
+    "title": "Activity",
+    "emptyTitle": "No activity yet",
+    "emptyBody": "Add expenses to a group and activity will appear here.",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "you": "You",
+    "loading": "Loading activity…",
+    "loadFailed": "Couldn't load activity. Pull down to retry.",
+    "event_expense_added": "{{actor}} added \"{{title}}\" for {{amount}} to {{group}}",
+    "event_expense_edited": "{{actor}} edited \"{{title}}\" in {{group}}",
+    "event_expense_deleted": "{{actor}} deleted \"{{title}}\" from {{group}}",
+    "event_settlement_added": "{{from}} settled {{amount}} to {{to}} in {{group}}",
+    "event_settlement_reverted": "{{actor}} reverted a settlement in {{group}}",
+    "event_member_joined": "{{actor}} joined {{group}}",
+    "event_group_created": "{{actor}} created {{group}}",
+    "event_group_updated": "{{actor}} updated {{group}}",
+    "event_group_renamed": "{{actor}} renamed \"{{oldName}}\" to \"{{newName}}\"",
+    "event_group_archived": "{{actor}} archived {{group}}",
+    "event_invite_link_rotated": "{{actor}} rotated the invite link in {{group}}",
+    "event_generic": "{{actor}} · {{event}} in {{group}}",
+    "expenseUpdated": {
+      "fields": "({{fields}})",
+      "line": "{{actor}} changed {{title}} {{fields}}"
+    }
   },
   "home": {
     "netBalance": "net balance",
@@ -67,6 +94,7 @@
     "statusNew": "no expenses yet",
     "recentCount": "recent · {{count}}",
     "noActivity": "No activity yet.",
+    "seeAll": "see all →",
     "hostChip": "on {{host}}",
     "errorStrip": "{{host}} unavailable",
     "retry": "Retry",
@@ -176,6 +204,11 @@
     "body": "Chara is an open-source, self-hostable way to split bills with friends. Make a group, add expenses, settle up — no ads, no upsells, no data harvesting.",
     "website": "Website",
     "source": "Source code"
+  },
+  "privacy": {
+    "title": "Privacy",
+    "analyticsLabel": "Send anonymous usage analytics",
+    "analyticsDescription": "Helps us understand how Chara is used. No personal data, IP addresses, or content is collected. You can turn this off at any time."
   },
   "onboarding": {
     "eyebrow": "set up",
@@ -287,6 +320,7 @@
     "inviteLabel": "Invite via QR",
     "menuLabel": "Group menu",
     "edit": "Edit group",
+    "activity": "Activity",
     "archive": "Archive group",
     "archivePromptTitle": "Archive {{name}}?",
     "archivePromptBody": "The group will be hidden from your list. You can still view archived groups later.",
@@ -318,7 +352,11 @@
     "languageHint": "AI-generated receipt titles will be written in this language for everyone in the group.",
     "saving": "Saving…",
     "submit": "Save changes",
-    "errorTitle": "Could not save changes"
+    "errorTitle": "Could not save changes",
+    "errors": {
+      "currencyLockedTitle": "Currency is locked",
+      "currencyLockedBody": "Currency is locked once a group has expenses. Create a new group if you need a different currency."
+    }
   },
   "expenseSaved": {
     "headline": "Expense added.",
@@ -486,7 +524,54 @@
     "noReceipt": "No receipt attached.",
     "activityHeader": "created {{created}}, {{time}}",
     "commentsLabel": "Comments",
-    "menuLabel": "Expense menu"
+    "menuLabel": "Expense menu",
+    "fx": {
+      "originalLine": "{{amount}} · {{converted}} · {{source}} {{asOf}}",
+      "sourceECB": "ECB",
+      "rateLabel": "rate"
+    },
+    "actions": {
+      "edit": "Edit expense",
+      "delete": "Delete expense",
+      "menu": "More actions"
+    },
+    "noChanges": "Nothing changed.",
+    "staleBanner": "This expense changed since you opened it. Reload to see the latest.",
+    "deletedToast": "Expense deleted.",
+    "savedToast": "Changes saved.",
+    "notFoundToast": "This expense no longer exists.",
+    "loadError": "Couldn't load this expense.",
+    "reload": "Reload",
+    "editTitle": "Edit expense"
+  },
+  "impactSheet": {
+    "title": {
+      "edit": "Review changes",
+      "delete": "Delete this expense?"
+    },
+    "lead": {
+      "withSettlements": "This expense has been settled since it was added. Your changes will shift balances:",
+      "plain": "Saving will update balances for {{count}} members.",
+      "deletePlain": "Deleting will reverse balances for {{count}} members."
+    },
+    "note": {
+      "settlementsUnchanged": "Settlements stay on record. The new balance reflects the difference.",
+      "crossCurrency": "Note: your previous {{oldCurrency}} balance is no longer affected by this expense."
+    },
+    "affectedSettlements": {
+      "heading": "Affected settlements (not changed)",
+      "more": "+{{count}} more"
+    },
+    "wasOwed": "was owed",
+    "nowOwed": "now owed",
+    "wasOwes": "owed",
+    "nowOwes": "now owes",
+    "unchanged": "unchanged",
+    "cancel": "Cancel",
+    "save": "Save changes",
+    "delete": "Delete expense",
+    "errorGeneric": "Couldn't save. Try again.",
+    "deleteErrorGeneric": "Couldn't delete. Try again."
   },
   "scanner": {
     "permissionDeniedTitle": "Camera access denied",

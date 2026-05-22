@@ -57,6 +57,31 @@ RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, categ
 -- name: SoftDeleteExpense :exec
 UPDATE expenses SET is_deleted = TRUE, updated_at = NOW() WHERE id = $1;
 
+-- name: CountActiveExpensesByGroup :one
+-- Active = not soft-deleted. Used to lock the group currency once any real
+-- expense exists, since the member_balances view groups by expenses.currency
+-- and changing it mid-flight would fragment balances into per-currency
+-- buckets.
+SELECT COUNT(*) FROM expenses WHERE group_id = $1 AND NOT is_deleted;
+
+-- name: UpdateExpenseFxSnapshot :one
+-- Explicitly sets the FX snapshot columns and the canonical amount. The
+-- regular UpdateExpense query uses COALESCE narg semantics which cannot
+-- *clear* these columns to NULL; this query exists so the handler can
+-- recompute FX on edits and clear the snapshot when the new currency
+-- equals the group currency.
+UPDATE expenses
+SET amount            = $2,
+    original_amount   = $3,
+    original_currency = $4,
+    fx_rate           = $5,
+    fx_as_of          = $6,
+    updated_at        = NOW()
+WHERE id = $1
+RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
+          expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
+          original_amount, original_currency, fx_rate, fx_as_of;
+
 -- name: SearchExpenses :many
 SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
        expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
