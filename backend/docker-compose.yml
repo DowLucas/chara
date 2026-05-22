@@ -3,13 +3,40 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: quits-backend:dev
-    container_name: quits-backend
+    image: chara-backend:dev
+    container_name: chara-backend
     network_mode: host
     env_file: .env.local
+    depends_on:
+      minio:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "-O-", "http://localhost:8080/api/health/liveness"]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 5s
+
+  # Local S3-compatible storage for receipt attachments. Bound to the host
+  # network so the backend can talk to it via localhost:9000 — same address
+  # an AWS deployment would use after swapping endpoints. The Console UI on
+  # :9001 is useful for poking at uploaded objects during dev.
+  minio:
+    image: minio/minio:latest
+    container_name: chara-minio
+    network_mode: host
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - chara-minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+
+volumes:
+  chara-minio-data:

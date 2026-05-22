@@ -3,8 +3,8 @@ package split_test
 import (
 	"testing"
 
-	"github.com/DowLucas/quits/internal/money"
-	"github.com/DowLucas/quits/internal/split"
+	"github.com/DowLucas/chara/internal/money"
+	"github.com/DowLucas/chara/internal/split"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

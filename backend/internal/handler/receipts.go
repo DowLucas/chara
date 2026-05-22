@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/DowLucas/quits/internal/receipt"
+	"github.com/DowLucas/chara/internal/receipt"
 )
 
 // MaxReceiptImageBytes caps the decoded image size sent to Gemini. ~6 MB is
@@ -34,14 +34,22 @@ type scanRequest struct {
 }
 
 type scanResponse struct {
-	Title         string `json:"title"`
-	Merchant      string `json:"merchant"`
-	Date          string `json:"date,omitempty"`
-	Currency      string `json:"currency"`
-	TotalMinor    int64  `json:"total_minor"`
-	SubtotalMinor int64  `json:"subtotal_minor,omitempty"`
-	TaxMinor      int64  `json:"tax_minor,omitempty"`
-	TipMinor      int64  `json:"tip_minor,omitempty"`
+	Title         string             `json:"title"`
+	Merchant      string             `json:"merchant"`
+	Date          string             `json:"date,omitempty"`
+	Currency      string             `json:"currency"`
+	TotalMinor    int64              `json:"total_minor"`
+	SubtotalMinor int64              `json:"subtotal_minor,omitempty"`
+	TaxMinor      int64              `json:"tax_minor,omitempty"`
+	TipMinor      int64              `json:"tip_minor,omitempty"`
+	Items         []scanResponseItem `json:"items,omitempty"`
+}
+
+type scanResponseItem struct {
+	Description    string `json:"description"`
+	Qty            int    `json:"qty"`
+	UnitPriceMinor int64  `json:"unit_price_minor"`
+	TotalMinor     int64  `json:"total_minor"`
 }
 
 var allowedReceiptMIME = map[string]struct{}{
@@ -102,6 +110,19 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var items []scanResponseItem
+	if len(res.Items) > 0 {
+		items = make([]scanResponseItem, len(res.Items))
+		for i, it := range res.Items {
+			items[i] = scanResponseItem{
+				Description:    it.Description,
+				Qty:            it.Qty,
+				UnitPriceMinor: int64(it.UnitPriceMinor),
+				TotalMinor:     int64(it.TotalMinor),
+			}
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(scanResponse{
 		Title:         res.Title,
@@ -112,6 +133,7 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 		SubtotalMinor: int64(res.SubtotalMinor),
 		TaxMinor:      int64(res.TaxMinor),
 		TipMinor:      int64(res.TipMinor),
+		Items:         items,
 	})
 }
 

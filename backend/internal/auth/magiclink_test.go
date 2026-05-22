@@ -3,7 +3,7 @@ package auth_test
 import (
 	"testing"
 
-	"github.com/DowLucas/quits/internal/auth"
+	"github.com/DowLucas/chara/internal/auth"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

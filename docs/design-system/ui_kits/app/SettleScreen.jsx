@@ -9,7 +9,7 @@ const SettleScreen = ({ onBack, onConfirm, onDone }) => {
         <TopBar title="" left={<IconButton icon="x" onClick={onDone} />} />
         <div className="settled-screen">
           <Stamp size="lg" />
-          <div className="h">Quits. Nice.</div>
+          <div className="h">Chara. Nice.</div>
           <div className="p">760 kr from Mo landed in your account.</div>
           <hr style={{ border: 0, borderBottom: "1.5px solid var(--graphite)", width: 180, margin: "8px 0" }} />
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--lead)", letterSpacing: "0.04em" }}>

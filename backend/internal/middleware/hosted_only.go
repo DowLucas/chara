@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/DowLucas/quits/internal/config"
+	"github.com/DowLucas/chara/internal/config"
 )
 
 // HostedOnly returns 404 for any request when the instance is in selfhost mode.

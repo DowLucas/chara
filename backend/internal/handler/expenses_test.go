@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/DowLucas/quits/internal/db"
-	"github.com/DowLucas/quits/internal/server"
-	"github.com/DowLucas/quits/testutil"
+	"github.com/DowLucas/chara/internal/db"
+	"github.com/DowLucas/chara/internal/server"
+	"github.com/DowLucas/chara/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -31,7 +31,7 @@ type groupEnv struct {
 func setupExpenseEnv(t *testing.T) (env *testutil.Env, alice, bob testUserEnv, groupID, aliceMemberID, bobMemberID string) {
 	t.Helper()
 	env = testutil.NewEnv(t)
-	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT)
+	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil)
 
 	aliceU := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice"), "Alice")
 	bobU := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "bob"), "Bob")
@@ -243,6 +243,118 @@ func TestExpenses_Create_PaidByID_NotInGroup(t *testing.T) {
 		otherMember.ID, otherMember.ID)
 	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", body, alice.Token))
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+// TestExpenses_Create_PaidByID_GenericError guards against information
+// disclosure: cross-group and non-existent paid_by_id values must produce an
+// identical response so callers can't probe member existence.
+func TestExpenses_Create_PaidByID_GenericError(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, _ := setupExpenseEnv(t)
+
+	_, otherMember := testutil.CreateGroup(t, env.Pool, "Other Group", "SEK", alice.ID, "Alice")
+	bogusMemberID := "01HZZNONEXISTENT00000000"
+
+	otherBody := fmt.Sprintf(`{"title":"X","amount":"10.00","currency":"SEK","paid_by_id":%q,"split_method":"equal","participants":[%q]}`,
+		otherMember.ID, aliceMemberID)
+	otherRR := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", otherBody, alice.Token))
+
+	bogusBody := fmt.Sprintf(`{"title":"X","amount":"10.00","currency":"SEK","paid_by_id":%q,"split_method":"equal","participants":[%q]}`,
+		bogusMemberID, aliceMemberID)
+	bogusRR := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", bogusBody, alice.Token))
+
+	require.Equal(t, http.StatusBadRequest, otherRR.Code)
+	require.Equal(t, http.StatusBadRequest, bogusRR.Code)
+
+	var otherResp, bogusResp map[string]any
+	require.NoError(t, json.NewDecoder(otherRR.Body).Decode(&otherResp))
+	require.NoError(t, json.NewDecoder(bogusRR.Body).Decode(&bogusResp))
+	assert.Equal(t, otherResp["error"], bogusResp["error"],
+		"paid_by_id error message must not differ between cross-group and non-existent IDs")
+}
+
+func TestCreateExpense_RejectsSplitMemberFromOtherGroup(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+
+	// Bob exists in group B (a different group from groupID/group A).
+	bobOtherU := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "bob_other"), "BobOther")
+	_, bobOtherMember := testutil.CreateGroup(t, env.Pool, "Other Group", "SEK", bobOtherU.ID, "BobOther")
+
+	// Alice (in group A) submits an expense whose split references bobOtherMember
+	// (a member of group B). This must be rejected with 400.
+	body := fmt.Sprintf(`{
+		"title": "IDOR Attempt",
+		"amount": "100.00",
+		"currency": "SEK",
+		"paid_by_id": %q,
+		"split_method": "exact",
+		"splits": [
+			{"member_id": %q, "share": "50.00"},
+			{"member_id": %q, "share": "50.00"}
+		]
+	}`, aliceMemberID, aliceMemberID, bobOtherMember.ID)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", body, alice.Token))
+	assert.Equal(t, http.StatusBadRequest, rr.Code, "expected 400 when split member belongs to a different group, got %d: %s", rr.Code, rr.Body.String())
+
+	// DB: no expense_splits row was written referencing the cross-group member.
+	var count int
+	err := env.Pool.QueryRow(context.Background(),
+		"SELECT COUNT(*) FROM expense_splits WHERE member_id = $1", bobOtherMember.ID).Scan(&count)
+	require.NoError(t, err)
+	assert.Equal(t, 0, count, "no split row should have been written for the cross-group member")
+
+	_ = bobMemberID
+}
+
+func TestCreateExpense_RejectsParticipantFromOtherGroup(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, _ := setupExpenseEnv(t)
+
+	bobOtherU := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "bob_other2"), "BobOther2")
+	_, bobOtherMember := testutil.CreateGroup(t, env.Pool, "Other Group 2", "SEK", bobOtherU.ID, "BobOther2")
+
+	body := fmt.Sprintf(`{
+		"title": "IDOR Participant",
+		"amount": "100.00",
+		"currency": "SEK",
+		"paid_by_id": %q,
+		"split_method": "equal",
+		"participants": [%q, %q]
+	}`, aliceMemberID, aliceMemberID, bobOtherMember.ID)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", body, alice.Token))
+	assert.Equal(t, http.StatusBadRequest, rr.Code, "expected 400 when participant belongs to a different group, got %d: %s", rr.Code, rr.Body.String())
+
+	var count int
+	err := env.Pool.QueryRow(context.Background(),
+		"SELECT COUNT(*) FROM expense_splits WHERE member_id = $1", bobOtherMember.ID).Scan(&count)
+	require.NoError(t, err)
+	assert.Equal(t, 0, count)
+}
+
+func TestUpdateExpense_RejectsSplitMemberFromOtherGroup(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	fix := testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	bobOtherU := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "bob_other3"), "BobOther3")
+	_, bobOtherMember := testutil.CreateGroup(t, env.Pool, "Other Group 3", "SEK", bobOtherU.ID, "BobOther3")
+
+	body := fmt.Sprintf(`{
+		"amount": "100.00",
+		"split_method": "exact",
+		"splits": [
+			{"member_id": %q, "share": "50.00"},
+			{"member_id": %q, "share": "50.00"}
+		]
+	}`, aliceMemberID, bobOtherMember.ID)
+
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+groupID+"/expenses/"+fix.Expense.ID, body, alice.Token))
+	assert.Equal(t, http.StatusBadRequest, rr.Code, "expected 400 when update splits reference a cross-group member, got %d: %s", rr.Code, rr.Body.String())
+
+	var count int
+	err := env.Pool.QueryRow(context.Background(),
+		"SELECT COUNT(*) FROM expense_splits WHERE member_id = $1", bobOtherMember.ID).Scan(&count)
+	require.NoError(t, err)
+	assert.Equal(t, 0, count)
 }
 
 func TestExpenses_Create_Exact_SplitsDontSumToTotal(t *testing.T) {

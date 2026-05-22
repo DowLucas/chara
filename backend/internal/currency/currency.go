@@ -1,4 +1,4 @@
-// Package currency is the backend allowlist of ISO 4217 currency codes Quits
+// Package currency is the backend allowlist of ISO 4217 currency codes Chara
 // accepts. The list intentionally mirrors app/lib/currencies.ts so a code
 // that surfaces in the picker is the same code the server will accept; keep
 // them in sync.

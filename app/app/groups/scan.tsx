@@ -1,38 +1,26 @@
 // In-app "join another group" scanner. Same flow as onboarding/scan but goes
 // back to the groups tab (instead of forward into onboarding routes) on cancel.
+//
+// All cross-server invite dispatch lives in `useInviteJoin()` so this screen
+// and `onboarding/scan.tsx` share one implementation.
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { QRScanner } from '@/components/QRScanner';
-import { joinGroupByToken, parseInviteToken, ApiError } from '@/lib/api';
+import { useInviteJoin } from '@/lib/use-invite-join';
 import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
 
 export default function GroupsScanScreen() {
   const { t } = useTranslation();
-  const [busy, setBusy] = useState(false);
+  const { busy, handle } = useInviteJoin();
   const [error, setError] = useState<string | null>(null);
 
   async function handleScanned(data: string) {
-    if (busy) return;
-    const token = parseInviteToken(data);
-    if (!token) {
+    const result = await handle(data);
+    if (result.kind === 'invalid') {
       setError(t('scanJoin.invalidQr'));
       setTimeout(() => setError(null), 1800);
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    try {
-      const group = await joinGroupByToken(token);
-      router.replace(`/groups/${group.id}`);
-    } catch (e: any) {
-      if (e instanceof ApiError && e.status === 409) {
-        router.back();
-        return;
-      }
-      Alert.alert(t('scanJoin.couldNotJoin'), e?.message || String(e));
-      setBusy(false);
     }
   }
 

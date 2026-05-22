@@ -10,7 +10,7 @@ flowchart TD
     B -->|Enter email + Tap Send| C["API: POST /auth/magic-link"]
     C -->|Success| D["Confirmation Screen\nCheck your email"]
     C -->|Error: invalid email| B
-    D -->|User taps link in email| E["Deep Link Callback\nquits://auth?token=XXX"]
+    D -->|User taps link in email| E["Deep Link Callback\nchara://auth?token=XXX"]
     E -->|Token valid + Same device| F["Exchange Token for JWT\nPOST /auth/verify-magic-link"]
     E -->|Token expired| G["Expired Link Screen\nAsk to resend"]
     E -->|Wrong device/no secure store| H["Prompt: Complete sign-in\nEnter email again"]
@@ -23,7 +23,7 @@ flowchart TD
 
 ## 2.2 Sign In Screen Variants  `P0`
 
-The sign-in screen adapts based on whether the app is pointed at a hosted or self-hosted instance. The app detects instance type from the API's `/.well-known/quits-instance` endpoint.
+The sign-in screen adapts based on whether the app is pointed at a hosted or self-hosted instance. The app detects instance type from the API's `/.well-known/chara-instance` endpoint.
 
 ```mermaid
 flowchart TD
@@ -132,7 +132,7 @@ All incoming deep links routed: auth tokens, group invites, expense notification
 
 ```mermaid
 flowchart TD
-    A["App receives Deep Link\nquits://..."] -->|Parse URL| B{Link Type?}
+    A["App receives Deep Link\nchara://..."] -->|Parse URL| B{Link Type?}
     B -->|auth?token=XXX| C["Magic Link Callback\nExchange token for JWT"]
     B -->|auth/callback?code=YYY| CC["OAuth Callback\nGoogle or OIDC code exchange"]
     B -->|group/invite?code=YYY| D["Group Invite Callback\nValidate code + Join"]

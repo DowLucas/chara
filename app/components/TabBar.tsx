@@ -13,8 +13,6 @@ import i18n from '@/lib/i18n';
 
 const ROUTE_TO_TAB: Record<string, { icon: React.ComponentProps<typeof Feather>['name']; labelKey: string }> = {
   index: { icon: 'home', labelKey: 'tabs.home' },
-  groups: { icon: 'users', labelKey: 'tabs.groups' },
-  activity: { icon: 'list', labelKey: 'tabs.activity' },
   you: { icon: 'user', labelKey: 'tabs.you' },
 };
 
@@ -33,11 +31,11 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
     try {
       groups = await listGroups();
     } catch {
-      router.push('/groups');
+      router.push('/(tabs)');
       return;
     }
     if (groups.length === 0) {
-      router.push('/groups');
+      router.push('/(tabs)');
       return;
     }
     if (groups.length === 1) {
@@ -69,41 +67,35 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name);
         }
 
-        // Insert FAB after "groups" tab (index 1)
-        const showFab = index === 2;
-
         return (
-          <React.Fragment key={route.key}>
-            {showFab && (
-              <TouchableOpacity
-                style={styles.fab}
-                onPress={onFabPress}
-                activeOpacity={0.85}
-                accessibilityRole="button"
-                accessibilityLabel={t('tabs.addExpenseLabel')}
-              >
-                <Feather name="plus" size={26} color={colors.paper} strokeWidth={1.5} />
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              accessibilityRole="button"
-              accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel={options.tabBarAccessibilityLabel}
-              onPress={onPress}
-              style={styles.tab}
-              activeOpacity={0.7}
-            >
-              <Feather
-                name={tabInfo.icon}
-                size={22}
-                color={isFocused ? colors.graphite : colors.lead}
-                strokeWidth={1.5}
-              />
-              <Text style={[styles.label, isFocused && styles.labelActive]}>{t(tabInfo.labelKey)}</Text>
-            </TouchableOpacity>
-          </React.Fragment>
+          <TouchableOpacity
+            key={route.key}
+            accessibilityRole="button"
+            accessibilityState={isFocused ? { selected: true } : {}}
+            accessibilityLabel={options.tabBarAccessibilityLabel}
+            onPress={onPress}
+            style={styles.tab}
+            activeOpacity={0.7}
+          >
+            <Feather
+              name={tabInfo.icon}
+              size={22}
+              color={isFocused ? colors.graphite : colors.lead}
+              strokeWidth={1.5}
+            />
+            <Text style={[styles.label, isFocused && styles.labelActive]}>{t(tabInfo.labelKey)}</Text>
+          </TouchableOpacity>
         );
       })}
+      <TouchableOpacity
+        style={[styles.fab, { bottom: insets.bottom + 14 }]}
+        onPress={onFabPress}
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel={t('tabs.addExpenseLabel')}
+      >
+        <Feather name="plus" size={26} color={colors.paper} strokeWidth={1.5} />
+      </TouchableOpacity>
     </View>
     <ActionSheet
       visible={pickerVisible}
@@ -134,14 +126,15 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   fab: {
+    position: 'absolute',
+    left: '50%',
+    marginLeft: -26,
     width: 52,
     height: 52,
     borderRadius: 26,
     backgroundColor: colors.graphite,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: -20,
-    marginBottom: 6,
     shadowColor: colors.graphite,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,

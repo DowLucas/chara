@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
-	"github.com/DowLucas/quits/internal/db"
+	"github.com/DowLucas/chara/internal/db"
 )
 
 // ErrRateUnavailable means we have no rate for at least one leg of the

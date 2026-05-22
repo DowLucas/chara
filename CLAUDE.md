@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Quits is an open-source, self-hostable bill-splitting app (Splitwise alternative). See `docs/` for full product strategy, architecture, and UX diagrams.
+Chara is an open-source, self-hostable bill-splitting app (Splitwise alternative). See `docs/` for full product strategy, architecture, and UX diagrams.
 
 ## TDD
 
@@ -33,7 +33,25 @@ Auth is split by instance type:
 - **Hosted tier**: email magic link, Google OAuth, Apple Sign In (iOS only)
 - **Self-hosted**: email magic link, OIDC (Authentik, Keycloak, Authelia, etc.)
 
-Google and Apple Sign In are **not available on self-hosted instances**. The app detects instance type from `/.well-known/quits-instance` and renders sign-in options accordingly.
+Google and Apple Sign In are **not available on self-hosted instances**. The app detects instance type from `/.well-known/chara-instance` and renders sign-in options accordingly.
+
+## Multi-server accounts
+
+The app holds **N independent server-accounts** at once and aggregates their data into one UI. This is **aggregation, not federation** — servers don't talk to each other; "linking" lives only inside the app, on this device. The full design is `docs/superpowers/specs/2026-05-22-multi-server-accounts-design.md` — read it before changing anything in this area.
+
+Rules every new piece of code must follow:
+
+- **Composite identity.** A group is identified app-wide by `(serverUrl, groupId)`, never by a bare id. Routes are `/groups/[server]/[id]/...` and `/expenses/[server]/[id]`. When pushing routes, `encodeURIComponent(serverUrl)`; when reading from `useLocalSearchParams`, `decodeURIComponent(server)`. **Both sides or neither.**
+- **No global "active account".** Routing of writes is **context-determined**: group screens route to that group's server, profile/PIN/Face ID writes target the specific account being edited. New-group / scan-unknown-invite are the only server-ambiguous actions — they use `lastUsedCreateServerUrl` (sticky) with a chooser fallback.
+- **Per-server API access.** Call `apiFor(serverUrl).X()` for any new code that talks to a backend. The flat exports in `app/lib/api.ts` (`listGroups()`, `createExpense(...)`, …) are **backward-compat shims** that route through the default account; do not use them in new screens. `publicApi(serverUrl)` is the unauthenticated equivalent (well-known, magic-link request, verify).
+- **No new `useAuth()` consumers.** `useAuth()` is a deprecated shim resolving to the default account. New code uses `useAccounts()` (list + mutators), `useAccount(serverUrl)` (one account), or `useDefaultAccount()`. Auth gates check the right thing for the situation (often `accounts.length > 0`, sometimes `defaultAccount?.status === 'reauth_required'`).
+- **Aggregated reads.** Home, balances, activity, and any future "across all my groups" surface uses the hooks in `app/lib/aggregated-reads.ts` — parallel fan-out, per-account `status` (`idle | loading | ok | error`), partial-failure tolerance, SWR cache. Never `Promise.all` across accounts (one slow server should not block the rest); always `Promise.allSettled`. Per-currency totals only — never sum across currencies.
+- **Per-account status is persisted.** `reauth_required` (401) and `incompatible` (426) live in the accounts blob and survive cold launches. Cold-launch + foreground probes (`compat-recovery.ts`) clear `incompatible` when the server is upgraded. Cache reads need to *skip* accounts in these states.
+- **Push tokens fan out.** One Expo token registered with **every** linked server. Add/remove account → register/unregister on that server. Token rotation → re-fan-out. Notification payloads must include the `serverUrl` of the originating server in the deep link.
+- **Server identity is the join key.** `normalizeServerUrl()` (`app/lib/server-url.ts`) is the only entry point for accepting a URL string. `https://` always allowed; `http://` only for loopback/private hosts. No path, no query, no trailing slash. Pasted URLs with a path are rejected at entry.
+- **Bidirectional protocol compat.** Every authenticated request sends `X-Chara-App-Protocol: <APP_PROTOCOL_VERSION>` (`app/lib/protocol.ts`). The backend has Chi middleware that returns `426` when out of `[MIN_APP_PROTOCOL, MAX_APP_PROTOCOL]`. The app's discovery handshake (`runDiscoveryHandshake`) checks both directions before sign-in. **Bump `PROTOCOL_VERSION` on breaking changes**; additive optional fields/feature flags don't bump.
+- **Storage layout.** A single SecureStore blob at key `chara.accounts` holds every account + the device's `defaultServerUrl` / `lastUsedCreateServerUrl`. Atomic write per mutation. Mutate via `accounts-store.ts` (non-React; safe from background tasks) or `useAccounts()` (React). Never write the key from anywhere else.
+- **Account removal has a precondition.** The Remove Account flow refuses when the user has any non-zero balance on that server (and refuses if the balance check fails — fail safe). The same precheck applies to "Sign out of everything". Future destructive flows touching an account should check `hasOpenBalance()` first.
 
 ## Money
 
@@ -79,7 +97,7 @@ There is no `.env.dev` / `.env.dev.local` split — secrets and dev config are c
 
 ### Expo app caching
 
-The Expo app caches `/.well-known/quits-instance` at module load (`app/lib/api.ts`), so after toggling a backend feature flag (e.g. adding `GEMINI_API_KEY`) you must hard-reload the Expo bundle (`r` in Metro) — restarting only the server isn't enough.
+The Expo app caches `/.well-known/chara-instance` at module load (`app/lib/api.ts`), so after toggling a backend feature flag (e.g. adding `GEMINI_API_KEY`) you must hard-reload the Expo bundle (`r` in Metro) — restarting only the server isn't enough.
 
 ## Key architectural docs
 
@@ -88,6 +106,7 @@ The Expo app caches `/.well-known/quits-instance` at module load (`app/lib/api.t
 - `docs/06-roadmap.md` — Week-by-week build sequence
 - `docs/07-ux-diagrams-index.md` — Index of all 82 UX flow diagrams
 - `docs/ux/` — Mermaid diagrams for every screen and user flow, organized by area
+- `docs/superpowers/specs/2026-05-22-multi-server-accounts-design.md` — Multi-server / multi-account design. **Read before touching anything in the auth, accounts, routing, or aggregated-reads area.**
 
 ## MVP scope (P0)
 

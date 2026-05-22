@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -14,22 +15,33 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/DowLucas/quits/internal/currency"
-	"github.com/DowLucas/quits/internal/db"
-	"github.com/DowLucas/quits/internal/fx"
-	"github.com/DowLucas/quits/internal/middleware"
-	"github.com/DowLucas/quits/internal/money"
-	"github.com/DowLucas/quits/internal/split"
-	"github.com/DowLucas/quits/internal/ulid"
+	"github.com/DowLucas/chara/internal/currency"
+	"github.com/DowLucas/chara/internal/db"
+	"github.com/DowLucas/chara/internal/fx"
+	"github.com/DowLucas/chara/internal/middleware"
+	"github.com/DowLucas/chara/internal/money"
+	"github.com/DowLucas/chara/internal/split"
+	"github.com/DowLucas/chara/internal/storage"
+	"github.com/DowLucas/chara/internal/ulid"
 )
 
 type ExpenseHandler struct {
 	queries *db.Queries
 	pool    *pgxpool.Pool
+	// store is optional — nil on instances without object storage. When
+	// present it's used to clean attachment bucket objects on delete.
+	store *storage.Client
 }
 
 func NewExpenseHandler(pool *pgxpool.Pool, queries *db.Queries) *ExpenseHandler {
 	return &ExpenseHandler{queries: queries, pool: pool}
+}
+
+// WithStorage returns an ExpenseHandler that will best-effort delete
+// attachment bucket objects when an expense is soft-deleted.
+func (h *ExpenseHandler) WithStorage(s *storage.Client) *ExpenseHandler {
+	h.store = s
+	return h
 }
 
 // ── Response types ────────────────────────────────────────────────────────────
@@ -182,16 +194,49 @@ func (h *ExpenseHandler) requireGroupMember(w http.ResponseWriter, r *http.Reque
 	return member, true
 }
 
+// validateSplitMembersInGroup ensures every supplied member ID belongs to the
+// URL group. Without this check, a member of group A could submit an expense
+// whose split or participant rows reference members of group B — the
+// expense_splits FK only points at group_members(id) and does not enforce
+// group consistency. Returns a generic error so we don't leak whether an ID
+// exists in some other group.
+func (h *ExpenseHandler) validateSplitMembersInGroup(ctx context.Context, memberIDs []string, groupID string) error {
+	seen := make(map[string]struct{}, len(memberIDs))
+	for _, id := range memberIDs {
+		if id == "" {
+			return fmt.Errorf("invalid split member")
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		member, err := h.queries.GetGroupMember(ctx, id)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return fmt.Errorf("invalid split member")
+			}
+			return err
+		}
+		if member.GroupID != groupID {
+			return fmt.Errorf("invalid split member")
+		}
+	}
+	return nil
+}
+
+// validatePaidByInGroup returns a deliberately generic error for both
+// "member doesn't exist" and "member belongs to another group" so callers
+// can't probe member existence by diffing error strings.
 func (h *ExpenseHandler) validatePaidByInGroup(ctx context.Context, memberID, groupID string) error {
 	member, err := h.queries.GetGroupMember(ctx, memberID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return fmt.Errorf("paid_by_id not found")
+			return fmt.Errorf("paid_by_id not in group")
 		}
 		return err
 	}
 	if member.GroupID != groupID {
-		return fmt.Errorf("paid_by_id does not belong to this group")
+		return fmt.Errorf("paid_by_id not in group")
 	}
 	return nil
 }
@@ -311,6 +356,16 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.validatePaidByInGroup(r.Context(), req.PaidByID, groupID); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	splitMemberIDs := make([]string, 0, len(req.Participants)+len(req.Splits))
+	splitMemberIDs = append(splitMemberIDs, req.Participants...)
+	for _, s := range req.Splits {
+		splitMemberIDs = append(splitMemberIDs, s.MemberID)
+	}
+	if err := h.validateSplitMembersInGroup(r.Context(), splitMemberIDs, groupID); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -552,6 +607,18 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if len(req.Participants) > 0 || len(req.Splits) > 0 {
+		splitMemberIDs := make([]string, 0, len(req.Participants)+len(req.Splits))
+		splitMemberIDs = append(splitMemberIDs, req.Participants...)
+		for _, s := range req.Splits {
+			splitMemberIDs = append(splitMemberIDs, s.MemberID)
+		}
+		if err := h.validateSplitMembersInGroup(r.Context(), splitMemberIDs, groupID); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+	}
+
 	params := db.UpdateExpenseParams{ID: expenseID}
 	if req.Title != nil {
 		params.Title = pgtype.Text{String: *req.Title, Valid: true}
@@ -679,6 +746,23 @@ func (h *ExpenseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Snapshot attachment keys BEFORE the soft-delete so we can sweep the
+	// bucket after the transaction commits. We do this outside the tx
+	// because the read is harmless if the delete later rolls back —
+	// nothing in the tx mutates this list.
+	var attachmentKeys []string
+	if h.store != nil {
+		atts, err := h.queries.ListAttachmentsByExpense(r.Context(), expenseID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+		attachmentKeys = make([]string, 0, len(atts))
+		for _, a := range atts {
+			attachmentKeys = append(attachmentKeys, a.S3Key)
+		}
+	}
+
 	tx, err := h.pool.Begin(r.Context())
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error")
@@ -693,6 +777,13 @@ func (h *ExpenseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Attachments have no soft-delete column — hard-delete the rows so
+	// the bucket objects we're about to sweep stop being referenced.
+	if err := q.DeleteAttachmentsByExpense(r.Context(), expenseID); err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
 	if err := writeActivity(r.Context(), q, groupID, claims.UserID, "expense_deleted", expenseID, "expense"); err != nil {
 		writeError(w, http.StatusInternalServerError, "could not write activity")
 		return
@@ -701,6 +792,17 @@ func (h *ExpenseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	if err := tx.Commit(r.Context()); err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error")
 		return
+	}
+
+	// Best-effort bucket sweep — orphans here are recoverable and the
+	// expense is already gone from the user's view, so we never fail the
+	// request because of MinIO/S3 hiccups.
+	if h.store != nil {
+		for _, key := range attachmentKeys {
+			if err := h.store.Delete(context.Background(), key); err != nil {
+				slog.Warn("attachment bucket sweep failed", "key", key, "err", err)
+			}
+		}
 	}
 
 	w.WriteHeader(http.StatusNoContent)

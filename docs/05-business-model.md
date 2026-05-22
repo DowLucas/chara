@@ -22,16 +22,16 @@ The right choice. Reasons:
 
 Counter-arguments worth knowing:
 
-- "AGPL scares off corporate contributors." True for some companies (Google's policy famously forbids AGPL). But Quits's audience is individuals and small orgs, not Google.
+- "AGPL scares off corporate contributors." True for some companies (Google's policy famously forbids AGPL). But Chara's audience is individuals and small orgs, not Google.
 - "MIT/Apache is friendlier." True, but invites the SaaS-clone failure mode. Spliit and SplitPro are MIT; both could theoretically be cloned and resold tomorrow.
 
 ### Mobile binaries: Same code, different distribution
 
-The mobile apps are AGPL-licensed source code, distributed as binaries through the App Store and Play Store. The compilation toolchain, signing, and store presence are operated by the Quits project. Anyone can build their own version from source and distribute it (this is what F-Droid versions would be).
+The mobile apps are AGPL-licensed source code, distributed as binaries through the App Store and Play Store. The compilation toolchain, signing, and store presence are operated by the Chara project. Anyone can build their own version from source and distribute it (this is what F-Droid versions would be).
 
 ### Trademark: Reserved
 
-The name "Quits" and the logo are not under AGPLv3. They are trademarks held by the project entity (see governance below). Forks must rename. This is the Bitwarden / Vaultwarden pattern and is well-understood by the community.
+The name "Chara" and the logo are not under AGPLv3. They are trademarks held by the project entity (see governance below). Forks must rename. This is the Bitwarden / Vaultwarden pattern and is well-understood by the community.
 
 ### CLA: Yes, minimal
 
@@ -46,7 +46,7 @@ This is the Apache CLA pattern, not the Canonical pattern. The latter is hated f
 
 ## Monetization streams (in priority order)
 
-### Stream 1: Hosted tier ("Quits Cloud"), primary revenue
+### Stream 1: Hosted tier ("Chara Cloud"), primary revenue
 
 The reliable, recurring revenue driver. Pricing must be:
 
@@ -72,7 +72,7 @@ The supplementary revenue from individual donors and corporate sponsors.
 - **Individual tiers**: €5, €10, €25/month
 - **Corporate tiers**: €100, €500/month with logo visibility
 - **One-time donation** via Stripe and OpenCollective
-- **"Quits Supporter" badge** visible in their app instance for $50+ one-time or $5+/month recurring
+- **"Chara Supporter" badge** visible in their app instance for $50+ one-time or $5+/month recurring
 
 Estimated revenue at scale (year 2): 200-500 sponsors at average $5/month = $1,000-2,500/month. Real money, not enough to live on, but a meaningful supplement.
 
@@ -89,13 +89,13 @@ None of these are reliable, all of them are real. Plan for none, celebrate any y
 
 ### Stream 4: Commercial license sales, minor
 
-Companies that want to use Quits code in proprietary software (e.g. embedding the splitting engine in a closed-source app) can purchase a commercial license. Pricing is "ask us", typically €2,000-€10,000 one-time depending on use.
+Companies that want to use Chara code in proprietary software (e.g. embedding the splitting engine in a closed-source app) can purchase a commercial license. Pricing is "ask us", typically €2,000-€10,000 one-time depending on use.
 
 Reality check: this might happen 1-2 times a year. Not a real revenue line, but a real option to leave open.
 
 ### Stream 5: Marketplace fees, explicitly avoided
 
-We do NOT take a cut of payments processed through Quits. Quits does not hold money. This is non-negotiable: the moment we touch the money flow, we are subject to PSD2, AML, KYC, and the regulatory burden destroys the project. Steven's pivot here is the cautionary tale.
+We do NOT take a cut of payments processed through Chara. Chara does not hold money. This is non-negotiable: the moment we touch the money flow, we are subject to PSD2, AML, KYC, and the regulatory burden destroys the project. Steven's pivot here is the cautionary tale.
 
 ## Pricing comparison
 
@@ -104,8 +104,8 @@ We do NOT take a cut of payments processed through Quits. Quits does not hold mo
 | Splitwise | Capped at ~3 expenses/day, ads | ~$3.00 |
 | Steven | Ads | ~$3-5 (varies) |
 | Tricount | Fully free, ad-free | n/a |
-| **Quits self-host** | **Fully free, full features** | **n/a** |
-| **Quits hosted (planned)** | **Free, real limits on OCR + storage** | **€2 / 25 SEK / month, family plan €5 / 50 SEK** |
+| **Chara self-host** | **Fully free, full features** | **n/a** |
+| **Chara hosted (planned)** | **Free, real limits on OCR + storage** | **€2 / 25 SEK / month, family plan €5 / 50 SEK** |
 
 ## Year 1-3 revenue projection (low/mid/high)
 
@@ -162,7 +162,7 @@ Lucas builds nights and weekends, paid nothing. Hosted tier revenue is reinveste
 
 Sponsor income + hosted MRR covers ~€1500-2500/month, allowing Lucas to scale back consulting (1Dow Technology) by 20-30% to invest more hours. Or, more realistically, brings a contributor on at €500-1000/month part-time.
 
-**Risk**: Lucas's other commitments (Fidify, Eventfold, KTH) compete for time. This is not a problem to solve by working more hours; it is solved by saying no to Quits growth that does not pay for itself.
+**Risk**: Lucas's other commitments (Fidify, Eventfold, KTH) compete for time. This is not a problem to solve by working more hours; it is solved by saying no to Chara growth that does not pay for itself.
 
 ### Stage 3: Funded or 1 FTE (Months 24-36)
 
@@ -204,27 +204,27 @@ Corporate sponsors do not buy roadmap influence. This is an explicit policy. The
 
 ## What this is not
 
-Quits is not a VC-fundable business in the traditional sense. The TAM is too small (bill-splitting is a tens-of-millions-of-users market, not hundreds-of-millions), and the open source model caps revenue per user. This is a feature, not a bug.
+Chara is not a VC-fundable business in the traditional sense. The TAM is too small (bill-splitting is a tens-of-millions-of-users market, not hundreds-of-millions), and the open source model caps revenue per user. This is a feature, not a bug.
 
-What Quits is, is a sustainable, mission-aligned project that earns its maintainers a comfortable Swedish middle-class income, serves a real user need, and lasts decades. Bitwarden, Mullvad, Sourcehut, FastMail, Tarsnap. That is the company Quits aspires to keep.
+What Chara is, is a sustainable, mission-aligned project that earns its maintainers a comfortable Swedish middle-class income, serves a real user need, and lasts decades. Bitwarden, Mullvad, Sourcehut, FastMail, Tarsnap. That is the company Chara aspires to keep.
 
-If at any point Quits is offered VC funding: the question is whether the funding lets the project stay AGPL, self-host-free, and trust-aligned. If yes, consider it carefully. If no (and the usual VC ask is to commercialize the open source to justify the return profile), decline. The Immich path with FUTO is the better template.
+If at any point Chara is offered VC funding: the question is whether the funding lets the project stay AGPL, self-host-free, and trust-aligned. If yes, consider it carefully. If no (and the usual VC ask is to commercialize the open source to justify the return profile), decline. The Immich path with FUTO is the better template.
 
 ## The honest scenario tree
 
-There are realistically three outcomes for Quits. Plan for all three.
+There are realistically three outcomes for Chara. Plan for all three.
 
 ### Outcome A (most likely, ~60%): Niche success
 
-Quits becomes the go-to bill splitter in the self-hosting community. 5k-50k self-hosted instances, 1-5k paying hosted users, €5-30k MRR. Sustainable for one part-time maintainer, possibly one FTE with grant support. Not a global Splitwise replacement, but a real and beloved tool.
+Chara becomes the go-to bill splitter in the self-hosting community. 5k-50k self-hosted instances, 1-5k paying hosted users, €5-30k MRR. Sustainable for one part-time maintainer, possibly one FTE with grant support. Not a global Splitwise replacement, but a real and beloved tool.
 
 ### Outcome B (~25%): Nordic success + global niche
 
-The Swedish wedge works. Quits becomes the de facto Swish-integrated bill splitter, captures a meaningful slice of the post-Steven Swedish market, and rides that into the broader Nordics. 50k+ active users in Sweden, €50-150k MRR, 2-3 FTE possible.
+The Swedish wedge works. Chara becomes the de facto Swish-integrated bill splitter, captures a meaningful slice of the post-Steven Swedish market, and rides that into the broader Nordics. 50k+ active users in Sweden, €50-150k MRR, 2-3 FTE possible.
 
 ### Outcome C (~10%): Project doesn't reach sustainability
 
-Maintainer burnout, scope creep, or a competing project takes the wedge. Quits is shipped but plateaus and is eventually abandoned or maintained at low velocity. This is the failure case to plan against by enforcing scope and bringing on a co-maintainer early.
+Maintainer burnout, scope creep, or a competing project takes the wedge. Chara is shipped but plateaus and is eventually abandoned or maintained at low velocity. This is the failure case to plan against by enforcing scope and bringing on a co-maintainer early.
 
 ### Outcome D (~5%): Breakout
 

@@ -2,11 +2,11 @@
 
 ## Vision
 
-Quits is the bill-splitting application that respects the user. Open code, self-hostable, native on every device, and integrated with how people actually move money in their region. It is what Splitwise would be if it had been built by Bitwarden's team in Stockholm.
+Chara is the bill-splitting application that respects the user. Open code, self-hostable, native on every device, and integrated with how people actually move money in their region. It is what Splitwise would be if it had been built by Bitwarden's team in Stockholm.
 
 ## Three-line positioning
 
-> Quits is an open source bill splitter that runs on your server or ours. Native iOS and Android apps, real Swish and Vipps integration, and your data never leaves your control. The Splitwise replacement for people who care where their data lives.
+> Chara is an open source bill splitter that runs on your server or ours. Native iOS and Android apps, real Swish and Vipps integration, and your data never leaves your control. The Splitwise replacement for people who care where their data lives.
 
 ## Target audiences (in priority order)
 
@@ -45,10 +45,10 @@ Quits is the bill-splitting application that respects the user. Open code, self-
 
 These are real choices. Each one represents temptation that should be resisted in v1 and possibly forever.
 
-1. **Not a budgeting app.** No "spending by category" envelope budgeting, no YNAB-style. Splitwise wandered into this and it diluted the core. Insights and charts are fine, but Quits is about settling shared expenses, not personal finance.
-2. **Not a payments processor.** Quits never holds money. All settlements happen via external rails (Swish, Vipps, MobilePay, PayPal, manual). No KYC, no AML, no licensing exposure. Important for staying out of regulatory scope.
+1. **Not a budgeting app.** No "spending by category" envelope budgeting, no YNAB-style. Splitwise wandered into this and it diluted the core. Insights and charts are fine, but Chara is about settling shared expenses, not personal finance.
+2. **Not a payments processor.** Chara never holds money. All settlements happen via external rails (Swish, Vipps, MobilePay, PayPal, manual). No KYC, no AML, no licensing exposure. Important for staying out of regulatory scope.
 3. **Not a bank.** No issued card, no debit accounts, no PSD2 license. Steven walked this path and it consumed them.
-4. **Not a B2B SaaS.** No "Quits for Teams" with seats, SCIM, audit logs. The self-host story is the answer for organizations that need control. Open core paid-SSO has a track record of poisoning OSS goodwill (see Bitwarden's grumbles).
+4. **Not a B2B SaaS.** No "Chara for Teams" with seats, SCIM, audit logs. The self-host story is the answer for organizations that need control. Open core paid-SSO has a track record of poisoning OSS goodwill (see Bitwarden's grumbles).
 5. **Not a chat app.** Comments on expenses, yes. General messaging, no. Splitwise tried; nobody uses it.
 6. **Not a social network.** No public profiles, no feeds, no "Splitwise wrapped" virality unless it is opt-in and shareable.
 
@@ -191,7 +191,7 @@ P0 = MVP (must ship). P1 = within 6 months of MVP. P2 = within 12 months of MVP.
 |---------|:---:|---|
 | Group total over time | P1 | |
 | Spending by category | P2 | |
-| Year-end summary | P2 | "Quits Wrapped" potential |
+| Year-end summary | P2 | "Chara Wrapped" potential |
 | Per-person spending trends | P2 | |
 | Budget tracking | P3 | Bordering on non-goal |
 
@@ -205,7 +205,7 @@ P0 = MVP (must ship). P1 = within 6 months of MVP. P2 = within 12 months of MVP.
 | Magic link auth | P0 | |
 | Passkeys | P1 | WebAuthn via `go-webauthn/webauthn` |
 | Admin dashboard | P1 | User management, audit log |
-| Backup / restore CLI | P0 | `quits backup`, `quits restore` |
+| Backup / restore CLI | P0 | `chara backup`, `chara restore` |
 | Healthcheck endpoints | P0 | |
 | OpenAPI schema | P1 | |
 | Webhook system | P2 | |
@@ -240,13 +240,13 @@ P0 = MVP (must ship). P1 = within 6 months of MVP. P2 = within 12 months of MVP.
 
 ## Differentiation summary
 
-If a journalist asks "how is Quits different from Splitwise?" the answer is three sentences:
+If a journalist asks "how is Chara different from Splitwise?" the answer is three sentences:
 
 1. **You own your data.** Open source, self-hostable, full export, no lock-in.
 2. **Native Nordic payments.** One tap to settle via Swish, Vipps, or MobilePay.
 3. **Free in self-host, sane in hosted.** No paywalls on adding expenses or searching history.
 
-If a Swedish user asks "how is Quits different from Steven?" the answer is two:
+If a Swedish user asks "how is Chara different from Steven?" the answer is two:
 
 1. **It is open source and not run by a struggling fintech.** Multiple maintainers, transparent uptime, you can host it yourself if you want.
 2. **It works the same way Steven did before it broke.** Reliable Swish integration, simple group splits, fast.

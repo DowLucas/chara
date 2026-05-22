@@ -1,39 +1,25 @@
+// Onboarding scanner. Shares all join logic with `app/groups/scan.tsx`
+// via `useInviteJoin()` — cross-server branches, multi-account chooser,
+// and the §8 discovery handshake all live in the hook.
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { QRScanner } from '@/components/QRScanner';
-import { joinGroupByToken, parseInviteToken, ApiError } from '@/lib/api';
+import { useInviteJoin } from '@/lib/use-invite-join';
 import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
 
 export default function ScanToJoinScreen() {
   const { t } = useTranslation();
-  const [busy, setBusy] = useState(false);
+  const { busy, handle } = useInviteJoin();
   const [error, setError] = useState<string | null>(null);
 
   async function handleScanned(data: string) {
-    if (busy) return;
-    const token = parseInviteToken(data);
-    if (!token) {
+    const result = await handle(data);
+    if (result.kind === 'invalid') {
       setError(t('scanJoin.invalidQr'));
       // re-arm after a moment so the user can retry without backing out
       setTimeout(() => setError(null), 1800);
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    try {
-      const group = await joinGroupByToken(token);
-      router.replace(`/groups/${group.id}`);
-    } catch (e: any) {
-      if (e instanceof ApiError && e.status === 409) {
-        // Already a member — just open the group.
-        // The 409 body doesn't include the id; bounce to the groups list which will show it.
-        router.replace('/(tabs)/groups');
-        return;
-      }
-      Alert.alert(t('scanJoin.couldNotJoin'), e?.message || String(e));
-      setBusy(false);
     }
   }
 

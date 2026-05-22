@@ -1,11 +1,21 @@
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import {
+  APP_PROTOCOL_VERSION,
+  PROTOCOL_HEADER,
+} from './protocol';
+import {
+  accountFor,
+  defaultAccount,
+  markIncompatible,
+  markReauthRequired,
+} from './accounts-store';
 
 const TOKEN_KEY = 'auth_token';
 
 function resolveBaseUrl(): string {
-  if (!__DEV__) return 'https://api.quits.app';
+  if (!__DEV__) return 'https://api.chara.app';
 
   // Explicit override always wins (e.g. EXPO_PUBLIC_API_URL=http://192.168.0.45:8080).
   const fromEnv = process.env.EXPO_PUBLIC_API_URL;
@@ -36,7 +46,13 @@ function resolveBaseUrl(): string {
 
 export const BASE_URL = resolveBaseUrl();
 if (__DEV__ && typeof console !== 'undefined') {
-  console.log('[quits] API base URL:', BASE_URL);
+  console.log('[chara] API base URL:', BASE_URL);
+}
+
+// Exposed for callers (e.g. Image source headers) that need to make their
+// own authenticated requests outside the typed `request` helper.
+export async function authToken(): Promise<string | null> {
+  return getToken();
 }
 
 async function getToken(): Promise<string | null> {
@@ -62,15 +78,79 @@ export async function clearToken(): Promise<void> {
   return SecureStore.deleteItemAsync(TOKEN_KEY);
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = await getToken();
+export class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
+
+export class NoAccountError extends Error {
+  constructor(public serverUrl: string) {
+    super(`No account configured for server ${serverUrl}`);
+  }
+}
+
+/**
+ * Core per-server request. Used by `apiFor(serverUrl)`, `publicApi(serverUrl)`,
+ * and the backward-compat `request()` shim below.
+ *
+ *   - Injects `X-Chara-App-Protocol` on every call (spec §9).
+ *   - Injects `Authorization: Bearer <token>` when an account exists for
+ *     `serverUrl` *and* `requireAuth` is true.
+ *   - On `401` from an authenticated call, flips the account's status to
+ *     `reauth_required` (spec §12).
+ *   - On `426`, flips the account's status to `incompatible` (spec §9).
+ *   - Throws `ApiError` on non-2xx, `NoAccountError` if an authenticated
+ *     call is made without an account for `serverUrl`.
+ */
+export async function requestOn<T>(
+  serverUrl: string,
+  path: string,
+  options: RequestInit & { requireAuth?: boolean } = {},
+): Promise<T> {
+  const { requireAuth = true, ...rest } = options;
+  const account = accountFor(serverUrl);
+
+  if (requireAuth && !account) {
+    // Fall back to the legacy SecureStore token *only* if `serverUrl` matches
+    // BASE_URL — this covers the brief window between sign-in completion and
+    // the accounts blob being written by useAuth().signIn() during the
+    // backward-compat path. Removed in Wave 2D.
+    if (serverUrl === BASE_URL) {
+      const legacyToken = await getToken();
+      if (legacyToken) {
+        return requestWithToken<T>(serverUrl, path, rest, legacyToken);
+      }
+    }
+    throw new NoAccountError(serverUrl);
+  }
+
+  const token = account?.token ?? null;
+  return requestWithToken<T>(serverUrl, path, rest, token);
+}
+
+async function requestWithToken<T>(
+  serverUrl: string,
+  path: string,
+  options: RequestInit,
+  token: string | null,
+): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    [PROTOCOL_HEADER]: String(APP_PROTOCOL_VERSION),
     ...(options.headers as Record<string, string>),
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  const res = await fetch(`${serverUrl}${path}`, { ...options, headers });
+
+  // Mark account status based on response codes (spec §9, §12).
+  if (res.status === 401 && accountFor(serverUrl)) {
+    void markReauthRequired(serverUrl);
+  } else if (res.status === 426 && accountFor(serverUrl)) {
+    void markIncompatible(serverUrl);
+  }
+
   if (!res.ok) {
     const body = await res.text();
     throw new ApiError(res.status, body);
@@ -79,10 +159,18 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export class ApiError extends Error {
-  constructor(public status: number, message: string) {
-    super(message);
-  }
+/**
+ * Backward-compat shim. Existing flat exports (listGroups, createGroup, …)
+ * go through this. It resolves the target server from the default account,
+ * falling back to BASE_URL during the brief boot window before the
+ * accounts blob is loaded.
+ *
+ * New code must NOT use this — call `apiFor(serverUrl).X()` instead.
+ */
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const def = defaultAccount();
+  const serverUrl = def?.serverUrl ?? BASE_URL;
+  return requestOn<T>(serverUrl, path, options);
 }
 
 // Auth
@@ -100,6 +188,12 @@ export interface User {
   name: string;
   phone?: string;
   avatar_url?: string;
+  /** Server-hosted avatar object URL (relative, e.g. /api/users/<id>/avatar).
+   *  Prefer this over `avatar_url` (the latter is the OAuth provider's URL). */
+  avatar_object_url?: string | null;
+  /** ISO-8601 timestamp the user's avatar was last updated. Used to bust the
+   *  RN image cache after a fresh upload. */
+  avatar_updated_at?: string | null;
 }
 
 export function requestMagicLink(email: string) {
@@ -147,6 +241,8 @@ export interface GroupMember {
   role?: string;
   is_ghost?: boolean;
   joined_at?: string;
+  /** Server-hosted avatar object URL for this member's user (relative). */
+  avatar_object_url?: string | null;
 }
 
 export function listGroups() {
@@ -198,11 +294,11 @@ export function joinGroupByToken(token: string) {
 
 /** Build the QR payload / deep link for a group's invite token. */
 export function inviteDeepLink(token: string): string {
-  return `quits://join/${token}`;
+  return `chara://join/${token}`;
 }
 
 /** Extract an invite token from a scanned string. Accepts the raw token, a
- *  `quits://join/<token>` deep link, or any URL whose path ends with /join/<token>. */
+ *  `chara://join/<token>` deep link, or any URL whose path ends with /join/<token>. */
 export function parseInviteToken(scanned: string): string | null {
   const s = scanned.trim();
   if (!s) return null;
@@ -304,7 +400,12 @@ export interface Settlement {
   amount: string;
   currency: string;
   note?: string;
+  method?: string;
+  created_by_id?: string;
   created_at: string;
+  /** Set when the settlement has been soft-reverted. Reverted rows are
+   *  excluded from balance math but kept in the audit list. */
+  reverted_at?: string;
 }
 
 export interface SettleInput {
@@ -337,6 +438,16 @@ export function settle(groupId: string, input: SettleInput) {
   });
 }
 
+export function listSettlements(groupId: string) {
+  return request<Settlement[]>(`/api/groups/${groupId}/settlements`);
+}
+
+export function revertSettlement(groupId: string, settlementId: string) {
+  return request<void>(`/api/groups/${groupId}/settlements/${settlementId}/revert`, {
+    method: 'POST',
+  });
+}
+
 export function listMyBalances() {
   return request<MyBalance[]>('/api/me/balances');
 }
@@ -366,7 +477,7 @@ export function listMyActivity(limit = 50, offset = 0) {
   );
 }
 
-// Instance info — published by the backend at /.well-known/quits-instance.
+// Instance info — published by the backend at /.well-known/chara-instance.
 // Result is cached for the session; the feature set is fixed at server boot.
 export interface InstanceFeatures {
   google_auth: boolean;
@@ -385,7 +496,7 @@ let instanceCache: Promise<InstanceInfo> | null = null;
 export function getInstanceInfo(): Promise<InstanceInfo> {
   if (instanceCache) return instanceCache;
   instanceCache = (async () => {
-    const res = await fetch(`${BASE_URL}/.well-known/quits-instance`);
+    const res = await fetch(`${BASE_URL}/.well-known/chara-instance`);
     if (!res.ok) throw new ApiError(res.status, await res.text());
     return res.json() as Promise<InstanceInfo>;
   })().catch((e) => {
@@ -408,6 +519,17 @@ export interface ScannedReceipt {
   subtotal_minor?: number;
   tax_minor?: number;
   tip_minor?: number;
+  /** Per-line items in the receipt's currency. Optional — backends without
+   *  itemized OCR (or scans where items can't be confidently parsed) omit
+   *  this field. The mobile app must tolerate missing / empty. */
+  items?: ScannedReceiptItem[];
+}
+
+export interface ScannedReceiptItem {
+  description: string;
+  qty: number;
+  unit_price_minor: number;
+  total_minor: number;
 }
 
 export function scanReceipt(imageBase64: string, mimeType: string, language?: string) {
@@ -419,6 +541,84 @@ export function scanReceipt(imageBase64: string, mimeType: string, language?: st
       ...(language ? { language } : {}),
     }),
   });
+}
+
+// Receipt attachments
+export interface ExpenseAttachment {
+  id: string;
+  expense_id: string;
+  mime_type: string;
+  size_bytes: number;
+  created_at: string;
+  /** Short-lived presigned GET URL (15 min). Re-fetch the list to refresh. */
+  url?: string;
+}
+
+export function uploadExpenseAttachment(
+  groupId: string,
+  expenseId: string,
+  imageBase64: string,
+  mimeType: string,
+) {
+  return request<ExpenseAttachment>(
+    `/api/groups/${groupId}/expenses/${expenseId}/attachments`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ image_base64: imageBase64, mime_type: mimeType }),
+    },
+  );
+}
+
+export function listExpenseAttachments(groupId: string, expenseId: string) {
+  return request<ExpenseAttachment[]>(
+    `/api/groups/${groupId}/expenses/${expenseId}/attachments`,
+  );
+}
+
+// Avatars
+export type AvatarMimeType = 'image/jpeg' | 'image/png' | 'image/webp';
+
+export function uploadAvatar(imageBase64: string, mimeType: AvatarMimeType) {
+  return request<{ url: string; updated_at: string }>('/api/me/avatar', {
+    method: 'POST',
+    body: JSON.stringify({ image_base64: imageBase64, mime_type: mimeType }),
+  });
+}
+
+export function deleteAvatar() {
+  return request<void>('/api/me/avatar', { method: 'DELETE' });
+}
+
+/** Build an authenticated `<Image source={...}>` descriptor for the given
+ *  user's server-hosted avatar. Returns null if neither `avatar_object_url`
+ *  nor a fallback OAuth `avatar_url` is set — callers should then render
+ *  initials.
+ *
+ *  The OAuth fallback (`avatar_url`) is served by the provider directly and
+ *  doesn't need auth headers; the server avatar does. The cache-buster
+ *  (`?v=<updated_at>`) only applies to the server avatar so a fresh upload
+ *  invalidates the RN image cache. */
+export function avatarImageSource(
+  input:
+    | { avatar_object_url?: string | null; avatar_url?: string | null; avatar_updated_at?: string | null }
+    | null
+    | undefined,
+  token: string | null,
+): { uri: string; headers?: Record<string, string> } | null {
+  if (!input) return null;
+  if (input.avatar_object_url) {
+    const path = input.avatar_object_url;
+    const sep = path.includes('?') ? '&' : '?';
+    const bust = input.avatar_updated_at
+      ? `${sep}v=${encodeURIComponent(input.avatar_updated_at)}`
+      : '';
+    const uri = path.startsWith('http') ? `${path}${bust}` : `${BASE_URL}${path}${bust}`;
+    return token ? { uri, headers: { Authorization: `Bearer ${token}` } } : { uri };
+  }
+  if (input.avatar_url) {
+    return { uri: input.avatar_url };
+  }
+  return null;
 }
 
 // FX
@@ -445,4 +645,180 @@ export function convertFx(input: {
   });
   if (input.asOf) params.set('as_of', input.asOf);
   return request<FxConvertResponse>(`/api/fx/convert?${params.toString()}`);
+}
+
+// ---------------------------------------------------------------------------
+// Per-server clients (spec §6).
+//
+// `apiFor(serverUrl)` and `publicApi(serverUrl)` are the forward-looking
+// surface for multi-server callers. They always return a client object;
+// authentication errors throw at *request* time (NoAccountError), not at
+// construction time, so the client is safely constructible for speculative
+// uses.
+//
+// During the route-refactor wave (2D), screens migrate from the flat
+// `listGroups()` / `getGroup(id)` / etc. exports above to
+// `apiFor(serverUrl).listGroups()`. The flat exports stay for now as
+// backward-compat shims routing through the default account.
+// ---------------------------------------------------------------------------
+
+export function apiFor(serverUrl: string) {
+  return {
+    // Identity
+    getMe: () => requestOn<User>(serverUrl, '/api/me'),
+    updateMe: (input: { name?: string; phone?: string }) =>
+      requestOn<User>(serverUrl, '/api/me', {
+        method: 'PATCH',
+        body: JSON.stringify(input),
+      }),
+
+    // Groups
+    listGroups: () => requestOn<Group[]>(serverUrl, '/api/groups'),
+    getGroup: (id: string) => requestOn<GroupDetail>(serverUrl, `/api/groups/${id}`),
+    createGroup: (name: string, currency: string, language?: string) =>
+      requestOn<Group>(serverUrl, '/api/groups', {
+        method: 'POST',
+        body: JSON.stringify({ name, currency, ...(language ? { language } : {}) }),
+      }),
+    updateGroup: (id: string, input: UpdateGroupInput) =>
+      requestOn<Group>(serverUrl, `/api/groups/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(input),
+      }),
+    archiveGroup: (id: string) =>
+      requestOn<void>(serverUrl, `/api/groups/${id}`, { method: 'DELETE' }),
+    listGroupMembers: (groupId: string) =>
+      requestOn<GroupMember[]>(serverUrl, `/api/groups/${groupId}/members`),
+
+    // Invites
+    joinGroupByToken: (token: string) =>
+      requestOn<GroupDetail>(serverUrl, `/api/groups/join/${encodeURIComponent(token)}`, {
+        method: 'POST',
+      }),
+
+    // Expenses
+    listExpenses: (groupId: string) =>
+      requestOn<Expense[]>(serverUrl, `/api/groups/${groupId}/expenses`),
+    getExpense: (groupId: string, expenseId: string) =>
+      requestOn<Expense>(serverUrl, `/api/groups/${groupId}/expenses/${expenseId}`),
+    createExpense: (groupId: string, input: CreateExpenseInput) =>
+      requestOn<Expense>(serverUrl, `/api/groups/${groupId}/expenses`, {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    deleteExpense: (groupId: string, expenseId: string) =>
+      requestOn<void>(serverUrl, `/api/groups/${groupId}/expenses/${expenseId}`, {
+        method: 'DELETE',
+      }),
+
+    // Balances + settlements
+    listGroupBalances: (groupId: string) =>
+      requestOn<Balance[]>(serverUrl, `/api/groups/${groupId}/balances`),
+    listSettlementSuggestions: (groupId: string) =>
+      requestOn<SettlementSuggestion[]>(serverUrl, `/api/groups/${groupId}/settle-suggestions`),
+    settle: (groupId: string, input: SettleInput) =>
+      requestOn<Settlement>(serverUrl, `/api/groups/${groupId}/settle`, {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    listSettlements: (groupId: string) =>
+      requestOn<Settlement[]>(serverUrl, `/api/groups/${groupId}/settlements`),
+    revertSettlement: (groupId: string, settlementId: string) =>
+      requestOn<void>(serverUrl, `/api/groups/${groupId}/settlements/${settlementId}/revert`, {
+        method: 'POST',
+      }),
+
+    // Attachments
+    uploadExpenseAttachment: (
+      groupId: string,
+      expenseId: string,
+      imageBase64: string,
+      mimeType: string,
+    ) =>
+      requestOn<ExpenseAttachment>(
+        serverUrl,
+        `/api/groups/${groupId}/expenses/${expenseId}/attachments`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ image_base64: imageBase64, mime_type: mimeType }),
+        },
+      ),
+    listExpenseAttachments: (groupId: string, expenseId: string) =>
+      requestOn<ExpenseAttachment[]>(
+        serverUrl,
+        `/api/groups/${groupId}/expenses/${expenseId}/attachments`,
+      ),
+
+    // FX (group-scoped — uses the group's home server)
+    convertFx: (input: { from: string; to: string; amountMinor: number; asOf?: string }) => {
+      const params = new URLSearchParams({
+        from: input.from,
+        to: input.to,
+        amount_minor: String(input.amountMinor),
+      });
+      if (input.asOf) params.set('as_of', input.asOf);
+      return requestOn<FxConvertResponse>(serverUrl, `/api/fx/convert?${params.toString()}`);
+    },
+
+    // Receipt OCR (group-scoped — uses the group's home server)
+    scanReceipt: (imageBase64: string, mimeType: string, language?: string) =>
+      requestOn<ScannedReceipt>(serverUrl, '/api/receipts/scan', {
+        method: 'POST',
+        body: JSON.stringify({
+          image_base64: imageBase64,
+          mime_type: mimeType,
+          ...(language ? { language } : {}),
+        }),
+      }),
+
+    // Instance info (unauthenticated, but bound to a specific server)
+    instanceInfo: () =>
+      requestOn<InstanceInfo>(serverUrl, '/.well-known/chara-instance', {
+        requireAuth: false,
+      }),
+
+    // Aggregated home/balances/activity (Wave 4 fan-out targets)
+    listMyBalances: () => requestOn<MyBalance[]>(serverUrl, '/api/me/balances'),
+    listMyActivity: (limit = 50, offset = 0) =>
+      requestOn<ActivityEvent[]>(
+        serverUrl,
+        `/api/me/activity?limit=${limit}&offset=${offset}`,
+      ),
+
+    // Push tokens (Wave 5)
+    registerPushToken: (token: string, platform: 'ios' | 'android' | 'web') =>
+      requestOn<void>(serverUrl, '/api/me/push-token', {
+        method: 'POST',
+        body: JSON.stringify({ token, platform }),
+      }),
+    deletePushToken: (token: string) =>
+      requestOn<void>(serverUrl, '/api/me/push-token', {
+        method: 'DELETE',
+        body: JSON.stringify({ token }),
+      }),
+
+    // Logout (advisory; spec §16 item 4)
+    logout: () => requestOn<void>(serverUrl, '/api/me/logout', { method: 'POST' }),
+  };
+}
+
+export function publicApi(serverUrl: string) {
+  return {
+    instanceInfo: () =>
+      requestOn<InstanceInfo>(serverUrl, '/.well-known/chara-instance', {
+        requireAuth: false,
+      }),
+    requestMagicLink: (email: string) =>
+      requestOn<MagicLinkResponse>(serverUrl, '/api/auth/magic-link', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+        requireAuth: false,
+      }),
+    verifyMagicLink: (token: string) =>
+      requestOn<TokenResponse>(serverUrl, '/api/auth/verify', {
+        method: 'POST',
+        body: JSON.stringify({ token }),
+        requireAuth: false,
+      }),
+  };
 }

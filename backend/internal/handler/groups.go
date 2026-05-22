@@ -12,12 +12,12 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/DowLucas/quits/internal/config"
-	"github.com/DowLucas/quits/internal/currency"
-	"github.com/DowLucas/quits/internal/language"
-	"github.com/DowLucas/quits/internal/db"
-	"github.com/DowLucas/quits/internal/middleware"
-	"github.com/DowLucas/quits/internal/ulid"
+	"github.com/DowLucas/chara/internal/config"
+	"github.com/DowLucas/chara/internal/currency"
+	"github.com/DowLucas/chara/internal/language"
+	"github.com/DowLucas/chara/internal/db"
+	"github.com/DowLucas/chara/internal/middleware"
+	"github.com/DowLucas/chara/internal/ulid"
 )
 
 type GroupHandler struct {
@@ -33,12 +33,17 @@ func NewGroupHandler(pool *pgxpool.Pool, queries *db.Queries, cfg *config.Config
 // ── Response types ────────────────────────────────────────────────────────────
 
 type MemberResponse struct {
-	ID       string    `json:"id"`
-	UserID   *string   `json:"user_id,omitempty"`
-	Name     string    `json:"name"`
-	Role     string    `json:"role"`
-	IsGhost  bool      `json:"is_ghost"`
-	JoinedAt time.Time `json:"joined_at"`
+	ID              string    `json:"id"`
+	UserID          *string   `json:"user_id,omitempty"`
+	Name            string    `json:"name"`
+	Role            string    `json:"role"`
+	IsGhost         bool      `json:"is_ghost"`
+	JoinedAt        time.Time `json:"joined_at"`
+	// AvatarObjectURL points at the proxy endpoint. Always set when the
+	// member is a real user (not a ghost) — the endpoint returns 404 if
+	// they haven't uploaded one, letting the client fall back to initials
+	// or the OAuth-provided avatar_url.
+	AvatarObjectURL *string `json:"avatar_object_url,omitempty"`
 }
 
 type GroupResponse struct {
@@ -85,6 +90,8 @@ func memberToResponse(m db.GroupMember) MemberResponse {
 	}
 	if m.UserID.Valid {
 		r.UserID = &m.UserID.String
+		u := avatarURL(m.UserID.String)
+		r.AvatarObjectURL = &u
 	}
 	return r
 }
@@ -361,6 +368,34 @@ func (h *GroupHandler) GetInviteLink(w http.ResponseWriter, r *http.Request) {
 
 	inviteURL := h.cfg.BaseURL + "/api/groups/join/" + group.InviteToken
 	writeJSON(w, http.StatusOK, map[string]string{"invite_url": inviteURL})
+}
+
+func (h *GroupHandler) RegenerateInviteToken(w http.ResponseWriter, r *http.Request) {
+	groupID := chi.URLParam(r, "groupID")
+
+	member, ok := h.requireMember(w, r, groupID)
+	if !ok {
+		return
+	}
+	if member.Role != "owner" {
+		writeError(w, http.StatusForbidden, "only the group owner can rotate the invite link")
+		return
+	}
+
+	group, err := h.queries.RegenerateInviteToken(r.Context(), db.RegenerateInviteTokenParams{
+		ID:          groupID,
+		InviteToken: ulid.New(),
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "group not found")
+		} else {
+			writeError(w, http.StatusInternalServerError, "internal error")
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, groupToResponse(group))
 }
 
 func (h *GroupHandler) JoinViaToken(w http.ResponseWriter, r *http.Request) {

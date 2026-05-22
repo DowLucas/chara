@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Quits — Bill splitting that respects your data</title>
+<title>Chara — Bill splitting that respects your data</title>
 <meta name="description" content="Open-source, self-hostable bill splitting. Track shared expenses, settle up in any currency, and own your data. The Splitwise replacement for people who care where their data lives." />
-<meta property="og:title" content="Quits — Bill splitting that respects your data" />
+<meta property="og:title" content="Chara — Bill splitting that respects your data" />
 <meta property="og:description" content="Open-source, self-hostable bill splitting. The Splitwise replacement for people who care where their data lives." />
 <meta property="og:type" content="website" />
 <meta name="theme-color" content="#142536" />
@@ -15,13 +15,13 @@
 
 <nav class="nav">
   <div class="nav-inner">
-    <a href="/" class="brand"><span class="brand-mark">Q</span> Quits</a>
+    <a href="/" class="brand"><span class="brand-mark">Q</span> Chara</a>
     <div class="nav-links">
       <a href="#features">Features</a>
       <a href="#self-host">Self-host</a>
       <a href="#compare">Compare</a>
       <a href="#faq">FAQ</a>
-      <a href="https://github.com/lucasdow/quits" class="nav-cta">Get the app →</a>
+      <a href="https://github.com/lucasdow/chara" class="nav-cta">Get the app →</a>
     </div>
   </div>
 </nav>
@@ -61,7 +61,7 @@
     <div class="balance-card">
       <div class="card-head">
         <span>Tokyo trip · oct</span>
-        <span class="stamp">QUITS</span>
+        <span class="stamp">CHARA</span>
       </div>
       <div class="amount-label">You're owed</div>
       <div class="amount">
@@ -94,7 +94,7 @@
   <div class="wrap">
     <div class="section-head reveal">
       <h2>Money is awkward enough.<br />Your app shouldn't be.</h2>
-      <p>Quits earns its place by being honest, fast, and out of the way — three things every other splitter forgets the moment it raises a Series A.</p>
+      <p>Chara earns its place by being honest, fast, and out of the way — three things every other splitter forgets the moment it raises a Series A.</p>
     </div>
     <div class="value-grid reveal">
       <div class="value-cell">
@@ -105,7 +105,7 @@
       <div class="value-cell">
         <div class="value-num">02 / fast</div>
         <h3>Add an expense in under three seconds.</h3>
-        <p>Snap a receipt, pick who's in, hit save. Quits assumes you split equally unless you say otherwise, because 90% of the time, you do.</p>
+        <p>Snap a receipt, pick who's in, hit save. Chara assumes you split equally unless you say otherwise, because 90% of the time, you do.</p>
       </div>
       <div class="value-cell">
         <div class="value-num">03 / yours</div>
@@ -122,13 +122,13 @@
     <div class="section-head reveal">
       <div class="eyebrow">What's inside</div>
       <h2>The boring parts, done well.</h2>
-      <p>Quits sweats the basics: multi-currency math, fair settlement, and receipts you can actually find six months later.</p>
+      <p>Chara sweats the basics: multi-currency math, fair settlement, and receipts you can actually find six months later.</p>
     </div>
     <div class="features-grid">
       <div class="feature reveal">
         <div class="icon">⚖︎</div>
         <h3>Simplified settlement</h3>
-        <p>Quits computes the minimum number of payments to get everyone to zero. No more "I'll Venmo you, you Cash App them, they'll Swish me."</p>
+        <p>Chara computes the minimum number of payments to get everyone to zero. No more "I'll Venmo you, you Cash App them, they'll Swish me."</p>
       </div>
       <div class="feature alt reveal">
         <div class="icon">$</div>
@@ -153,7 +153,7 @@
       <div class="feature alt reveal">
         <div class="icon">↻</div>
         <h3>Recurring bills handled</h3>
-        <p>Rent, Spotify Family, the gym — set it once. Quits drops the expense in on schedule and pings the right people to settle.</p>
+        <p>Rent, Spotify Family, the gym — set it once. Chara drops the expense in on schedule and pings the right people to settle.</p>
       </div>
     </div>
   </div>
@@ -166,13 +166,13 @@
       <div class="section-head" style="margin-bottom:32px;">
         <div class="eyebrow" style="color: var(--citrine);">Versus the alternatives</div>
         <h2>Everything free.<br />Nothing watching.</h2>
-        <p style="color: rgba(244, 241, 230, 0.7);">Splitwise sells you back the features they removed. Steven sells you a card. Quits just splits the bill — and lets you run it on your own server if you want.</p>
+        <p style="color: rgba(244, 241, 230, 0.7);">Splitwise sells you back the features they removed. Steven sells you a card. Chara just splits the bill — and lets you run it on your own server if you want.</p>
       </div>
       <div class="compare-grid">
         <div class="head feat">&nbsp;</div>
         <div class="head">Splitwise free</div>
         <div class="head">Steven</div>
-        <div class="head us">Quits</div>
+        <div class="head us">Chara</div>
 
         <div class="feat">Add expenses</div>
         <div><span class="limit">Capped at 3 / day</span></div>
@@ -246,12 +246,12 @@
         <li>· Plain SQL migrations via golang-migrate, audit-friendly</li>
         <li>· Postgres-native job queue — no Redis, no Sidekiq, no extra moving parts</li>
       </ul>
-      <a href="https://github.com/lucasdow/quits" class="btn btn-ghost">Read the deploy guide →</a>
+      <a href="https://github.com/lucasdow/chara" class="btn btn-ghost">Read the deploy guide →</a>
     </div>
     <div class="code-card reveal">
 <pre><span class="c"># Get up and running in under a minute</span>
-<span class="k">git clone</span> <span class="s">https://github.com/lucasdow/quits</span>
-<span class="k">cd</span> quits
+<span class="k">git clone</span> <span class="s">https://github.com/lucasdow/chara</span>
+<span class="k">cd</span> chara
 <span class="k">cp</span> .env.example .env
 
 <span class="c"># Edit .env with your domain + OIDC settings</span>
@@ -272,20 +272,20 @@
     </div>
     <div class="faq reveal">
       <div class="faq-item">
-        <div class="faq-q">Is Quits really free? <span class="faq-toggle">+</span></div>
+        <div class="faq-q">Is Chara really free? <span class="faq-toggle">+</span></div>
         <div class="faq-a">Yes. The app is MIT licensed and every feature is available to every user. The hosted tier exists for people who don't want to run a server — it's priced to cover hosting, not to gate features.</div>
       </div>
       <div class="faq-item">
         <div class="faq-q">How is this different from Splitwise? <span class="faq-toggle">+</span></div>
-        <div class="faq-a">Splitwise added a daily expense limit on the free tier and bought-out features (multi-currency, receipts, charts) sit behind Pro. Quits keeps those open and adds the option to self-host. We also don't sell your data — there's nothing to sell.</div>
+        <div class="faq-a">Splitwise added a daily expense limit on the free tier and bought-out features (multi-currency, receipts, charts) sit behind Pro. Chara keeps those open and adds the option to self-host. We also don't sell your data — there's nothing to sell.</div>
       </div>
       <div class="faq-item">
         <div class="faq-q">Can I import my Splitwise history? <span class="faq-toggle">+</span></div>
-        <div class="faq-a">Yes. Quits ships with a Splitwise CSV importer that maps groups, balances, and historical expenses. You won't lose anything in the move.</div>
+        <div class="faq-a">Yes. Chara ships with a Splitwise CSV importer that maps groups, balances, and historical expenses. You won't lose anything in the move.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q">What about payments — does Quits move money? <span class="faq-toggle">+</span></div>
-        <div class="faq-a">No. Quits tells you who owes who and how to make the smallest number of payments. Settlement happens in your existing payment app — Venmo, Swish, Wise, IBAN, whatever works. Less to break, less to regulate, less to leak.</div>
+        <div class="faq-q">What about payments — does Chara move money? <span class="faq-toggle">+</span></div>
+        <div class="faq-a">No. Chara tells you who owes who and how to make the smallest number of payments. Settlement happens in your existing payment app — Venmo, Swish, Wise, IBAN, whatever works. Less to break, less to regulate, less to leak.</div>
       </div>
       <div class="faq-item">
         <div class="faq-q">Where is the hosted version run? <span class="faq-toggle">+</span></div>
@@ -307,7 +307,7 @@
       <p>The bill-splitter you'll actually keep using. Free on your phone, free on your server.</p>
       <div class="cta-row" style="justify-content: center;">
         <a href="#download" class="btn btn-primary">Download for iOS &amp; Android <span class="arrow">→</span></a>
-        <a href="https://github.com/lucasdow/quits" class="btn btn-ghost">Star on GitHub</a>
+        <a href="https://github.com/lucasdow/chara" class="btn btn-ghost">Star on GitHub</a>
       </div>
     </div>
   </div>
@@ -318,7 +318,7 @@
   <div class="wrap">
     <div class="foot-grid">
       <div class="foot-col">
-        <a href="/" class="brand" style="margin-bottom: 14px;"><span class="brand-mark">Q</span> Quits</a>
+        <a href="/" class="brand" style="margin-bottom: 14px;"><span class="brand-mark">Q</span> Chara</a>
         <p style="max-width: 320px;">Open-source bill splitting. Built in Sweden, licensed MIT, hosted in the EU.</p>
       </div>
       <div class="foot-col">
@@ -330,8 +330,8 @@
       </div>
       <div class="foot-col">
         <h4>Project</h4>
-        <a href="https://github.com/lucasdow/quits">GitHub</a>
-        <a href="https://github.com/lucasdow/quits/releases">Changelog</a>
+        <a href="https://github.com/lucasdow/chara">GitHub</a>
+        <a href="https://github.com/lucasdow/chara/releases">Changelog</a>
         <a href="/security.html">Security</a>
         <a href="/support.html">Support</a>
       </div>
@@ -344,7 +344,7 @@
       </div>
     </div>
     <div class="foot-bottom">
-      <span>© 2026 Quits · MIT licensed</span>
+      <span>© 2026 Chara · MIT licensed</span>
       <span>v1.0 · built in Stockholm</span>
     </div>
   </div>

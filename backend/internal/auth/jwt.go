@@ -12,7 +12,7 @@ const defaultAccessTTL = 24 * time.Hour
 type Claims struct {
 	UserID       string `json:"sub"`
 	Email        string `json:"email"`
-	InstanceMode string `json:"quits_mode"`
+	InstanceMode string `json:"chara_mode"`
 	jwt.RegisteredClaims
 }
 

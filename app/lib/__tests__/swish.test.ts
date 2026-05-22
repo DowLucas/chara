@@ -147,22 +147,22 @@ describe('buildSwishLink', () => {
     const longName = 'a'.repeat(60);
     const payload = decodeSwishLink(buildSwishLink({ ...baseOpts, groupName: longName }));
     // group portion ≤ 40 chars
-    const prefix = 'Quits · ';
+    const prefix = 'Chara · ';
     expect(payload.message.value.startsWith(prefix)).toBe(true);
     const groupPortion = payload.message.value.slice(prefix.length);
     expect(groupPortion.length).toBeLessThanOrEqual(40);
     expect(groupPortion).toBe('a'.repeat(40));
   });
 
-  it('preserves short group name with "Quits · " prefix', () => {
+  it('preserves short group name with "Chara · " prefix', () => {
     const payload = decodeSwishLink(buildSwishLink({ ...baseOpts, groupName: 'Friday dinner' }));
-    expect(payload.message.value).toBe('Quits · Friday dinner');
+    expect(payload.message.value).toBe('Chara · Friday dinner');
   });
 
   it('includes callbackurl with pendingId', () => {
     const payload = decodeSwishLink(buildSwishLink(baseOpts));
     expect(payload.callbackurl).toBe(
-      'quits://settle/swish/return?pendingId=01HGZABCDEFGHJKMNPQRSTVWXY',
+      'chara://settle/swish/return?pendingId=01HGZABCDEFGHJKMNPQRSTVWXY',
     );
   });
 
@@ -195,12 +195,12 @@ describe('formatSwishDetails', () => {
   });
 
   it('formats message identically to link payload', () => {
-    expect(formatSwishDetails(opts).message).toBe('Quits · Friday dinner');
+    expect(formatSwishDetails(opts).message).toBe('Chara · Friday dinner');
   });
 
   it('truncates long group names in message', () => {
     const longName = 'a'.repeat(60);
     const out = formatSwishDetails({ ...opts, groupName: longName });
-    expect(out.message).toBe('Quits · ' + 'a'.repeat(40));
+    expect(out.message).toBe('Chara · ' + 'a'.repeat(40));
   });
 });

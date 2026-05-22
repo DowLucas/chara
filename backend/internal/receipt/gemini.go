@@ -12,7 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DowLucas/quits/internal/language"
+	"github.com/DowLucas/chara/internal/language"
+	"github.com/DowLucas/chara/internal/money"
 )
 
 // DefaultGeminiModel is Google's current vision-capable Gemini Flash model.
@@ -46,9 +47,21 @@ const extractionPrompt = `You are a receipt parser. Look at the attached receipt
 - subtotal: the pre-tax pre-tip subtotal as a decimal string, or "" if not shown.
 - tax: tax/VAT amount as a decimal string, or "" if not shown.
 - tip: tip/gratuity amount as a decimal string, or "" if not shown.
+- items: an ARRAY of the individual purchased line items. Each item is an object with:
+    • description: the item name as it appears on the receipt (string).
+    • qty: quantity as an integer (defaults to 1 if not shown).
+    • unit_price: per-unit price as a decimal string, or "" if not shown — in which case use the line total.
+    • total: line total as a decimal string (qty × unit_price). Required.
+  All item amounts are in the SAME currency as the "currency" field above (the receipt's currency — NOT translated).
+  Rules for items:
+    • IGNORE subtotal, tax/VAT, tip, total, change, and rounding lines — those are summary lines, not items.
+    • IGNORE deposit-return / "pant" / bottle-return rows.
+    • OMIT modifiers (e.g. "+ extra cheese", "no onions"); sum any modifier price into the parent line total.
+    • If you can't confidently identify the line items, return an EMPTY array []. Do not hallucinate items.
+    • Keep item descriptions in the receipt's original language (do NOT translate item names).
 
 Respond with a single JSON object and no other text. Example:
-{"title":"Groceries at ICA Maxi","merchant":"ICA Maxi","date":"2026-05-20","currency":"SEK","total":"284.50","subtotal":"227.60","tax":"56.90","tip":""}
+{"title":"Groceries at ICA Maxi","merchant":"ICA Maxi","date":"2026-05-20","currency":"SEK","total":"284.50","subtotal":"227.60","tax":"56.90","tip":"","items":[{"description":"Mjölk 1L","qty":2,"unit_price":"15.90","total":"31.80"},{"description":"Bröd","qty":1,"unit_price":"32.50","total":"32.50"}]}
 
 If the image is not a receipt or you cannot read a total, respond with {"error":"unreadable"}.`
 
@@ -135,15 +148,23 @@ type geminiResponse struct {
 }
 
 type geminiExtracted struct {
-	Title    string `json:"title"`
-	Merchant string `json:"merchant"`
-	Date     string `json:"date"`
-	Currency string `json:"currency"`
-	Total    string `json:"total"`
-	Subtotal string `json:"subtotal"`
-	Tax      string `json:"tax"`
-	Tip      string `json:"tip"`
-	Error    string `json:"error"`
+	Title    string                `json:"title"`
+	Merchant string                `json:"merchant"`
+	Date     string                `json:"date"`
+	Currency string                `json:"currency"`
+	Total    string                `json:"total"`
+	Subtotal string                `json:"subtotal"`
+	Tax      string                `json:"tax"`
+	Tip      string                `json:"tip"`
+	Items    []geminiExtractedItem `json:"items"`
+	Error    string                `json:"error"`
+}
+
+type geminiExtractedItem struct {
+	Description string `json:"description"`
+	Qty         int    `json:"qty"`
+	UnitPrice   string `json:"unit_price"`
+	Total       string `json:"total"`
 }
 
 // Scan implements [Scanner].
@@ -261,6 +282,41 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 		title = merchant
 	}
 
+	// Parse items. Skip rows with unparseable totals rather than failing the
+	// whole scan — items are an optional enhancement, the headline total is
+	// what the user actually needs.
+	var items []Item
+	for _, raw := range extracted.Items {
+		desc := strings.TrimSpace(raw.Description)
+		if desc == "" {
+			continue
+		}
+		totalMinor, err := parseDecimalToMinor(raw.Total)
+		if err != nil || totalMinor <= 0 {
+			continue
+		}
+		qty := raw.Qty
+		if qty <= 0 {
+			qty = 1
+		}
+		unitMinor, err := parseDecimalToMinor(raw.UnitPrice)
+		if err != nil || unitMinor <= 0 {
+			// Fall back to total when unit price is missing — single-qty
+			// lines often omit it.
+			if qty > 0 {
+				unitMinor = totalMinor / money.Amount(qty)
+			} else {
+				unitMinor = totalMinor
+			}
+		}
+		items = append(items, Item{
+			Description:    desc,
+			Qty:            qty,
+			UnitPriceMinor: unitMinor,
+			TotalMinor:     totalMinor,
+		})
+	}
+
 	return &Receipt{
 		Title:         title,
 		Merchant:      merchant,
@@ -270,6 +326,7 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 		SubtotalMinor: subtotal,
 		TaxMinor:      tax,
 		TipMinor:      tip,
+		Items:         items,
 	}, nil
 }
 

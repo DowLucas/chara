@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/DowLucas/quits/internal/currency"
-	"github.com/DowLucas/quits/internal/money"
+	"github.com/DowLucas/chara/internal/currency"
+	"github.com/DowLucas/chara/internal/money"
 )
 
 // Receipt is the structured result of a single scan.
@@ -35,6 +35,23 @@ type Receipt struct {
 	SubtotalMinor money.Amount `json:"subtotal_minor,omitempty"`
 	TaxMinor      money.Amount `json:"tax_minor,omitempty"`
 	TipMinor      money.Amount `json:"tip_minor,omitempty"`
+
+	// Items, if present, lists per-line entries extracted from the receipt
+	// (in the receipt's currency). Optional — Gemini may return an empty
+	// list when items can't be confidently parsed. Mobile clients MUST
+	// tolerate a missing/empty array. Modifiers are folded into the parent
+	// line; deposit-return rows are omitted; subtotal/tax/tip lines are not
+	// repeated here.
+	Items []Item `json:"items,omitempty"`
+}
+
+// Item is a single line on a receipt. All amounts are in the receipt's
+// currency (see Receipt.Currency) as int64 minor units.
+type Item struct {
+	Description    string       `json:"description"`
+	Qty            int          `json:"qty"`
+	UnitPriceMinor money.Amount `json:"unit_price_minor"`
+	TotalMinor     money.Amount `json:"total_minor"`
 }
 
 // Scanner takes a raw image and returns a structured receipt.

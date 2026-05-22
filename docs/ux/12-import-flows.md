@@ -53,7 +53,7 @@ flowchart TD
 
 ## 12.3 CSV Generic Import Flow  `P1`
 
-User uploads a generic CSV file, maps columns to Quits fields via drag-and-select UI, previews the first 5 rows, confirms, and imports with background processing.
+User uploads a generic CSV file, maps columns to Chara fields via drag-and-select UI, previews the first 5 rows, confirms, and imports with background processing.
 
 ```mermaid
 flowchart TD
@@ -99,7 +99,7 @@ flowchart TD
     D --> D1["Unknown Participants"]
     D1 --> D2{Action}
     D2 -->|Create Ghost User| D3["Auto-create Unlinked User"]
-    D2 -->|Map to Existing| D4["Select User from Quits"]
+    D2 -->|Map to Existing| D4["Select User from Chara"]
     D3 --> E["Section 4: Currency"]
     D4 --> E
     E --> E1["Currency Mismatch List"]
@@ -128,18 +128,18 @@ Summary of push notification behavior and user navigation after import completio
 ```mermaid
 sequenceDiagram
     actor User
-    participant Quits
+    participant Chara
     participant River as River Job Queue
     participant PushSvc as Push Service
 
-    User ->> Quits: Confirm Import
-    Quits ->> River: Queue Background Job
-    Quits ->> User: Show "Importing..." State
+    User ->> Chara: Confirm Import
+    Chara ->> River: Queue Background Job
+    Chara ->> User: Show "Importing..." State
     River ->> River: Process Expenses & Groups
     River ->> River: Detect & Handle Conflicts
-    River -->> Quits: Import Complete Status
-    Quits ->> PushSvc: Send Notification
+    River -->> Chara: Import Complete Status
+    Chara ->> PushSvc: Send Notification
     PushSvc ->> User: Push: "Import Complete"
-    User ->> Quits: Tap Notification / Navigate
-    Quits ->> User: Show Imported Groups List
+    User ->> Chara: Tap Notification / Navigate
+    Chara ->> User: Show Imported Groups List
 ```

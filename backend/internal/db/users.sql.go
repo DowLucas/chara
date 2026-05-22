@@ -11,8 +11,35 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const clearUserAvatar = `-- name: ClearUserAvatar :one
+UPDATE users
+SET avatar_object_key = NULL,
+    avatar_updated_at = NOW(),
+    updated_at        = NOW()
+WHERE id = $1
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at
+`
+
+func (q *Queries) ClearUserAvatar(ctx context.Context, id string) (User, error) {
+	row := q.db.QueryRow(ctx, clearUserAvatar, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.DisplayName,
+		&i.AvatarUrl,
+		&i.Phone,
+		&i.Locale,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.AvatarObjectKey,
+		&i.AvatarUpdatedAt,
+	)
+	return i, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at FROM users WHERE email = $1
+SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -27,12 +54,14 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.Locale,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.AvatarObjectKey,
+		&i.AvatarUpdatedAt,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at FROM users WHERE id = $1
+SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
@@ -47,6 +76,40 @@ func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
 		&i.Locale,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.AvatarObjectKey,
+		&i.AvatarUpdatedAt,
+	)
+	return i, err
+}
+
+const setUserAvatar = `-- name: SetUserAvatar :one
+UPDATE users
+SET avatar_object_key = $2,
+    avatar_updated_at = NOW(),
+    updated_at        = NOW()
+WHERE id = $1
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at
+`
+
+type SetUserAvatarParams struct {
+	ID              string      `db:"id" json:"id"`
+	AvatarObjectKey pgtype.Text `db:"avatar_object_key" json:"avatar_object_key"`
+}
+
+func (q *Queries) SetUserAvatar(ctx context.Context, arg SetUserAvatarParams) (User, error) {
+	row := q.db.QueryRow(ctx, setUserAvatar, arg.ID, arg.AvatarObjectKey)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.DisplayName,
+		&i.AvatarUrl,
+		&i.Phone,
+		&i.Locale,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.AvatarObjectKey,
+		&i.AvatarUpdatedAt,
 	)
 	return i, err
 }
@@ -59,7 +122,7 @@ SET display_name = COALESCE($2, display_name),
     locale       = COALESCE($5, locale),
     updated_at   = NOW()
 WHERE id = $1
-RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at
 `
 
 type UpdateUserParams struct {
@@ -88,6 +151,8 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.Locale,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.AvatarObjectKey,
+		&i.AvatarUpdatedAt,
 	)
 	return i, err
 }
@@ -99,7 +164,7 @@ ON CONFLICT (email) DO UPDATE
     SET display_name = EXCLUDED.display_name,
         avatar_url   = COALESCE(EXCLUDED.avatar_url, users.avatar_url),
         updated_at   = NOW()
-RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at
 `
 
 type UpsertUserParams struct {
@@ -128,6 +193,32 @@ func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (User, e
 		&i.Locale,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.AvatarObjectKey,
+		&i.AvatarUpdatedAt,
 	)
 	return i, err
+}
+
+const usersShareGroup = `-- name: UsersShareGroup :one
+SELECT EXISTS (
+    SELECT 1
+    FROM group_members gm1
+    JOIN group_members gm2 ON gm1.group_id = gm2.group_id
+    WHERE gm1.user_id = $1
+      AND gm2.user_id = $2
+      AND gm1.user_id IS NOT NULL
+      AND gm2.user_id IS NOT NULL
+) AS shares
+`
+
+type UsersShareGroupParams struct {
+	UserID   pgtype.Text `db:"user_id" json:"user_id"`
+	UserID_2 pgtype.Text `db:"user_id_2" json:"user_id_2"`
+}
+
+func (q *Queries) UsersShareGroup(ctx context.Context, arg UsersShareGroupParams) (bool, error) {
+	row := q.db.QueryRow(ctx, usersShareGroup, arg.UserID, arg.UserID_2)
+	var shares bool
+	err := row.Scan(&shares)
+	return shares, err
 }

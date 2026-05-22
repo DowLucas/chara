@@ -1,14 +1,14 @@
-# Quits
+# Chara
 
 > Open source, self-hostable, mobile-native bill splitting. Nordic first.
 
-**Working tagline:** *"Vi är quits." The open Splitwise that runs on your server.*
+**Working tagline:** *"Vi är chara." The open Splitwise that runs on your server.*
 
 ## What this is
 
-Quits is a bill-splitting application designed to compete head-on with Splitwise and Steven, with one fundamental difference: it is fully open source under AGPLv3 and can be self-hosted by anyone with a Docker host. The hosted version is a separate, optional, paid product that exists to fund development.
+Chara is a bill-splitting application designed to compete head-on with Splitwise and Steven, with one fundamental difference: it is fully open source under AGPLv3 and can be self-hosted by anyone with a Docker host. The hosted version is a separate, optional, paid product that exists to fund development.
 
-The wedge into the market is the Nordics. Sweden's incumbent (Steven) is in operational decline with extremely poor recent user sentiment, while Splitwise has paywalled core functionality (3 expenses per day on the free tier). Both are closed source. There is currently no self-hostable bill splitter with native iOS and Android apps and native Nordic payment rail integration (Swish, Vipps, MobilePay). Quits fills that gap.
+The wedge into the market is the Nordics. Sweden's incumbent (Steven) is in operational decline with extremely poor recent user sentiment, while Splitwise has paywalled core functionality (3 expenses per day on the free tier). Both are closed source. There is currently no self-hostable bill splitter with native iOS and Android apps and native Nordic payment rail integration (Swish, Vipps, MobilePay). Chara fills that gap.
 
 ## Why now
 
@@ -26,7 +26,7 @@ Three converging tailwinds:
 | SplitPro | 1.1k | Next.js PWA + tRPC | Web-only, no native apps, no payment rail integration |
 | Splito  | ~600  | SwiftUI + Firebase | iOS-only, no Android, Firebase backend cannot be truly self-hosted |
 
-None of them have native iOS plus Android plus self-host plus payment rails. That is Quits's product surface.
+None of them have native iOS plus Android plus self-host plus payment rails. That is Chara's product surface.
 
 ## Documents in this folder
 
@@ -39,7 +39,7 @@ None of them have native iOS plus Android plus self-host plus payment rails. Tha
 
 ## Honest scope reality
 
-A faithful Splitwise + Steven replacement with native iOS + Android + self-host is 6 to 12 months of focused effort to v1, and probably another 6 months to feature parity. Both Spliit (4 years, one maintainer) and SplitPro (2 years, two maintainers) are still missing core Splitwise features. Quits only succeeds if scope is held ruthlessly through v1 and a second contributor is brought in early.
+A faithful Splitwise + Steven replacement with native iOS + Android + self-host is 6 to 12 months of focused effort to v1, and probably another 6 months to feature parity. Both Spliit (4 years, one maintainer) and SplitPro (2 years, two maintainers) are still missing core Splitwise features. Chara only succeeds if scope is held ruthlessly through v1 and a second contributor is brought in early.
 
 The roadmap doc treats this as a constraint, not a footnote.
 

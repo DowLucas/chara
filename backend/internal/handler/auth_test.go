@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/DowLucas/quits/internal/db"
-	"github.com/DowLucas/quits/internal/server"
-	"github.com/DowLucas/quits/testutil"
+	"github.com/DowLucas/chara/internal/db"
+	"github.com/DowLucas/chara/internal/server"
+	"github.com/DowLucas/chara/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,7 +22,7 @@ func newAuthEnv(t *testing.T) *testutil.Env {
 	env := testutil.NewEnv(t)
 	env.Config.DevMode = true // surface magic-link token in response
 	env.Config.MagicLinkTTL = 15 * time.Minute
-	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT)
+	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil)
 	return env
 }
 
@@ -167,4 +167,21 @@ func TestUpdateMe_RejectsBlankPhone(t *testing.T) {
 
 	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/me", `{"phone":"   "}`, token))
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+// Logout is advisory (JWT stays valid until expiry). The handler does nothing
+// today but must respond 204 to keep the app's contract stable.
+func TestLogout_Returns204WithValidToken(t *testing.T) {
+	env := newAuthEnv(t)
+	user := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "logout"), "Logout User")
+	token := env.MintToken(t, user.ID, user.Email)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/me/logout", "", token))
+	assert.Equal(t, http.StatusNoContent, rr.Code, rr.Body.String())
+}
+
+func TestLogout_RequiresAuth(t *testing.T) {
+	env := newAuthEnv(t)
+	rr := env.Do(t, mustReq(t, "POST", "/api/me/logout", ""))
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
 }

@@ -76,11 +76,11 @@ Generate and share a join link that recipients can open to join the group.
 
 ```mermaid
 flowchart TD
-    A["Members Screen"] -->|Tap 'Share Link'| B["Link generated<br/>quits://join/{token}"]
+    A["Members Screen"] -->|Tap 'Share Link'| B["Link generated<br/>chara://join/{token}"]
     B --> C["System Share Sheet"]
     C --> D["Copy link or share<br/>to messaging/email"]
     D --> E["Recipient receives link"]
-    E --> F["Recipient taps link<br/>Opens Quits app"]
+    E --> F["Recipient taps link<br/>Opens Chara app"]
     
     style B fill:#c8e6c9
     style F fill:#bbdefb
@@ -91,7 +91,7 @@ User accepts a group invite via deep link, with handling for logged-in and new u
 
 ```mermaid
 flowchart TD
-    A["Receive quits://join/{token}"]
+    A["Receive chara://join/{token}"]
     A --> B{"User logged in?"}
     B -->|Yes| C["Show Confirmation Sheet<br/>Group name + member count"]
     B -->|No| D["Navigate to Auth Screen"]
@@ -193,7 +193,7 @@ Ghost member (added by email) signs up; system auto-links their account to the g
 flowchart TD
     A["Ghost member invited<br/>Email: alice@example.com<br/>Status: Pending"]
     A --> B["alice@example.com<br/>receives invite email"]
-    B --> C["alice signs up in Quits<br/>with same email"]
+    B --> C["alice signs up in Chara<br/>with same email"]
     C --> D["System detects<br/>email match"]
     D --> E["Ghost record linked<br/>to new account"]
     E --> F["alice becomes<br/>active member<br/>No action needed"]

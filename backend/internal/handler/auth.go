@@ -13,11 +13,11 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/DowLucas/quits/internal/auth"
-	"github.com/DowLucas/quits/internal/config"
-	"github.com/DowLucas/quits/internal/db"
-	"github.com/DowLucas/quits/internal/middleware"
-	"github.com/DowLucas/quits/internal/ulid"
+	"github.com/DowLucas/chara/internal/auth"
+	"github.com/DowLucas/chara/internal/config"
+	"github.com/DowLucas/chara/internal/db"
+	"github.com/DowLucas/chara/internal/middleware"
+	"github.com/DowLucas/chara/internal/ulid"
 )
 
 type AuthHandler struct {
@@ -46,11 +46,13 @@ type verifyRequest struct {
 }
 
 type userResponse struct {
-	ID        string  `json:"id"`
-	Email     string  `json:"email"`
-	Name      string  `json:"name"`
-	Phone     string  `json:"phone"`
-	AvatarURL *string `json:"avatar_url,omitempty"`
+	ID              string     `json:"id"`
+	Email           string     `json:"email"`
+	Name            string     `json:"name"`
+	Phone           string     `json:"phone"`
+	AvatarURL       *string    `json:"avatar_url,omitempty"`
+	AvatarObjectURL *string    `json:"avatar_object_url,omitempty"`
+	AvatarUpdatedAt *time.Time `json:"avatar_updated_at,omitempty"`
 }
 
 type tokenResponse struct {
@@ -70,6 +72,14 @@ func userToResponse(u db.User) userResponse {
 	if u.AvatarUrl.Valid {
 		v := u.AvatarUrl.String
 		r.AvatarURL = &v
+	}
+	if u.AvatarObjectKey.Valid && u.AvatarObjectKey.String != "" {
+		v := avatarURL(u.ID)
+		r.AvatarObjectURL = &v
+	}
+	if u.AvatarUpdatedAt.Valid {
+		t := u.AvatarUpdatedAt.Time
+		r.AvatarUpdatedAt = &t
 	}
 	return r
 }
@@ -174,6 +184,20 @@ func (h *AuthHandler) Verify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, tokenResponse{Token: jwtStr, User: userToResponse(user)})
+}
+
+// Logout is an advisory hook for the future JWT-revocation spec.
+//
+// The JWT is HMAC-stateless and stays valid until expiry regardless of this
+// call — the server does nothing today. The endpoint exists so the app's
+// contract (best-effort POST on Remove account / Sign out) stays stable when
+// real revocation lands. See spec §16 item 4.
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	if middleware.ClaimsFromContext(r.Context()) == nil {
+		writeError(w, http.StatusUnauthorized, "missing claims")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // Me returns the authenticated user.

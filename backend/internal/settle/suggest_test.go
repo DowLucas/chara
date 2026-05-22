@@ -3,7 +3,7 @@ package settle_test
 import (
 	"testing"
 
-	"github.com/DowLucas/quits/internal/settle"
+	"github.com/DowLucas/chara/internal/settle"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -9,9 +9,9 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
-	"github.com/DowLucas/quits/internal/currency"
-	"github.com/DowLucas/quits/internal/db"
-	"github.com/DowLucas/quits/internal/fx"
+	"github.com/DowLucas/chara/internal/currency"
+	"github.com/DowLucas/chara/internal/db"
+	"github.com/DowLucas/chara/internal/fx"
 )
 
 type FxHandler struct {

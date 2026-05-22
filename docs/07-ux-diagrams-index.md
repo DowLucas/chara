@@ -40,10 +40,10 @@ Which actions open a modal sheet vs push onto the stack vs replace the current s
 | 2.9 | Sign out flow | User flow | P0 |
 
 **2.1 — Magic link auth flow**
-User taps "Sign in with email" → enters email → sees confirmation screen → taps link in email → app opens via `quits://auth?token=...` deep link → token exchanged for JWT → lands on home screen. Available on both hosted and self-hosted.
+User taps "Sign in with email" → enters email → sees confirmation screen → taps link in email → app opens via `chara://auth?token=...` deep link → token exchanged for JWT → lands on home screen. Available on both hosted and self-hosted.
 
 **2.2 — Sign in screen variants**
-The sign-in screen differs by instance type. Hosted: Email, Google, Apple. Self-hosted: Email, SSO. App detects instance type from `/.well-known/quits-instance`. Includes the server URL entry screen shown on first launch or when switching instances.
+The sign-in screen differs by instance type. Hosted: Email, Google, Apple. Self-hosted: Email, SSO. App detects instance type from `/.well-known/chara-instance`. Includes the server URL entry screen shown on first launch or when switching instances.
 
 **2.3 — Google OAuth flow (hosted only)**
 Tap "Continue with Google" → system browser opens → Google consent → redirect callback → JWT issued → home screen. Not available on self-hosted instances.
@@ -120,7 +120,7 @@ List of members with their balance in the group. Ghost members (invited but not 
 From members screen → "Invite" → enter email(s) → send → pending invite state shown.
 
 **4.5 — Invite by shareable link flow**
-"Share link" → system share sheet with `quits://join/{token}` URL. Anyone who taps is added to the group. Shows anonymous join and account-linked join variants.
+"Share link" → system share sheet with `chara://join/{token}` URL. Anyone who taps is added to the group. Shows anonymous join and account-linked join variants.
 
 **4.6 — Accept group invite (deep link)**
 User receives link → app opens → if logged in: confirmation sheet → joined. If not logged in: auth first → then joined. Edge: link expired or already a member.
@@ -191,7 +191,7 @@ Currency picker on the add expense form. Shows group default prominently. Select
 Default is the logged-in user. Tap "Paid by: You" → sheet with group members → select different payer. Useful for logging someone else's expense.
 
 **5.11 — Add from Share Sheet**
-User is in Photos app, selects a receipt image, taps Share → Quits in share sheet → Quits opens Add Expense with the image pre-attached and OCR triggered.
+User is in Photos app, selects a receipt image, taps Share → Chara in share sheet → Chara opens Add Expense with the image pre-attached and OCR triggered.
 
 **5.12 — Recurring expense setup**
 Toggle "Repeat this expense" → frequency picker (weekly, monthly, custom) → start / end date → confirmation of schedule.
@@ -248,7 +248,7 @@ Per-member net balance. "You owe" vs "owed to you" sections. "Settle up" button 
 Tap "Settle up with Alice" → amount pre-filled (their full balance) → "Mark as paid" → creates a settlement record → balances update → both users notified.
 
 **7.3 — Settle up with Swish**
-Tap "Settle with Swish" → app builds `swish://payment?data={base64}` URL with Alice's phone, amount, message → system opens Swish app → user confirms in Swish → user returns to Quits → "Mark as paid?" prompt → settled. Edge case: no Swish installed.
+Tap "Settle with Swish" → app builds `swish://payment?data={base64}` URL with Alice's phone, amount, message → system opens Swish app → user confirms in Swish → user returns to Chara → "Mark as paid?" prompt → settled. Edge case: no Swish installed.
 
 **7.4 — Settle up with Vipps**
 Same pattern as Swish. `vipps://send?...` deep link. Falls back to Vipps web URL if app not installed.
@@ -379,7 +379,7 @@ Profile → Import → Splitwise → OAuth or CSV upload → parsing → preview
 Steven export file upload → parse → same preview + confirm flow.
 
 **12.3 — CSV generic import**
-Upload CSV → column mapping screen (match CSV columns to Quits fields) → preview → confirm.
+Upload CSV → column mapping screen (match CSV columns to Chara fields) → preview → confirm.
 
 **12.4 — Import review screen**
 Shows what will be imported: X groups, Y expenses, Z friends. Highlights conflicts (e.g. group name already exists: merge or create new). Progress indicator during import.
@@ -406,7 +406,7 @@ User list, active sessions, storage usage, job queue status, recent errors, back
 Admin enters: issuer URL, client ID, client secret → test button → success/failure → save. Users can then sign in via "Sign in with SSO".
 
 **13.4 — Backup / restore**
-`quits backup` CLI creates encrypted zip of Postgres dump + S3 contents. `quits restore` flow. Admin UI trigger for hosted tier.
+`chara backup` CLI creates encrypted zip of Postgres dump + S3 contents. `chara restore` flow. Admin UI trigger for hosted tier.
 
 **13.5 — Instance URL entry (mobile)**
 When a self-hosted user opens the app for the first time: "Are you using the hosted service or a self-hosted instance?" → if self-hosted: enter instance URL → validated → stored → auth flow proceeds against that instance.

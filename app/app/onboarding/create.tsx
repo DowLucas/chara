@@ -8,7 +8,6 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -110,14 +109,7 @@ export default function CreateGroupScreen() {
         onSelect={setCurrency}
       />
 
-      <View style={styles.illustrationWrap}>
-        <Image
-          source={require('@/assets/illustrations/onboarding-create.png')}
-          style={styles.illustration}
-          resizeMode="contain"
-          accessible={false}
-        />
-      </View>
+      <View style={{ flex: 1 }} />
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
         <TouchableOpacity
@@ -181,17 +173,6 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: colors.graphite },
   chipLabel: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.graphite },
   chipLabelActive: { color: colors.paper },
-  illustrationWrap: {
-    flex: 1,
-    flexShrink: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  illustration: {
-    width: '100%',
-    height: '100%',
-  },
   footer: { paddingTop: spacing.s3 },
   cta: {
     flexDirection: 'row',

@@ -1,6 +1,6 @@
 ---
-name: quits-design
-description: Use this skill to generate well-branded interfaces and assets for Quits, either for production or throwaway prototypes/mocks. Contains essential design guidelines, colors, type, fonts, assets, and UI kit components for prototyping.
+name: chara-design
+description: Use this skill to generate well-branded interfaces and assets for Chara, either for production or throwaway prototypes/mocks. Contains essential design guidelines, colors, type, fonts, assets, and UI kit components for prototyping.
 user-invocable: true
 ---
 
@@ -15,8 +15,8 @@ If the user invokes this skill without any other guidance, ask them what they wa
 - **Brand DNA:** cool, structural, type-first. The opposite of fintech. Mercury / Linear / Aesop, not Splitwise.
 - **Anchors:** Sand dune `#F0E5CC`, Dark coffee `#2D1F1A`, Tomato jam `#B83D3D`, Palm leaf `#8FA055`, Honey bronze `#E0A040`.
 - **Type:** Inter 600 display, Inter 400–500 body, JetBrains Mono 500 for all numerals.
-- **Casing:** sentence case everywhere. `QUITS` stamp is the only ALL CAPS.
-- **Signatures:** the 1.5px rule line, the rotated QUITS stamp, strike-through on settled.
+- **Casing:** sentence case everywhere. `CHARA` stamp is the only ALL CAPS.
+- **Signatures:** the 1.5px rule line, the rotated CHARA stamp, strike-through on settled.
 - **Forbidden:** gradients, drop shadows, glass, emoji, exclamation points, green as a brand color, Title Case.
 
 ## Files

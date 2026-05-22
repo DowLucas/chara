@@ -47,7 +47,7 @@ This document is opinionated on purpose. Optionality kills solo and small-team p
          │   HTTPS (REST / OpenAPI)
          │                │                │
 ┌────────▼────────────────▼────────────────▼─────────────────────┐
-│                    Quits API (Go + Chi)                         │
+│                    Chara API (Go + Chi)                         │
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │ Handlers: auth, groups, expenses, balances, settlements,│   │
 │  │ activity, search, attachments, importers, webhooks      │   │
@@ -183,7 +183,7 @@ Switch to either:
 - **PowerSync**: more mature, SQLite-on-device, syncs to Postgres. Production-ready.
 - **ElectricSQL**: Postgres-native, has been through architectural changes recently.
 
-Local-first becomes the v2 marketing moment: "Use Quits on a plane, in the metro, at a festival." This is a real Splitwise pain point. Save it as a banner feature.
+Local-first becomes the v2 marketing moment: "Use Chara on a plane, in the metro, at a festival." This is a real Splitwise pain point. Save it as a banner feature.
 
 Design v1 APIs so v2 sync can be layered on without breaking changes: avoid relying on server-generated IDs (use ULIDs from the client), avoid implicit timestamps, send full mutation events not partial diffs.
 
@@ -234,13 +234,13 @@ Google and Apple Sign In are hosted-only. They require centralised OAuth app reg
 
 1. User taps "Sign in with email"
 2. Magic link is sent via Resend (hosted) or configured SMTP (self-host)
-3. Tap link in email opens the Quits app via deep link (`quits://auth?token=...`)
+3. Tap link in email opens the Chara app via deep link (`chara://auth?token=...`)
 4. App exchanges one-time token for a signed JWT, stored in Expo SecureStore
 5. Subsequent requests include the JWT in the `Authorization: Bearer` header
 
 ### Google OAuth flow (hosted tier only)
 
-Standard OAuth 2.0 PKCE redirect. On mobile the redirect lands on the Quits deep link (`quits://auth/callback?code=...`). The API server exchanges the code for an `id_token`, verifies it against Google's JWKS endpoint, upserts the user record, and issues a Quits JWT.
+Standard OAuth 2.0 PKCE redirect. On mobile the redirect lands on the Chara deep link (`chara://auth/callback?code=...`). The API server exchanges the code for an `id_token`, verifies it against Google's JWKS endpoint, upserts the user record, and issues a Chara JWT.
 
 ### Apple Sign In flow (hosted tier only)
 
@@ -251,7 +251,7 @@ Apple Sign In on iOS uses the native `ASAuthorizationAppleIDProvider` (via `expo
 3. App posts `identity_token` to `POST /auth/apple`
 4. API verifies the JWT against Apple's public keys (`https://appleid.apple.com/auth/keys`)
 5. API upserts user (Apple may hide the email on repeat sign-ins; store `apple_sub` as the stable identifier)
-6. API issues a Quits JWT; app stores it in Expo SecureStore
+6. API issues a Chara JWT; app stores it in Expo SecureStore
 
 **Important Apple-specific details:**
 - Apple only provides the user's name and email on the *first* sign-in. Subsequent sign-ins return only `sub`. The server must persist the name on first login.
@@ -264,7 +264,7 @@ Apple Sign In is **not required** for Android or web — only shown on iOS (wher
 
 ### OIDC flow (self-hosters)
 
-Redirect through the identity provider, callback into the app via deep link, exchange the OIDC `id_token` for a Quits-issued JWT.
+Redirect through the identity provider, callback into the app via deep link, exchange the OIDC `id_token` for a Chara-issued JWT.
 
 ## Storage architecture
 
@@ -284,7 +284,7 @@ Image processing (thumbnails, EXIF stripping for privacy) happens in a backgroun
 
 **Expo Push Service** is the default. It is free, requires no Apple/Google keys for the user, and works for self-hosted instances. The flow:
 
-1. Mobile app on first login registers its Expo push token with the Quits API
+1. Mobile app on first login registers its Expo push token with the Chara API
 2. When an event occurs (new expense, settlement, mention), the API calls Expo's push API with the token
 3. Expo delivers via APNs / FCM to the device
 
@@ -292,7 +292,7 @@ For self-hosters who want to bypass Expo entirely (a minority but vocal subset o
 
 ## Payment rail integration
 
-Quits never holds money. All "settlement" is either marking-as-paid (manual) or deep-linking to a payment rail.
+Chara never holds money. All "settlement" is either marking-as-paid (manual) or deep-linking to a payment rail.
 
 ### Swish (Sweden, P0)
 
@@ -302,7 +302,7 @@ Swish exposes a `swish://` URL scheme for deep-linking from one app to another:
 swish://payment?data={base64-encoded-JSON}
 ```
 
-The encoded JSON contains payee phone, amount, currency, and message. Tap "Settle 240 SEK with Swish" in Quits → opens Swish with everything pre-filled → user confirms in Swish app.
+The encoded JSON contains payee phone, amount, currency, and message. Tap "Settle 240 SEK with Swish" in Chara → opens Swish with everything pre-filled → user confirms in Swish app.
 
 No merchant integration required for person-to-person. This is the simplest possible integration and the highest-value feature in Sweden.
 
@@ -316,7 +316,7 @@ Post-merger, Vipps and MobilePay are unified. Similar deep-link pattern: `vipps:
 
 ### Open banking (P2+)
 
-Tink and GoCardless Bank Account Data for EU, Plaid for US. Read-only transaction import that creates draft expenses. The legal posture here is sensitive: Quits never moves money, only reads transactions with user consent under PSD2 AISP, and the AISP licensing burden is on the data aggregator (Tink, GoCardless), not on Quits. This is fine. Document it carefully.
+Tink and GoCardless Bank Account Data for EU, Plaid for US. Read-only transaction import that creates draft expenses. The legal posture here is sensitive: Chara never moves money, only reads transactions with user consent under PSD2 AISP, and the AISP licensing burden is on the data aggregator (Tink, GoCardless), not on Chara. This is fine. Document it carefully.
 
 ## Deployment topology
 
@@ -324,10 +324,10 @@ Tink and GoCardless Bank Account Data for EU, Plaid for US. Read-only transactio
 
 Single `docker-compose.yml` with:
 
-- `quits-api` (Go binary)
-- `quits-postgres` (Postgres 16+)
-- `quits-minio` (S3-compatible object storage)
-- Optional `quits-ollama` profile (off by default, for OCR enthusiasts)
+- `chara-api` (Go binary)
+- `chara-postgres` (Postgres 16+)
+- `chara-minio` (S3-compatible object storage)
+- Optional `chara-ollama` profile (off by default, for OCR enthusiasts)
 
 Web UI is served by the API container (Expo web build, static assets). Mobile apps connect to the user-specified API URL.
 

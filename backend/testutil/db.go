@@ -47,8 +47,8 @@ func startTestDB() (*pgxpool.Pool, error) {
 
 	pgContainer, err := tcpostgres.Run(ctx,
 		"postgres:16-alpine",
-		tcpostgres.WithDatabase("quits_test"),
-		tcpostgres.WithUsername("quits"),
+		tcpostgres.WithDatabase("chara_test"),
+		tcpostgres.WithUsername("chara"),
 		tcpostgres.WithPassword("test"),
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").

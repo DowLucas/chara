@@ -8,12 +8,16 @@ interface Props {
   size?: 'sm' | 'lg';
   /** When true, plays the entrance animation on mount. Defaults to true for 'lg'. */
   animateIn?: boolean;
+  /** Speed multiplier for the entrance animation. 1 = default ("~320ms").
+   *  Use 2 for a snappy success-screen variant. Springs are stiffened by
+   *  the same factor so the perceived motion stays balanced. */
+  speed?: number;
 }
 
 // Design brief: "Stamp animates in from −6deg to −2deg over ~320ms. No
 // confetti, no fanfare." A quick fade + scale-overshoot + rotation spring
 // gives the stamp a weighty landing without violating the brand tone.
-export function Stamp({ size = 'sm', animateIn }: Props) {
+export function Stamp({ size = 'sm', animateIn, speed = 1 }: Props) {
   const { t } = useTranslation();
   const shouldAnimate = animateIn ?? size === 'lg';
 
@@ -23,16 +27,18 @@ export function Stamp({ size = 'sm', animateIn }: Props) {
 
   useEffect(() => {
     if (!shouldAnimate) return;
+    const d = (ms: number) => Math.max(1, Math.round(ms / speed));
+    const k = (s: number) => s * speed;
     Animated.parallel([
       Animated.timing(opacity, {
         toValue: 1,
-        duration: 220,
+        duration: d(220),
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.spring(rotate, {
         toValue: -2,
-        stiffness: 180,
+        stiffness: k(180),
         damping: 12,
         mass: 0.9,
         useNativeDriver: true,
@@ -40,19 +46,19 @@ export function Stamp({ size = 'sm', animateIn }: Props) {
       Animated.sequence([
         Animated.timing(scale, {
           toValue: 1.06,
-          duration: 180,
+          duration: d(180),
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
         Animated.spring(scale, {
           toValue: 1,
-          stiffness: 240,
+          stiffness: k(240),
           damping: 14,
           useNativeDriver: true,
         }),
       ]),
     ]).start();
-  }, [shouldAnimate, rotate, opacity, scale]);
+  }, [shouldAnimate, rotate, opacity, scale, speed]);
 
   const rotateDeg = rotate.interpolate({
     inputRange: [-8, -2],

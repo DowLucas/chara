@@ -131,7 +131,7 @@ flowchart TD
   
   Reason -->|Access Group| NotMember["🔒 Not in Group<br/>Message: You're not in this group<br/>CTA: Return Home<br/>CTA: Request Invite"]
   
-  Reason -->|Limit Exceeded| FreeTierLimit["🔒 Plan Limit<br/>Message: Upgrade to Quits Cloud<br/>Upgrade Sheet Shown"]
+  Reason -->|Limit Exceeded| FreeTierLimit["🔒 Plan Limit<br/>Message: Upgrade to Chara Cloud<br/>Upgrade Sheet Shown"]
   
   NotAdmin --> Home([Home])
   NotOwner --> Expense([Expense])

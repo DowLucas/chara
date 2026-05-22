@@ -11,11 +11,11 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/DowLucas/quits/internal/db"
-	"github.com/DowLucas/quits/internal/middleware"
-	"github.com/DowLucas/quits/internal/money"
-	"github.com/DowLucas/quits/internal/settle"
-	"github.com/DowLucas/quits/internal/ulid"
+	"github.com/DowLucas/chara/internal/db"
+	"github.com/DowLucas/chara/internal/middleware"
+	"github.com/DowLucas/chara/internal/money"
+	"github.com/DowLucas/chara/internal/settle"
+	"github.com/DowLucas/chara/internal/ulid"
 )
 
 type BalancesHandler struct {
@@ -53,16 +53,39 @@ type SettlementSuggestion struct {
 }
 
 type SettlementResponse struct {
-	ID           string    `json:"id"`
-	GroupID      string    `json:"group_id"`
-	FromMemberID string    `json:"from_member_id"`
-	ToMemberID   string    `json:"to_member_id"`
-	Amount       string    `json:"amount"`
-	Currency     string    `json:"currency"`
-	Note         *string   `json:"note,omitempty"`
-	Method       string    `json:"method"`
-	CreatedByID  string    `json:"created_by_id"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID           string     `json:"id"`
+	GroupID      string     `json:"group_id"`
+	FromMemberID string     `json:"from_member_id"`
+	ToMemberID   string     `json:"to_member_id"`
+	Amount       string     `json:"amount"`
+	Currency     string     `json:"currency"`
+	Note         *string    `json:"note,omitempty"`
+	Method       string     `json:"method"`
+	CreatedByID  string     `json:"created_by_id"`
+	CreatedAt    time.Time  `json:"created_at"`
+	RevertedAt   *time.Time `json:"reverted_at,omitempty"`
+}
+
+func settlementToResponse(s db.Settlement) SettlementResponse {
+	r := SettlementResponse{
+		ID:           s.ID,
+		GroupID:      s.GroupID,
+		FromMemberID: s.FromMember,
+		ToMemberID:   s.ToMember,
+		Amount:       money.Amount(s.Amount).String(),
+		Currency:     s.Currency,
+		Method:       s.Method,
+		CreatedByID:  s.CreatedByID,
+		CreatedAt:    s.CreatedAt.Time,
+	}
+	if s.Note.Valid {
+		r.Note = &s.Note.String
+	}
+	if s.RevertedAt.Valid {
+		t := s.RevertedAt.Time
+		r.RevertedAt = &t
+	}
+	return r
 }
 
 // ── Request types ─────────────────────────────────────────────────────────────
@@ -103,16 +126,19 @@ func (h *BalancesHandler) requireMember(w http.ResponseWriter, r *http.Request, 
 	return member, true
 }
 
+// validateMemberInGroup returns a deliberately generic error for both
+// "member doesn't exist" and "member belongs to another group" so callers
+// can't probe member existence by diffing error strings.
 func (h *BalancesHandler) validateMemberInGroup(r *http.Request, memberID, groupID string) error {
 	member, err := h.queries.GetGroupMember(r.Context(), memberID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return errors.New("member not found")
+			return errors.New("member not in group")
 		}
 		return err
 	}
 	if member.GroupID != groupID {
-		return errors.New("member does not belong to this group")
+		return errors.New("member not in group")
 	}
 	return nil
 }
@@ -244,22 +270,30 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := SettlementResponse{
-		ID:           settlement.ID,
-		GroupID:      settlement.GroupID,
-		FromMemberID: settlement.FromMember,
-		ToMemberID:   settlement.ToMember,
-		Amount:       money.Amount(settlement.Amount).String(),
-		Currency:     settlement.Currency,
-		Method:       settlement.Method,
-		CreatedByID:  settlement.CreatedByID,
-		CreatedAt:    settlement.CreatedAt.Time,
-	}
-	if settlement.Note.Valid {
-		resp.Note = &settlement.Note.String
+	writeJSON(w, http.StatusCreated, settlementToResponse(settlement))
+}
+
+// ListSettlements returns every settlement (including soft-reverted ones) for
+// the group, newest first. Reverted rows are kept in the response so the UI
+// can show the historical record with a strike-through — they just don't
+// affect balances (the member_balances view filters reverted_at IS NULL).
+func (h *BalancesHandler) ListSettlements(w http.ResponseWriter, r *http.Request) {
+	groupID := chi.URLParam(r, "groupID")
+	if _, ok := h.requireMember(w, r, groupID); !ok {
+		return
 	}
 
-	writeJSON(w, http.StatusCreated, resp)
+	rows, err := h.queries.ListSettlementsByGroup(r.Context(), groupID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not list settlements")
+		return
+	}
+
+	resp := make([]SettlementResponse, len(rows))
+	for i, s := range rows {
+		resp[i] = settlementToResponse(s)
+	}
+	writeJSON(w, http.StatusOK, resp)
 }
 
 func (h *BalancesHandler) SuggestSettlements(w http.ResponseWriter, r *http.Request) {
