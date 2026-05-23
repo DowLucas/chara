@@ -23,13 +23,16 @@ module.exports = {
   // Preserve existing translations; only the source language (en) gets new keys
   // auto-filled with the key text. Other locales come from Weblate.
   defaultValue: (locale, _ns, key) => (locale === 'en' ? key : ''),
-  // Mark removed keys instead of deleting them on the first pass, so we notice.
-  keepRemoved: false,
+  // Keep keys we can't see statically — some screens use t(dynamicKey) for
+  // error codes / action labels resolved at runtime. Stale-key audits happen
+  // manually for now.
+  keepRemoved: true,
   // We use t('group.key') style — flat keys with dot separators.
   lexers: {
     tsx: ['JsxLexer'],
     ts: ['JavascriptLexer'],
   },
   verbose: false,
-  failOnWarnings: true,
+  // Dynamic-key warnings are expected; don't fail the run on them.
+  failOnWarnings: false,
 };
