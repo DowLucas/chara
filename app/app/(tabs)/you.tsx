@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   Share,
   Linking,
-  Alert,
   ScrollView,
   Platform,
   Switch,
 } from 'react-native';
+import { showAlert } from '@/lib/app-alert';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -24,6 +24,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
 import { useAccounts } from '@/lib/accounts';
 import { initialsOf } from '@/lib/name';
+import { isPopupJustClosed } from '@/lib/popup-guard';
 import {
   apiFor,
   authToken,
@@ -119,9 +120,9 @@ export default function YouScreen() {
       await refreshUser();
     } catch (e) {
       if (e instanceof ApiError && e.status === 413) {
-        Alert.alert(t('you.avatar.tooLargeTitle'), t('you.avatar.tooLargeBody'));
+        showAlert({ title: t('you.avatar.tooLargeTitle'), message: t('you.avatar.tooLargeBody') });
       } else {
-        Alert.alert(t('common.error'), e instanceof Error ? e.message : String(e));
+        showAlert({ title: t('common.error'), message: e instanceof Error ? e.message : String(e) });
       }
     } finally {
       setUploading(false);
@@ -131,7 +132,7 @@ export default function YouScreen() {
   async function pickFromLibrary() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(t('you.avatar.permissionTitle'), t('you.avatar.permissionBody'));
+      showAlert({ title: t('you.avatar.permissionTitle'), message: t('you.avatar.permissionBody') });
       return;
     }
     const picked = await ImagePicker.launchImageLibraryAsync({
@@ -149,7 +150,7 @@ export default function YouScreen() {
   async function takePhoto() {
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(t('you.avatar.permissionTitle'), t('you.avatar.permissionBody'));
+      showAlert({ title: t('you.avatar.permissionTitle'), message: t('you.avatar.permissionBody') });
       return;
     }
     const picked = await ImagePicker.launchCameraAsync({
@@ -170,13 +171,16 @@ export default function YouScreen() {
       await apiDeleteAvatar();
       await refreshUser();
     } catch (e) {
-      Alert.alert(t('common.error'), e instanceof Error ? e.message : String(e));
+      showAlert({ title: t('common.error'), message: e instanceof Error ? e.message : String(e) });
     } finally {
       setUploading(false);
     }
   }
 
   function openAvatarSheet() {
+    // Swallow the press if a popup was just dismissed in the same gesture.
+    // See app/lib/popup-guard.ts.
+    if (isPopupJustClosed()) return;
     const options: ActionSheetOption[] = [
       { label: t('you.avatar.choosePhoto'), onPress: pickFromLibrary },
       { label: t('you.avatar.takePhoto'), onPress: takePhoto },
@@ -199,7 +203,7 @@ export default function YouScreen() {
   async function toggleFaceId(next: boolean) {
     if (next) {
       if (!biometricAvailable) {
-        Alert.alert(t('you.faceIdUnavailableTitle'), t('you.faceIdUnavailableBody'));
+        showAlert({ title: t('you.faceIdUnavailableTitle'), message: t('you.faceIdUnavailableBody') });
         return;
       }
       const result = await LocalAuthentication.authenticateAsync({
@@ -227,10 +231,10 @@ export default function YouScreen() {
     );
     const unverified = results.filter((r) => r.status === 'rejected');
     if (unverified.length > 0) {
-      Alert.alert(
-        t('accounts.removeBalanceCheckFailedTitle'),
-        t('accounts.removeBalanceCheckFailedBody'),
-      );
+      showAlert({
+        title: t('accounts.removeBalanceCheckFailedTitle'),
+        message: t('accounts.removeBalanceCheckFailedBody'),
+      });
       return;
     }
     const blocked = results
@@ -241,10 +245,10 @@ export default function YouScreen() {
       .filter((r) => hasOpenBalance(r.value.balances))
       .map((r) => hostFor(r.value.account.serverUrl));
     if (blocked.length > 0) {
-      Alert.alert(
-        t('accounts.removeBlockedOpenBalanceTitle'),
-        t('accounts.signOutAllBlockedBody', { hosts: blocked.join(', ') }),
-      );
+      showAlert({
+        title: t('accounts.removeBlockedOpenBalanceTitle'),
+        message: t('accounts.signOutAllBlockedBody', { hosts: blocked.join(', ') }),
+      });
       return;
     }
 
@@ -252,30 +256,27 @@ export default function YouScreen() {
       void signOut();
       return;
     }
-    Alert.alert(
-      t('accounts.signOutAllConfirmTitle'),
-      t('accounts.signOutAllConfirmBody'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('accounts.signOutAll'),
-          style: 'destructive',
-          onPress: async () => {
-            for (const account of accounts) {
-              try {
-                await apiFor(account.serverUrl).logout();
-              } catch {
-                /* best-effort */
-              }
-              // Spec §15: deregister push token before forgetting the account.
-              await unregisterForAccount(account.serverUrl);
-              await removeAccount(account.serverUrl);
-            }
-            router.replace('/(auth)/sign-in');
-          },
-        },
+    const result = await showAlert({
+      title: t('accounts.signOutAllConfirmTitle'),
+      message: t('accounts.signOutAllConfirmBody'),
+      buttons: [
+        { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
+        { key: 'signout', label: t('accounts.signOutAll'), style: 'destructive' },
       ],
-    );
+    });
+    if (result === 'signout') {
+      for (const account of accounts) {
+        try {
+          await apiFor(account.serverUrl).logout();
+        } catch {
+          /* best-effort */
+        }
+        // Spec §15: deregister push token before forgetting the account.
+        await unregisterForAccount(account.serverUrl);
+        await removeAccount(account.serverUrl);
+      }
+      router.replace('/(auth)/sign-in');
+    }
   }
 
   async function handleTellFriend() {
@@ -284,7 +285,7 @@ export default function YouScreen() {
         message: t('you.shareMessage'),
       });
     } catch (e: any) {
-      Alert.alert(t('common.error'), e?.message || String(e));
+      showAlert({ title: t('common.error'), message: e?.message || String(e) });
     }
   }
 
@@ -297,7 +298,7 @@ export default function YouScreen() {
       androidPackage: ANDROID_PACKAGE,
     });
     if (!url) {
-      Alert.alert(t('you.rateUnavailableTitle'), t('you.rateUnavailableBody'));
+      showAlert({ title: t('you.rateUnavailableTitle'), message: t('you.rateUnavailableBody') });
       return;
     }
     const can = await Linking.canOpenURL(url);
@@ -370,13 +371,6 @@ export default function YouScreen() {
             label={pinSet ? t('you.changeSecurityCode') : t('you.createSecurityCode')}
             value={pinSet ? t('you.codeOn') : t('you.codeOff')}
             onPress={() => router.push('/settings/security-code')}
-          />
-          <ToggleRow
-            label={t('you.faceIdRowLabel')}
-            value={faceIdEnabled}
-            onValueChange={toggleFaceId}
-            disabled={!biometricAvailable}
-            hint={!biometricAvailable ? t('you.faceIdUnavailableShort') : undefined}
           />
           <NavRow label={t('privacy.title')} onPress={() => router.push('/settings/privacy')} />
           <NavRow label={t('you.about')} onPress={() => router.push('/settings/about')} />

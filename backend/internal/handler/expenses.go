@@ -309,6 +309,15 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := requireGroupUnlocked(r.Context(), h.queries, groupID); err != nil {
+		if errors.Is(err, ErrGroupLocked) {
+			writeLockedError(w)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
 	var req createExpenseReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
@@ -516,13 +525,25 @@ func (h *ExpenseHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch all splits in one query so the client can render per-member
+	// standings (who is involved in each expense) without an N+1 round-trip.
+	allSplits, err := h.queries.ListSplitsByGroup(r.Context(), groupID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+	splitsByExpense := make(map[string][]db.ExpenseSplit, len(expenses))
+	for _, s := range allSplits {
+		splitsByExpense[s.ExpenseID] = append(splitsByExpense[s.ExpenseID], s)
+	}
+
 	resp := make([]ExpenseResponse, len(expenses))
 	for i, e := range expenses {
 		resp[i] = buildExpenseResponse(
 			e.ID, e.GroupID, e.Title, e.Amount, e.Currency,
 			e.PaidByID, e.SplitMethod, e.Category, e.Notes, e.ExpenseDate,
 			e.IsReimbursement, e.CreatedByID, e.CreatedAt, e.UpdatedAt,
-			nil,
+			dbSplitsToResponse(splitsByExpense[e.ID]),
 			e.OriginalAmount, e.OriginalCurrency, e.FxRate, e.FxAsOf,
 		)
 	}
@@ -572,6 +593,15 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.ClaimsFromContext(r.Context())
 
 	if _, ok := h.requireGroupMember(w, r, groupID); !ok {
+		return
+	}
+
+	if err := requireGroupUnlocked(r.Context(), h.queries, groupID); err != nil {
+		if errors.Is(err, ErrGroupLocked) {
+			writeLockedError(w)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
 
@@ -1046,6 +1076,15 @@ func (h *ExpenseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.ClaimsFromContext(r.Context())
 
 	if _, ok := h.requireGroupMember(w, r, groupID); !ok {
+		return
+	}
+
+	if err := requireGroupUnlocked(r.Context(), h.queries, groupID); err != nil {
+		if errors.Is(err, ErrGroupLocked) {
+			writeLockedError(w)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
 

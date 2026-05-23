@@ -29,6 +29,7 @@ import {
 } from '../lib/edit-expense-flow';
 import { settlementImpactSheetCopy, SheetMode } from './SettlementImpactSheet.helpers';
 import { formatMinorUnits } from '../lib/i18n';
+import { markPopupClosed } from '../lib/popup-guard';
 import { initialsOf } from '../lib/name';
 import type { MemberDelta } from '../lib/balance-impact';
 import type { Settlement, GroupMember } from '../lib/api';
@@ -60,6 +61,12 @@ export function SettlementImpactSheet({
   onConfirm,
 }: Props) {
   const { t } = useTranslation();
+  // Stamp the popup-guard on dismissal so the row that opened us underneath
+  // can't fire `onPress` in the same gesture. See app/lib/popup-guard.ts.
+  const handleCancel = React.useCallback(() => {
+    markPopupClosed();
+    onCancel();
+  }, [onCancel]);
   const copy = settlementImpactSheetCopy({
     mode,
     affectedSettlementsCount: affectedSettlements.length,
@@ -78,7 +85,7 @@ export function SettlementImpactSheet({
       visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
-      onRequestClose={onCancel}
+      onRequestClose={handleCancel}
     >
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollBody}>
@@ -133,7 +140,7 @@ export function SettlementImpactSheet({
         <View style={styles.ctaBar}>
           <Button
             kind="secondary"
-            onPress={onCancel}
+            onPress={handleCancel}
             style={{ flex: 1 }}
             disabled={submitting}
           >

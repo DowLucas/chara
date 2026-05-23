@@ -5,10 +5,10 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { showAlert } from '@/lib/app-alert';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -50,7 +50,7 @@ export default function CreateGroupScreen() {
         code = 'network';
       }
       analytics.track('group_create_failed', { code });
-      Alert.alert(t('createGroup.errorTitle'), e?.message || String(e));
+      showAlert({ title: t('createGroup.errorTitle'), message: e?.message || String(e) });
     } finally {
       setSubmitting(false);
     }

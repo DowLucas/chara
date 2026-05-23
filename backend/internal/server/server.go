@@ -44,6 +44,9 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 	r.Post("/api/auth/verify", authH.Verify)
 
 	groupH := handler.NewGroupHandler(pool, queries, cfg)
+	if store != nil {
+		groupH = groupH.WithStorage(store)
+	}
 	expenseH := handler.NewExpenseHandler(pool, queries)
 	if store != nil {
 		expenseH = expenseH.WithStorage(store)
@@ -72,6 +75,13 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 		r.Get("/api/groups/{groupID}", groupH.Get)
 		r.Patch("/api/groups/{groupID}", groupH.Update)
 		r.Delete("/api/groups/{groupID}", groupH.Archive)
+		r.Post("/api/groups/{groupID}/unarchive", groupH.Unarchive)
+		r.Post("/api/groups/{groupID}/lock", groupH.Lock)
+		r.Post("/api/groups/{groupID}/unlock", groupH.Unlock)
+		r.Delete("/api/groups/{groupID}/permanent", groupH.PermanentDelete)
+		r.Get("/api/groups/{groupID}/stats", groupH.Stats)
+		r.Delete("/api/groups/{groupID}/members/{memberID}", groupH.RemoveMember)
+		r.Get("/api/groups/{groupID}/members/{memberID}/can-leave", groupH.CanLeave)
 		r.Get("/api/groups/{groupID}/invite-link", groupH.GetInviteLink)
 		r.Post("/api/groups/{groupID}/invite-link/regenerate", groupH.RegenerateInviteToken)
 		r.Post("/api/groups/join/{token}", groupH.JoinViaToken)

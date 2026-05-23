@@ -68,6 +68,20 @@ function stripTrailingColon(s: string): string {
   return s.endsWith(':') ? s.slice(0, -1) : s;
 }
 
+/**
+ * True if the URL's host is a loopback/private IP — i.e. exposing it on
+ * the UI in plain text leaks LAN topology. Use to decide whether to
+ * mask the chip behind a tap-to-reveal.
+ */
+export function isPrivateServerUrl(serverUrl: string): boolean {
+  try {
+    const parsed = new URL(serverUrl);
+    return isPrivateOrLoopbackHost(parsed.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
 export function normalizeServerUrl(input: string): string | NormalizationError {
   if (input == null) return invalid('empty input');
   const trimmed = String(input).trim();

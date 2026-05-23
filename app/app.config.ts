@@ -17,6 +17,9 @@ const config: ExpoConfig = {
     infoPlist: {
       NSUserNotificationsUsageDescription:
         'Chara sends push notifications when group members add expenses or settle up.',
+      // Schemes Chara may call Linking.canOpenURL on. iOS hides apps not
+      // listed here behind a `false` return, even if the app is installed.
+      LSApplicationQueriesSchemes: ['swish'],
     },
   },
   android: {

@@ -2,8 +2,8 @@ import React, { useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
 import { TopBar } from '@/components/TopBar';
-import { IconButton } from '@/components/IconButton';
 import { AvatarStack } from '@/components/Avatar';
 import { Stamp } from '@/components/Stamp';
 import { EmptyState } from '@/components/EmptyState';
@@ -16,6 +16,7 @@ import {
   useAggregatedActivity,
 } from '@/lib/aggregated-reads';
 import { formatMinorUnits, decimalToMinor } from '@/lib/i18n';
+import { isPopupJustClosed } from '@/lib/popup-guard';
 import { initialsOf } from '@/lib/name';
 import {
   colors,
@@ -61,7 +62,7 @@ export default function HomeScreen() {
 
   const groupReads = useAggregatedGroups();
   const balanceReads = useAggregatedBalances();
-  // Top-3 recent activity preview. Same hook the Activity tab uses, so a
+  // Top-5 recent activity preview. Same hook the Activity tab uses, so a
   // foreground refresh hydrates both surfaces without a second fetch.
   const activityReads = useAggregatedActivity(50);
   const recentActivity = useMemo(() => {
@@ -74,7 +75,7 @@ export default function HomeScreen() {
         new Date(b.event.created_at).getTime() -
         new Date(a.event.created_at).getTime(),
     );
-    return all.slice(0, 3);
+    return all.slice(0, 5);
   }, [activityReads]);
 
   // Host chip rule (spec §14): only when ≥ 2 accounts.
@@ -142,20 +143,28 @@ export default function HomeScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <TopBar
-        title={t('app.name')}
+        title={t('tabs.home')}
+        left={
+          <TouchableOpacity
+            style={styles.topAction}
+            onPress={() => router.push('/groups/scan')}
+            accessibilityLabel={t('groupsTab.scanQrLabel')}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Feather name="camera" size={18} color={colors.graphite} strokeWidth={1.5} />
+            <Text style={styles.topActionLabel}>{t('groupsTab.joinGroup')}</Text>
+          </TouchableOpacity>
+        }
         right={
-          <View style={{ flexDirection: 'row' }}>
-            <IconButton
-              icon="camera"
-              onPress={() => router.push('/groups/scan')}
-              label={t('groupsTab.scanQrLabel')}
-            />
-            <IconButton
-              icon="plus"
-              onPress={() => router.push('/onboarding/create')}
-              label={t('groupsTab.newGroupLabel')}
-            />
-          </View>
+          <TouchableOpacity
+            style={styles.topAction}
+            onPress={() => router.push('/onboarding/create')}
+            accessibilityLabel={t('groupsTab.newGroupLabel')}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Text style={styles.topActionLabel}>{t('groupsTab.newGroup')}</Text>
+            <Feather name="plus" size={18} color={colors.graphite} strokeWidth={1.5} />
+          </TouchableOpacity>
         }
       />
       <ScrollView
@@ -167,7 +176,12 @@ export default function HomeScreen() {
         <View style={styles.hero}>
           <Text style={styles.eyebrow}>{t('home.netBalance')}</Text>
           {netByCurrency.length === 0 ? (
-            <Text style={[styles.heroBalance, { color: colors.lead }]}>
+            <Text
+              style={[styles.heroBalance, { color: colors.lead }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.5}
+            >
               {fmtBalance('0', primaryCurrency)}
             </Text>
           ) : (
@@ -176,6 +190,9 @@ export default function HomeScreen() {
                 styles.heroBalance,
                 { color: primaryNet >= 0 ? colors.moss : colors.brick },
               ]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.5}
             >
               {fmtBalance(String(primaryNet), primaryCurrency)}
             </Text>
@@ -228,9 +245,12 @@ export default function HomeScreen() {
                   <TouchableOpacity
                     key={`${serverUrl}::${g.id}`}
                     style={styles.groupCard}
-                    onPress={() =>
-                      router.push(`/groups/${encodeURIComponent(serverUrl)}/${g.id}`)
-                    }
+                    onPress={() => {
+                      // Swallow taps that close the FAB group-picker / any
+                      // other sheet whose backdrop covered this row.
+                      if (isPopupJustClosed()) return;
+                      router.push(`/groups/${encodeURIComponent(serverUrl)}/${g.id}`);
+                    }}
                     activeOpacity={0.7}
                   >
                     <AvatarStack people={groupInitials(g)} />
@@ -328,7 +348,7 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* Recent activity — top 3 across every linked account, click-through
+        {/* Recent activity — top 5 across every linked account, click-through
             to the dedicated Activity tab. */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>
@@ -338,6 +358,8 @@ export default function HomeScreen() {
             <TouchableOpacity
               onPress={() => router.push('/(tabs)/activity')}
               hitSlop={8}
+              activeOpacity={0.7}
+              style={styles.seeAllBtn}
             >
               <Text style={styles.seeAllLink}>{t('home.seeAll')}</Text>
             </TouchableOpacity>
@@ -348,17 +370,12 @@ export default function HomeScreen() {
           <Text style={styles.noActivity}>{t('home.noActivity')}</Text>
         ) : (
           recentActivity.map((r) => (
-            <TouchableOpacity
-              key={r.event.id}
-              activeOpacity={0.7}
-              onPress={() => router.push('/(tabs)/activity')}
-              style={styles.activityRow}
-            >
+            <View key={r.event.id} style={styles.activityRow}>
               <Text style={styles.activityText} numberOfLines={2}>
                 {summariseActivity(r.event, t)}
               </Text>
               <Text style={styles.activityMeta}>{r.event.group_name ?? ''}</Text>
-            </TouchableOpacity>
+            </View>
           ))
         )}
       </ScrollView>
@@ -394,17 +411,23 @@ function summariseActivity(
     to_member_name?: string;
   };
   switch (e.event_type) {
-    case 'expense_added':
+    case 'expense_added': {
+      const hasFull = !!s.title && s.amount != null && !!s.currency;
+      if (!hasFull) return t('activity.event_expense_added_simple', { actor, group });
       return t('activity.event_expense_added', {
         actor,
         group,
-        title: s.title ?? '',
-        amount: s.amount != null && s.currency ? formatMinorUnits(s.amount, s.currency) : '',
+        title: s.title,
+        amount: formatMinorUnits(s.amount!, s.currency!),
       });
+    }
     case 'expense_edited':
-      return t('activity.event_expense_edited', { actor, group, title: s.title ?? '' });
+    case 'expense_updated':
+      if (!s.title) return t('activity.event_expense_edited_simple', { actor, group });
+      return t('activity.event_expense_edited', { actor, group, title: s.title });
     case 'expense_deleted':
-      return t('activity.event_expense_deleted', { actor, group, title: s.title ?? '' });
+      if (!s.title) return t('activity.event_expense_deleted_simple', { actor, group });
+      return t('activity.event_expense_deleted', { actor, group, title: s.title });
     case 'settlement_added':
       return t('activity.event_settlement_added', {
         actor,
@@ -444,37 +467,50 @@ function ErrorStrip({ label, cta }: { label: string; cta: string }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
+  topAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+  },
+  topActionLabel: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.graphite,
+    letterSpacing: 0.2,
+  },
   hero: {
     paddingHorizontal: spacing.s5,
-    paddingTop: spacing.s3,
-    paddingBottom: spacing.s4,
+    paddingTop: spacing.s2,
+    paddingBottom: spacing.s3,
   },
   eyebrow: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
     color: colors.lead,
     letterSpacing: 0.3,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   heroBalance: {
     fontFamily: fontMono,
-    fontSize: fontSize.displayXl,
-    letterSpacing: -1.5,
+    fontSize: fontSize.displayL,
+    letterSpacing: -1,
     fontVariant: ['tabular-nums'],
-    lineHeight: 68,
+    lineHeight: 50,
     includeFontPadding: false,
     textAlignVertical: 'center',
-    paddingTop: 4,
+    paddingTop: 2,
   },
   multiCurrencyRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.s2,
-    marginTop: spacing.s2,
+    gap: spacing.s1,
+    marginTop: spacing.s1,
   },
   currencyChip: {
-    paddingHorizontal: spacing.s3,
-    paddingVertical: spacing.s1,
+    paddingHorizontal: spacing.s2,
+    paddingVertical: 2,
     borderWidth: 0.5,
     borderColor: colors.ruleSoft,
     borderRadius: 6,
@@ -482,7 +518,7 @@ const styles = StyleSheet.create({
   },
   currencyChipAmt: {
     fontFamily: fontMonoMedium,
-    fontSize: fontSize.bodyS,
+    fontSize: fontSize.caption,
     letterSpacing: -0.2,
     fontVariant: ['tabular-nums'],
   },
@@ -511,8 +547,6 @@ const styles = StyleSheet.create({
     gap: spacing.s3,
     backgroundColor: colors.bone,
     borderRadius: 10,
-    borderWidth: 0.5,
-    borderColor: colors.ruleSoft,
     paddingHorizontal: spacing.s4,
     paddingVertical: spacing.s3,
   },
@@ -533,11 +567,10 @@ const styles = StyleSheet.create({
     color: colors.lead,
   },
   groupMeta: {
-    fontFamily: fontMono,
+    fontFamily: fontBody,
     fontSize: fontSize.caption,
     color: colors.lead,
     marginTop: 2,
-    letterSpacing: 0.3,
   },
   hostChip: {
     fontFamily: fontMono,
@@ -577,14 +610,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing.s4,
     paddingVertical: spacing.s3,
-    borderRadius: 8,
-    borderWidth: 0.5,
-    borderColor: colors.ruleSoft,
+    borderRadius: 10,
     backgroundColor: colors.bone,
   },
   errorStripText: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontFamily: fontBody,
+    fontSize: fontSize.bodyS,
     color: colors.graphite,
     flex: 1,
     minWidth: 0,
@@ -607,14 +638,17 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
   },
   sectionLabel: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.bodyS,
+    color: colors.graphite,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   sectionRule: {
-    height: 1.5,
-    backgroundColor: colors.graphite,
+    height: 1,
+    backgroundColor: colors.ruleSoft,
     marginHorizontal: spacing.s5,
+    marginBottom: spacing.s1,
   },
   noActivity: {
     fontFamily: fontBody,
@@ -622,6 +656,12 @@ const styles = StyleSheet.create({
     color: colors.lead,
     paddingHorizontal: spacing.s5,
     paddingTop: spacing.s3,
+  },
+  seeAllBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    backgroundColor: colors.bone,
   },
   seeAllLink: {
     fontFamily: fontMonoMedium,
@@ -642,11 +682,10 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   activityMeta: {
-    fontFamily: fontMonoMedium,
+    fontFamily: fontBody,
     fontSize: fontSize.caption,
     color: colors.lead,
     marginTop: 2,
-    letterSpacing: 0.3,
   },
   emptyCta: {
     flexDirection: 'row',

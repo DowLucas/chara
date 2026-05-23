@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   Image,
   StyleSheet,
   TouchableOpacity,
@@ -18,8 +17,12 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
-import { scanReceipt, convertFx, ScannedReceipt, FxConvertResponse, ApiError } from '@/lib/api';
+import { scanReceipt, convertFx, ScannedReceipt, ApiError } from '@/lib/api';
 import { formatMinorUnits } from '@/lib/i18n';
+import {
+  FxConversionSection,
+  FxState as SharedFxState,
+} from '@/components/FxConversionSection';
 
 /**
  * What the parent ultimately commits to the expense form.
@@ -378,9 +381,7 @@ interface ResultViewProps {
 
 type FxState =
   | { kind: 'none' } // same currency, no conversion
-  | { kind: 'loading' }
-  | { kind: 'ready'; data: FxConvertResponse }
-  | { kind: 'error'; message: string };
+  | SharedFxState;
 
 function ResultView({
   photoUri,
@@ -539,12 +540,11 @@ function ResultView({
           ))}
         </View>
 
-        {needsConversion && (
-          <FxSection
-            t={t}
+        {needsConversion && fx.kind !== 'none' && (
+          <FxConversionSection
             from={receipt.currency}
             to={groupCurrency}
-            originalTotalMinor={receipt.total_minor}
+            amountMinor={receipt.total_minor}
             fx={fx}
             rateInput={rateInput}
             setRateInput={setRateInput}
@@ -565,102 +565,6 @@ function ResultView({
         >
           {t('receiptScanner.useThis')}
         </Button>
-      </View>
-    </View>
-  );
-}
-
-// ─── FX conversion sub-section ────────────────────────────────────────────────
-interface FxSectionProps {
-  t: (k: string, opts?: any) => string;
-  from: string;
-  to: string;
-  originalTotalMinor: number;
-  fx: FxState;
-  rateInput: string;
-  setRateInput: (v: string) => void;
-  rateNumber: number | null;
-}
-
-function FxSection({
-  t,
-  from,
-  to,
-  originalTotalMinor,
-  fx,
-  rateInput,
-  setRateInput,
-  rateNumber,
-}: FxSectionProps) {
-  if (fx.kind === 'loading') {
-    return (
-      <View style={styles.fxWrap}>
-        <View style={styles.fxLoading}>
-          <ActivityIndicator color={colors.graphite} />
-          <Text style={styles.fxLoadingText}>
-            {t('receiptScanner.fxLoading', { from, to })}
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
-  if (fx.kind === 'error') {
-    return (
-      <View style={styles.fxWrap}>
-        <View style={styles.fxErrorRow}>
-          <Feather name="alert-triangle" size={16} color={colors.vermillion} />
-          <Text style={styles.fxErrorText}>
-            {t('receiptScanner.fxError', { from, to })}
-          </Text>
-        </View>
-        <Text style={styles.fxErrorHint}>{t('receiptScanner.fxErrorHint')}</Text>
-      </View>
-    );
-  }
-
-  // Belt-and-braces: the parent only mounts <FxSection/> when conversion is
-  // needed, so fx.kind 'none' is unreachable here — but the type system
-  // still allows it, so we narrow defensively.
-  if (fx.kind !== 'ready') return null;
-
-  const convertedMinor =
-    rateNumber !== null ? Math.round(originalTotalMinor * rateNumber) : 0;
-
-  return (
-    <View style={styles.fxWrap}>
-      <Text style={styles.fxHeader}>{t('receiptScanner.fxHeader', { to })}</Text>
-
-      <View style={styles.fxRateRow}>
-        <Text style={styles.fxRateLabel}>{t('receiptScanner.fxRateLabel', { from })}</Text>
-        <View style={styles.fxRateInputWrap}>
-          <TextInput
-            value={rateInput}
-            onChangeText={setRateInput}
-            keyboardType="decimal-pad"
-            placeholder={fx.data.rate}
-            placeholderTextColor={colors.lead}
-            style={styles.fxRateInput}
-            selectTextOnFocus
-          />
-          <Text style={styles.fxRateUnit}>{to}</Text>
-        </View>
-      </View>
-
-      <Text style={styles.fxSource}>
-        {t('receiptScanner.fxSource', {
-          source: fx.data.source,
-          date: fx.data.as_of,
-        })}
-      </Text>
-
-      <View style={styles.fxConvertedRow}>
-        <Text style={styles.fxConvertedLabel}>{t('receiptScanner.fxConvertedLabel')}</Text>
-        <Text style={styles.fxConvertedValue}>
-          {rateNumber !== null
-            ? formatMinorUnits(convertedMinor, to)
-            : t('receiptScanner.fxRateInvalid')}
-        </Text>
       </View>
     </View>
   );
@@ -927,105 +831,4 @@ const styles = StyleSheet.create({
     paddingTop: spacing.s3,
   },
 
-  // FX conversion section
-  fxWrap: {
-    marginTop: spacing.s4,
-    padding: spacing.s4,
-    backgroundColor: colors.bone,
-    borderRadius: 8,
-    gap: spacing.s2,
-  },
-  fxHeader: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
-    letterSpacing: 0.4,
-    textTransform: 'lowercase',
-  },
-  fxRateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.s3,
-    marginTop: 4,
-  },
-  fxRateLabel: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.graphite,
-    letterSpacing: 0.3,
-    flexShrink: 1,
-  },
-  fxRateInputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.graphite,
-    paddingBottom: 2,
-    minWidth: 110,
-  },
-  fxRateInput: {
-    flex: 1,
-    fontFamily: fontMono,
-    fontSize: fontSize.body,
-    color: colors.graphite,
-    padding: 0,
-    textAlign: 'right',
-  },
-  fxRateUnit: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
-    letterSpacing: 0.3,
-  },
-  fxSource: {
-    fontFamily: fontMono,
-    fontSize: 11,
-    color: colors.lead,
-    opacity: 0.8,
-    letterSpacing: 0.3,
-  },
-  fxConvertedRow: {
-    marginTop: spacing.s2,
-    paddingTop: spacing.s2,
-    borderTopWidth: 1,
-    borderTopColor: colors.graphite,
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-  },
-  fxConvertedLabel: {
-    fontFamily: fontMono,
-    fontSize: fontSize.body,
-    color: colors.graphite,
-    letterSpacing: 0.3,
-  },
-  fxConvertedValue: {
-    fontFamily: fontDisplay,
-    fontSize: fontSize.displayS,
-    color: colors.graphite,
-    letterSpacing: -0.5,
-  },
-  fxLoading: { flexDirection: 'row', alignItems: 'center', gap: spacing.s3 },
-  fxLoadingText: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.graphite,
-    letterSpacing: 0.3,
-  },
-  fxErrorRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  fxErrorText: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.vermillion,
-    letterSpacing: 0.3,
-    flexShrink: 1,
-  },
-  fxErrorHint: {
-    fontFamily: fontBody,
-    fontSize: fontSize.bodyS,
-    color: colors.lead,
-    lineHeight: 18,
-  },
 });

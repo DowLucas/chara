@@ -5,17 +5,16 @@ import {
   formatSwishDetails,
 } from '../swish';
 
-// Helper: decode URL-safe base64 (no padding) → JSON
+// Helper: URI-decode the data param → JSON. The Swish app expects
+// `?data=<encodeURIComponent(JSON.stringify(...))>`; base64 was the wrong
+// encoding choice in the original design doc — Swish rejects it.
 function decodeSwishLink(link: string): any {
   const url = new URL(link);
   expect(url.protocol).toBe('swish:');
   const data = url.searchParams.get('data');
   if (!data) throw new Error('no data param');
-  // restore standard base64
-  let b64 = data.replace(/-/g, '+').replace(/_/g, '/');
-  while (b64.length % 4 !== 0) b64 += '=';
-  const json = Buffer.from(b64, 'base64').toString('utf8');
-  return JSON.parse(json);
+  // URLSearchParams already decoded `data`; just parse the JSON.
+  return JSON.parse(data);
 }
 
 describe('normalizeSwishNumber', () => {
@@ -109,33 +108,56 @@ describe('buildSwishLink', () => {
     expect(link.startsWith('swish://payment?data=')).toBe(true);
   });
 
-  it('uses URL-safe base64 with no padding', () => {
+  it('encodes payload as URI-encoded JSON (not base64)', () => {
     const link = buildSwishLink(baseOpts);
     const data = link.slice('swish://payment?data='.length);
-    expect(data).not.toContain('+');
-    expect(data).not.toContain('/');
-    expect(data).not.toContain('=');
+    // URI-encoded JSON always starts with %7B (encoded `{`).
+    expect(data.startsWith('%7B')).toBe(true);
   });
 
-  it('encodes amount 24000 minor → "240.00"', () => {
+  it('encodes amount 24000 minor → 240 (number, not string)', () => {
     const payload = decodeSwishLink(buildSwishLink(baseOpts));
-    expect(payload.amount.value).toBe('240.00');
+    expect(payload.amount.value).toBe(240);
+    expect(typeof payload.amount.value).toBe('number');
   });
 
-  it('encodes amount 100 minor → "1.00"', () => {
+  it('encodes amount 100 minor → 1 (number)', () => {
     const payload = decodeSwishLink(buildSwishLink({ ...baseOpts, amountMinor: 100 }));
-    expect(payload.amount.value).toBe('1.00');
+    expect(payload.amount.value).toBe(1);
   });
 
-  it('encodes payee in national format without +46 or spaces', () => {
+  it('rounds öre UP to whole kronor (2949 minor → 30, never 29)', () => {
+    // Swish's consumer parser rejects decimal amounts with
+    // "Felaktig länk". We round up so the payee is never short.
+    const payload = decodeSwishLink(buildSwishLink({ ...baseOpts, amountMinor: 2949 }));
+    expect(payload.amount.value).toBe(30);
+    expect(Number.isInteger(payload.amount.value)).toBe(true);
+  });
+
+  it('rounds 226.82 SEK (22682 minor) up to 227', () => {
+    const payload = decodeSwishLink(buildSwishLink({ ...baseOpts, amountMinor: 22682 }));
+    expect(payload.amount.value).toBe(227);
+  });
+
+  it('encodes payee in national format (0XXXXXXXXX), not E.164', () => {
+    // The current Swish iOS/Android apps reject `+46…` deep-links with
+    // "incorrect format". Live production pages (italy26 donate.html)
+    // send national format successfully.
     const payload = decodeSwishLink(buildSwishLink(baseOpts));
     expect(payload.payee.value).toBe('0701234567');
+    expect(payload.payee.value).not.toContain('+');
   });
 
-  it('payee.editable and amount.editable are false', () => {
+  it('omits editable keys (Swish rejects payloads with editable:false)', () => {
     const payload = decodeSwishLink(buildSwishLink(baseOpts));
-    expect(payload.amount.editable).toBe(false);
-    expect(payload.message.editable).toBe(false);
+    expect(payload.amount).not.toHaveProperty('editable');
+    expect(payload.message).not.toHaveProperty('editable');
+    expect(payload.payee).not.toHaveProperty('editable');
+  });
+
+  it('does not include callbackurl (merchant-only field, rejected by consumer parser)', () => {
+    const payload = decodeSwishLink(buildSwishLink(baseOpts));
+    expect(payload).not.toHaveProperty('callbackurl');
   });
 
   it('version is 1', () => {
@@ -143,36 +165,38 @@ describe('buildSwishLink', () => {
     expect(payload.version).toBe(1);
   });
 
-  it('truncates group name to 40 chars in message', () => {
+  it('truncates message to Swish 50-char limit', () => {
     const longName = 'a'.repeat(60);
     const payload = decodeSwishLink(buildSwishLink({ ...baseOpts, groupName: longName }));
-    // group portion ≤ 40 chars
-    const prefix = 'Chara · ';
-    expect(payload.message.value.startsWith(prefix)).toBe(true);
-    const groupPortion = payload.message.value.slice(prefix.length);
-    expect(groupPortion.length).toBeLessThanOrEqual(40);
-    expect(groupPortion).toBe('a'.repeat(40));
+    expect(payload.message.value.length).toBeLessThanOrEqual(50);
+    expect(payload.message.value.startsWith('Chara: ')).toBe(true);
   });
 
-  it('preserves short group name with "Chara · " prefix', () => {
+  it('uses "Chara: " (colon, not middle dot) — middle dot is rejected by Swish', () => {
     const payload = decodeSwishLink(buildSwishLink({ ...baseOpts, groupName: 'Friday dinner' }));
-    expect(payload.message.value).toBe('Chara · Friday dinner');
+    expect(payload.message.value).toBe('Chara: Friday dinner');
+    expect(payload.message.value).not.toContain('·');
   });
 
-  it('includes callbackurl with pendingId', () => {
-    const payload = decodeSwishLink(buildSwishLink(baseOpts));
-    expect(payload.callbackurl).toBe(
-      'chara://settle/swish/return?pendingId=01HGZABCDEFGHJKMNPQRSTVWXY',
-    );
+  it('strips characters outside Swish charset (·, -, *, emoji)', () => {
+    const payload = decodeSwishLink(buildSwishLink({
+      ...baseOpts,
+      groupName: 'My·trip-2024 🇸🇪 *fun*',
+    }));
+    // Disallowed chars become spaces and collapse; only the allowed set
+    // remains. The `·`, `-`, `*`, and emoji must all be gone.
+    expect(payload.message.value).not.toMatch(/[·\-*]/);
+    expect(payload.message.value).not.toMatch(/[\u{1F1E6}-\u{1F1FF}]/u);
+    expect(payload.message.value).toMatch(/^[a-zA-ZåäöÅÄÖ0-9:;.,?!()" ]+$/);
   });
 
   it('throws on invalid payeeSwishNumber', () => {
     expect(() => buildSwishLink({ ...baseOpts, payeeSwishNumber: '012-broken' })).toThrow();
   });
 
-  it('accepts national-format number and canonicalizes for payload', () => {
+  it('accepts E.164-format input and emits national-format in payload', () => {
     const payload = decodeSwishLink(
-      buildSwishLink({ ...baseOpts, payeeSwishNumber: '0701234567' }),
+      buildSwishLink({ ...baseOpts, payeeSwishNumber: '+46701234567' }),
     );
     expect(payload.payee.value).toBe('0701234567');
   });
@@ -195,12 +219,13 @@ describe('formatSwishDetails', () => {
   });
 
   it('formats message identically to link payload', () => {
-    expect(formatSwishDetails(opts).message).toBe('Chara · Friday dinner');
+    expect(formatSwishDetails(opts).message).toBe('Chara: Friday dinner');
   });
 
-  it('truncates long group names in message', () => {
+  it('truncates long group names in message to 50 chars', () => {
     const longName = 'a'.repeat(60);
     const out = formatSwishDetails({ ...opts, groupName: longName });
-    expect(out.message).toBe('Chara · ' + 'a'.repeat(40));
+    expect(out.message.length).toBeLessThanOrEqual(50);
+    expect(out.message.startsWith('Chara: ')).toBe(true);
   });
 });

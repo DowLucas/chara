@@ -5,11 +5,11 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { showAlert } from '@/lib/app-alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -36,6 +36,7 @@ export default function EditGroupScreen() {
     : currency
       ? [...SUGGESTED_CURRENCY_CODES, currency]
       : SUGGESTED_CURRENCY_CODES;
+  const currencyLocked = group?.currency_locked === true;
 
   useEffect(() => {
     if (!id || !serverUrl) return;
@@ -76,14 +77,14 @@ export default function EditGroupScreen() {
           parsed = null;
         }
         if (parsed?.code === 'group_currency_locked') {
-          Alert.alert(
-            t('editGroup.errors.currencyLockedTitle'),
-            t('editGroup.errors.currencyLockedBody'),
-          );
+          showAlert({
+            title: t('editGroup.errors.currencyLockedTitle'),
+            message: t('editGroup.errors.currencyLockedBody'),
+          });
           return;
         }
       }
-      Alert.alert(t('editGroup.errorTitle'), e?.message || String(e));
+      showAlert({ title: t('editGroup.errorTitle'), message: e?.message || String(e) });
     } finally {
       setSubmitting(false);
     }
@@ -108,7 +109,6 @@ export default function EditGroupScreen() {
 
       <View style={styles.header}>
         <Text style={styles.eyebrow}>{t('editGroup.eyebrow')}</Text>
-        <Text style={styles.headline}>{group.name}</Text>
       </View>
 
       <View style={styles.field}>
@@ -132,22 +132,31 @@ export default function EditGroupScreen() {
             return (
               <TouchableOpacity
                 key={c}
-                style={[styles.chip, active && styles.chipActive]}
+                style={[
+                  styles.chip,
+                  active && styles.chipActive,
+                  currencyLocked && styles.chipDisabled,
+                ]}
                 onPress={() => setCurrency(c)}
                 activeOpacity={0.85}
+                disabled={currencyLocked}
               >
                 <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{c}</Text>
               </TouchableOpacity>
             );
           })}
           <TouchableOpacity
-            style={styles.chip}
+            style={[styles.chip, currencyLocked && styles.chipDisabled]}
             onPress={() => setPickerOpen(true)}
             activeOpacity={0.85}
+            disabled={currencyLocked}
           >
             <Text style={styles.chipLabel}>{t('currencyPicker.more')}</Text>
           </TouchableOpacity>
         </View>
+        {currencyLocked && (
+          <Text style={styles.fieldHint}>{t('editGroup.currencyLockedHint')}</Text>
+        )}
       </View>
 
       <CurrencyPicker
@@ -267,6 +276,7 @@ const styles = StyleSheet.create({
     borderColor: colors.graphite,
   },
   chipActive: { backgroundColor: colors.graphite },
+  chipDisabled: { opacity: 0.4 },
   chipLabel: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.graphite },
   chipLabelActive: { color: colors.paper },
   footer: { paddingTop: spacing.s3 },

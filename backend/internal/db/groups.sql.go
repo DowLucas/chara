@@ -14,7 +14,7 @@ import (
 const createGroup = `-- name: CreateGroup :one
 INSERT INTO groups (id, name, currency, language, created_by, invite_token)
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language
+RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked
 `
 
 type CreateGroupParams struct {
@@ -46,12 +46,13 @@ func (q *Queries) CreateGroup(ctx context.Context, arg CreateGroupParams) (Group
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Language,
+		&i.IsLocked,
 	)
 	return i, err
 }
 
 const getGroupByID = `-- name: GetGroupByID :one
-SELECT id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language FROM groups WHERE id = $1
+SELECT id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked FROM groups WHERE id = $1
 `
 
 func (q *Queries) GetGroupByID(ctx context.Context, id string) (Group, error) {
@@ -67,12 +68,13 @@ func (q *Queries) GetGroupByID(ctx context.Context, id string) (Group, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Language,
+		&i.IsLocked,
 	)
 	return i, err
 }
 
 const getGroupByInviteToken = `-- name: GetGroupByInviteToken :one
-SELECT id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language FROM groups WHERE invite_token = $1 AND NOT is_archived
+SELECT id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked FROM groups WHERE invite_token = $1 AND NOT is_archived
 `
 
 func (q *Queries) GetGroupByInviteToken(ctx context.Context, inviteToken string) (Group, error) {
@@ -88,12 +90,158 @@ func (q *Queries) GetGroupByInviteToken(ctx context.Context, inviteToken string)
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Language,
+		&i.IsLocked,
 	)
 	return i, err
 }
 
+const getGroupLockState = `-- name: GetGroupLockState :one
+SELECT is_locked FROM groups WHERE id = $1
+`
+
+// Cheap read of just the lock flag. Used by the requireGroupUnlocked
+// write-gate helper before opening a transaction.
+func (q *Queries) GetGroupLockState(ctx context.Context, id string) (bool, error) {
+	row := q.db.QueryRow(ctx, getGroupLockState, id)
+	var is_locked bool
+	err := row.Scan(&is_locked)
+	return is_locked, err
+}
+
+const groupStats = `-- name: GroupStats :one
+SELECT
+    g.created_at,
+    (SELECT COUNT(*) FROM group_members WHERE group_id = g.id)::bigint AS member_count,
+    (SELECT COUNT(*) FROM expenses
+        WHERE group_id = g.id AND NOT is_deleted AND NOT is_reimbursement)::bigint AS expense_count,
+    (SELECT MIN(expense_date)::date FROM expenses
+        WHERE group_id = g.id AND NOT is_deleted AND NOT is_reimbursement) AS first_expense_at,
+    (SELECT MAX(expense_date)::date FROM expenses
+        WHERE group_id = g.id AND NOT is_deleted AND NOT is_reimbursement) AS last_expense_at
+FROM groups g
+WHERE g.id = $1
+`
+
+type GroupStatsRow struct {
+	CreatedAt      pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	MemberCount    int64              `db:"member_count" json:"member_count"`
+	ExpenseCount   int64              `db:"expense_count" json:"expense_count"`
+	FirstExpenseAt pgtype.Date        `db:"first_expense_at" json:"first_expense_at"`
+	LastExpenseAt  pgtype.Date        `db:"last_expense_at" json:"last_expense_at"`
+}
+
+// Single-row aggregation for the GET /api/groups/{id}/stats endpoint.
+// Filters out soft-deleted and reimbursement rows so the figures mirror
+// the member_balances view's "what counts as a real expense" rule.
+func (q *Queries) GroupStats(ctx context.Context, id string) (GroupStatsRow, error) {
+	row := q.db.QueryRow(ctx, groupStats, id)
+	var i GroupStatsRow
+	err := row.Scan(
+		&i.CreatedAt,
+		&i.MemberCount,
+		&i.ExpenseCount,
+		&i.FirstExpenseAt,
+		&i.LastExpenseAt,
+	)
+	return i, err
+}
+
+const groupStatsTopSpender = `-- name: GroupStatsTopSpender :one
+SELECT gm.id AS member_id,
+       gm.user_id,
+       gm.name AS display_name,
+       SUM(e.amount)::bigint AS minor_units_paid,
+       e.currency
+FROM expenses e
+JOIN group_members gm ON gm.id = e.paid_by_id
+WHERE e.group_id = $1
+  AND NOT e.is_deleted
+  AND NOT e.is_reimbursement
+  AND e.currency = $2
+GROUP BY gm.id, gm.user_id, gm.name, gm.joined_at, e.currency
+ORDER BY SUM(e.amount) DESC, gm.joined_at ASC, gm.id ASC
+LIMIT 1
+`
+
+type GroupStatsTopSpenderParams struct {
+	GroupID  string `db:"group_id" json:"group_id"`
+	Currency string `db:"currency" json:"currency"`
+}
+
+type GroupStatsTopSpenderRow struct {
+	MemberID       string      `db:"member_id" json:"member_id"`
+	UserID         pgtype.Text `db:"user_id" json:"user_id"`
+	DisplayName    string      `db:"display_name" json:"display_name"`
+	MinorUnitsPaid int64       `db:"minor_units_paid" json:"minor_units_paid"`
+	Currency       string      `db:"currency" json:"currency"`
+}
+
+// The single top-spender row in the group base currency. Joined against
+// group_members so a paid_by row whose member was removed (impossible
+// today, but defensive) doesn't break the query. Tie-break by joined_at
+// then member id so the result is stable.
+func (q *Queries) GroupStatsTopSpender(ctx context.Context, arg GroupStatsTopSpenderParams) (GroupStatsTopSpenderRow, error) {
+	row := q.db.QueryRow(ctx, groupStatsTopSpender, arg.GroupID, arg.Currency)
+	var i GroupStatsTopSpenderRow
+	err := row.Scan(
+		&i.MemberID,
+		&i.UserID,
+		&i.DisplayName,
+		&i.MinorUnitsPaid,
+		&i.Currency,
+	)
+	return i, err
+}
+
+const groupStatsTotalsByCurrency = `-- name: GroupStatsTotalsByCurrency :many
+SELECT currency, SUM(amount)::bigint AS total_minor_units
+FROM expenses
+WHERE group_id = $1 AND NOT is_deleted AND NOT is_reimbursement
+GROUP BY currency
+ORDER BY currency ASC
+`
+
+type GroupStatsTotalsByCurrencyRow struct {
+	Currency        string `db:"currency" json:"currency"`
+	TotalMinorUnits int64  `db:"total_minor_units" json:"total_minor_units"`
+}
+
+// One row per currency with the sum of expense amounts in that currency.
+// Filter mirrors GroupStats.
+func (q *Queries) GroupStatsTotalsByCurrency(ctx context.Context, groupID string) ([]GroupStatsTotalsByCurrencyRow, error) {
+	rows, err := q.db.Query(ctx, groupStatsTotalsByCurrency, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GroupStatsTotalsByCurrencyRow{}
+	for rows.Next() {
+		var i GroupStatsTotalsByCurrencyRow
+		if err := rows.Scan(&i.Currency, &i.TotalMinorUnits); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const hardDeleteGroup = `-- name: HardDeleteGroup :exec
+DELETE FROM groups WHERE id = $1
+`
+
+// Cascade FKs on group_id handle the rest, but we delete in explicit
+// order to make the dependency chain readable and to keep the option of
+// adding non-cascading FKs later.
+func (q *Queries) HardDeleteGroup(ctx context.Context, id string) error {
+	_, err := q.db.Exec(ctx, hardDeleteGroup, id)
+	return err
+}
+
 const listGroupsByUserID = `-- name: ListGroupsByUserID :many
-SELECT g.id, g.name, g.currency, g.created_by, g.invite_token, g.is_archived, g.created_at, g.updated_at, g.language FROM groups g
+SELECT g.id, g.name, g.currency, g.created_by, g.invite_token, g.is_archived, g.created_at, g.updated_at, g.language, g.is_locked FROM groups g
 JOIN group_members gm ON gm.group_id = g.id
 WHERE gm.user_id = $1 AND NOT g.is_archived
 ORDER BY g.updated_at DESC
@@ -118,7 +266,86 @@ func (q *Queries) ListGroupsByUserID(ctx context.Context, userID pgtype.Text) ([
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Language,
+			&i.IsLocked,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listMemberBalancesByGroup = `-- name: ListMemberBalancesByGroup :many
+SELECT member_id, user_id, currency, net_balance
+FROM member_balances
+WHERE group_id = $1 AND currency IS NOT NULL AND net_balance != 0
+`
+
+type ListMemberBalancesByGroupRow struct {
+	MemberID   string      `db:"member_id" json:"member_id"`
+	UserID     pgtype.Text `db:"user_id" json:"user_id"`
+	Currency   pgtype.Text `db:"currency" json:"currency"`
+	NetBalance int64       `db:"net_balance" json:"net_balance"`
+}
+
+// Convenience read for the hard-delete and remove-member preconditions.
+// Returns one row per (member, currency) where net_balance != 0.
+func (q *Queries) ListMemberBalancesByGroup(ctx context.Context, groupID string) ([]ListMemberBalancesByGroupRow, error) {
+	rows, err := q.db.Query(ctx, listMemberBalancesByGroup, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListMemberBalancesByGroupRow{}
+	for rows.Next() {
+		var i ListMemberBalancesByGroupRow
+		if err := rows.Scan(
+			&i.MemberID,
+			&i.UserID,
+			&i.Currency,
+			&i.NetBalance,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listMemberOpenBalances = `-- name: ListMemberOpenBalances :many
+SELECT currency, net_balance
+FROM member_balances
+WHERE group_id = $1 AND member_id = $2 AND currency IS NOT NULL AND net_balance != 0
+`
+
+type ListMemberOpenBalancesParams struct {
+	GroupID  string `db:"group_id" json:"group_id"`
+	MemberID string `db:"member_id" json:"member_id"`
+}
+
+type ListMemberOpenBalancesRow struct {
+	Currency   pgtype.Text `db:"currency" json:"currency"`
+	NetBalance int64       `db:"net_balance" json:"net_balance"`
+}
+
+// Open (non-zero) balances for a single member, used by leave/kick and
+// can-leave probe.
+func (q *Queries) ListMemberOpenBalances(ctx context.Context, arg ListMemberOpenBalancesParams) ([]ListMemberOpenBalancesRow, error) {
+	rows, err := q.db.Query(ctx, listMemberOpenBalances, arg.GroupID, arg.MemberID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListMemberOpenBalancesRow{}
+	for rows.Next() {
+		var i ListMemberOpenBalancesRow
+		if err := rows.Scan(&i.Currency, &i.NetBalance); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -132,7 +359,7 @@ func (q *Queries) ListGroupsByUserID(ctx context.Context, userID pgtype.Text) ([
 const regenerateInviteToken = `-- name: RegenerateInviteToken :one
 UPDATE groups SET invite_token = $2, updated_at = NOW()
 WHERE id = $1
-RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language
+RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked
 `
 
 type RegenerateInviteTokenParams struct {
@@ -153,6 +380,36 @@ func (q *Queries) RegenerateInviteToken(ctx context.Context, arg RegenerateInvit
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Language,
+		&i.IsLocked,
+	)
+	return i, err
+}
+
+const setGroupLocked = `-- name: SetGroupLocked :one
+UPDATE groups SET is_locked = $2, updated_at = NOW()
+WHERE id = $1
+RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked
+`
+
+type SetGroupLockedParams struct {
+	ID       string `db:"id" json:"id"`
+	IsLocked bool   `db:"is_locked" json:"is_locked"`
+}
+
+func (q *Queries) SetGroupLocked(ctx context.Context, arg SetGroupLockedParams) (Group, error) {
+	row := q.db.QueryRow(ctx, setGroupLocked, arg.ID, arg.IsLocked)
+	var i Group
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Currency,
+		&i.CreatedBy,
+		&i.InviteToken,
+		&i.IsArchived,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Language,
+		&i.IsLocked,
 	)
 	return i, err
 }
@@ -165,7 +422,7 @@ SET name        = COALESCE($2, name),
     is_archived = COALESCE($5, is_archived),
     updated_at  = NOW()
 WHERE id = $1
-RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language
+RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked
 `
 
 type UpdateGroupParams struct {
@@ -195,6 +452,7 @@ func (q *Queries) UpdateGroup(ctx context.Context, arg UpdateGroupParams) (Group
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Language,
+		&i.IsLocked,
 	)
 	return i, err
 }

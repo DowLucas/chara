@@ -161,6 +161,57 @@ func (q *Queries) ListGroupMembers(ctx context.Context, groupID string) ([]Group
 	return items, nil
 }
 
+const listGroupMembersWithUser = `-- name: ListGroupMembersWithUser :many
+SELECT gm.id, gm.group_id, gm.user_id, gm.name, gm.role, gm.is_ghost, gm.joined_at, u.phone AS user_phone
+FROM group_members gm
+LEFT JOIN users u ON u.id = gm.user_id
+WHERE gm.group_id = $1
+ORDER BY gm.joined_at ASC
+`
+
+type ListGroupMembersWithUserRow struct {
+	ID        string             `db:"id" json:"id"`
+	GroupID   string             `db:"group_id" json:"group_id"`
+	UserID    pgtype.Text        `db:"user_id" json:"user_id"`
+	Name      string             `db:"name" json:"name"`
+	Role      string             `db:"role" json:"role"`
+	IsGhost   bool               `db:"is_ghost" json:"is_ghost"`
+	JoinedAt  pgtype.Timestamptz `db:"joined_at" json:"joined_at"`
+	UserPhone pgtype.Text        `db:"user_phone" json:"user_phone"`
+}
+
+// Members joined against users so handlers can surface user-level fields
+// (phone for Swish deep-links, locale, etc.) without a second round-trip.
+// LEFT JOIN because ghost members have NULL user_id.
+func (q *Queries) ListGroupMembersWithUser(ctx context.Context, groupID string) ([]ListGroupMembersWithUserRow, error) {
+	rows, err := q.db.Query(ctx, listGroupMembersWithUser, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListGroupMembersWithUserRow{}
+	for rows.Next() {
+		var i ListGroupMembersWithUserRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.GroupID,
+			&i.UserID,
+			&i.Name,
+			&i.Role,
+			&i.IsGhost,
+			&i.JoinedAt,
+			&i.UserPhone,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateGroupMemberName = `-- name: UpdateGroupMemberName :one
 UPDATE group_members SET name = $2 WHERE id = $1 RETURNING id, group_id, user_id, name, role, is_ghost, joined_at
 `

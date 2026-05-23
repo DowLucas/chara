@@ -8,9 +8,9 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   Modal,
 } from 'react-native';
+import { showAlert } from '@/lib/app-alert';
 import { Feather } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -31,12 +31,16 @@ import {
   GroupMember,
   ScannedReceipt,
   ScannedReceiptItem,
-  FxConvertResponse,
 } from '@/lib/api';
 import { decimalToMinor } from '@/lib/i18n';
 import { ReceiptScanner, ReceiptScanResult } from '@/components/ReceiptScanner';
 import { CurrencyPicker } from '@/components/CurrencyPicker';
+import {
+  FxConversionSection,
+  useFxConversion,
+} from '@/components/FxConversionSection';
 import { ExpenseSavedOverlay } from '@/components/ExpenseSavedOverlay';
+import { notifyGroupChanged } from '@/lib/group-refresh';
 import { ScanItemsAssign } from '@/components/ScanItemsAssign';
 import { useAuth } from '@/lib/auth';
 import { currentLocale } from '@/lib/i18n';
@@ -55,7 +59,7 @@ import {
 
 const SPLIT_METHODS = [
   { id: 'equal', labelKey: 'addExpense.methodEqual' },
-  { id: 'exact', labelKey: 'addExpense.methodExact' },
+  { id: 'exact', labelKey: 'addExpense.methodManual' },
   { id: 'percentage', labelKey: 'addExpense.methodPercent' },
 ] as const;
 
@@ -126,8 +130,6 @@ export default function AddExpenseScreen() {
   // entering a foreign-currency expense and we show a live FX preview.
   const [selectedCurrency, setSelectedCurrency] = useState<string>('');
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [fxPreview, setFxPreview] = useState<FxConvertResponse | null>(null);
-  const [fxError, setFxError] = useState<string | null>(null);
   // Android opens picker on tap; iOS shows inline picker permanently.
   const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -303,47 +305,45 @@ export default function AddExpenseScreen() {
   const currency = selectedCurrency || groupCurrency;
   const isForeignCurrency = currency !== groupCurrency;
 
-  // Debounced FX preview. The /api/fx/convert call is server-side and
-  // round-trips, so don't refire on every keystroke — wait 350 ms after the
-  // user stops typing the amount.
-  useEffect(() => {
-    if (!isForeignCurrency || amountMinor <= 0) {
-      setFxPreview(null);
-      setFxError(null);
-      return;
-    }
-    let cancelled = false;
-    setFxError(null);
-    const handle = setTimeout(() => {
-      api
-        .convertFx({ from: currency, to: groupCurrency, amountMinor })
-        .then((res) => {
-          if (!cancelled) setFxPreview(res);
-        })
-        .catch((e) => {
-          if (cancelled) return;
-          setFxPreview(null);
-          setFxError(e?.message || 'rate unavailable');
-        });
-    }, 350);
-    return () => {
-      cancelled = true;
-      clearTimeout(handle);
-    };
-  }, [currency, groupCurrency, amountMinor, isForeignCurrency]);
+  // FX conversion. Mirrors the scan-receipt flow: fetch the rate, let the
+  // user override it, and submit the converted amount in the group's
+  // currency. Debounced because amountMinor changes on every keystroke.
+  const fxAsOf = toDateStr(date);
+  const { fx, rateInput, setRateInput, rateNumber, convertedMinor } =
+    useFxConversion({
+      from: currency,
+      to: groupCurrency,
+      amountMinor,
+      asOf: fxAsOf,
+      enabled: isForeignCurrency,
+      convertFx: api.convertFx,
+      debounceMs: 350,
+    });
+
+  // When the user enters in a foreign currency and FX is ready, step 2
+  // (split) operates in the group's currency at the converted total.
+  // Every split derivation below pivots off these "effective" values so
+  // the user picks amounts in the same currency that ultimately gets
+  // saved on the expense.
+  const fxApplied =
+    isForeignCurrency && fx?.kind === 'ready' && rateNumber !== null;
+  const effectiveAmountMinor = fxApplied ? convertedMinor : amountMinor;
+  const effectiveCurrency = fxApplied ? groupCurrency : currency;
 
   const includedMembers = members.filter((m) => included[m.id]);
   const equalShare =
     method === 'equal' && includedMembers.length > 0
-      ? Math.round(amountMinor / includedMembers.length)
+      ? Math.round(effectiveAmountMinor / includedMembers.length)
       : 0;
 
   // Switching split method wipes any per-member entries so values from one
   // mode (e.g. exact kronor) don't bleed into another (percentages).
+  // Also wipe when the effective split currency flips (foreign ↔ group on
+  // FX toggle) — exact amounts typed in one currency don't carry over.
   useEffect(() => {
     setExactByMember({});
     setPctByMember({});
-  }, [method]);
+  }, [method, effectiveCurrency]);
 
   // A row is "locked" if the user has typed anything in it. Empty rows are
   // "auto" and split the remainder evenly among themselves.
@@ -373,12 +373,12 @@ export default function AddExpenseScreen() {
       if (locked === null) autoIds.push(m.id);
       else lockedSum += locked;
     }
-    const remaining = amountMinor - lockedSum;
+    const remaining = effectiveAmountMinor - lockedSum;
     const shares = distributeInt(remaining, autoIds.length);
     const out: Record<string, number> = {};
     autoIds.forEach((id, i) => (out[id] = shares[i] ?? 0));
     return out;
-  }, [method, includedMembers, exactByMember, amountMinor]);
+  }, [method, includedMembers, exactByMember, effectiveAmountMinor]);
 
   // For percentage mode: same idea, but the budget is 10000 basis points.
   const autoPctBp = useMemo<Record<string, number>>(() => {
@@ -405,7 +405,7 @@ export default function AddExpenseScreen() {
     }
     if (method === 'percentage') {
       const bp = lockedPctBp(memberId) ?? autoPctBp[memberId] ?? 0;
-      return Math.round((amountMinor * bp) / 10000);
+      return Math.round((effectiveAmountMinor * bp) / 10000);
     }
     return 0;
   }
@@ -416,11 +416,11 @@ export default function AddExpenseScreen() {
     // shares always sum back to the total. Multiplying the displayed
     // per-member figure here would drift by up to N-1 cents and surface a
     // bogus "0.03 off" line. By definition, equal mode is never off.
-    if (method === 'equal') return amountMinor;
+    if (method === 'equal') return effectiveAmountMinor;
     return includedMembers.reduce((s, m) => s + effectiveMinor(m.id), 0);
-  }, [method, equalShare, includedMembers, exactByMember, pctByMember, amountMinor, autoExactMinor, autoPctBp]);
+  }, [method, equalShare, includedMembers, exactByMember, pctByMember, effectiveAmountMinor, autoExactMinor, autoPctBp]);
 
-  const offBy = totalSplitMinor - amountMinor;
+  const offBy = totalSplitMinor - effectiveAmountMinor;
 
   const canContinueStep1 = title.trim().length > 0 && amountMinor > 0;
 
@@ -452,13 +452,27 @@ export default function AddExpenseScreen() {
   async function handleSubmit() {
     if (!id || !canSubmit || !payerMemberId) return;
 
+    const MAX_AMOUNT_MINOR = 9_999_999_99;
+    if (amountMinor > MAX_AMOUNT_MINOR) {
+      showAlert({
+        title: t('addExpense.saveErrorTitle'),
+        message: `Amount too large. Maximum is ${fmtMinor(MAX_AMOUNT_MINOR, currency)}.`,
+      });
+      return;
+    }
+
     setSaving(true);
     try {
-      const amountDecimal = (amountMinor / 100).toFixed(2);
+      // Step 2 already operates in `effectiveCurrency` (group currency
+      // when FX is applied, otherwise the user's selected currency), so
+      // submitting those values directly is enough — no further rate
+      // scaling. Same-currency / FX-loading / FX-error all fall through
+      // to the original amount + currency and let the backend handle it.
+      const amountDecimal = (effectiveAmountMinor / 100).toFixed(2);
       const base = {
         title: title.trim(),
         amount: amountDecimal,
-        currency,
+        currency: effectiveCurrency,
         paid_by_id: payerMemberId,
         expense_date: effectiveDate(),
         split_method: method,
@@ -488,6 +502,11 @@ export default function AddExpenseScreen() {
         });
       }
 
+      // Tell the group-detail screen to refetch. Fire before any
+      // navigation / overlay so subscribers landing back on the group
+      // page (via overlay-continue or deep-link return) get fresh data.
+      notifyGroupChanged(serverUrl, id);
+
       // If a receipt was scanned, persist the image now that we have an
       // expense id to link it to. A failed upload is non-fatal — the
       // expense itself is already saved and the user can re-attach later
@@ -509,9 +528,9 @@ export default function AddExpenseScreen() {
       // Continue button dismisses back to the group page; we keep the
       // form mounted underneath so a quick add->add->add flow could be
       // wired in later without re-mounting the screen.
-      setSavedSubtitle(`${base.title} · ${fmtMinor(amountMinor, currency)}`);
+      setSavedSubtitle(`${base.title} · ${fmtMinor(effectiveAmountMinor, effectiveCurrency)}`);
     } catch (e: any) {
-      Alert.alert(t('addExpense.saveErrorTitle'), e?.message || t('addExpense.saveErrorBody'));
+      showAlert({ title: t('addExpense.saveErrorTitle'), message: e?.message || t('addExpense.saveErrorBody') });
     } finally {
       setSaving(false);
     }
@@ -530,7 +549,7 @@ export default function AddExpenseScreen() {
     >
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <TopBar
-          title={t('addExpense.title')}
+          title={group?.name ? t('addExpense.titleInGroup', { group: group.name }) : t('addExpense.title')}
           left={
             <IconButton
               icon={step === 1 ? 'x' : 'arrow-left'}
@@ -552,6 +571,7 @@ export default function AddExpenseScreen() {
               amount={amount}
               setAmount={setAmount}
               currency={currency}
+              onOpenCurrencyPicker={() => setPickerOpen(true)}
               title={title}
               setTitle={setTitle}
               date={date}
@@ -562,14 +582,21 @@ export default function AddExpenseScreen() {
               onOpenKeypad={() => setKeypadTarget({ kind: 'amount' })}
               ocrAvailable={ocrAvailable}
               onScanReceipt={() => setScannerOpen(true)}
+              isForeignCurrency={isForeignCurrency}
+              groupCurrency={groupCurrency}
+              amountMinor={amountMinor}
+              fx={fx}
+              rateInput={rateInput}
+              setRateInput={setRateInput}
+              rateNumber={rateNumber}
             />
           )}
 
           {step === 2 && (
             <Step2
               t={t}
-              currency={currency}
-              amountMinor={amountMinor}
+              currency={effectiveCurrency}
+              amountMinor={effectiveAmountMinor}
               recapMeta={recapMeta}
               groupName={group?.name ?? '—'}
               members={members}
@@ -656,6 +683,11 @@ export default function AddExpenseScreen() {
           value={date}
           mode="date"
           maximumDate={new Date()}
+          minimumDate={(() => {
+            const d = new Date();
+            d.setFullYear(d.getFullYear() - 5);
+            return d;
+          })()}
           display="default"
           onChange={(event, selected) => {
             setShowDatePicker(false);
@@ -677,6 +709,16 @@ export default function AddExpenseScreen() {
           onCancel={() => setScannerOpen(false)}
         />
       </Modal>
+
+      <CurrencyPicker
+        visible={pickerOpen}
+        selected={currency}
+        onClose={() => setPickerOpen(false)}
+        onSelect={(code) => {
+          setSelectedCurrency(code);
+          setPickerOpen(false);
+        }}
+      />
 
       <ScanItemsAssign
         visible={scanItemsState !== null}
@@ -742,6 +784,7 @@ interface Step1Props {
   amount: string;
   setAmount: (v: string) => void;
   currency: string;
+  onOpenCurrencyPicker: () => void;
   title: string;
   setTitle: (v: string) => void;
   date: Date;
@@ -752,12 +795,20 @@ interface Step1Props {
   onOpenKeypad: () => void;
   ocrAvailable: boolean;
   onScanReceipt: () => void;
+  isForeignCurrency: boolean;
+  groupCurrency: string;
+  amountMinor: number;
+  fx: ReturnType<typeof useFxConversion>['fx'];
+  rateInput: string;
+  setRateInput: (v: string) => void;
+  rateNumber: number | null;
 }
 function Step1({
   t,
   amount,
   setAmount,
   currency,
+  onOpenCurrencyPicker,
   title,
   setTitle,
   date,
@@ -768,23 +819,57 @@ function Step1({
   onOpenKeypad,
   ocrAvailable,
   onScanReceipt,
+  isForeignCurrency,
+  groupCurrency,
+  amountMinor,
+  fx,
+  rateInput,
+  setRateInput,
+  rateNumber,
 }: Step1Props) {
   return (
     <View>
       <View style={styles.hero}>
         <Text style={styles.eyebrow}>{t('addExpense.amount')}</Text>
-        <TouchableOpacity activeOpacity={0.7} onPress={onOpenKeypad} style={styles.amountRow}>
-          <Text
-            style={[
-              styles.amountInput,
-              !amount && { color: colors.lead },
-            ]}
+        <View style={styles.amountRow}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={onOpenKeypad}
+            style={styles.amountTouchable}
           >
-            {amount || '0'}
-          </Text>
-          <Text style={styles.currency}>{currency.toLowerCase()}</Text>
-        </TouchableOpacity>
+            <Text
+              style={[
+                styles.amountInput,
+                !amount && { color: colors.lead },
+              ]}
+            >
+              {amount || '0'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={onOpenCurrencyPicker}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('addExpense.changeCurrency')}
+            style={styles.currencyTouchable}
+          >
+            <Text style={styles.currency}>{currency.toLowerCase()}</Text>
+            <Feather name="chevron-down" size={16} color={colors.lead} />
+          </TouchableOpacity>
+        </View>
         <View style={styles.rule} />
+        {isForeignCurrency && amountMinor > 0 && (
+          <FxConversionSection
+            from={currency}
+            to={groupCurrency}
+            amountMinor={amountMinor}
+            fx={fx}
+            rateInput={rateInput}
+            setRateInput={setRateInput}
+            rateNumber={rateNumber}
+          />
+        )}
       </View>
 
       {ocrAvailable && (
@@ -807,6 +892,7 @@ function Step1({
           placeholder={t('addExpense.titlePlaceholder')}
           placeholderTextColor={colors.lead}
           style={styles.titleInput}
+          maxLength={120}
         />
       </View>
 
@@ -971,7 +1057,9 @@ function Step2({
                 { color: offBy === 0 ? colors.moss : colors.brick },
               ]}
             >
-              {fmtMinor(Math.abs(offBy), currency)} {t('addExpense.off')}
+              {offBy === 0
+                ? ''
+                : `${fmtMinor(Math.abs(offBy), currency)} ${offBy > 0 ? t('addExpense.leftToAssign') : t('addExpense.overBy')}`}
             </Text>
           </View>
         </View>
@@ -1106,6 +1194,11 @@ function DateInput({
           value={date}
           mode="date"
           maximumDate={new Date()}
+          minimumDate={(() => {
+            const d = new Date();
+            d.setFullYear(d.getFullYear() - 5);
+            return d;
+          })()}
           display="compact"
           themeVariant="light"
           accentColor={colors.vermillion}
@@ -1174,14 +1267,21 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   amountRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
+  amountTouchable: { flex: 1 },
   amountInput: {
-    flex: 1,
     fontFamily: fontMono,
     fontSize: 56,
     letterSpacing: -1.5,
     color: colors.graphite,
     padding: 0,
     fontVariant: ['tabular-nums'],
+  },
+  currencyTouchable: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 4,
   },
   currency: { fontFamily: fontMono, fontSize: 24, color: colors.lead },
   rule: { height: 1.5, backgroundColor: colors.graphite, marginTop: 12 },

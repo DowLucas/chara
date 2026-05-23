@@ -7,10 +7,10 @@ import {
   TouchableWithoutFeedback,
   StyleSheet,
   Platform,
-  ActionSheetIOS,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import i18n from '@/lib/i18n';
+import { markPopupClosed } from '@/lib/popup-guard';
 import { colors, fontBody, fontBodyMedium, fontMono, fontSize, spacing } from '@/lib/theme';
 
 export interface ActionSheetOption {
@@ -31,6 +31,14 @@ export function ActionSheet({ visible, onClose, title, options }: Props) {
   const insets = useSafeAreaInsets();
   const cancelLabel = i18n.t('common.cancel');
 
+  // Stamp the popup-guard whenever this sheet closes so the parent screen's
+  // row underneath the backdrop can't fire `onPress` in the same gesture
+  // that dismissed us. See app/lib/popup-guard.ts.
+  const closeWithGuard = React.useCallback(() => {
+    markPopupClosed();
+    onClose();
+  }, [onClose]);
+
   // On iOS, the native sheet is the right primitive — but we only invoke it
   // imperatively. Callers that want the native sheet should use openNativeSheet
   // directly; this component renders the Android/Web bottom sheet UI.
@@ -39,10 +47,10 @@ export function ActionSheet({ visible, onClose, title, options }: Props) {
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={closeWithGuard}
       statusBarTranslucent
     >
-      <TouchableWithoutFeedback onPress={onClose}>
+      <TouchableWithoutFeedback onPress={closeWithGuard}>
         <View style={styles.backdrop} />
       </TouchableWithoutFeedback>
       <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.s3 }]}>
@@ -56,7 +64,7 @@ export function ActionSheet({ visible, onClose, title, options }: Props) {
             key={`${opt.label}-${i}`}
             style={[styles.row, i === 0 && !title && styles.rowFirst]}
             onPress={() => {
-              onClose();
+              closeWithGuard();
               // Defer so the modal can dismiss before the next screen mounts.
               setTimeout(opt.onPress, Platform.OS === 'android' ? 80 : 0);
             }}
@@ -67,7 +75,7 @@ export function ActionSheet({ visible, onClose, title, options }: Props) {
             </Text>
           </TouchableOpacity>
         ))}
-        <TouchableOpacity style={[styles.row, styles.cancelRow]} onPress={onClose} activeOpacity={0.7}>
+        <TouchableOpacity style={[styles.row, styles.cancelRow]} onPress={closeWithGuard} activeOpacity={0.7}>
           <Text style={[styles.rowLabel, styles.cancelLabel]}>{cancelLabel}</Text>
         </TouchableOpacity>
       </View>
@@ -75,27 +83,19 @@ export function ActionSheet({ visible, onClose, title, options }: Props) {
   );
 }
 
-/** Convenience: on iOS, show the native sheet; on other platforms, the caller
- *  should render <ActionSheet> with its own visible state. */
+/**
+ * Backward-compat shim. Previously this fired the native iOS ActionSheetIOS;
+ * we now always render the JS `<ActionSheet>` component so the look matches
+ * the rest of the app's custom modal infrastructure. Returns `false`
+ * unconditionally so existing callers fall through to their JS-sheet
+ * fallback path. New code should render `<ActionSheet>` directly.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function openNativeActionSheet(
-  title: string | undefined,
-  options: ActionSheetOption[],
+  _title: string | undefined,
+  _options: ActionSheetOption[],
 ): boolean {
-  if (Platform.OS !== 'ios') return false;
-  const labels = [...options.map((o) => o.label), i18n.t('common.cancel')];
-  const destructiveIndex = options.findIndex((o) => o.destructive);
-  ActionSheetIOS.showActionSheetWithOptions(
-    {
-      title,
-      options: labels,
-      cancelButtonIndex: labels.length - 1,
-      destructiveButtonIndex: destructiveIndex === -1 ? undefined : destructiveIndex,
-    },
-    (i) => {
-      if (i >= 0 && i < options.length) options[i].onPress();
-    },
-  );
-  return true;
+  return false;
 }
 
 const styles = StyleSheet.create({

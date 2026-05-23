@@ -13,7 +13,6 @@ import {
   ScrollView,
   StyleSheet,
   RefreshControl,
-  TouchableOpacity,
 } from 'react-native';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -143,7 +142,6 @@ export default function GroupActivityScreen() {
               <ActivityRow
                 key={e.id}
                 event={e}
-                serverUrl={serverUrl}
                 youUserId={user?.id ?? ''}
               />
             ))}
@@ -158,11 +156,9 @@ export default function GroupActivityScreen() {
 
 function ActivityRow({
   event,
-  serverUrl,
   youUserId,
 }: {
   event: ActivityEvent;
-  serverUrl: string;
   youUserId: string;
 }) {
   const { t } = useTranslation();
@@ -172,25 +168,15 @@ function ActivityRow({
   const sentence = describeEvent(event, { actor, group, t });
   const time = formatTime(new Date(event.created_at));
 
-  const onPress = () => {
-    if (!event.entity_id) return;
-    if (event.event_type.startsWith('expense_')) {
-      router.push(
-        `/expenses/${encodeURIComponent(serverUrl)}/${event.entity_id}` as never,
-      );
-    }
-    // settlement_* / group_* / member_* stay on this group; no-op.
-  };
-
   return (
-    <TouchableOpacity activeOpacity={0.7} onPress={onPress} style={styles.row}>
+    <View style={styles.row}>
       <View style={styles.rowLeft}>
         <Text style={styles.rowTitle} numberOfLines={2}>
           {sentence}
         </Text>
         <Text style={styles.rowMeta}>{time}</Text>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 

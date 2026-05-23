@@ -22,7 +22,12 @@ const (
 	EventGroupCreated       = "group_created"
 	EventGroupUpdated       = "group_updated"
 	EventGroupArchived      = "group_archived"
+	EventGroupUnarchived    = "group_unarchived"
+	EventGroupLocked        = "group_locked"
+	EventGroupUnlocked      = "group_unlocked"
 	EventInviteLinkRotated  = "invite_link_rotated"
+	EventMemberLeft         = "member_left"
+	EventMemberKicked       = "member_kicked"
 
 	EntityExpense    = "expense"
 	EntitySettlement = "settlement"

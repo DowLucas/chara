@@ -77,6 +77,7 @@ type Group struct {
 	CreatedAt   pgtype.Timestamptz `db:"created_at" json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
 	Language    string             `db:"language" json:"language"`
+	IsLocked    bool               `db:"is_locked" json:"is_locked"`
 }
 
 type GroupMember struct {
