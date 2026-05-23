@@ -47,31 +47,36 @@ export function currentLocale(): string {
 
 /** Convert a wire-format decimal string ("12.34", "12", "-6.00") to int64
  *  minor units (1234, 1200, -600). Assumes 2-decimal currencies; expand if
- *  you ever support JPY/KWD. */
-export function decimalToMinor(decimal: string | number): number {
-  if (typeof decimal === 'number') return Math.round(decimal * 100);
-  const s = decimal.trim();
-  if (!s) return 0;
-  const neg = s.startsWith('-');
-  const body = neg ? s.slice(1) : s;
-  const [intPart, fracPart = ''] = body.split('.');
-  const frac = (fracPart + '00').slice(0, 2);
-  const n = parseInt(intPart || '0', 10) * 100 + parseInt(frac || '0', 10);
-  return neg ? -n : n;
-}
+ *  you ever support JPY/KWD. Re-exported from a pure module so jest can
+ *  pull it without dragging in expo-localization. */
+export { decimalToMinor } from './money-utils';
 
-/** Format a money value stored as minor units (öre/cents) into a localized
- *  string like "1 234 SEK" or "-1,234 USD". `relative` adds a leading sign. */
+/** Format a money value stored as minor units (öre/cents) using the device's
+ *  locale and the currency's native presentation — "495,82 kr" for SEK in
+ *  sv-SE, "$1,234.56" for USD in en-US, "1.234,56 €" for EUR in de-DE. Falls
+ *  back to "amount CODE" if the runtime can't resolve the currency.
+ *  `relative` adds a leading + / − sign. */
 export function formatMinorUnits(minor: number | string, currency: string, opts?: { relative?: boolean }): string {
   const n = typeof minor === 'string' ? parseInt(minor, 10) : minor;
-  if (!Number.isFinite(n)) return `0 ${currency}`;
-  const abs = Math.abs(n);
-  const formatted = (abs / 100).toLocaleString(currentLocale(), { minimumFractionDigits: 0 });
-  if (opts?.relative) {
-    const sign = n > 0 ? '+' : n < 0 ? '−' : '';
-    return `${sign}${formatted} ${currency}`;
+  const safe = Number.isFinite(n) ? n : 0;
+  const value = Math.abs(safe) / 100;
+  let formatted: string;
+  try {
+    formatted = new Intl.NumberFormat(currentLocale(), {
+      style: 'currency',
+      currency,
+      currencyDisplay: 'narrowSymbol',
+    }).format(value);
+  } catch {
+    // Unknown ISO code on this runtime — keep the old shape so the UI
+    // doesn't crash.
+    formatted = `${value.toLocaleString(currentLocale(), { minimumFractionDigits: 0 })} ${currency}`;
   }
-  return `${formatted} ${currency}`;
+  if (opts?.relative) {
+    const sign = safe > 0 ? '+' : safe < 0 ? '−' : '';
+    return `${sign}${formatted}`;
+  }
+  return formatted;
 }
 
 /** Localized date string (short form). */

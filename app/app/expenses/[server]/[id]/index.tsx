@@ -22,6 +22,7 @@ import {
 import { useAccount } from '@/lib/accounts';
 import { currentLocale, formatDate, formatMinorUnits } from '@/lib/i18n';
 import { computeBalanceImpact } from '@/lib/balance-impact';
+import { isPopupJustClosed } from '@/lib/popup-guard';
 import { initialsOf } from '@/lib/name';
 import { colors, fontDisplay, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
 
@@ -91,6 +92,9 @@ export default function ExpenseDetailScreen() {
   );
 
   function openMenu() {
+    // Don't reopen the action sheet if a popup was just dismissed by
+    // tapping near this trigger. See app/lib/popup-guard.ts.
+    if (isPopupJustClosed()) return;
     if (!isAuthor) return;
     const options: ActionSheetOption[] = [
       {
@@ -175,16 +179,13 @@ export default function ExpenseDetailScreen() {
       <TopBar
         left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
         right={
-          <View style={{ flexDirection: 'row' }}>
-            <IconButton icon="message-square" label={t('expenseDetail.commentsLabel')} />
-            {isAuthor && (
-              <IconButton
-                icon="more-vertical"
-                label={t('expenseDetail.actions.menu')}
-                onPress={openMenu}
-              />
-            )}
-          </View>
+          isAuthor ? (
+            <IconButton
+              icon="more-vertical"
+              label={t('expenseDetail.actions.menu')}
+              onPress={openMenu}
+            />
+          ) : undefined
         }
       />
       <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
@@ -474,7 +475,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontVariant: ['tabular-nums'],
   },
-  rule: { height: 1.5, backgroundColor: colors.graphite, marginTop: 14 },
+  rule: { height: 1, backgroundColor: colors.ruleSoft, marginTop: 14 },
   metaStrip: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, gap: 8 },
   metaCol: { flex: 1 },
   metaLabel: {
@@ -504,15 +505,22 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   sectionLabel: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
-  sectionRule: { height: 1.5, backgroundColor: colors.graphite, marginHorizontal: spacing.s5 },
+  sectionRule: {
+    height: 1,
+    backgroundColor: colors.ruleSoft,
+    marginHorizontal: spacing.s5,
+    marginBottom: spacing.s1,
+  },
   splitRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 14,
-    paddingHorizontal: spacing.s5,
-    borderBottomWidth: 0.5,
-    borderBottomColor: colors.ruleSoft,
+    paddingHorizontal: spacing.s4,
+    backgroundColor: colors.bone,
+    borderRadius: 10,
+    marginHorizontal: spacing.s4,
+    marginTop: spacing.s2,
   },
   splitLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   splitName: {
@@ -525,10 +533,10 @@ const styles = StyleSheet.create({
   splitAmount: {
     fontFamily: fontMono,
     fontSize: 16,
-    color: colors.brick,
+    color: colors.graphite,
     fontVariant: ['tabular-nums'],
   },
-  receiptWrap: { paddingHorizontal: spacing.s5, paddingTop: 12, gap: spacing.s2 },
+  receiptWrap: { paddingHorizontal: spacing.s4, paddingTop: spacing.s2, gap: spacing.s2 },
   receiptCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -536,16 +544,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.s4,
     paddingVertical: spacing.s3,
     backgroundColor: colors.bone,
-    borderWidth: 0.5,
-    borderColor: colors.ruleSoft,
-    borderRadius: 6,
+    borderRadius: 10,
   },
   receiptCardEmpty: {
     justifyContent: 'center',
   },
   receiptText: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontFamily: fontBody,
+    fontSize: fontSize.bodyS,
     color: colors.graphite,
     flex: 1,
   },

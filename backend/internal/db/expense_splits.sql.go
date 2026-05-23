@@ -76,3 +76,35 @@ func (q *Queries) ListSplitsByExpense(ctx context.Context, expenseID string) ([]
 	}
 	return items, nil
 }
+
+const listSplitsByGroup = `-- name: ListSplitsByGroup :many
+SELECT es.id, es.expense_id, es.member_id, es.share
+FROM expense_splits es
+JOIN expenses e ON e.id = es.expense_id
+WHERE e.group_id = $1 AND NOT e.is_deleted
+`
+
+func (q *Queries) ListSplitsByGroup(ctx context.Context, groupID string) ([]ExpenseSplit, error) {
+	rows, err := q.db.Query(ctx, listSplitsByGroup, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ExpenseSplit{}
+	for rows.Next() {
+		var i ExpenseSplit
+		if err := rows.Scan(
+			&i.ID,
+			&i.ExpenseID,
+			&i.MemberID,
+			&i.Share,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

@@ -8,9 +8,9 @@
  * the global `i18n` instance — the deep-link handler runs outside React.
  */
 
-import { Alert } from 'react-native';
 import { router } from 'expo-router';
 import i18n from './i18n';
+import { showAlert } from './app-alert';
 import * as analytics from './analytics';
 import { apiFor, ApiError, publicApi } from './api';
 import { runDiscoveryHandshake } from './discovery';
@@ -71,7 +71,7 @@ async function joinOn(
       return { kind: 'handled' };
     }
     analytics.track('group_join_failed', { code: joinFailureCode(e) });
-    Alert.alert(i18n.t('scanJoin.couldNotJoin'), e?.message || String(e));
+    showAlert({ title: i18n.t('scanJoin.couldNotJoin'), message: e?.message || String(e) });
     return { kind: 'handled' };
   }
 }
@@ -89,31 +89,29 @@ export async function dispatchInviteIntent(
 
     case 'choose-account': {
       // TODO(Wave 6+): replace with the design's chooser sheet when
-      // multi-account-per-server lands. For now the Alert is a pragmatic
+      // multi-account-per-server lands. For now the alert is a pragmatic
       // placeholder — the data model can't produce this branch anyway
       // (one account per serverUrl).
-      return new Promise<DispatchResult>((resolve) => {
-        const defaultHost = hostFor(intent.defaultPick);
-        const buttons = intent.candidateServerUrls.map((url) => ({
-          text: hostFor(url),
-          onPress: () => {
-            void joinOn(url, intent.token, source).then(resolve);
-          },
-        }));
-        // Pre-selected default first per spec §10.
-        buttons.sort((a, b) =>
-          a.text === defaultHost ? -1 : b.text === defaultHost ? 1 : 0,
-        );
-        buttons.push({
-          text: i18n.t('common.cancel'),
-          // RN's Alert button accepts `style` at runtime; the inferred type
-          // from `.map()` above doesn't include it, so cast.
-          // @ts-expect-error see note
-          style: 'cancel',
-          onPress: () => resolve({ kind: 'handled' }),
-        });
-        Alert.alert(i18n.t('scanJoin.chooseAccount'), undefined, buttons);
+      const defaultHost = hostFor(intent.defaultPick);
+      const candidateButtons = intent.candidateServerUrls.map((url) => ({
+        key: url,
+        label: hostFor(url),
+      }));
+      // Pre-selected default first per spec §10.
+      candidateButtons.sort((a, b) =>
+        a.label === defaultHost ? -1 : b.label === defaultHost ? 1 : 0,
+      );
+      const result = await showAlert({
+        title: i18n.t('scanJoin.chooseAccount'),
+        buttons: [
+          ...candidateButtons,
+          { key: 'cancel', label: i18n.t('common.cancel'), style: 'cancel' },
+        ],
       });
+      if (result && result !== 'cancel') {
+        return joinOn(result, intent.token, source);
+      }
+      return { kind: 'handled' };
     }
 
     case 'add-account-then-join': {
@@ -125,7 +123,7 @@ export async function dispatchInviteIntent(
         checkCompat: (args) => checkProtocolCompat(args),
       });
       if (!result.ok) {
-        Alert.alert(i18n.t('scanJoin.unreachable', { host }));
+        showAlert({ title: i18n.t('scanJoin.unreachable', { host }) });
         return { kind: 'handled' };
       }
       const qs = new URLSearchParams();

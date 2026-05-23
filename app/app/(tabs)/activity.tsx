@@ -22,9 +22,7 @@ import {
   ScrollView,
   StyleSheet,
   RefreshControl,
-  TouchableOpacity,
 } from 'react-native';
-import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
@@ -167,45 +165,22 @@ export default function ActivityScreen() {
 
 function ActivityRow({ row, youUserId }: { row: Row; youUserId: string }) {
   const { t } = useTranslation();
-  const { event, serverUrl } = row;
+  const { event } = row;
   const isYou = event.actor_id === youUserId;
   const actor = isYou ? t('activity.you') : event.actor_name || t('common.dash');
   const group = event.group_name ?? '';
   const sentence = describeEvent(event, { actor, group, t });
   const time = formatTime(new Date(event.created_at));
 
-  const onPress = () => {
-    if (!event.entity_id) return navigateToGroup(serverUrl, event.group_id);
-    if (event.event_type.startsWith('expense_')) {
-      router.push(
-        `/expenses/${encodeURIComponent(serverUrl)}/${event.entity_id}` as never,
-      );
-      return;
-    }
-    if (event.event_type.startsWith('settlement_')) {
-      // No dedicated settlement-detail route; deep-link to the group
-      // detail screen which lists settlements.
-      navigateToGroup(serverUrl, event.group_id);
-      return;
-    }
-    navigateToGroup(serverUrl, event.group_id);
-  };
-
   return (
-    <TouchableOpacity activeOpacity={0.7} onPress={onPress} style={styles.row}>
+    <View style={styles.row}>
       <View style={styles.rowLeft}>
         <Text style={styles.rowTitle} numberOfLines={2}>
           {sentence}
         </Text>
         <Text style={styles.rowMeta}>{time}</Text>
       </View>
-    </TouchableOpacity>
-  );
-}
-
-function navigateToGroup(serverUrl: string, groupId: string) {
-  router.push(
-    `/groups/${encodeURIComponent(serverUrl)}/${groupId}` as never,
+    </View>
   );
 }
 
@@ -225,20 +200,32 @@ function describeEvent(event: ActivityEvent, ctx: DescribeCtx): string {
   switch (event.event_type) {
     case 'expense_added': {
       const s = (p?.snapshot ?? {}) as ExpenseActivitySnapshot;
+      const hasFull = !!s.title && s.amount != null && !!s.currency;
+      if (!hasFull) {
+        return t('activity.event_expense_added_simple', { actor, group });
+      }
       return t('activity.event_expense_added', {
         actor,
         group,
-        title: s.title ?? '',
-        amount: s.amount != null && s.currency ? formatMinorUnits(s.amount, s.currency) : '',
+        title: s.title,
+        amount: formatMinorUnits(s.amount!, s.currency!),
       });
     }
-    case 'expense_edited': {
+    case 'expense_edited':
+    case 'expense_updated': {
+      // 'expense_updated' is the pre-rename event_type still in legacy rows.
       const s = (p?.snapshot ?? {}) as ExpenseActivitySnapshot;
-      return t('activity.event_expense_edited', { actor, group, title: s.title ?? '' });
+      if (!s.title) {
+        return t('activity.event_expense_edited_simple', { actor, group });
+      }
+      return t('activity.event_expense_edited', { actor, group, title: s.title });
     }
     case 'expense_deleted': {
       const s = (p?.snapshot ?? {}) as ExpenseActivitySnapshot;
-      return t('activity.event_expense_deleted', { actor, group, title: s.title ?? '' });
+      if (!s.title) {
+        return t('activity.event_expense_deleted_simple', { actor, group });
+      }
+      return t('activity.event_expense_deleted', { actor, group, title: s.title });
     }
     case 'settlement_added': {
       const s = (p?.snapshot ?? {}) as SettlementActivitySnapshot;

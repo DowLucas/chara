@@ -194,6 +194,15 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := requireGroupUnlocked(r.Context(), h.queries, groupID); err != nil {
+		if errors.Is(err, ErrGroupLocked) {
+			writeLockedError(w)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
 	var req settleReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
@@ -390,6 +399,15 @@ func (h *BalancesHandler) RevertSettlement(w http.ResponseWriter, r *http.Reques
 	claims := middleware.ClaimsFromContext(r.Context())
 
 	if _, ok := h.requireMember(w, r, groupID); !ok {
+		return
+	}
+
+	if err := requireGroupUnlocked(r.Context(), h.queries, groupID); err != nil {
+		if errors.Is(err, ErrGroupLocked) {
+			writeLockedError(w)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
 

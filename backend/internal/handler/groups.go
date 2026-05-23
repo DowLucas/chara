@@ -14,9 +14,10 @@ import (
 
 	"github.com/DowLucas/chara/internal/config"
 	"github.com/DowLucas/chara/internal/currency"
-	"github.com/DowLucas/chara/internal/language"
 	"github.com/DowLucas/chara/internal/db"
+	"github.com/DowLucas/chara/internal/language"
 	"github.com/DowLucas/chara/internal/middleware"
+	"github.com/DowLucas/chara/internal/storage"
 	"github.com/DowLucas/chara/internal/ulid"
 )
 
@@ -24,10 +25,20 @@ type GroupHandler struct {
 	queries *db.Queries
 	pool    *pgxpool.Pool
 	cfg     *config.Config
+	// store is optional — when present it's used to best-effort sweep
+	// attachment bucket objects on permanent group delete.
+	store *storage.Client
 }
 
 func NewGroupHandler(pool *pgxpool.Pool, queries *db.Queries, cfg *config.Config) *GroupHandler {
 	return &GroupHandler{queries: queries, pool: pool, cfg: cfg}
+}
+
+// WithStorage returns a GroupHandler that will best-effort sweep
+// attachment bucket objects when a group is permanently deleted.
+func (h *GroupHandler) WithStorage(s *storage.Client) *GroupHandler {
+	h.store = s
+	return h
 }
 
 // ── Response types ────────────────────────────────────────────────────────────
@@ -44,6 +55,11 @@ type MemberResponse struct {
 	// they haven't uploaded one, letting the client fall back to initials
 	// or the OAuth-provided avatar_url.
 	AvatarObjectURL *string `json:"avatar_object_url,omitempty"`
+	// Phone is the linked user's phone number (E.164 or national format).
+	// Surfaced so the settle screen can build the Swish deep-link without
+	// a second round-trip. Omitted for ghost members and users with no
+	// phone on file.
+	Phone *string `json:"phone,omitempty"`
 }
 
 type GroupResponse struct {
@@ -57,6 +73,17 @@ type GroupResponse struct {
 	CreatedBy   string    `json:"created_by"`
 	InviteToken string    `json:"invite_token"`
 	IsArchived  bool      `json:"is_archived"`
+	// IsLocked, when true, freezes financial mutations on the group —
+	// expenses, settlements, edits, invite regen all return 409
+	// {"code":"group_locked"}. Lifecycle (archive / hard-delete) and
+	// membership removal still work so an owner is never stuck with a
+	// locked-and-forgotten group.
+	IsLocked    bool      `json:"is_locked"`
+	// CurrencyLocked mirrors the server-side rule that the group's currency
+	// cannot change once any active expense exists. Exposed so the client
+	// can disable currency pickers proactively instead of learning at save
+	// time via 409 {"code":"group_currency_locked"}.
+	CurrencyLocked bool      `json:"currency_locked"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -66,21 +93,35 @@ type GroupDetailResponse struct {
 	Members []MemberResponse `json:"members"`
 }
 
-func groupToResponse(g db.Group) GroupResponse {
+func groupToResponse(g db.Group, currencyLocked bool) GroupResponse {
 	return GroupResponse{
-		ID:          g.ID,
-		Name:        g.Name,
-		Currency:    g.Currency,
-		Language:    g.Language,
-		CreatedBy:   g.CreatedBy,
-		InviteToken: g.InviteToken,
-		IsArchived:  g.IsArchived,
-		CreatedAt:   g.CreatedAt.Time,
-		UpdatedAt:   g.UpdatedAt.Time,
+		ID:             g.ID,
+		Name:           g.Name,
+		Currency:       g.Currency,
+		Language:       g.Language,
+		CreatedBy:      g.CreatedBy,
+		InviteToken:    g.InviteToken,
+		IsArchived:     g.IsArchived,
+		IsLocked:       g.IsLocked,
+		CurrencyLocked: currencyLocked,
+		CreatedAt:      g.CreatedAt.Time,
+		UpdatedAt:      g.UpdatedAt.Time,
 	}
 }
 
-func memberToResponse(m db.GroupMember) MemberResponse {
+// isCurrencyLocked returns true when the group has at least one active
+// expense (the same condition the Update handler enforces). Errors are
+// swallowed to false — the worst case is the client sees a stale unlocked
+// state and the Update handler still rejects the change with 409.
+func (h *GroupHandler) isCurrencyLocked(ctx context.Context, groupID string) bool {
+	count, err := h.queries.CountActiveExpensesByGroup(ctx, groupID)
+	if err != nil {
+		return false
+	}
+	return count > 0
+}
+
+func memberToResponse(m db.ListGroupMembersWithUserRow) MemberResponse {
 	r := MemberResponse{
 		ID:       m.ID,
 		Name:     m.Name,
@@ -92,6 +133,10 @@ func memberToResponse(m db.GroupMember) MemberResponse {
 		r.UserID = &m.UserID.String
 		u := avatarURL(m.UserID.String)
 		r.AvatarObjectURL = &u
+	}
+	if m.UserPhone.Valid && m.UserPhone.String != "" {
+		p := m.UserPhone.String
+		r.Phone = &p
 	}
 	return r
 }
@@ -113,6 +158,37 @@ func writeError(w http.ResponseWriter, code int, msg string) {
 // called.
 func isSupportedLanguage(code string) bool {
 	return language.IsSupported(code)
+}
+
+// ErrGroupLocked sentinel is returned by requireGroupUnlocked when the group
+// is locked. Handlers translate it to `409 {"code":"group_locked"}`.
+var ErrGroupLocked = errors.New("group_locked")
+
+// requireGroupUnlocked is the write-gate every handler that mutates group
+// contents must call before opening its transaction. It deliberately
+// accepts the read-only *db.Queries on the pool (not a tx) so it's cheap
+// and can short-circuit before any locking work happens.
+//
+// Returns ErrGroupLocked when the group is currently locked, pgx.ErrNoRows
+// when the group does not exist, or any other DB error.
+func requireGroupUnlocked(ctx context.Context, q *db.Queries, groupID string) error {
+	locked, err := q.GetGroupLockState(ctx, groupID)
+	if err != nil {
+		return err
+	}
+	if locked {
+		return ErrGroupLocked
+	}
+	return nil
+}
+
+// writeLockedError emits the canonical `409 {"code":"group_locked"}` body.
+// Exposed to other handlers in the package via writeLockedError.
+func writeLockedError(w http.ResponseWriter) {
+	writeJSON(w, http.StatusConflict, map[string]string{
+		"code":  "group_locked",
+		"error": "this group is locked",
+	})
 }
 
 // requireMember looks up the authenticated user's membership in groupID.
@@ -232,7 +308,8 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, groupToResponse(group))
+	// Brand-new group with no expenses yet — currency is by definition unlocked.
+	writeJSON(w, http.StatusCreated, groupToResponse(group, false))
 }
 
 func (h *GroupHandler) List(w http.ResponseWriter, r *http.Request) {
@@ -244,7 +321,7 @@ func (h *GroupHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 	resp := make([]GroupResponse, len(groups))
 	for i, g := range groups {
-		resp[i] = groupToResponse(g)
+		resp[i] = groupToResponse(g, h.isCurrencyLocked(r.Context(), g.ID))
 	}
 	writeJSON(w, http.StatusOK, resp)
 }
@@ -268,7 +345,7 @@ func (h *GroupHandler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = member
 
-	members, err := h.queries.ListGroupMembers(r.Context(), groupID)
+	members, err := h.queries.ListGroupMembersWithUser(r.Context(), groupID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error")
 		return
@@ -280,7 +357,7 @@ func (h *GroupHandler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, GroupDetailResponse{
-		GroupResponse: groupToResponse(group),
+		GroupResponse: groupToResponse(group, h.isCurrencyLocked(r.Context(), group.ID)),
 		Members:       memberResp,
 	})
 }
@@ -295,6 +372,15 @@ func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	if member.Role != "owner" {
 		writeError(w, http.StatusForbidden, "only the group owner can update the group")
+		return
+	}
+
+	if err := requireGroupUnlocked(r.Context(), h.queries, groupID); err != nil {
+		if errors.Is(err, ErrGroupLocked) {
+			writeLockedError(w)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
 
@@ -403,7 +489,7 @@ func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, groupToResponse(group))
+	writeJSON(w, http.StatusOK, groupToResponse(group, h.isCurrencyLocked(r.Context(), group.ID)))
 }
 
 func (h *GroupHandler) Archive(w http.ResponseWriter, r *http.Request) {
@@ -485,6 +571,15 @@ func (h *GroupHandler) RegenerateInviteToken(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	if err := requireGroupUnlocked(r.Context(), h.queries, groupID); err != nil {
+		if errors.Is(err, ErrGroupLocked) {
+			writeLockedError(w)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
 	claims := middleware.ClaimsFromContext(r.Context())
 
 	tx, err := h.pool.Begin(r.Context())
@@ -521,7 +616,7 @@ func (h *GroupHandler) RegenerateInviteToken(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	writeJSON(w, http.StatusOK, groupToResponse(group))
+	writeJSON(w, http.StatusOK, groupToResponse(group, h.isCurrencyLocked(r.Context(), group.ID)))
 }
 
 func (h *GroupHandler) JoinViaToken(w http.ResponseWriter, r *http.Request) {
@@ -535,6 +630,15 @@ func (h *GroupHandler) JoinViaToken(w http.ResponseWriter, r *http.Request) {
 		} else {
 			writeError(w, http.StatusInternalServerError, "internal error")
 		}
+		return
+	}
+
+	if err := requireGroupUnlocked(r.Context(), h.queries, group.ID); err != nil {
+		if errors.Is(err, ErrGroupLocked) {
+			writeLockedError(w)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
 
@@ -595,14 +699,14 @@ func (h *GroupHandler) JoinViaToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	members, _ := h.queries.ListGroupMembers(r.Context(), group.ID)
+	members, _ := h.queries.ListGroupMembersWithUser(r.Context(), group.ID)
 	memberResp := make([]MemberResponse, len(members))
 	for i, m := range members {
 		memberResp[i] = memberToResponse(m)
 	}
 
 	writeJSON(w, http.StatusOK, GroupDetailResponse{
-		GroupResponse: groupToResponse(group),
+		GroupResponse: groupToResponse(group, h.isCurrencyLocked(r.Context(), group.ID)),
 		Members:       memberResp,
 	})
 }

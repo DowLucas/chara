@@ -9,6 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AccountsProvider } from '@/lib/accounts';
 import { snapshot as accountsSnapshot } from '@/lib/accounts-store';
+import { AppAlertHost } from '@/components/AppAlert/AppAlertHost';
 import * as analytics from '@/lib/analytics';
 import { runRecoveryProbes } from '@/lib/compat-recovery';
 import { bootstrapPush, retryPendingRegistrations } from '@/lib/push';
@@ -154,6 +155,7 @@ export default function RootLayout() {
           <Stack.Screen name="settings/accounts" options={{ animation: 'slide_from_right' }} />
         </Stack>
         <StatusBar style="dark" />
+        <AppAlertHost />
       </AccountsProvider>
     </SafeAreaProvider>
   );

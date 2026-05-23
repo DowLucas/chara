@@ -7,8 +7,8 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native';
+import { showAlert } from '@/lib/app-alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -164,7 +164,7 @@ export default function SignInScreen() {
         method: 'magic_link',
         code: classifyAuthError(e),
       });
-      Alert.alert(t('signIn.couldNotSend'), msg);
+      showAlert({ title: t('signIn.couldNotSend'), message: msg });
     } finally {
       setLoading(false);
     }

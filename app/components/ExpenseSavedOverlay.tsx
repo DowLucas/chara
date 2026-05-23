@@ -20,83 +20,40 @@ export function ExpenseSavedOverlay({ visible, subtitle, onContinue }: Props) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 
-  // Disc draws in: starts collapsed + transparent, springs up to full size
-  // with a brief overshoot. Mirrors Stamp's entrance feel.
-  const discScale = useRef(new Animated.Value(0)).current;
-  const discOpacity = useRef(new Animated.Value(0)).current;
-  const checkOpacity = useRef(new Animated.Value(0)).current;
-  const checkScale = useRef(new Animated.Value(0.6)).current;
+  // Disc + check render in their final state immediately — no draw-in.
+  // The body (stamp + headline) still slides up so the screen has a tiny
+  // sense of arrival without holding the checkmark hostage.
   const bodyTranslate = useRef(new Animated.Value(16)).current;
   const bodyOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!visible) return;
-    // Reset so re-opens replay the entrance.
-    discScale.setValue(0);
-    discOpacity.setValue(0);
-    checkOpacity.setValue(0);
-    checkScale.setValue(0.6);
     bodyTranslate.setValue(16);
     bodyOpacity.setValue(0);
 
-    // 2× faster: halve every timing duration and double the spring
-    // stiffness so the natural-frequency-driven settling matches. Damping
-    // is mass-relative, so we leave it; for stiffness `k`, the spring
-    // period scales as 1/√k, so we'd need 4× to halve the period — in
-    // practice 2× is the perceived sweet spot without making the motion
-    // feel jerky.
-    Animated.sequence([
-      Animated.parallel([
-        Animated.spring(discScale, { toValue: 1, stiffness: 400, damping: 14, useNativeDriver: true }),
-        Animated.timing(discOpacity, {
-          toValue: 1,
-          duration: 110,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.parallel([
-        Animated.spring(checkScale, { toValue: 1, stiffness: 480, damping: 12, useNativeDriver: true }),
-        Animated.timing(checkOpacity, {
-          toValue: 1,
-          duration: 80,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.parallel([
-        Animated.timing(bodyTranslate, {
-          toValue: 0,
-          duration: 110,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(bodyOpacity, {
-          toValue: 1,
-          duration: 110,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]),
+    Animated.parallel([
+      Animated.timing(bodyTranslate, {
+        toValue: 0,
+        duration: 110,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(bodyOpacity, {
+        toValue: 1,
+        duration: 110,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
     ]).start();
-  }, [visible, discScale, discOpacity, checkOpacity, checkScale, bodyTranslate, bodyOpacity]);
+  }, [visible, bodyTranslate, bodyOpacity]);
 
   return (
     <Modal visible={visible} animationType="fade" transparent={false} onRequestClose={onContinue}>
       <View style={[styles.container, { paddingTop: insets.top + spacing.s7, paddingBottom: insets.bottom + spacing.s4 }]}>
         <View style={styles.center}>
-          <Animated.View
-            style={[
-              styles.disc,
-              { opacity: discOpacity, transform: [{ scale: discScale }] },
-            ]}
-          >
-            <Animated.View
-              style={{ opacity: checkOpacity, transform: [{ scale: checkScale }] }}
-            >
-              <Feather name="check" size={48} color={colors.paper} />
-            </Animated.View>
-          </Animated.View>
+          <View style={styles.disc}>
+            <Feather name="check" size={48} color={colors.paper} />
+          </View>
 
           <Animated.View
             style={[

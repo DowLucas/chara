@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
+import { showAlert } from '@/lib/app-alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TopBar } from '@/components/TopBar';
@@ -15,6 +16,12 @@ import {
 } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { decimalToMinor, formatMinorUnits, formatDate, formatTime } from '@/lib/i18n';
+import {
+  buildSwishLink,
+  isSwishEligible,
+  normalizeSwishNumber,
+  type Platform as SwishPlatform,
+} from '@/lib/swish';
 import {
   colors,
   fontDisplay,
@@ -55,9 +62,16 @@ export default function SettleMethodScreen() {
   const { user } = useAuth();
 
   const [group, setGroup] = useState<GroupDetail | null>(null);
-  const [stage, setStage] = useState<'pick' | 'done'>('pick');
+  const [stage, setStage] = useState<'pick' | 'awaiting' | 'done'>('pick');
   const [submitting, setSubmitting] = useState(false);
   const [completedAt, setCompletedAt] = useState<Date | null>(null);
+  // Swish deep-link held across the awaiting stage so the "Open Swish
+  // again" button can re-fire the same URL the user already approved.
+  const [swishUrl, setSwishUrl] = useState<string | null>(null);
+  // Tracks whether the user has tapped Open Swish at least once. We
+  // only foreground the "I've paid" confirm button after they've
+  // actually been to Swish, so a stray tap can't record a false settle.
+  const [swishOpened, setSwishOpened] = useState(false);
 
   // Members come from the GroupDetail response — no separate /members route.
   const members: GroupMember[] = group?.members ?? [];
@@ -81,11 +95,17 @@ export default function SettleMethodScreen() {
   const amountMinor = useMemo(() => decimalToMinor(amount ?? '0.00'), [amount]);
   const formattedAmount = formatMinorUnits(amountMinor, currency ?? 'SEK');
 
-  // Payment-method state is hard-coded for v1 — once user payment profiles
-  // exist (Swish phone, Vipps, PayPal handle, IBAN), pull these from the
-  // recipient's profile so the sub-labels show real handles, not "Not linked".
+  // The Swish row is the recipient's phone; the rest still need real
+  // payment profiles (Vipps handle, PayPal email, IBAN). Until those land,
+  // they fall through to the optimistic "settled out-of-band" path.
+  const swishEligible = isSwishEligible({
+    currency: currency ?? 'SEK',
+    payeeSwishNumber: counter?.phone ?? null,
+    platform: Platform.OS as SwishPlatform,
+    amountMinor,
+  });
   const methods: MethodRow[] = [
-    { id: 'swish',  enabled: true,  primary: true,  badge: t('settleMethod.instantBadge') },
+    { id: 'swish',  enabled: swishEligible, primary: true, badge: t('settleMethod.instantBadge') },
     { id: 'vipps',  enabled: false, primary: false },
     { id: 'paypal', enabled: true,  primary: false },
     { id: 'bank',   enabled: true,  primary: false },
@@ -107,10 +127,27 @@ export default function SettleMethodScreen() {
       setStage('done');
       return true;
     } catch (e: any) {
-      Alert.alert(t('settleMethod.errorTitle'), e?.message || t('settleMethod.errorBody'));
+      showAlert({ title: t('settleMethod.errorTitle'), message: e?.message || t('settleMethod.errorBody') });
       return false;
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function openSwish() {
+    if (!swishUrl) return;
+    // Skip canOpenURL — in Expo Go (and on iOS without
+    // LSApplicationQueriesSchemes declared) it returns false even when
+    // the Swish app is installed. openURL is the source of truth: it
+    // rejects iff iOS finds no handler for the scheme.
+    try {
+      await Linking.openURL(swishUrl);
+      setSwishOpened(true);
+    } catch {
+      showAlert({
+        title: t('settleMethod.swishUnavailableTitle'),
+        message: t('settleMethod.swishUnavailableBody'),
+      });
     }
   }
 
@@ -121,23 +158,129 @@ export default function SettleMethodScreen() {
       return;
     }
     if (m === 'swish') {
-      // TODO(push-notifications): when the recipient runs the self-hosted
-      // build with notification tokens registered, fire a "you've been paid"
-      // push here (via /api/notifications/dispatch) so they see it instantly
-      // without polling. For the hosted tier this lands via Expo Push.
-      const swishUrl = buildSwishUrl(amountMinor, currency ?? 'SEK', counter?.name);
-      if (swishUrl) {
-        const can = await Linking.canOpenURL(swishUrl);
-        if (can) {
-          await Linking.openURL(swishUrl);
-        }
+      // Hard-stop if the recipient has no Swish number on file. Without
+      // it the deep-link is unbuildable, so we should not silently fall
+      // through to "settled".
+      if (!counter?.phone || !normalizeSwishNumber(counter.phone)) {
+        showAlert({
+          title: t('settleMethod.swishMissingPhoneTitle'),
+          message: t('settleMethod.swishMissingPhoneBody', { name: counter?.name ?? '' }),
+        });
+        return;
       }
-      await recordSettlement('swish');
+      let url: string;
+      try {
+        url = buildSwishLink({
+          payeeSwishNumber: counter.phone,
+          amountMinor,
+          currency: 'SEK',
+          groupName: group?.name ?? 'Chara',
+          // Without a server-side pending-settlement record we just feed a
+          // client-side correlation id. The callbackurl is informational —
+          // iOS surfaces a "Return to Chara" affordance after payment.
+          pendingId: `${id}-${from}-${to}-${Date.now()}`,
+        });
+      } catch (e: any) {
+        showAlert({
+          title: t('settleMethod.swishMissingPhoneTitle'),
+          message: e?.message || t('settleMethod.swishMissingPhoneBody', { name: counter?.name ?? '' }),
+        });
+        return;
+      }
+      // Don't open Swish or record the settlement yet — Swish gives us
+      // no payment-complete callback (see docs/swish-integration.md
+      // §3.0.1), so the only honest UX is to park on a waiting screen,
+      // let the user tap Open Swish themselves, then explicitly confirm
+      // they paid before we record the settlement.
+      setSwishUrl(url);
+      setSwishOpened(false);
+      setStage('awaiting');
       return;
     }
     // vipps / paypal / bank — defer deep-link integration; for v1, record the
     // settlement and let the user complete the payment out-of-band.
     await recordSettlement(m);
+  }
+
+  if (stage === 'awaiting') {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <TopBar
+          title={t('settleMethod.swishWaitTitle', { amount: formattedAmount })}
+          left={<IconButton icon="arrow-left" onPress={() => { setStage('pick'); setSwishUrl(null); setSwishOpened(false); }} />}
+        />
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.awaitingScroll}>
+          <View style={styles.counterRow}>
+            <Avatar initials={initialsOf(counter?.name)} />
+            <View style={styles.counterTextWrap}>
+              <Text style={styles.counterName} numberOfLines={1}>
+                {t('settleMethod.to', { name: counter?.name ?? '' })}
+              </Text>
+              <Text style={styles.counterMeta} numberOfLines={1}>
+                {t('settleMethod.subMeta', { group: group?.name ?? '' })}
+              </Text>
+            </View>
+            <Text style={styles.counterAmount}>{formattedAmount}</Text>
+          </View>
+          <View style={styles.heroRule} />
+          <View style={styles.awaitingBodyWrap}>
+            <Text style={styles.awaitingBody}>
+              {t('settleMethod.swishWaitBody', {
+                amount: formattedAmount,
+                name: counter?.name ?? '',
+              })}
+            </Text>
+          </View>
+        </ScrollView>
+        <View style={[styles.ctaBar, { paddingBottom: insets.bottom + 8 }]}>
+          {/* Stack the two actions. Before opening Swish the open
+              button is the primary CTA and the confirm is a quiet
+              ghost link; once they've been to Swish we swap the
+              hierarchy so confirming is the obvious next step. */}
+          {!swishOpened ? (
+            <>
+              <Button kind="primary" onPress={openSwish} style={{ marginBottom: spacing.s2 }}>
+                {t('settleMethod.swishWaitOpen')}
+              </Button>
+              <TouchableOpacity
+                onPress={() => recordSettlement('swish')}
+                disabled={submitting}
+                style={styles.awaitingSecondary}
+              >
+                <Text style={styles.awaitingSecondaryText}>
+                  {t('settleMethod.swishWaitConfirmShort')}
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              {/* Moss instead of vermillion so the user returning from
+                  Swish sees a visually distinct "yes, that's done"
+                  affordance — green reads as completion, not a fresh
+                  action. Matches the colors.moss "settled / you're
+                  owed" semantic from CLAUDE.md. */}
+              <Button
+                kind="primary"
+                onPress={() => recordSettlement('swish')}
+                disabled={submitting}
+                style={{
+                  marginBottom: spacing.s2,
+                  backgroundColor: colors.moss,
+                  borderColor: colors.moss,
+                }}
+              >
+                {t('settleMethod.swishWaitConfirm', { name: counter?.name?.split(' ')[0] ?? '' })}
+              </Button>
+              <TouchableOpacity onPress={openSwish} style={styles.awaitingSecondary}>
+                <Text style={styles.awaitingSecondaryText}>
+                  {t('settleMethod.swishWaitReopen')}
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </View>
+    );
   }
 
   if (stage === 'done') {
@@ -198,7 +341,7 @@ export default function SettleMethodScreen() {
 
         {methods.map((m) => {
           const label = labelForMethod(m.id, t);
-          const sub = subForMethod(m.id, t, counter?.name);
+          const sub = subForMethod(m.id, t, counter?.name, counter?.phone);
           const disabled = !m.enabled;
           return (
             <TouchableOpacity
@@ -253,7 +396,7 @@ export default function SettleMethodScreen() {
       <View style={[styles.ctaBar, { paddingBottom: insets.bottom + 8 }]}>
         <Button
           kind="primary"
-          disabled={submitting}
+          disabled={submitting || !swishEligible}
           onPress={() => handleMethod('swish')}
           style={{ flex: 1 }}
         >
@@ -280,27 +423,23 @@ function subForMethod(
   id: MethodId,
   t: (k: string, opts?: any) => string,
   counterName?: string | null,
+  counterPhone?: string | null,
 ): string {
   switch (id) {
-    case 'swish':  return counterName
-      ? t('settleMethod.swishSub', { name: counterName.split(' ')[0], phone: '—' })
-      : t('settleMethod.swishUnlinked');
+    case 'swish': {
+      if (!counterName) return t('settleMethod.swishUnlinked');
+      const canonical = counterPhone ? normalizeSwishNumber(counterPhone) : null;
+      if (!canonical) return t('settleMethod.swishUnlinked');
+      // Display as national format with light spacing.
+      const national = '0' + canonical.slice(3);
+      const pretty = `${national.slice(0, 3)} ${national.slice(3, 6)} ${national.slice(6, 8)} ${national.slice(8)}`;
+      return t('settleMethod.swishSub', { name: counterName.split(' ')[0], phone: pretty });
+    }
     case 'vipps':  return t('settleMethod.vippsUnlinked');
     case 'paypal': return t('settleMethod.paypalUnlinked');
     case 'bank':   return t('settleMethod.bankSub');
     case 'manual': return t('settleMethod.manualSub');
   }
-}
-
-// Build a Swish payment URL (Nordic payment rail). The protocol opens the
-// Swish app with the amount and recipient prefilled. Phone is hard-coded to
-// blank for v1 — wire to recipient's saved phone once user payment profiles
-// land.
-function buildSwishUrl(amountMinor: number, currency: string, recipientName?: string | null): string | null {
-  if (currency !== 'SEK') return null;
-  const sek = (amountMinor / 100).toFixed(2);
-  const msg = recipientName ? `Chara · ${recipientName}` : 'Chara';
-  return `swish://payment?amount=${sek}&message=${encodeURIComponent(msg)}`;
 }
 
 const styles = StyleSheet.create({
@@ -453,6 +592,30 @@ const styles = StyleSheet.create({
     borderTopWidth: 1.5,
     borderTopColor: colors.graphite,
     backgroundColor: colors.paper,
+  },
+  awaitingScroll: {
+    flexGrow: 1,
+  },
+  awaitingBodyWrap: {
+    paddingHorizontal: spacing.s5,
+    paddingTop: spacing.s5,
+  },
+  awaitingBody: {
+    fontFamily: fontBody,
+    fontSize: fontSize.body,
+    color: colors.graphite,
+    lineHeight: 22,
+  },
+  awaitingSecondary: {
+    alignItems: 'center',
+    paddingVertical: spacing.s3,
+  },
+  awaitingSecondaryText: {
+    fontFamily: fontMono,
+    fontSize: fontSize.bodyS,
+    color: colors.lead,
+    letterSpacing: 0.3,
+    textDecorationLine: 'underline',
   },
   settledScreen: {
     flex: 1,

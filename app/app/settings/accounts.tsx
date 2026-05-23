@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { showAlert } from '@/lib/app-alert';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -39,45 +40,42 @@ export default function AccountsScreen() {
     try {
       balances = await apiFor(account.serverUrl).listMyBalances();
     } catch {
-      Alert.alert(
-        t('accounts.removeBalanceCheckFailedTitle'),
-        t('accounts.removeBalanceCheckFailedBody'),
-      );
+      showAlert({
+        title: t('accounts.removeBalanceCheckFailedTitle'),
+        message: t('accounts.removeBalanceCheckFailedBody'),
+      });
       return;
     }
     if (hasOpenBalance(balances)) {
-      Alert.alert(
-        t('accounts.removeBlockedOpenBalanceTitle'),
-        t('accounts.removeBlockedOpenBalanceBody', { host: hostFor(account.serverUrl) }),
-      );
+      showAlert({
+        title: t('accounts.removeBlockedOpenBalanceTitle'),
+        message: t('accounts.removeBlockedOpenBalanceBody', { host: hostFor(account.serverUrl) }),
+      });
       return;
     }
 
-    Alert.alert(
-      t('accounts.removeConfirmTitle'),
-      t('accounts.removeConfirmBody'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('accounts.removeConfirm'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await apiFor(account.serverUrl).logout();
-            } catch {
-              /* best-effort */
-            }
-            // Spec §15: deregister this device's push token from the server.
-            // `unregisterForAccount` swallows internally — safe to await.
-            await unregisterForAccount(account.serverUrl);
-            await removeAccount(account.serverUrl);
-            if (accounts.length <= 1) {
-              router.replace('/(auth)/sign-in');
-            }
-          },
-        },
+    const result = await showAlert({
+      title: t('accounts.removeConfirmTitle'),
+      message: t('accounts.removeConfirmBody'),
+      buttons: [
+        { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
+        { key: 'remove', label: t('accounts.removeConfirm'), style: 'destructive' },
       ],
-    );
+    });
+    if (result === 'remove') {
+      try {
+        await apiFor(account.serverUrl).logout();
+      } catch {
+        /* best-effort */
+      }
+      // Spec §15: deregister this device's push token from the server.
+      // `unregisterForAccount` swallows internally — safe to await.
+      await unregisterForAccount(account.serverUrl);
+      await removeAccount(account.serverUrl);
+      if (accounts.length <= 1) {
+        router.replace('/(auth)/sign-in');
+      }
+    }
   }
 
   function handleSetDefault(serverUrl: string) {

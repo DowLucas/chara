@@ -13,7 +13,8 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, Alert, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import { showAlert } from '@/lib/app-alert';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -214,7 +215,7 @@ export default function EditExpenseScreen() {
     });
   }
 
-  function handleSubmit(value: ExpenseFormValue) {
+  async function handleSubmit(value: ExpenseFormValue) {
     if (!expense) return;
     const impact = buildImpact(value);
     const flow = decideConfirmFlow({
@@ -227,7 +228,7 @@ export default function EditExpenseScreen() {
     });
 
     if (flow.kind === 'no-changes') {
-      Alert.alert(t('expenseDetail.noChanges'));
+      showAlert({ title: t('expenseDetail.noChanges') });
       router.back();
       return;
     }
@@ -239,16 +240,22 @@ export default function EditExpenseScreen() {
       return;
     }
     // simple confirm
-    Alert.alert(
-      t('impactSheet.title.edit'),
-      flow.affectedCount > 0
-        ? t('impactSheet.lead.plain', { count: flow.affectedCount })
-        : '',
-      [
-        { text: t('impactSheet.cancel'), style: 'cancel', onPress: () => setPendingValue(null) },
-        { text: t('impactSheet.save'), onPress: () => commitPatch(value) },
+    const result = await showAlert({
+      title: t('impactSheet.title.edit'),
+      message:
+        flow.affectedCount > 0
+          ? t('impactSheet.lead.plain', { count: flow.affectedCount })
+          : undefined,
+      buttons: [
+        { key: 'cancel', label: t('impactSheet.cancel'), style: 'cancel' },
+        { key: 'save', label: t('impactSheet.save') },
       ],
-    );
+    });
+    if (result === 'save') {
+      commitPatch(value);
+    } else {
+      setPendingValue(null);
+    }
   }
 
   async function commitPatch(value: ExpenseFormValue) {

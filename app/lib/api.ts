@@ -231,6 +231,64 @@ export interface Group {
   language: string;
   invite_token: string;
   created_at: string;
+  /** Group lock state. True ⇒ no new expenses, settlements, edits, or
+   *  invite regen are accepted by the server (returns 409 group_locked).
+   *  Lifecycle (archive/unarchive/delete) and membership (leave/kick)
+   *  bypass the lock. Added in spec
+   *  `docs/superpowers/specs/2026-05-23-group-settings-design.md`. */
+  is_locked: boolean;
+  /** Archived groups are hidden from the home list but otherwise intact.
+   *  Unarchive reverses this. Independent from `is_locked`. */
+  is_archived: boolean;
+  /** True ⇒ the group has at least one active expense, so the backend
+   *  will refuse any attempt to change the group currency (409
+   *  group_currency_locked). Frontend uses this to disable the chips
+   *  proactively. Optional for backward compat with old servers. */
+  currency_locked?: boolean;
+}
+
+/** Per-currency total for the group's stats card. */
+export interface GroupCurrencyTotal {
+  currency: string;
+  minor_units: number;
+}
+
+/** Top-paid member for the group's stats card. The currency field is the
+ *  group's base currency — the backend pre-converts each expense via
+ *  the FX snapshot before summing. */
+export interface GroupTopSpender {
+  member_id: string;
+  user_id: string;
+  display_name: string;
+  minor_units_paid: number;
+  currency: string;
+}
+
+/** Group statistics — returned by GET /api/groups/{id}/stats. Live query,
+ *  uncached. Filters `NOT is_deleted AND NOT is_reimbursement` (mirrors
+ *  the balance view). */
+export interface GroupStats {
+  member_count: number;
+  expense_count: number;
+  totals_by_currency: GroupCurrencyTotal[];
+  top_spender: GroupTopSpender | null;
+  created_at: string;
+  first_expense_at: string | null;
+  last_expense_at: string | null;
+}
+
+/** Structured reason rows returned by GET /api/groups/{id}/members/{mid}/can-leave
+ *  and the body of 409 refusals from DELETE /members/{mid}. */
+export type LeaveBlockedReason =
+  | {
+      code: 'member_has_open_balance';
+      rows: { currency: string; minor_units: number }[];
+    }
+  | { code: 'owner_cannot_leave' };
+
+export interface CanLeaveResponse {
+  ok: boolean;
+  reasons: LeaveBlockedReason[];
 }
 
 export interface GroupMember {
@@ -243,6 +301,10 @@ export interface GroupMember {
   joined_at?: string;
   /** Server-hosted avatar object URL for this member's user (relative). */
   avatar_object_url?: string | null;
+  /** Linked user's phone number (E.164 or national format). Used by the
+   * settle screen to build Swish deep-links. Absent for ghost members
+   * and users with no phone on file. */
+  phone?: string | null;
 }
 
 export function listGroups() {
@@ -275,6 +337,40 @@ export function updateGroup(id: string, input: UpdateGroupInput) {
 
 export function archiveGroup(id: string) {
   return request<void>(`/api/groups/${id}`, { method: 'DELETE' });
+}
+
+// Group settings — backward-compat shims. New code should use
+// apiFor(serverUrl) directly; these exist so the flat surface is complete.
+
+export function getGroupStats(groupId: string) {
+  return request<GroupStats>(`/api/groups/${groupId}/stats`);
+}
+
+export function lockGroup(groupId: string) {
+  return request<Group>(`/api/groups/${groupId}/lock`, { method: 'POST' });
+}
+
+export function unlockGroup(groupId: string) {
+  return request<Group>(`/api/groups/${groupId}/unlock`, { method: 'POST' });
+}
+
+export function unarchiveGroup(groupId: string) {
+  return request<Group>(`/api/groups/${groupId}/unarchive`, { method: 'POST' });
+}
+
+export function permanentDeleteGroup(groupId: string, nameConfirmation: string) {
+  return request<void>(`/api/groups/${groupId}/permanent`, {
+    method: 'DELETE',
+    body: JSON.stringify({ name_confirmation: nameConfirmation }),
+  });
+}
+
+export function removeMember(groupId: string, memberId: string) {
+  return request<void>(`/api/groups/${groupId}/members/${memberId}`, { method: 'DELETE' });
+}
+
+export function getMemberCanLeave(groupId: string, memberId: string) {
+  return request<CanLeaveResponse>(`/api/groups/${groupId}/members/${memberId}/can-leave`);
 }
 
 export function listGroupMembers(groupId: string) {
@@ -776,6 +872,30 @@ export function apiFor(serverUrl: string) {
       requestOn<void>(serverUrl, `/api/groups/${id}`, { method: 'DELETE' }),
     listGroupMembers: (groupId: string) =>
       requestOn<GroupMember[]>(serverUrl, `/api/groups/${groupId}/members`),
+
+    // Group lifecycle (spec 2026-05-23-group-settings-design.md)
+    getGroupStats: (groupId: string) =>
+      requestOn<GroupStats>(serverUrl, `/api/groups/${groupId}/stats`),
+    lockGroup: (groupId: string) =>
+      requestOn<Group>(serverUrl, `/api/groups/${groupId}/lock`, { method: 'POST' }),
+    unlockGroup: (groupId: string) =>
+      requestOn<Group>(serverUrl, `/api/groups/${groupId}/unlock`, { method: 'POST' }),
+    unarchiveGroup: (groupId: string) =>
+      requestOn<Group>(serverUrl, `/api/groups/${groupId}/unarchive`, { method: 'POST' }),
+    permanentDeleteGroup: (groupId: string, nameConfirmation: string) =>
+      requestOn<void>(serverUrl, `/api/groups/${groupId}/permanent`, {
+        method: 'DELETE',
+        body: JSON.stringify({ name_confirmation: nameConfirmation }),
+      }),
+    removeMember: (groupId: string, memberId: string) =>
+      requestOn<void>(serverUrl, `/api/groups/${groupId}/members/${memberId}`, {
+        method: 'DELETE',
+      }),
+    getMemberCanLeave: (groupId: string, memberId: string) =>
+      requestOn<CanLeaveResponse>(
+        serverUrl,
+        `/api/groups/${groupId}/members/${memberId}/can-leave`,
+      ),
 
     // Invites
     joinGroupByToken: (token: string) =>

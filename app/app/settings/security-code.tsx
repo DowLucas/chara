@@ -5,10 +5,10 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { showAlert } from '@/lib/app-alert';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -54,7 +54,7 @@ export default function SecurityCodeScreen() {
     if (submitting) return;
     const value = code.trim();
     if (!isValidSecurityCode(value)) {
-      Alert.alert(t('securityCode.errorTitle'), t('securityCode.errorFormat'));
+      showAlert({ title: t('securityCode.errorTitle'), message: t('securityCode.errorFormat') });
       return;
     }
     setSubmitting(true);
@@ -62,7 +62,7 @@ export default function SecurityCodeScreen() {
       if (stage === 'current') {
         const ok = await verifySecurityCode(value);
         if (!ok) {
-          Alert.alert(t('securityCode.errorTitle'), t('securityCode.errorWrong'));
+          showAlert({ title: t('securityCode.errorTitle'), message: t('securityCode.errorWrong') });
           setCode('');
           return;
         }
@@ -74,38 +74,38 @@ export default function SecurityCodeScreen() {
         setStage('confirm');
       } else if (stage === 'confirm') {
         if (value !== newCode) {
-          Alert.alert(t('securityCode.errorTitle'), t('securityCode.errorMismatch'));
+          showAlert({ title: t('securityCode.errorTitle'), message: t('securityCode.errorMismatch') });
           setCode('');
           setStage('new');
           setNewCode('');
           return;
         }
         await setSecurityCode(value);
-        Alert.alert(t('securityCode.savedTitle'), t('securityCode.savedBody'), [
-          { text: t('common.ok'), onPress: () => router.back() },
-        ]);
+        await showAlert({
+          title: t('securityCode.savedTitle'),
+          message: t('securityCode.savedBody'),
+          buttons: [{ key: 'ok', label: t('common.ok') }],
+        });
+        router.back();
       }
     } finally {
       setSubmitting(false);
     }
   }
 
-  function handleDisable() {
-    Alert.alert(
-      t('securityCode.disableTitle'),
-      t('securityCode.disableBody'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('securityCode.disableConfirm'),
-          style: 'destructive',
-          onPress: async () => {
-            await clearSecurityCode();
-            router.back();
-          },
-        },
+  async function handleDisable() {
+    const result = await showAlert({
+      title: t('securityCode.disableTitle'),
+      message: t('securityCode.disableBody'),
+      buttons: [
+        { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
+        { key: 'disable', label: t('securityCode.disableConfirm'), style: 'destructive' },
       ],
-    );
+    });
+    if (result === 'disable') {
+      await clearSecurityCode();
+      router.back();
+    }
   }
 
   const headline =

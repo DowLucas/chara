@@ -48,16 +48,23 @@ export function Avatar({ initials, size = 'md', stack = false, style, source }: 
 
 interface AvatarStackProps {
   people: string[];
+  /** Max avatars shown before collapsing the tail into a "+N" chip. */
   max?: number;
 }
 
-export function AvatarStack({ people, max = 4 }: AvatarStackProps) {
-  const shown = people.slice(0, max);
+export function AvatarStack({ people, max = 3 }: AvatarStackProps) {
+  const overflow = people.length - max;
+  const shown = overflow > 0 ? people.slice(0, max) : people;
   return (
     <View style={styles.stackRow}>
       {shown.map((p, i) => (
         <Avatar key={i} initials={p} size="sm" stack={i > 0} />
       ))}
+      {overflow > 0 && (
+        <View style={[styles.base, styles.overflow, styles.stack]}>
+          <Text style={[styles.text, styles.textSm]}>+{overflow}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -87,5 +94,11 @@ const styles = StyleSheet.create({
   stackRow: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  overflow: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: colors.bone,
   },
 });

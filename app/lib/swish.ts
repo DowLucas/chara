@@ -14,9 +14,14 @@ const SE_MOBILE_PREFIXES = ['70', '72', '73', '76', '79'] as const;
 // Length of the national portion (e.g. "0701234567" → 10 digits).
 const SE_NATIONAL_LENGTH = 10;
 
-const MAX_GROUP_NAME_LEN = 40;
-const MESSAGE_PREFIX = 'Chara · ';
-const CALLBACK_URL_BASE = 'chara://settle/swish/return';
+const MAX_MESSAGE_LEN = 50;
+const MESSAGE_PREFIX = 'Chara: ';
+// Swish's consumer-mode deep-link parser enforces the same character
+// set as the merchant API: letters (a-ö / A-Ö including Swedish
+// diacritics), digits, and `:;.,?!()"` plus space. Anything else —
+// including `·` (U+00B7) and `-` — triggers "Felaktig länk". Source:
+// https://developer.swish.nu/api/payment-request/v1 (message regex)
+const ALLOWED_MESSAGE_CHARS = /[^a-zA-ZåäöÅÄÖ0-9:;.,?!()" ]/g;
 
 /**
  * Normalizes a Swedish mobile number to canonical E.164 (`+46XXXXXXXXX`).
@@ -75,12 +80,37 @@ export function isSwishEligible(opts: {
 }
 
 /**
- * Builds the `swish://payment?data=<urlSafeBase64>` deep link.
+ * Builds the `swish://payment?data=<URI-encoded-JSON>` deep link.
  *
  * Throws if `payeeSwishNumber` is not a valid SE mobile number — callers
  * should gate with `isSwishEligible` first.
  *
- * See docs/swish-integration.md §3 for the JSON spec.
+ * Wire format reverse-engineered from the Swish iOS/Android handlers and
+ * cross-checked against the swish-easy reference (the only working open
+ * implementation I've found) plus several live donation pages
+ * (Filmstund, fluxer, biketoured/italy26). Strict-payload invariants
+ * Swish enforces — any violation surfaces as the generic "Felaktig
+ * länk" / "Incorrect link" error in the Swish app:
+ *
+ *   - Encoding is `encodeURIComponent(JSON.stringify(payload))`. Base64
+ *     is rejected outright.
+ *   - `payee.value` is E.164 (`+46...`) or national (`07...`). Both work.
+ *   - `amount.value` MUST be an **integer** number of kronor. The
+ *     consumer parser rejects decimals (226.82 → fail). The merchant
+ *     HTTP API accepts decimal strings, but the deep-link parser is
+ *     strict integer-only. Round at build time; the caller decides
+ *     whether to use Math.round / Math.ceil / Math.floor for the öre.
+ *   - `message.value` is restricted to `[a-zA-ZåäöÅÄÖ0-9:;.,?!()" ]`
+ *     (max 50 chars). `·`, `-`, `*`, emoji, etc. all trigger
+ *     "Felaktig länk". We sanitize at build time.
+ *   - **Unknown top-level keys are rejected.** No `callbackurl` (that's
+ *     a merchant-URL query param, not a consumer JSON field).
+ *   - `editable` keys are omitted unless true.
+ *
+ * `pendingId` is accepted for caller-side correlation but is not
+ * round-tripped through the link (Swish gives us no payment-status
+ * callback — see docs/swish-integration.md §3.0.1). Kept in the
+ * signature so call-sites don't have to change.
  */
 export function buildSwishLink(opts: {
   payeeSwishNumber: string;
@@ -94,17 +124,34 @@ export function buildSwishLink(opts: {
     throw new Error(`buildSwishLink: invalid Swish number "${opts.payeeSwishNumber}"`);
   }
 
+  // Swish's consumer deep-link parser wants **national format**
+  // (`0XXXXXXXXX`), not E.164. The swish-easy reference (2018) sends
+  // E.164 and worked at the time, but the current Swish iOS/Android
+  // apps reject `+46…` with "the link used to open the app has an
+  // incorrect format" — even though they accept the same number in
+  // E.164 when you type it manually. The live italy26 donation page
+  // (https://github.com/biketoured/italy26/blob/main/donate.html)
+  // ships `0725532011` and currently works.
+  const national = '0' + canonical.slice(3);
+
   const payload = {
     version: 1,
-    payee: { value: toNationalFormat(canonical) },
-    amount: { value: formatMinorAsDecimal(opts.amountMinor), editable: false },
-    message: { value: buildMessage(opts.groupName), editable: false },
-    callbackurl: `${CALLBACK_URL_BASE}?pendingId=${encodeURIComponent(opts.pendingId)}`,
+    payee: { value: national },
+    // Round up so the payee is never short — better to over-pay by <1 kr
+    // than to under-pay (which would leave a tiny residual debt and force
+    // a follow-up settlement). Caller-side display should match.
+    amount: { value: Math.ceil(opts.amountMinor / 100) },
+    message: { value: buildMessage(opts.groupName) },
   };
 
-  const json = JSON.stringify(payload);
-  const data = urlSafeBase64Encode(json);
-  return `swish://payment?data=${data}`;
+  return `swish://payment?data=${encodeURIComponent(JSON.stringify(payload))}`;
+}
+
+/** Rounds a minor-unit amount the same way `buildSwishLink` does, so
+ *  the UI can show the rounded amount the user is about to send (and
+ *  any settlement record can match). */
+export function swishRoundedKronor(amountMinor: number): number {
+  return Math.ceil(amountMinor / 100);
 }
 
 /**
@@ -155,28 +202,15 @@ function formatMinorAsDecimal(minor: number): string {
   return negative ? `-${body}` : body;
 }
 
-/** `"Chara · " + groupName` with the group portion truncated to 40 chars. */
+/** Builds the Swish payment message: `"Chara: <sanitized group name>"`,
+ *  with any disallowed characters (anything outside Swish's permitted set
+ *  `[a-zA-ZåäöÅÄÖ0-9:;.,?!()" ]`) replaced with a space, collapsed runs
+ *  of spaces, and truncated to Swish's 50-character limit. */
 function buildMessage(groupName: string): string {
-  const truncated = groupName.length > MAX_GROUP_NAME_LEN
-    ? groupName.slice(0, MAX_GROUP_NAME_LEN)
-    : groupName;
-  return MESSAGE_PREFIX + truncated;
-}
-
-/** URL-safe base64 (`+`→`-`, `/`→`_`, no padding). */
-function urlSafeBase64Encode(input: string): string {
-  // Use Buffer when available (Node, RN via polyfill); fall back to btoa.
-  let b64: string;
-  if (typeof Buffer !== 'undefined') {
-    b64 = Buffer.from(input, 'utf8').toString('base64');
-  } else if (typeof btoa !== 'undefined') {
-    // btoa needs binary string; encode UTF-8 first.
-    const bytes = new TextEncoder().encode(input);
-    let bin = '';
-    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-    b64 = btoa(bin);
-  } else {
-    throw new Error('No base64 encoder available in this environment');
-  }
-  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const sanitized = groupName
+    .replace(ALLOWED_MESSAGE_CHARS, ' ')
+    .replace(/ +/g, ' ')
+    .trim();
+  const full = MESSAGE_PREFIX + sanitized;
+  return full.length > MAX_MESSAGE_LEN ? full.slice(0, MAX_MESSAGE_LEN) : full;
 }

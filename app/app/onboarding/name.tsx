@@ -5,10 +5,10 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { showAlert } from '@/lib/app-alert';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -32,11 +32,11 @@ export default function OnboardingNameScreen() {
     const trimmedName = name.trim();
     const trimmedPhone = phone.trim();
     if (!trimmedName) {
-      Alert.alert(t('onboardingName.errorTitle'), t('onboardingName.errorEmpty'));
+      showAlert({ title: t('onboardingName.errorTitle'), message: t('onboardingName.errorEmpty') });
       return;
     }
     if (!trimmedPhone) {
-      Alert.alert(t('onboardingName.errorTitle'), t('onboardingName.errorPhone'));
+      showAlert({ title: t('onboardingName.errorTitle'), message: t('onboardingName.errorPhone') });
       return;
     }
     setSubmitting(true);
@@ -47,7 +47,7 @@ export default function OnboardingNameScreen() {
       if (router.canGoBack()) router.back();
       else router.replace('/onboarding');
     } catch (e: any) {
-      Alert.alert(t('onboardingName.errorTitle'), e?.message || String(e));
+      showAlert({ title: t('onboardingName.errorTitle'), message: e?.message || String(e) });
     } finally {
       setSubmitting(false);
     }
@@ -55,9 +55,20 @@ export default function OnboardingNameScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { paddingTop: insets.top + spacing.s4 }]}
+      style={[styles.container, { paddingTop: insets.top + spacing.s2 }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <TouchableOpacity
+        style={styles.back}
+        onPress={() => {
+          if (router.canGoBack()) router.back();
+          else router.replace('/(tabs)/you');
+        }}
+        accessibilityLabel={t('common.back')}
+      >
+        <Feather name="chevron-left" size={22} color={colors.graphite} />
+      </TouchableOpacity>
+
       <View style={styles.header}>
         <Text style={styles.eyebrow}>{t('onboardingName.eyebrow')}</Text>
         <Text style={styles.headline}>{t('onboardingName.headline')}</Text>
@@ -122,7 +133,8 @@ export default function OnboardingNameScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper, paddingHorizontal: spacing.s5 },
-  header: { gap: spacing.s2, marginBottom: spacing.s5 },
+  back: { paddingVertical: spacing.s2, marginLeft: -spacing.s2, alignSelf: 'flex-start' },
+  header: { gap: spacing.s2, marginTop: spacing.s4, marginBottom: spacing.s5 },
   eyebrow: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,

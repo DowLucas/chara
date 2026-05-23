@@ -22,14 +22,16 @@ import {
 import { evalExpression, hasOperator } from '@/lib/evalExpression';
 
 /**
- * Modal math keypad. Slides up over the screen; tapping the scrim or `=` closes it.
+ * Modal math keypad. Slides up over the screen; tapping the scrim or Done closes it.
  *
  * Contract:
  *   - `value` is the raw expression string (e.g. "12.50+3.40").
- *   - `onChange(next)` fires on every keystroke.
- *   - `onSubmit(resolved)` fires on `=`. The resolved value is the evaluated number
- *     with up to 2 decimals (trailing zeros trimmed). For plain numbers, the value
- *     is returned unchanged.
+ *   - `onChange(next)` fires on every keystroke and when `=` folds the expression
+ *     into its result (Ans-style — keypad stays open so the user can keep typing,
+ *     e.g. `+ 2 =` to continue from the new total).
+ *   - `onSubmit(resolved)` fires on Done. The resolved value is the evaluated
+ *     number with up to 2 decimals (trailing zeros trimmed); plain numbers pass
+ *     through unchanged.
  */
 interface Props {
   visible: boolean;
@@ -46,16 +48,23 @@ const OPERATORS = new Set(['+', '-', '*', '/', '×', '÷', '−']);
 // The four operator glyphs used on keypad buttons (display form).
 const DISPLAY_OPERATORS = ['÷', '×', '−', '+'] as const;
 const BACKSPACE_KEY = '⌫';
+const CLEAR_KEY = 'AC';
+const EQUALS_KEY = '=';
 const DECIMAL_KEY = '.';
 
 // Starting translateY for the closed sheet — window height guarantees off-screen.
 const SHEET_OFFSCREEN = Dimensions.get('window').height;
 
-const KEY_ROWS: readonly (readonly string[])[] = [
-  ['7', '8', '9', '÷'],
-  ['4', '5', '6', '×'],
-  ['1', '2', '3', '−'],
-  [DECIMAL_KEY, '0', BACKSPACE_KEY, '+'],
+// Calculator layout: numbers on the left, operators on the right column,
+// AC + ⌫ on top, 0 spans two cells on the bottom row, = at bottom-right.
+// `span` controls how many of the 4 grid columns a key occupies.
+type KeySpec = { label: string; span?: number };
+const KEY_ROWS: readonly (readonly KeySpec[])[] = [
+  [{ label: CLEAR_KEY, span: 2 }, { label: BACKSPACE_KEY }, { label: '÷' }],
+  [{ label: '7' }, { label: '8' }, { label: '9' }, { label: '×' }],
+  [{ label: '4' }, { label: '5' }, { label: '6' }, { label: '−' }],
+  [{ label: '1' }, { label: '2' }, { label: '3' }, { label: '+' }],
+  [{ label: '0', span: 2 }, { label: DECIMAL_KEY }, { label: EQUALS_KEY }],
 ];
 
 const isOperator = (ch: string): boolean => OPERATORS.has(ch);
@@ -111,11 +120,22 @@ export function AmountKeypad({
   const handleBackspace = () => onChange(value.slice(0, -1));
   const handleClear = () => onChange('');
 
+  // Evaluate the in-progress expression and replace it with the result, like
+  // Ans on a classic calculator. Keeps the keypad open so the user can keep
+  // composing (e.g. type `+ 2 =` again to continue from the new total).
   const handleEquals = () => {
+    if (!value || !hasOperator(value)) return;
+    const r = evalExpression(value);
+    if (r === null) return; // invalid — let the user fix it
+    onChange(formatResolved(r));
+  };
+
+  // Submit + close. Evaluates first so a half-typed expression resolves cleanly.
+  const handleDone = () => {
     if (!value) { onClose(); return; }
     if (!hasOperator(value)) { onSubmit(value); return; }
     const r = evalExpression(value);
-    if (r === null) return; // invalid — let the user fix it
+    if (r === null) return;
     const resolved = formatResolved(r);
     onChange(resolved);
     onSubmit(resolved);
@@ -195,25 +215,33 @@ export function AmountKeypad({
         <View style={styles.grid}>
           {KEY_ROWS.map((row, ri) => (
             <View key={ri} style={styles.row}>
-              {row.map((k) => (
-                <KeypadKey
-                  key={k}
-                  label={k}
-                  onPress={k === BACKSPACE_KEY ? handleBackspace : () => handleKey(k)}
-                  onLongPress={k === BACKSPACE_KEY ? handleClear : undefined}
-                  accessibilityLabel={accessibilityLabelFor(k, t)}
-                />
-              ))}
+              {row.map(({ label, span }) => {
+                let onPress: () => void;
+                if (label === BACKSPACE_KEY) onPress = handleBackspace;
+                else if (label === CLEAR_KEY) onPress = handleClear;
+                else if (label === EQUALS_KEY) onPress = handleEquals;
+                else onPress = () => handleKey(label);
+                return (
+                  <KeypadKey
+                    key={label}
+                    label={label}
+                    span={span ?? 1}
+                    onPress={onPress}
+                    onLongPress={label === BACKSPACE_KEY ? handleClear : undefined}
+                    accessibilityLabel={accessibilityLabelFor(label, t)}
+                  />
+                );
+              })}
             </View>
           ))}
 
           <TouchableOpacity
             activeOpacity={0.85}
-            onPress={handleEquals}
-            style={styles.equals}
-            accessibilityLabel={t('keypad.equals')}
+            onPress={handleDone}
+            style={styles.done}
+            accessibilityLabel={t('keypad.done')}
           >
-            <Text style={styles.equalsLabel}>=</Text>
+            <Text style={styles.doneLabel}>{t('keypad.done')}</Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -253,21 +281,32 @@ function DisplayField({ value, preview, currency, placeholder }: DisplayFieldPro
 
 interface KeypadKeyProps {
   label: string;
+  span: number;
   onPress: () => void;
   onLongPress?: () => void;
   accessibilityLabel: string;
 }
 
-function KeypadKey({ label, onPress, onLongPress, accessibilityLabel }: KeypadKeyProps) {
+function KeypadKey({ label, span, onPress, onLongPress, accessibilityLabel }: KeypadKeyProps) {
   const isOp = isDisplayOperator(label);
   const isBack = label === BACKSPACE_KEY;
+  const isClear = label === CLEAR_KEY;
+  const isEquals = label === EQUALS_KEY;
+  // = is styled like the other operators — it folds the expression into a result
+  // (Ans), but doesn't submit. Done is the primary action.
   return (
     <TouchableOpacity
       activeOpacity={0.6}
       onPress={onPress}
       onLongPress={onLongPress}
       accessibilityLabel={accessibilityLabel}
-      style={[styles.key, isOp && styles.keyOp, isBack && styles.keyBack]}
+      style={[
+        styles.key,
+        { flex: span },
+        (isOp || isEquals) && styles.keyOp,
+        isBack && styles.keyBack,
+        isClear && styles.keyClear,
+      ]}
     >
       <Text style={styles.keyLabel}>{label}</Text>
     </TouchableOpacity>
@@ -276,6 +315,8 @@ function KeypadKey({ label, onPress, onLongPress, accessibilityLabel }: KeypadKe
 
 function accessibilityLabelFor(k: string, t: (k: string) => string): string {
   if (k === BACKSPACE_KEY) return t('keypad.backspace');
+  if (k === CLEAR_KEY) return t('keypad.clear');
+  if (k === EQUALS_KEY) return t('keypad.equals');
   if (isDisplayOperator(k)) return t(`keypad.op.${k}`);
   return k;
 }
@@ -337,7 +378,6 @@ const styles = StyleSheet.create({
   grid: { gap: spacing.s2 },
   row: { flexDirection: 'row', gap: spacing.s2 },
   key: {
-    flex: 1,
     height: 56,
     borderRadius: 10,
     backgroundColor: colors.bone,
@@ -346,12 +386,13 @@ const styles = StyleSheet.create({
   },
   keyOp: { backgroundColor: 'rgba(45, 31, 26, 0.08)' },
   keyBack: { backgroundColor: 'rgba(184, 61, 61, 0.10)' },
+  keyClear: { backgroundColor: 'rgba(184, 61, 61, 0.10)' },
   keyLabel: {
     fontFamily: fontMonoMedium,
     fontSize: 22,
     color: colors.graphite,
   },
-  equals: {
+  done: {
     marginTop: spacing.s3,
     height: 52,
     borderRadius: 10,
@@ -359,7 +400,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  equalsLabel: {
+  doneLabel: {
     fontFamily: fontBodyMedium,
     fontSize: fontSize.body,
     color: colors.fgOnAccent,
