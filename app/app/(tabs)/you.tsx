@@ -21,6 +21,7 @@ import { TopBar } from '@/components/TopBar';
 import { Avatar } from '@/components/Avatar';
 import { ActionSheet, openNativeActionSheet, ActionSheetOption } from '@/components/ActionSheet';
 import { useTranslation } from 'react-i18next';
+import i18n, { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 import { useAccounts } from '@/lib/accounts';
 import { initialsOf } from '@/lib/name';
@@ -63,6 +64,7 @@ export default function YouScreen() {
   const [faceIdEnabled, setFaceIdEnabled] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [avatarSheetVisible, setAvatarSheetVisible] = useState(false);
+  const [languageSheetVisible, setLanguageSheetVisible] = useState(false);
   const [avatarToken, setAvatarToken] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -199,6 +201,16 @@ export default function YouScreen() {
       ? [{ label: t('you.avatar.remove'), onPress: removeAvatar, destructive: true } as ActionSheetOption]
       : []),
   ];
+
+  const currentLanguage = (i18n.language?.split('-')[0] ?? 'en') as SupportedLanguage;
+  const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
+    en: 'English',
+    sv: 'Svenska',
+  };
+  const languageSheetOptions: ActionSheetOption[] = SUPPORTED_LANGUAGES.map((code) => ({
+    label: LANGUAGE_NAMES[code],
+    onPress: () => i18n.changeLanguage(code),
+  }));
 
   async function toggleFaceId(next: boolean) {
     if (next) {
@@ -372,6 +384,11 @@ export default function YouScreen() {
             value={pinSet ? t('you.codeOn') : t('you.codeOff')}
             onPress={() => router.push('/settings/security-code')}
           />
+          <NavRow
+            label={t('you.language')}
+            value={LANGUAGE_NAMES[currentLanguage]}
+            onPress={() => setLanguageSheetVisible(true)}
+          />
           <NavRow label={t('privacy.title')} onPress={() => router.push('/settings/privacy')} />
           <NavRow label={t('you.about')} onPress={() => router.push('/settings/about')} />
           <NavRow label={t('you.tellFriend')} onPress={handleTellFriend} />
@@ -404,6 +421,12 @@ export default function YouScreen() {
         onClose={() => setAvatarSheetVisible(false)}
         title={t('you.avatar.chooseTitle')}
         options={avatarSheetOptions}
+      />
+      <ActionSheet
+        visible={languageSheetVisible}
+        onClose={() => setLanguageSheetVisible(false)}
+        title={t('you.language')}
+        options={languageSheetOptions}
       />
     </View>
   );

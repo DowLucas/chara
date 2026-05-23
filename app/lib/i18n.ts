@@ -3,13 +3,15 @@ import { initReactI18next } from 'react-i18next';
 import { getLocales } from 'expo-localization';
 
 import en from './locales/en.json';
+import sv from './locales/sv.json';
 
-export const SUPPORTED_LANGUAGES = ['en'] as const;
+export const SUPPORTED_LANGUAGES = ['en', 'sv'] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 export const FALLBACK_LANGUAGE: SupportedLanguage = 'en';
 
 export const resources = {
   en: { translation: en },
+  sv: { translation: sv },
 } as const;
 
 function detectLanguage(): SupportedLanguage {
