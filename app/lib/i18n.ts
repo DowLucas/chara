@@ -1,26 +1,79 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { getLocales } from 'expo-localization';
+import * as SecureStore from 'expo-secure-store';
 
 import en from './locales/en.json';
 import sv from './locales/sv.json';
+import de from './locales/de.json';
+import fr from './locales/fr.json';
+import it from './locales/it.json';
+import nl from './locales/nl.json';
+import da from './locales/da.json';
+import fi from './locales/fi.json';
+import ar from './locales/ar.json';
+import ja from './locales/ja.json';
+import zhHans from './locales/zh-Hans.json';
 
-export const SUPPORTED_LANGUAGES = ['en', 'sv'] as const;
+const KEY_LANGUAGE = 'chara.language';
+
+export const SUPPORTED_LANGUAGES = [
+  'en',
+  'sv',
+  'de',
+  'fr',
+  'it',
+  'nl',
+  'da',
+  'fi',
+  'ar',
+  'ja',
+  'zh-Hans',
+] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 export const FALLBACK_LANGUAGE: SupportedLanguage = 'en';
+
+/** Native-tongue display names, shown in the language picker so a user can
+ *  find their language regardless of what the UI is currently set to. */
+export const LANGUAGE_NATIVE_NAMES: Record<SupportedLanguage, string> = {
+  en: 'English',
+  sv: 'Svenska',
+  de: 'Deutsch',
+  fr: 'Français',
+  it: 'Italiano',
+  nl: 'Nederlands',
+  da: 'Dansk',
+  fi: 'Suomi',
+  ar: 'العربية',
+  ja: '日本語',
+  'zh-Hans': '中文（简体）',
+};
 
 export const resources = {
   en: { translation: en },
   sv: { translation: sv },
+  de: { translation: de },
+  fr: { translation: fr },
+  it: { translation: it },
+  nl: { translation: nl },
+  da: { translation: da },
+  fi: { translation: fi },
+  ar: { translation: ar },
+  ja: { translation: ja },
+  'zh-Hans': { translation: zhHans },
 } as const;
 
 function detectLanguage(): SupportedLanguage {
+  const supported = SUPPORTED_LANGUAGES as readonly string[];
   const locales = getLocales();
   for (const l of locales) {
+    const tag = (l.languageTag ?? '').toLowerCase();
     const code = (l.languageCode ?? '').toLowerCase();
-    if ((SUPPORTED_LANGUAGES as readonly string[]).includes(code)) {
-      return code as SupportedLanguage;
-    }
+    // Try the most specific match first: tag prefix (e.g. "zh-Hans" from
+    // "zh-Hans-CN"), then the bare language code.
+    const tagMatch = supported.find((s) => tag.startsWith(s.toLowerCase()));
+    if (tagMatch) return tagMatch as SupportedLanguage;
+    if (supported.includes(code)) return code as SupportedLanguage;
   }
   return FALLBACK_LANGUAGE;
 }
@@ -36,6 +89,21 @@ if (!i18n.isInitialized) {
       defaultNS: 'translation',
       interpolation: { escapeValue: false },
       returnNull: false,
+    });
+  // After sync init, async-load the user's explicit choice (if any) and
+  // switch to it. Brief device-locale → stored-choice flash on cold boot
+  // is acceptable; the alternative (async-init) would block app startup.
+  SecureStore.getItemAsync(KEY_LANGUAGE)
+    .then((stored) => {
+      if (stored && (SUPPORTED_LANGUAGES as readonly string[]).includes(stored)) {
+        if (i18n.language !== stored) {
+          i18n.changeLanguage(stored);
+        }
+      }
+    })
+    .catch(() => {
+      // SecureStore can throw before the keychain is unlocked on iOS; the
+      // user can re-pick from the You tab if their stored choice is lost.
     });
 }
 
