@@ -11,6 +11,11 @@ import {
   markIncompatible,
   markReauthRequired,
 } from './accounts-store';
+import type {
+  RecurringExpense,
+  CreateRecurringInput,
+  UpdateRecurringInput,
+} from './api-types-recurring';
 
 const TOKEN_KEY = 'auth_token';
 
@@ -1108,6 +1113,42 @@ export function apiFor(serverUrl: string) {
         serverUrl,
         `/api/groups/${groupId}/expenses/${expenseId}/attachments`,
       ),
+
+    // Recurring (spec 2026-05-24-recurring-expenses-design.md)
+    recurring: {
+      list: (groupId: string) =>
+        requestOn<RecurringExpense[]>(serverUrl, `/api/groups/${groupId}/recurring`),
+      get: (groupId: string, id: string) =>
+        requestOn<RecurringExpense>(serverUrl, `/api/groups/${groupId}/recurring/${id}`),
+      create: (groupId: string, input: CreateRecurringInput) =>
+        requestOn<RecurringExpense>(serverUrl, `/api/groups/${groupId}/recurring`, {
+          method: 'POST',
+          body: JSON.stringify(input),
+        }),
+      update: (groupId: string, id: string, input: UpdateRecurringInput) =>
+        requestOn<RecurringExpense>(serverUrl, `/api/groups/${groupId}/recurring/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(input),
+        }),
+      delete: (groupId: string, id: string) =>
+        requestOn<void>(serverUrl, `/api/groups/${groupId}/recurring/${id}`, {
+          method: 'DELETE',
+        }),
+      pause: (groupId: string, id: string) =>
+        requestOn<RecurringExpense>(serverUrl, `/api/groups/${groupId}/recurring/${id}/pause`, {
+          method: 'POST',
+        }),
+      resume: (groupId: string, id: string) =>
+        requestOn<RecurringExpense>(serverUrl, `/api/groups/${groupId}/recurring/${id}/resume`, {
+          method: 'POST',
+        }),
+      resumeAllAfterUnlock: (groupId: string) =>
+        requestOn<{ resumed_ids: string[] }>(
+          serverUrl,
+          `/api/groups/${groupId}/recurring/resume-all-after-unlock`,
+          { method: 'POST' },
+        ),
+    },
 
     // FX (group-scoped — uses the group's home server)
     convertFx: (input: { from: string; to: string; amountMinor: number; asOf?: string }) => {
