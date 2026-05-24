@@ -117,7 +117,9 @@ func Load() (*Config, error) {
 		GeminiAPIKey: getEnv("GEMINI_API_KEY", ""),
 
 		MinAppProtocol: getEnvInt("MIN_APP_PROTOCOL", 0),
-		MaxAppProtocol: getEnvInt("MAX_APP_PROTOCOL", 1),
+		// v2: recurring expenses (additive: 8 new endpoints + source_kind/source_id
+		// on expense responses). MIN_APP_PROTOCOL stays at 0 — older apps still work.
+		MaxAppProtocol: getEnvInt("MAX_APP_PROTOCOL", 2),
 
 		RecurringEnabled: getEnv("RECURRING_ENABLED", "") == "true" || getEnv("RECURRING_ENABLED", "") == "1",
 	}
