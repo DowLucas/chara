@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "daily, every 1 day, no DST",
+      "rule": {
+        "freq_unit": "day", "freq_interval": 1,
+        "start_date": "2026-06-01", "end_date": null,
+        "timezone": "Europe/Stockholm", "fire_local_time": "09:00"
+      },
+      "occurrence": "2026-06-01T07:00:00Z",
+      "expected_next_fire": "2026-06-02T07:00:00Z",
+      "expected_status": "active"
+    },
+    {
+      "name": "weekly, every 2 weeks",
+      "rule": {
+        "freq_unit": "week", "freq_interval": 2,
+        "start_date": "2026-06-01", "end_date": null,
+        "timezone": "Europe/Stockholm", "fire_local_time": "09:00"
+      },
+      "occurrence": "2026-06-01T07:00:00Z",
+      "expected_next_fire": "2026-06-15T07:00:00Z",
+      "expected_status": "active"
+    },
+    {
+      "name": "monthly, end-of-month clamp (Jan 31 -> Feb 28 2027)",
+      "rule": {
+        "freq_unit": "month", "freq_interval": 1,
+        "start_date": "2027-01-31", "end_date": null,
+        "timezone": "Europe/Stockholm", "fire_local_time": "09:00"
+      },
+      "occurrence": "2027-01-31T08:00:00Z",
+      "expected_next_fire": "2027-02-28T08:00:00Z",
+      "expected_status": "active"
+    },
+    {
+      "name": "monthly across DST spring (Mar -> Apr Europe/Stockholm: UTC offset shifts)",
+      "rule": {
+        "freq_unit": "month", "freq_interval": 1,
+        "start_date": "2026-03-15", "end_date": null,
+        "timezone": "Europe/Stockholm", "fire_local_time": "09:00"
+      },
+      "occurrence": "2026-03-15T08:00:00Z",
+      "expected_next_fire": "2026-04-15T07:00:00Z",
+      "expected_status": "active"
+    },
+    {
+      "name": "yearly leap (Feb 29 2028 -> Feb 28 2029)",
+      "rule": {
+        "freq_unit": "year", "freq_interval": 1,
+        "start_date": "2028-02-29", "end_date": null,
+        "timezone": "Europe/Stockholm", "fire_local_time": "09:00"
+      },
+      "occurrence": "2028-02-29T08:00:00Z",
+      "expected_next_fire": "2029-02-28T08:00:00Z",
+      "expected_status": "active"
+    },
+    {
+      "name": "monthly with end_date reached (status flips to ended)",
+      "rule": {
+        "freq_unit": "month", "freq_interval": 1,
+        "start_date": "2026-06-01", "end_date": "2026-07-01",
+        "timezone": "Europe/Stockholm", "fire_local_time": "09:00"
+      },
+      "occurrence": "2026-07-01T07:00:00Z",
+      "expected_next_fire": "2026-07-01T07:00:00Z",
+      "expected_status": "ended"
+    }
+  ]
+}
