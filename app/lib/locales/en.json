@@ -31,6 +31,10 @@
     "signOutAllBlockedBody": "You still have open balances on {{hosts}}. Settle them before signing out of everything.",
     "signOutAllConfirmBody": "You'll go back to the sign-in screen. Your data stays on each server.",
     "signOutAllConfirmTitle": "Sign out of every account?",
+    "signOutAllWarnOpenBalanceBody": "You still have open balances on {{hosts}}. Your data stays on each server, but you'll need to sign back in to settle up.",
+    "signOutAllWarnOpenBalanceTitle": "Sign out with open balances?",
+    "signOutConfirmBody": "You'll go back to the sign-in screen. Your data stays on the server.",
+    "signOutConfirmTitle": "Sign out of this account?",
     "statusIncompatible": "version mismatch",
     "statusReauth": "re-auth needed",
     "title": "Accounts"

@@ -282,23 +282,15 @@ export default function YouScreen() {
   }
 
   async function handleSignOutPress() {
-    // Pre-check: refuse to sign out of any account that still has open
-    // balances. Same gate as per-account Remove; "sign out of everything"
-    // must not be a back-door to forget a server you owe / are owed money on.
+    // Best-effort open-balance check. Unlike per-account Remove, sign-out
+    // doesn't block — Lucas wants the user to always be able to sign out;
+    // we just warn when there's an unsettled balance so it's not a surprise.
     const results = await Promise.allSettled(
       accounts.map(async (account) => ({
         account,
         balances: await apiFor(account.serverUrl).listMyBalances(),
       })),
     );
-    const unverified = results.filter((r) => r.status === 'rejected');
-    if (unverified.length > 0) {
-      showAlert({
-        title: t('accounts.removeBalanceCheckFailedTitle'),
-        message: t('accounts.removeBalanceCheckFailedBody'),
-      });
-      return;
-    }
     const blocked = results
       .filter(
         (r): r is PromiseFulfilledResult<{ account: typeof accounts[number]; balances: Awaited<ReturnType<ReturnType<typeof apiFor>['listMyBalances']>> }> =>
@@ -306,39 +298,47 @@ export default function YouScreen() {
       )
       .filter((r) => hasOpenBalance(r.value.balances))
       .map((r) => hostFor(r.value.account.serverUrl));
-    if (blocked.length > 0) {
-      showAlert({
-        title: t('accounts.removeBlockedOpenBalanceTitle'),
-        message: t('accounts.signOutAllBlockedBody', { hosts: blocked.join(', ') }),
-      });
-      return;
-    }
+
+    const hasWarning = blocked.length > 0;
+    const title = hasWarning
+      ? t('accounts.signOutAllWarnOpenBalanceTitle')
+      : hasMultipleAccounts
+        ? t('accounts.signOutAllConfirmTitle')
+        : t('accounts.signOutConfirmTitle');
+    const message = hasWarning
+      ? t('accounts.signOutAllWarnOpenBalanceBody', { hosts: blocked.join(', ') })
+      : hasMultipleAccounts
+        ? t('accounts.signOutAllConfirmBody')
+        : t('accounts.signOutConfirmBody');
+    const confirmLabel = hasMultipleAccounts
+      ? t('accounts.signOutAll')
+      : t('you.signOut');
+
+    const result = await showAlert({
+      title,
+      message,
+      buttons: [
+        { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
+        { key: 'signout', label: confirmLabel, style: 'destructive' },
+      ],
+    });
+    if (result !== 'signout') return;
 
     if (!hasMultipleAccounts) {
       void signOut();
       return;
     }
-    const result = await showAlert({
-      title: t('accounts.signOutAllConfirmTitle'),
-      message: t('accounts.signOutAllConfirmBody'),
-      buttons: [
-        { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
-        { key: 'signout', label: t('accounts.signOutAll'), style: 'destructive' },
-      ],
-    });
-    if (result === 'signout') {
-      for (const account of accounts) {
-        try {
-          await apiFor(account.serverUrl).logout();
-        } catch {
-          /* best-effort */
-        }
-        // Spec §15: deregister push token before forgetting the account.
-        await unregisterForAccount(account.serverUrl);
-        await removeAccount(account.serverUrl);
+    for (const account of accounts) {
+      try {
+        await apiFor(account.serverUrl).logout();
+      } catch {
+        /* best-effort */
       }
-      router.replace('/(auth)/sign-in');
+      // Spec §15: deregister push token before forgetting the account.
+      await unregisterForAccount(account.serverUrl);
+      await removeAccount(account.serverUrl);
     }
+    router.replace('/(auth)/sign-in');
   }
 
   async function handleTellFriend() {
