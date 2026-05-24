@@ -51,7 +51,16 @@ if (__DEV__ && typeof console !== 'undefined') {
 
 // Exposed for callers (e.g. Image source headers) that need to make their
 // own authenticated requests outside the typed `request` helper.
+//
+// Resolves to the default account's token from the multi-server accounts
+// store. The legacy SecureStore key is only consulted as a fallback for
+// the brief boot window before the accounts blob is loaded (and for the
+// backward-compat sign-in path that still writes it). Without this, any
+// user who signed in via the new add-server flow had a null token here,
+// which broke things like the authenticated avatar <Image> source.
 export async function authToken(): Promise<string | null> {
+  const def = defaultAccount();
+  if (def?.token) return def.token;
   return getToken();
 }
 
@@ -386,11 +395,6 @@ export function joinGroupByToken(token: string) {
   return request<GroupDetail>(`/api/groups/join/${encodeURIComponent(token)}`, {
     method: 'POST',
   });
-}
-
-/** Build the QR payload / deep link for a group's invite token. */
-export function inviteDeepLink(token: string): string {
-  return `chara://join/${token}`;
 }
 
 /** Extract an invite token from a scanned string. Accepts the raw token, a
@@ -970,6 +974,11 @@ export function apiFor(serverUrl: string) {
       requestOn<GroupDetail>(serverUrl, `/api/groups/join/${encodeURIComponent(token)}`, {
         method: 'POST',
       }),
+    /** Fetch the canonical shareable invite URL for a group. The backend
+     *  returns `{ invite_url: 'https://<host>/i/<token>' }` — both QR and
+     *  share-sheet payloads use this string verbatim. */
+    getInviteLink: (groupId: string) =>
+      requestOn<{ invite_url: string }>(serverUrl, `/api/groups/${groupId}/invite-link`),
 
     // Expenses
     listExpenses: (groupId: string) =>

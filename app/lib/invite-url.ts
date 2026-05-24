@@ -4,7 +4,10 @@
  * See `docs/superpowers/specs/2026-05-22-multi-server-accounts-design.md`
  * §10 for the authoritative formats. We accept three forms:
  *
- *   1. Canonical HTTPS:  https://server.example/api/groups/join/<token>
+ *   1. Canonical HTTPS:  https://server.example/i/<token>
+ *                        https://server.example/api/groups/join/<token>
+ *                        (both path shapes accepted; backend returns the
+ *                        short form per the 2026-05-24 invite deep-links spec)
  *   2. App deep link:    chara://join?invite=<urlencoded-https-url>
  *   3. Legacy alias:     quits://join?invite=<urlencoded-https-url>
  *      (kept for one release during the rename rollout)
@@ -26,6 +29,7 @@ export interface InviteRef {
 }
 
 const JOIN_PATH_PREFIX = '/api/groups/join/';
+const SHORT_PATH_PREFIX = '/i/';
 
 function invalid(reason: string): InviteParseError {
   return { kind: 'invalid', reason };
@@ -35,8 +39,8 @@ function invalid(reason: string): InviteParseError {
  * Parse the inner HTTPS form. Returns the InviteRef or an error.
  * Enforces:
  *   - https scheme (not http, not anything else)
- *   - path matches `/api/groups/join/<token>` exactly (one non-empty
- *     segment after `join`)
+ *   - path matches `/i/<token>` or `/api/groups/join/<token>` exactly
+ *     (one non-empty segment after the prefix)
  *   - no query, no fragment
  *   - host passes `normalizeServerUrl`
  */
@@ -66,10 +70,14 @@ function parseHttpsForm(input: string): InviteRef | InviteParseError {
   if (path.endsWith('/') && path.length > 1) {
     path = path.slice(0, -1);
   }
-  if (!path.startsWith(JOIN_PATH_PREFIX)) {
-    return invalid('invite path must be /api/groups/join/<token>');
+  let tokenSegment: string;
+  if (path.startsWith(SHORT_PATH_PREFIX)) {
+    tokenSegment = path.slice(SHORT_PATH_PREFIX.length);
+  } else if (path.startsWith(JOIN_PATH_PREFIX)) {
+    tokenSegment = path.slice(JOIN_PATH_PREFIX.length);
+  } else {
+    return invalid('invite path must be /i/<token> or /api/groups/join/<token>');
   }
-  const tokenSegment = path.slice(JOIN_PATH_PREFIX.length);
   if (tokenSegment.length === 0) {
     return invalid('missing invite token');
   }

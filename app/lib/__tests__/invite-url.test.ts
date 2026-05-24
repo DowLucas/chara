@@ -36,6 +36,59 @@ describe('parseInviteUrl — three accepted forms', () => {
   });
 });
 
+describe('parseInviteUrl — new /i/<token> form', () => {
+  it('parses the short HTTPS form', () => {
+    expect(parseInviteUrl(`https://server.example/i/${TOKEN}`)).toEqual({
+      serverUrl: 'https://server.example',
+      token: TOKEN,
+    });
+  });
+
+  it('tolerates a trailing slash on the short form', () => {
+    expect(parseInviteUrl(`https://server.example/i/${TOKEN}/`)).toEqual({
+      serverUrl: 'https://server.example',
+      token: TOKEN,
+    });
+  });
+
+  it('rejects an empty token segment on the short form', () => {
+    const r = parseInviteUrl('https://server.example/i/');
+    expect((r as any).kind).toBe('invalid');
+    const r2 = parseInviteUrl('https://server.example/i');
+    expect((r2 as any).kind).toBe('invalid');
+  });
+
+  it('rejects extra path segments after the short-form token', () => {
+    const r = parseInviteUrl(`https://server.example/i/${TOKEN}/extra`);
+    expect((r as any).kind).toBe('invalid');
+  });
+
+  it('rejects a query on the short form', () => {
+    const r = parseInviteUrl(`https://server.example/i/${TOKEN}?foo=bar`);
+    expect((r as any).kind).toBe('invalid');
+  });
+
+  it('rejects a fragment on the short form', () => {
+    const r = parseInviteUrl(`https://server.example/i/${TOKEN}#frag`);
+    expect((r as any).kind).toBe('invalid');
+  });
+
+  it('parses chara:// wrapping the new short form', () => {
+    const inner = `https://server.example/i/${TOKEN}`;
+    const link = `chara://join?invite=${encodeURIComponent(inner)}`;
+    expect(parseInviteUrl(link)).toEqual({
+      serverUrl: 'https://server.example',
+      token: TOKEN,
+    });
+  });
+
+  it('produces the same InviteRef for /i/<token> and /api/groups/join/<token>', () => {
+    const short = parseInviteUrl(`https://server.example/i/${TOKEN}`);
+    const long = parseInviteUrl(`https://server.example/api/groups/join/${TOKEN}`);
+    expect(short).toEqual(long);
+  });
+});
+
 describe('parseInviteUrl — tolerance', () => {
   it('tolerates a trailing slash on the HTTPS form', () => {
     expect(parseInviteUrl(`${HTTPS}/`)).toEqual({
