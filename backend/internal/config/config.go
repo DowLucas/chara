@@ -68,6 +68,11 @@ type Config struct {
 	// MaxAppProtocol is the upper bound; clients above this get a 426.
 	MinAppProtocol int
 	MaxAppProtocol int
+
+	// RecurringEnabled gates the River-backed recurring-expense queue.
+	// Default off so the API still boots without the River tables present;
+	// flipped on in Phase 4 once the schema has rolled out everywhere.
+	RecurringEnabled bool
 }
 
 func Load() (*Config, error) {
@@ -113,6 +118,8 @@ func Load() (*Config, error) {
 
 		MinAppProtocol: getEnvInt("MIN_APP_PROTOCOL", 0),
 		MaxAppProtocol: getEnvInt("MAX_APP_PROTOCOL", 1),
+
+		RecurringEnabled: getEnv("RECURRING_ENABLED", "") == "true" || getEnv("RECURRING_ENABLED", "") == "1",
 	}
 
 	if err := cfg.validate(); err != nil {
