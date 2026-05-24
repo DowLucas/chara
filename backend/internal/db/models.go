@@ -69,16 +69,17 @@ type FxRate struct {
 }
 
 type Group struct {
-	ID          string             `db:"id" json:"id"`
-	Name        string             `db:"name" json:"name"`
-	Currency    string             `db:"currency" json:"currency"`
-	CreatedBy   string             `db:"created_by" json:"created_by"`
-	InviteToken string             `db:"invite_token" json:"invite_token"`
-	IsArchived  bool               `db:"is_archived" json:"is_archived"`
-	CreatedAt   pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	UpdatedAt   pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
-	Language    string             `db:"language" json:"language"`
-	IsLocked    bool               `db:"is_locked" json:"is_locked"`
+	ID                         string             `db:"id" json:"id"`
+	Name                       string             `db:"name" json:"name"`
+	Currency                   string             `db:"currency" json:"currency"`
+	CreatedBy                  string             `db:"created_by" json:"created_by"`
+	InviteToken                string             `db:"invite_token" json:"invite_token"`
+	IsArchived                 bool               `db:"is_archived" json:"is_archived"`
+	CreatedAt                  pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt                  pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+	Language                   string             `db:"language" json:"language"`
+	IsLocked                   bool               `db:"is_locked" json:"is_locked"`
+	InviteTokenCreatedByUserID pgtype.Text        `db:"invite_token_created_by_user_id" json:"invite_token_created_by_user_id"`
 }
 
 type GroupMember struct {

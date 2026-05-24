@@ -1,6 +1,6 @@
 -- name: CreateGroup :one
-INSERT INTO groups (id, name, currency, language, created_by, invite_token)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO groups (id, name, currency, language, created_by, invite_token, invite_token_created_by_user_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING *;
 
 -- name: GetGroupByID :one
@@ -26,7 +26,10 @@ WHERE id = $1
 RETURNING *;
 
 -- name: RegenerateInviteToken :one
-UPDATE groups SET invite_token = $2, updated_at = NOW()
+UPDATE groups
+SET invite_token = $2,
+    invite_token_created_by_user_id = $3,
+    updated_at = NOW()
 WHERE id = $1
 RETURNING *;
 

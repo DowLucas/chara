@@ -36,11 +36,12 @@ func CreateGroup(t *testing.T, pool *pgxpool.Pool, name, currency string, ownerU
 	q := db.New(pool)
 
 	group, err := q.CreateGroup(context.Background(), db.CreateGroupParams{
-		ID:          ulid.New(),
-		Name:        name,
-		Currency:    currency,
-		CreatedBy:   ownerUserID,
-		InviteToken: ulid.New(),
+		ID:                         ulid.New(),
+		Name:                       name,
+		Currency:                   currency,
+		CreatedBy:                  ownerUserID,
+		InviteToken:                ulid.New(),
+		InviteTokenCreatedByUserID: pgtype.Text{String: ownerUserID, Valid: true},
 	})
 	require.NoError(t, err)
 

@@ -723,3 +723,66 @@ func TestRotateInvite_WritesActivity(t *testing.T) {
 	}
 	assert.True(t, found, "expected invite_link_rotated activity entry")
 }
+
+// ── Inviter attribution (Wave 2B) ─────────────────────────────────────────────
+
+// Creating a group should record the creating user as the invite-token creator,
+// so the preview endpoint can resolve a display name for the deep-link landing
+// page.
+func TestGroups_Create_PopulatesInviteCreator(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_invcre"), "Alice")
+	token := env.MintToken(t, alice.ID, alice.Email)
+
+	req := env.AuthRequest(t, "POST", "/api/groups", `{"name":"Inviter Trip","currency":"SEK"}`, token)
+	rr := env.Do(t, req)
+	require.Equal(t, http.StatusCreated, rr.Code)
+
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&body))
+	groupID := body["id"].(string)
+
+	group, err := env.Queries.GetGroupByID(context.Background(), groupID)
+	require.NoError(t, err)
+	require.True(t, group.InviteTokenCreatedByUserID.Valid, "expected invite_token_created_by_user_id to be set")
+	assert.Equal(t, alice.ID, group.InviteTokenCreatedByUserID.String)
+}
+
+// Rotating the invite token should also update the recorded inviter to the
+// user who triggered the rotation.
+func TestRegenerateInviteToken_UpdatesCreator(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_invrot"), "Alice")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Rotate Inviter", "SEK", alice.ID, "Alice")
+
+	// Sanity: the fixture should already attribute to Alice.
+	require.True(t, group.InviteTokenCreatedByUserID.Valid)
+	require.Equal(t, alice.ID, group.InviteTokenCreatedByUserID.String)
+
+	// Null it out so we can assert the rotation re-populates it.
+	_, err := env.Pool.Exec(context.Background(),
+		"UPDATE groups SET invite_token_created_by_user_id = NULL WHERE id = $1", group.ID)
+	require.NoError(t, err)
+
+	aliceToken := env.MintToken(t, alice.ID, alice.Email)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+group.ID+"/invite-link/regenerate", "", aliceToken))
+	require.Equal(t, http.StatusOK, rr.Code)
+
+	after, err := env.Queries.GetGroupByID(context.Background(), group.ID)
+	require.NoError(t, err)
+	require.True(t, after.InviteTokenCreatedByUserID.Valid, "expected inviter to be set after rotate")
+	assert.Equal(t, alice.ID, after.InviteTokenCreatedByUserID.String)
+}
+
+// The preview endpoint (Wave 3) will read the inviter via GetGroupByInviteToken;
+// guard the column survives that read path.
+func TestGetGroupByInviteToken_ReturnsCreator(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_invget"), "Alice")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Preview Trip", "SEK", alice.ID, "Alice")
+
+	fetched, err := env.Queries.GetGroupByInviteToken(context.Background(), group.InviteToken)
+	require.NoError(t, err)
+	require.True(t, fetched.InviteTokenCreatedByUserID.Valid)
+	assert.Equal(t, alice.ID, fetched.InviteTokenCreatedByUserID.String)
+}

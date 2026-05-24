@@ -255,12 +255,13 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 	q := db.New(tx)
 
 	group, err := q.CreateGroup(r.Context(), db.CreateGroupParams{
-		ID:          ulid.New(),
-		Name:        req.Name,
-		Currency:    req.Currency,
-		Language:    req.Language,
-		CreatedBy:   claims.UserID,
-		InviteToken: ulid.New(),
+		ID:                         ulid.New(),
+		Name:                       req.Name,
+		Currency:                   req.Currency,
+		Language:                   req.Language,
+		CreatedBy:                  claims.UserID,
+		InviteToken:                ulid.New(),
+		InviteTokenCreatedByUserID: pgtype.Text{String: claims.UserID, Valid: true},
 	})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not create group")
@@ -594,8 +595,9 @@ func (h *GroupHandler) RegenerateInviteToken(w http.ResponseWriter, r *http.Requ
 	q := db.New(tx)
 
 	group, err := q.RegenerateInviteToken(r.Context(), db.RegenerateInviteTokenParams{
-		ID:          groupID,
-		InviteToken: ulid.New(),
+		ID:                         groupID,
+		InviteToken:                ulid.New(),
+		InviteTokenCreatedByUserID: pgtype.Text{String: claims.UserID, Valid: true},
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
