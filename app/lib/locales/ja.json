@@ -429,8 +429,8 @@
   },
   "groupsTab": {
     "joinGroup": "グループに参加",
-    "newGroup": "新規グループ",
-    "newGroupLabel": "新規グループ",
+    "newGroup": "新しいグループ",
+    "newGroupLabel": "新しいグループ",
     "scanQrLabel": "QRコードをスキャンして参加"
   },
   "home": {
@@ -442,7 +442,7 @@
     "groupsCount_other": "グループ・{{count}}件",
     "hostChip": "{{host}}",
     "netBalance": "純残高",
-    "noActivity": "アクティビティなし。",
+    "noActivity": "まだ活動はありません",
     "noGroupsBody": "グループを作成して割り勘を始めましょう。",
     "noGroupsCta": "最初のグループを作成",
     "noGroupsTitle": "グループなし",
@@ -452,12 +452,12 @@
     "retry": "再試行",
     "seeAll": "すべて見る →",
     "statusActive": "アクティブ",
-    "statusIncompatibleShort": "バージョン不一致",
-    "statusNew": "支出なし",
-    "statusReauthShort": "再認証が必要",
+    "statusIncompatibleShort": "バージョンの不一致",
+    "statusNew": "まだ費用はかかっていません",
+    "statusReauthShort": "再認証が必要です",
     "statusSettled": "精算済み",
-    "youOweStamp": "支払",
-    "youreOwedStamp": "受取"
+    "youOweStamp": "あなたは支払う義務がある",
+    "youreOwedStamp": "あなたは受け取るべきものがある"
   },
   "impactSheet": {
     "affectedSettlements": {
@@ -467,7 +467,7 @@
       "more_other": "他{{count}}件"
     },
     "cancel": "キャンセル",
-    "delete": "支出を削除",
+    "delete": "経費を削除する",
     "deleteErrorGeneric": "削除に失敗しました。もう一度お試しください。",
     "errorGeneric": "保存に失敗しました。もう一度お試しください。",
     "lead": {
@@ -496,8 +496,8 @@
     "body": "これをスキャンして参加してもらいます。",
     "errorLoad": "グループの読み込みに失敗しました",
     "eyebrow": "招待",
-    "share": "招待リンクを共有",
-    "shareMessage": "Charaで「{{name}}」に参加: {{link}}"
+    "share": "招待リンクを共有する",
+    "shareMessage": "Charaで「{{name}}」に参加しよう：{{link}}"
   },
   "keypad": {
     "backspace": "バックスペース（長押しでクリア）",
@@ -515,7 +515,7 @@
   "kickMember": {
     "blocked": {
       "body": "{{name}}に未精算の残高があります。先に精算してください。",
-      "row": "{{currency}} {{amount}}の未精算",
+      "row": "{{amount}} {{currency}} での未払い分",
       "title": "{{name}}をまだ削除できません"
     },
     "confirm": {
@@ -527,19 +527,19 @@
     "remove": "削除"
   },
   "members": {
-    "count": "メンバー・{{count}}人",
+    "count": "メンバー · {{count}}",
     "count_one": "メンバー・{{count}}人",
     "count_other": "メンバー・{{count}}人",
     "emptyBody": "メンバーを招待して割り勘を始めましょう。",
     "emptyTitle": "メンバーなし",
     "eyebrow": "メンバー",
     "ghost": "名前で追加",
-    "inviteCta": "QRコードで招待",
+    "inviteCta": "QRコードで招待する",
     "role": "役割",
     "roleMember": "メンバー",
     "roleOwner": "オーナー",
     "shareCta": "リンクを共有",
-    "shareMessage": "Charaで「{{name}}」に参加: {{link}}",
+    "shareMessage": "Charaで「{{name}}」に参加しよう：{{link}}",
     "you": "自分"
   },
   "onboarding": {
@@ -569,7 +569,7 @@
     "phonePlaceholder": "+46 70 123 45 67",
     "placeholder": "山田 太郎",
     "saving": "保存中…",
-    "submit": "次へ"
+    "submit": "続きを読む"
   },
   "privacy": {
     "analyticsDescription": "Charaの改善に役立てるため、利用状況を収集します。個人情報・IPアドレス・コンテンツは収集しません。いつでもオフにできます。",
@@ -641,7 +641,7 @@
   "securityCode": {
     "confirmBody": "コードを再入力して一致を確認してください。",
     "confirmCode": "コードを確認。",
-    "continue": "次へ",
+    "continue": "続きを読む",
     "createBody": "4桁または6桁のコードを設定します。Charaを開くときに入力します。",
     "createCode": "コードを作成。",
     "disable": "セキュリティコードをオフにする",
@@ -676,7 +676,7 @@
     "transfersCaption_one": "最少{{naive}}回ではなく{{count}}回の送金",
     "transfersCaption_other": "最少{{naive}}回ではなく{{count}}回の送金",
     "unknownUser": "不明",
-    "youOwe": "支払",
+    "youOwe": "あなたは支払う義務がある",
     "yourNet": "純残高・{{group}}",
     "yourTransfers": "送金・{{count}}件",
     "yourTransfers_one": "送金・{{count}}件",
@@ -727,17 +727,17 @@
     "couldNotSend": "マジックリンクを送信できませんでした",
     "emailPlaceholder": "your@email.com",
     "eyebrow": "サインイン",
-    "headline": "割って。\n精算して。\nチャラに。",
+    "headline": "決着をつけよう。終わりにしよう。",
     "hostedBy": "chara.appがホスト",
     "sending": "送信中…",
     "useMyServer": "自分のサーバーを使う →"
   },
   "tabs": {
     "activity": "アクティビティ",
-    "addExpenseLabel": "支出を追加",
+    "addExpenseLabel": "経費を追加",
     "chooseGroup": "グループを選択",
     "home": "ホーム",
-    "you": "マイページ"
+    "you": "あなた"
   },
   "you": {
     "about": "アプリについて",
@@ -779,8 +779,8 @@
     "settingsEyebrow": "設定",
     "shareMessage": "Charaで割り勘してみたよ。チェックしてみて: https://chara.app",
     "signOut": "サインアウト",
-    "signOutAll": "すべてサインアウト",
+    "signOutAll": "すべてのサービスからログアウトする",
     "tellFriend": "友達に教える",
-    "title": "マイページ"
+    "title": "あなた"
   }
 }
