@@ -638,6 +638,49 @@
     "retake": "Retake",
     "useThis": "Use this"
   },
+  "recurring": {
+    "currencyLockedHelp": "{{currency}} · group currency · can't be changed later.",
+    "deleteButton": "Delete",
+    "editFutureOnlyNotice": "Changes apply to future bills only. Past expenses stay as-is.",
+    "emptyBody": "Set up rent, internet, or anything that repeats — Chara will add it for you on schedule.",
+    "emptyTitle": "No recurring bills yet",
+    "eyebrow": "automation",
+    "listHeader": "Recurring bills",
+    "newButton": "+ New recurring bill",
+    "pauseButton": "Pause",
+    "paused": {
+      "catchup_overflow": "Catch-up paused — review and resume",
+      "group_locked": "Group is locked",
+      "manual": "Paused",
+      "member_left": "{{name}} left — update splits to resume"
+    },
+    "previewNext": "Will create the next bill on {{date}} at {{time}} ({{tz}}).",
+    "previewThen": "Then {{dates}}.",
+    "push": {
+      "expenseAutoPosted": "{{title}} · {{amount}} auto-added · you owe {{share}}",
+      "expenseAutoPostedCatchup": "{{title}} · {{amount}} auto-added · you owe {{share}} (catching up after offline)",
+      "pausedCatchupOverflow": "{{title}} auto-paused — we've been offline too long to safely catch up. Tap to review.",
+      "pausedGroupLocked_one": "Group locked — {{title}} won't auto-add until the group is unlocked. Tap to review.",
+      "pausedGroupLocked_other": "Group locked — {{title}} and {{extra}} other bills won't auto-add until the group is unlocked. Tap to review.",
+      "pausedMemberLeft": "Heads up: {{name}} left the group, so {{title}} won't auto-add until you update who's splitting it. Tap to fix."
+    },
+    "resumeAllAfterUnlock": "Resume all",
+    "resumeAllBanner_one": "{{count}} bill is paused from when the group was locked.",
+    "resumeAllBanner_other": "{{count}} bills are paused from when the group was locked.",
+    "resumeButton": "Resume",
+    "saveButton": "Save",
+    "schedule": {
+      "every_day_one": "every day",
+      "every_day_other": "every {{count}} days",
+      "every_month_one": "every month",
+      "every_month_other": "every {{count}} months",
+      "every_week_one": "every week",
+      "every_week_other": "every {{count}} weeks",
+      "every_year_one": "every year",
+      "every_year_other": "every {{count}} years"
+    },
+    "settingsRow": "Recurring bills"
+  },
   "scanItems": {
     "assignSheetHint": "Select one or more people. Tap again to remove.",
     "assignSheetTitle": "Who shared this item?",
@@ -795,6 +838,20 @@
     "home": "Home",
     "you": "Profile"
   },
+  "waitlist": {
+    "beta": "Chara is in public beta",
+    "body": "We're keeping receipt scans limited while we figure out hosting plans. Drop your email and we'll let you know when more capacity ships.",
+    "dismiss": "Not now",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "you@example.com",
+    "errorBadEmail": "Please enter a valid email address.",
+    "errorGeneric": "Couldn't sign you up. Please try again.",
+    "resetsAt": "Free scans reset {{date}}.",
+    "selfHostHint": "Or self-host Chara for unlimited everything",
+    "submit": "Notify me",
+    "success": "Thanks — we'll be in touch.",
+    "title": "You've used your {{cap}} free receipt scans this month"
+  },
   "you": {
     "about": "About the app",
     "accountsRowMany": "Accounts · {{count}}",
@@ -826,6 +883,12 @@
     "homeCurrency": "Home currency",
     "language": "Language",
     "languageAuto": "Automatic",
+    "openSource": {
+      "body": "You're using chara.app — our hosted beta. The app itself is free and open-source. You can self-host it on your own machine, with no caps.",
+      "eyebrow": "chara is open source",
+      "githubLabel": "View source on GitHub",
+      "selfHostLabel": "Self-hosting docs"
+    },
     "phoneLabel": "phone",
     "phoneMissing": "not set",
     "rateAppStore": "Rate us on the App Store",
