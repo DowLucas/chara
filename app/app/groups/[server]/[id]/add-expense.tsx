@@ -57,7 +57,6 @@ export default function AddExpenseScreen() {
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [token, setToken] = useState<string | null>(null);
-  const [groupCount, setGroupCount] = useState<number>(1);
 
   const [ocrAvailable, setOcrAvailable] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -105,14 +104,6 @@ export default function AddExpenseScreen() {
       })
       .catch(() => {});
   }, [id, serverUrl]);
-
-  useEffect(() => {
-    if (!serverUrl) return;
-    api
-      .listGroups()
-      .then((gs) => setGroupCount(gs.length))
-      .catch(() => {});
-  }, [serverUrl]);
 
   useEffect(() => {
     if (!serverUrl) return;
@@ -296,7 +287,6 @@ export default function AddExpenseScreen() {
         convertFx={api.convertFx}
         authToken={token}
         submitting={saving}
-        showChangeGroup={groupCount > 1}
         onSubmit={handleSubmit}
         onValuesChange={setLiveValues}
         topSlot={topSlot}
