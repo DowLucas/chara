@@ -36,37 +36,27 @@ import { showAlert } from '@/lib/app-alert';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
-import { Avatar } from '@/components/Avatar';
 import { AmountKeypad } from '@/components/AmountKeypad';
 import { CurrencyPicker } from '@/components/CurrencyPicker';
 import {
   FxConversionSection,
   useFxConversion,
 } from '@/components/FxConversionSection';
+import { SplitEditor, type SplitValue } from '@/components/SplitEditor';
 import {
-  avatarImageSource,
   FxConvertResponse,
   GroupMember,
 } from '@/lib/api';
 import { currentLocale } from '@/lib/i18n';
-import { initialsOf } from '@/lib/name';
 import { evalExpression, hasOperator } from '@/lib/evalExpression';
 import {
   colors,
   fontBody,
-  fontBodyMedium,
-  fontDisplay,
   fontMono,
   fontMonoMedium,
   fontSize,
   spacing,
 } from '@/lib/theme';
-
-const SPLIT_METHODS = [
-  { id: 'equal', labelKey: 'addExpense.methodEqual' },
-  { id: 'exact', labelKey: 'addExpense.methodManual' },
-  { id: 'percentage', labelKey: 'addExpense.methodPercent' },
-] as const;
 
 const MAX_AMOUNT_MINOR = 9_999_999_99;
 
@@ -167,16 +157,6 @@ function distributeInt(total: number, count: number): number[] {
   const base = Math.floor(total / count);
   const rem = total - base * count;
   return Array.from({ length: count }, (_, i) => base + (i < rem ? 1 : 0));
-}
-
-function fmtAutoMinor(minor: number): string {
-  return (Math.max(0, minor) / 100).toFixed(2);
-}
-
-function fmtAutoPct(bp: number): string {
-  const safe = Math.max(0, bp);
-  if (safe % 100 === 0) return String(safe / 100);
-  return (safe / 100).toFixed(2);
 }
 
 function buildInitialIncluded(
@@ -425,6 +405,74 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
 
     const offBy = totalSplitMinor - effectiveAmountMinor;
 
+    // SplitEditor uses a single canonical SplitValue shape; the wizard still
+    // owns the per-method maps it needs at submit time. These two adapters
+    // bridge the gap.
+    const splitValue = useMemo<SplitValue>(() => {
+      const includedIds = members.filter((m) => included[m.id]).map((m) => m.id);
+      const splits: SplitValue['splits'] = [];
+      if (method === 'exact') {
+        for (const m of members) {
+          const v = exactByMember[m.id];
+          if (v === undefined || v === '') continue;
+          const n = parseFloat(v.replace(',', '.'));
+          splits.push({
+            member_id: m.id,
+            value: Number.isFinite(n) ? Math.round(n * 100) : 0,
+          });
+        }
+      } else if (method === 'percentage') {
+        for (const m of members) {
+          const v = pctByMember[m.id];
+          if (v === undefined || v === '') continue;
+          const n = parseFloat(v.replace(',', '.'));
+          splits.push({
+            member_id: m.id,
+            value: Number.isFinite(n) ? Math.round(n * 100) : 0,
+          });
+        }
+      }
+      return { method, included: includedIds, splits };
+    }, [members, included, method, exactByMember, pctByMember]);
+
+    function handleSplitChange(next: SplitValue) {
+      // Method change — clear sub-maps to mirror legacy behavior.
+      if (next.method !== method) {
+        setMethod(next.method);
+        setExactByMember({});
+        setPctByMember({});
+        // included map stays the same.
+        return;
+      }
+      // included update.
+      const nextIncluded: Record<string, boolean> = {};
+      for (const m of members) nextIncluded[m.id] = false;
+      for (const id of next.included) nextIncluded[id] = true;
+      let includedChanged = false;
+      for (const m of members) {
+        if ((included[m.id] ?? false) !== nextIncluded[m.id]) {
+          includedChanged = true;
+          break;
+        }
+      }
+      if (includedChanged) setIncluded(nextIncluded);
+
+      // splits update — translate numeric values back to decimal strings.
+      if (next.method === 'exact') {
+        const nextMap: Record<string, string> = {};
+        for (const s of next.splits) {
+          nextMap[s.member_id] = (s.value / 100).toString();
+        }
+        setExactByMember(nextMap);
+      } else if (next.method === 'percentage') {
+        const nextMap: Record<string, string> = {};
+        for (const s of next.splits) {
+          nextMap[s.member_id] = (s.value / 100).toString();
+        }
+        setPctByMember(nextMap);
+      }
+    }
+
     const canContinueStep1 = title.trim().length > 0 && amountMinor > 0;
     const canSubmit =
       canContinueStep1 && !!payerMemberId && offBy === 0 && includedMembers.length > 0;
@@ -515,10 +563,6 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       await onSubmit(base);
     }
 
-    function memberLabel(m: GroupMember): string {
-      return m.id === currentUserMemberId ? t('addExpense.you') : m.name;
-    }
-
     const recapMeta = fmtMinor(amountMinor, currency);
 
     return (
@@ -575,26 +619,14 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
 
             {step === 2 && (
               <Step2
-                t={t}
                 currency={effectiveCurrency}
                 amountMinor={effectiveAmountMinor}
                 recapMeta={recapMeta}
                 groupName={groupName}
                 members={members}
-                memberLabel={memberLabel}
-                method={method}
-                setMethod={setMethod}
-                included={included}
-                setIncluded={setIncluded}
-                equalShare={equalShare}
-                exactByMember={exactByMember}
-                setExactByMember={setExactByMember}
-                pctByMember={pctByMember}
-                setPctByMember={setPctByMember}
-                autoExactMinor={autoExactMinor}
-                autoPctBp={autoPctBp}
-                totalSplitMinor={totalSplitMinor}
-                offBy={offBy}
+                currentUserMemberId={currentUserMemberId}
+                splitValue={splitValue}
+                onSplitChange={handleSplitChange}
                 authToken={authToken}
               />
             )}
@@ -829,54 +861,27 @@ function Step1({
 
 // ─── Step 2 ───────────────────────────────────────────────────────────────────
 interface Step2Props {
-  t: (k: string, opts?: any) => string;
   currency: string;
   amountMinor: number;
   recapMeta: string;
   groupName: string;
   members: GroupMember[];
-  memberLabel: (m: GroupMember) => string;
-  method: SplitMethod;
-  setMethod: (v: SplitMethod) => void;
-  included: Record<string, boolean>;
-  setIncluded: (v: Record<string, boolean>) => void;
-  equalShare: number;
-  exactByMember: Record<string, string>;
-  setExactByMember: (v: Record<string, string>) => void;
-  pctByMember: Record<string, string>;
-  setPctByMember: (v: Record<string, string>) => void;
-  autoExactMinor: Record<string, number>;
-  autoPctBp: Record<string, number>;
-  totalSplitMinor: number;
-  offBy: number;
+  currentUserMemberId?: string;
+  splitValue: SplitValue;
+  onSplitChange: (v: SplitValue) => void;
   authToken: string | null;
 }
 function Step2({
-  t,
   currency,
   amountMinor,
   recapMeta,
   groupName,
   members,
-  memberLabel,
-  method,
-  setMethod,
-  included,
-  setIncluded,
-  equalShare,
-  exactByMember,
-  setExactByMember,
-  pctByMember,
-  setPctByMember,
-  autoExactMinor,
-  autoPctBp,
-  totalSplitMinor,
-  offBy,
-  authToken: token,
+  currentUserMemberId,
+  splitValue,
+  onSplitChange,
+  authToken,
 }: Step2Props) {
-  const includedCount = members.filter((m) => included[m.id]).length;
-  const methodHint = method === 'equal' ? t('addExpense.nWays', { count: includedCount }) : undefined;
-
   return (
     <View>
       <Recap
@@ -884,186 +889,20 @@ function Step2({
         line={groupName}
         amount={fmtMinor(amountMinor, currency)}
       />
-
-      <SectionLabel>{t('addExpense.splitMethodLabel')}</SectionLabel>
-      <View style={styles.segmentWrap}>
-        {SPLIT_METHODS.map((m, i) => (
-          <SegmentButton
-            key={m.id}
-            label={t(m.labelKey)}
-            active={method === m.id}
-            onPress={() => setMethod(m.id as SplitMethod)}
-            first={i === 0}
-            last={i === SPLIT_METHODS.length - 1}
-          />
-        ))}
-      </View>
-
-      <SectionLabel hint={methodHint}>{t('addExpense.between')}</SectionLabel>
-      {(method === 'exact' || method === 'percentage') && (
-        <Text style={styles.autoFillHint}>{t('addExpense.autoFillHint')}</Text>
-      )}
-      <View style={{ paddingHorizontal: spacing.s5 }}>
-        {members.map((m) => {
-          const inc = included[m.id];
-          return (
-            <View key={m.id} style={styles.payerRow}>
-              <TouchableOpacity
-                onPress={() => setIncluded({ ...included, [m.id]: !inc })}
-                style={styles.payerLeft}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.checkbox, inc && styles.checkboxOn]}>
-                  {inc && <Text style={styles.checkmark}>✓</Text>}
-                </View>
-                <Avatar initials={initialsOf(m.name)} size="sm" source={avatarImageSource(m, token)} />
-                <Text style={[styles.payerName, !inc && { color: colors.lead }]}>
-                  {memberLabel(m)}
-                </Text>
-              </TouchableOpacity>
-              {inc && method === 'equal' && (
-                <Text style={styles.equalShare}>{fmtMinor(equalShare, currency)}</Text>
-              )}
-              {inc && method === 'exact' && (
-                <AutoSplitField
-                  value={exactByMember[m.id] ?? ''}
-                  onChange={(v) => setExactByMember({ ...exactByMember, [m.id]: v })}
-                  onClear={() => {
-                    const next = { ...exactByMember };
-                    delete next[m.id];
-                    setExactByMember(next);
-                  }}
-                  autoPlaceholder={fmtAutoMinor(autoExactMinor[m.id] ?? 0)}
-                  unit={currency.toLowerCase()}
-                />
-              )}
-              {inc && method === 'percentage' && (
-                <AutoSplitField
-                  value={pctByMember[m.id] ?? ''}
-                  onChange={(v) => setPctByMember({ ...pctByMember, [m.id]: v })}
-                  onClear={() => {
-                    const next = { ...pctByMember };
-                    delete next[m.id];
-                    setPctByMember(next);
-                  }}
-                  autoPlaceholder={fmtAutoPct(autoPctBp[m.id] ?? 0)}
-                  unit="%"
-                  narrow
-                />
-              )}
-            </View>
-          );
-        })}
-      </View>
-
-      <View style={styles.reconcileWrap}>
-        <View style={styles.reconcileCard}>
-          <View style={styles.reconcileRow}>
-            <Text style={styles.reconcileLabel}>{t('addExpense.totalSplit')}</Text>
-            <Text style={styles.reconcileValue}>{fmtMinor(totalSplitMinor, currency)}</Text>
-          </View>
-          <View style={styles.reconcileRow}>
-            <Text style={styles.reconcileLabel}>{t('addExpense.matchesPaid')}</Text>
-            <Text
-              style={[
-                styles.reconcileValue,
-                { color: offBy === 0 ? colors.moss : colors.brick },
-              ]}
-            >
-              {offBy === 0
-                ? ''
-                : `${fmtMinor(Math.abs(offBy), currency)} ${offBy > 0 ? t('addExpense.leftToAssign') : t('addExpense.overBy')}`}
-            </Text>
-          </View>
-        </View>
-      </View>
+      <SplitEditor
+        members={members}
+        totalMinor={amountMinor}
+        currency={currency}
+        value={splitValue}
+        onChange={onSplitChange}
+        currentUserMemberId={currentUserMemberId}
+        authToken={authToken}
+      />
     </View>
   );
 }
 
 // ─── Shared subcomponents ─────────────────────────────────────────────────────
-function SectionLabel({ children, hint }: { children: React.ReactNode; hint?: string }) {
-  return (
-    <View style={styles.sectionLabelWrap}>
-      <Text style={styles.sectionLabel}>{children}</Text>
-      {hint && <Text style={styles.sectionLabel}>{hint}</Text>}
-    </View>
-  );
-}
-
-function SegmentButton({
-  label,
-  active,
-  onPress,
-  first,
-  last,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-  first?: boolean;
-  last?: boolean;
-}) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.7}
-      style={[
-        styles.segmentBtn,
-        active && styles.segmentBtnActive,
-        first && styles.segmentBtnFirst,
-        last && styles.segmentBtnLast,
-      ]}
-    >
-      <Text style={[styles.segmentBtnLabel, active && styles.segmentBtnLabelActive]}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
-function AutoSplitField({
-  value,
-  onChange,
-  onClear,
-  autoPlaceholder,
-  unit,
-  narrow,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  onClear: () => void;
-  autoPlaceholder: string;
-  unit: string;
-  narrow?: boolean;
-}) {
-  const locked = value !== '';
-  return (
-    <View style={styles.amountField}>
-      <TextInput
-        value={value}
-        onChangeText={onChange}
-        keyboardType="decimal-pad"
-        placeholder={autoPlaceholder}
-        placeholderTextColor={colors.lead}
-        style={[
-          styles.amountFieldInput,
-          narrow && { width: 50 },
-          !locked && styles.amountFieldInputAuto,
-        ]}
-      />
-      <Text style={styles.amountFieldUnit}>{unit}</Text>
-      {locked ? (
-        <TouchableOpacity onPress={onClear} hitSlop={10} style={styles.clearBtn}>
-          <Text style={styles.clearBtnLabel}>✕</Text>
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.autoBadge}>
-          <Text style={styles.autoBadgeLabel}>auto</Text>
-        </View>
-      )}
-    </View>
-  );
-}
-
 function Recap({ eyebrow, line, amount }: { eyebrow: string; line: string; amount: string }) {
   return (
     <View style={styles.recapWrap}>
@@ -1216,33 +1055,6 @@ const styles = StyleSheet.create({
   groupName: { fontFamily: fontBody, fontSize: fontSize.bodyL, color: colors.graphite },
   changeLink: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.vermillion },
 
-  sectionLabelWrap: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-    paddingHorizontal: spacing.s5,
-    marginBottom: 6,
-    marginTop: spacing.s3,
-  },
-  sectionLabel: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
-
-  segmentWrap: { flexDirection: 'row', paddingHorizontal: spacing.s5, marginBottom: spacing.s3 },
-  segmentBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.graphite,
-    borderLeftWidth: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  segmentBtnFirst: { borderLeftWidth: 1, borderTopLeftRadius: 6, borderBottomLeftRadius: 6 },
-  segmentBtnLast: { borderTopRightRadius: 6, borderBottomRightRadius: 6 },
-  segmentBtnActive: { backgroundColor: colors.graphite },
-  segmentBtnLabel: { fontFamily: fontBodyMedium, fontSize: fontSize.bodyS, color: colors.graphite },
-  segmentBtnLabelActive: { color: colors.paper },
-
   recapWrap: { paddingHorizontal: spacing.s5, paddingTop: 10, paddingBottom: spacing.s4 },
   recapCard: {
     flexDirection: 'row',
@@ -1265,101 +1077,6 @@ const styles = StyleSheet.create({
   recapAmount: {
     fontFamily: fontMonoMedium,
     fontSize: 22,
-    color: colors.graphite,
-    fontVariant: ['tabular-nums'],
-  },
-
-  payerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 0.5,
-    borderBottomColor: colors.ruleSoft,
-  },
-  payerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  payerName: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite, flexShrink: 1 },
-
-  checkbox: {
-    width: 18,
-    height: 18,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: colors.ruleSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-  },
-  checkboxOn: { backgroundColor: colors.graphite, borderColor: colors.graphite },
-  checkmark: { color: colors.paper, fontSize: 11, lineHeight: 12, fontFamily: fontMonoMedium },
-
-  equalShare: {
-    fontFamily: fontMonoMedium,
-    fontSize: fontSize.body,
-    color: colors.graphite,
-    fontVariant: ['tabular-nums'],
-  },
-
-  amountField: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
-  amountFieldInput: {
-    fontFamily: fontMonoMedium,
-    fontSize: 18,
-    color: colors.graphite,
-    width: 70,
-    textAlign: 'right',
-    padding: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.ruleSoft,
-    fontVariant: ['tabular-nums'],
-  },
-  amountFieldUnit: { fontFamily: fontMono, fontSize: 11, color: colors.lead },
-  amountFieldInputAuto: { fontStyle: 'italic', color: colors.lead },
-  clearBtn: {
-    marginLeft: 6,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.bone,
-  },
-  clearBtnLabel: { fontFamily: fontMono, fontSize: 10, color: colors.lead, lineHeight: 11 },
-  autoBadge: {
-    marginLeft: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    backgroundColor: colors.bone,
-  },
-  autoBadgeLabel: {
-    fontFamily: fontMono,
-    fontSize: 9,
-    letterSpacing: 0.5,
-    color: colors.lead,
-    textTransform: 'uppercase',
-  },
-  autoFillHint: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
-    paddingHorizontal: spacing.s5,
-    marginBottom: 4,
-  },
-
-  reconcileWrap: { paddingHorizontal: spacing.s5, paddingTop: spacing.s4 },
-  reconcileCard: {
-    padding: 12,
-    backgroundColor: colors.bone,
-    borderWidth: 0.5,
-    borderColor: colors.ruleSoft,
-    borderRadius: 6,
-    gap: 4,
-  },
-  reconcileRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  reconcileLabel: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
-  reconcileValue: {
-    fontFamily: fontMono,
-    fontSize: fontSize.bodyS,
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
   },
