@@ -103,6 +103,7 @@ export default function GroupSettingsScreen() {
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState<DeleteGroupModalError | null>(null);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
+  const [recurringCount, setRecurringCount] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -127,15 +128,20 @@ export default function GroupSettingsScreen() {
       const isOwner = myMember?.role === 'owner';
       // Balances are owner-only (drives the Delete eligibility gate). Members
       // never see the danger zone, so we skip the fetch for them.
-      const [statsResult, canLeaveResult, balancesResult] = await Promise.allSettled([
-        api.getGroupStats(id),
-        !isOwner && myMember ? api.getMemberCanLeave(id, myMember.id) : Promise.resolve(null),
-        isOwner ? api.listGroupBalances(id) : Promise.resolve(null),
-      ]);
+      const [statsResult, canLeaveResult, balancesResult, recurringResult] =
+        await Promise.allSettled([
+          api.getGroupStats(id),
+          !isOwner && myMember ? api.getMemberCanLeave(id, myMember.id) : Promise.resolve(null),
+          isOwner ? api.listGroupBalances(id) : Promise.resolve(null),
+          api.recurring.list(id),
+        ]);
       if (statsResult.status === 'fulfilled') setStats(statsResult.value);
       if (canLeaveResult.status === 'fulfilled') setCanLeave(canLeaveResult.value);
       if (balancesResult.status === 'fulfilled' && Array.isArray(balancesResult.value)) {
         setBalances(balancesResult.value);
+      }
+      if (recurringResult.status === 'fulfilled' && Array.isArray(recurringResult.value)) {
+        setRecurringCount(recurringResult.value.length);
       }
     } catch {
       setLoadError(true);
@@ -489,6 +495,23 @@ export default function GroupSettingsScreen() {
                 destructive
               />
             )}
+          </View>
+        </View>
+
+        {/* AUTOMATION — recurring bills entry, visible to everyone */}
+        <View style={styles.section}>
+          <Text style={styles.sectionEyebrow}>{t('recurring.eyebrow')}</Text>
+          <View style={styles.list}>
+            <NavRow
+              label={t('recurring.settingsRow')}
+              hint={recurringCount !== null ? String(recurringCount) : undefined}
+              onPress={() =>
+                group &&
+                router.push(
+                  `/groups/${encodeURIComponent(serverUrl)}/${group.id}/recurring`,
+                )
+              }
+            />
           </View>
         </View>
 
