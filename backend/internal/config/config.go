@@ -121,7 +121,10 @@ func Load() (*Config, error) {
 		// on expense responses). MIN_APP_PROTOCOL stays at 0 — older apps still work.
 		MaxAppProtocol: getEnvInt("MAX_APP_PROTOCOL", 2),
 
-		RecurringEnabled: getEnv("RECURRING_ENABLED", "") == "true" || getEnv("RECURRING_ENABLED", "") == "1",
+		// Default ON: Phase 4 wired the schema, HTTP routes, and the
+		// React Native UI. Self-hosters can opt out with RECURRING_ENABLED=false
+		// (e.g. to skip the River background job system entirely).
+		RecurringEnabled: getEnv("RECURRING_ENABLED", "true") != "false" && getEnv("RECURRING_ENABLED", "true") != "0",
 	}
 
 	if err := cfg.validate(); err != nil {
