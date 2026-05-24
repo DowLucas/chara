@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import { useTranslation } from 'react-i18next';
-import { getGroup, inviteDeepLink, Group } from '@/lib/api';
+import { apiFor, getGroup, Group } from '@/lib/api';
 import { useDefaultAccount } from '@/lib/accounts';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 import * as analytics from '@/lib/analytics';
@@ -18,12 +18,19 @@ export default function GroupCreatedScreen() {
   const defaultServerUrl = useDefaultAccount()?.serverUrl ?? '';
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const [group, setGroup] = useState<Group | null>(null);
+  const [link, setLink] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!groupId) return;
     getGroup(groupId).then(setGroup).catch((e) => setError(e?.message ?? t('groupCreated.errorLoad')));
-  }, [groupId, t]);
+    if (defaultServerUrl) {
+      apiFor(defaultServerUrl)
+        .getInviteLink(groupId)
+        .then((r) => setLink(r.invite_url))
+        .catch((e) => setError(e?.message ?? t('groupCreated.errorLoad')));
+    }
+  }, [groupId, defaultServerUrl, t]);
 
   if (error) {
     return (
@@ -37,15 +44,13 @@ export default function GroupCreatedScreen() {
     );
   }
 
-  if (!group) {
+  if (!group || !link) {
     return (
       <View style={[styles.container, styles.center, { paddingTop: insets.top }]}>
         <ActivityIndicator color={colors.graphite} />
       </View>
     );
   }
-
-  const link = inviteDeepLink(group.invite_token);
 
   async function shareLink() {
     try {

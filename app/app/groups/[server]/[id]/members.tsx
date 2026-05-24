@@ -11,7 +11,7 @@ import { ActionSheet, openNativeActionSheet } from '@/components/ActionSheet';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
-import { apiFor, inviteDeepLink, GroupDetail, GroupMember } from '@/lib/api';
+import { apiFor, GroupDetail, GroupMember } from '@/lib/api';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import { formatLeaveReasons } from '@/lib/group-settings';
 import { formatMinorUnits, formatDate } from '@/lib/i18n';
@@ -211,8 +211,8 @@ export default function GroupMembersScreen() {
           kind="primary"
           onPress={async () => {
             if (!group) return;
-            const link = inviteDeepLink(group.invite_token);
             try {
+              const { invite_url: link } = await api.getInviteLink(id);
               await Share.share({
                 message: t('members.shareMessage', { name: group.name, link }),
               });

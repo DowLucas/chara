@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import { useTranslation } from 'react-i18next';
-import { apiFor, inviteDeepLink, Group } from '@/lib/api';
+import { apiFor, Group } from '@/lib/api';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 
 export default function GroupInviteScreen() {
@@ -14,17 +14,21 @@ export default function GroupInviteScreen() {
   const { server, id } = useLocalSearchParams<{ server: string; id: string }>();
   const serverUrl = decodeURIComponent(server ?? '');
   const [group, setGroup] = useState<Group | null>(null);
+  const [link, setLink] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id || !serverUrl) return;
-    apiFor(serverUrl)
+    const api = apiFor(serverUrl);
+    api
       .getGroup(id)
       .then(setGroup)
       .catch((e) => setError(e?.message ?? t('invite.errorLoad')));
+    api
+      .getInviteLink(id)
+      .then((r) => setLink(r.invite_url))
+      .catch((e) => setError(e?.message ?? t('invite.errorLoad')));
   }, [id, serverUrl, t]);
-
-  const link = group ? inviteDeepLink(group.invite_token) : '';
 
   async function shareLink() {
     if (!group) return;
@@ -45,7 +49,7 @@ export default function GroupInviteScreen() {
         <View style={styles.center}>
           <Text style={styles.body}>{error}</Text>
         </View>
-      ) : !group ? (
+      ) : !group || !link ? (
         <View style={styles.center}>
           <ActivityIndicator color={colors.graphite} />
         </View>
