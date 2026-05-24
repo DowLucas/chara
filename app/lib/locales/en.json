@@ -94,8 +94,8 @@
     "multiplePayers": "Multiple payers",
     "mustTotal": "must total {{amount}}",
     "nWays": "{{count}} ways",
-    "nWays_one": "addExpense.nWays",
-    "nWays_other": "addExpense.nWays",
+    "nWays_one": "1 way",
+    "nWays_other": "{{count}} ways",
     "off": "off",
     "onePerson": "One person",
     "overBy": "over by",
@@ -188,6 +188,10 @@
     "namePlaceholder": "Lisbon trip, Apartment 4B, …",
     "submit": "Create group"
   },
+  "languagePicker": {
+    "searchPlaceholder": "Search by name or code…",
+    "empty": "No languages match."
+  },
   "currencyPicker": {
     "all": "all",
     "empty": "No currencies match.",
@@ -241,8 +245,8 @@
     "reload": "Reload",
     "savedToast": "Changes saved.",
     "splitMeta": "split · {{method}} · {{count}} ways",
-    "splitMeta_one": "expenseDetail.splitMeta",
-    "splitMeta_other": "expenseDetail.splitMeta",
+    "splitMeta_one": "split · {{method}} · 1 way",
+    "splitMeta_other": "split · {{method}} · {{count}} ways",
     "staleBanner": "This expense changed since you opened it. Reload to see the latest.",
     "viewReceipt": "View receipt",
     "you": "You"
@@ -281,11 +285,11 @@
     "emptyBody": "Add the first expense to this group.",
     "emptyTitle": "No expenses yet",
     "expensesCount": "expenses · {{count}}",
-    "expensesCount_one": "groupDetail.expensesCount",
-    "expensesCount_other": "groupDetail.expensesCount",
+    "expensesCount_one": "expenses · {{count}}",
+    "expensesCount_other": "expenses · {{count}}",
     "expensesTotal": "total: {{count}}",
-    "expensesTotal_one": "groupDetail.expensesTotal",
-    "expensesTotal_other": "groupDetail.expensesTotal",
+    "expensesTotal_one": "total: {{count}}",
+    "expensesTotal_other": "total: {{count}}",
     "eyebrow": "group",
     "infoCreatedLabel": "Created",
     "infoCurrencyLabel": "Currency",
@@ -295,8 +299,8 @@
     "inviteLabel": "Invite via QR",
     "memberNoExpenses": "Not involved in any expenses yet.",
     "membersLabel": "View {{count}} members",
-    "membersLabel_one": "groupDetail.membersLabel",
-    "membersLabel_other": "groupDetail.membersLabel",
+    "membersLabel_one": "View 1 member",
+    "membersLabel_other": "View {{count}} members",
     "menuLabel": "Group menu",
     "namePaid": "{{name}} paid",
     "openInfoLabel": "Group details",
@@ -315,11 +319,11 @@
     "paymentsHeading": "payments · {{count}}",
     "paymentsHistoryEmpty": "No settlements recorded yet.",
     "paymentsHistoryHeading": "history · {{count}}",
-    "paymentsHistoryHeading_one": "groupDetail.paymentsHistoryHeading",
-    "paymentsHistoryHeading_other": "groupDetail.paymentsHistoryHeading",
+    "paymentsHistoryHeading_one": "history · {{count}}",
+    "paymentsHistoryHeading_other": "history · {{count}}",
     "paymentsToBePaidHeading": "to be paid · {{count}}",
-    "paymentsToBePaidHeading_one": "groupDetail.paymentsToBePaidHeading",
-    "paymentsToBePaidHeading_other": "groupDetail.paymentsToBePaidHeading",
+    "paymentsToBePaidHeading_one": "to be paid · {{count}}",
+    "paymentsToBePaidHeading_other": "to be paid · {{count}}",
     "settle": "Settle",
     "settledUp": "settled up",
     "someonePaid": "Someone paid",
@@ -392,8 +396,8 @@
       "archivedBadge": "Archived",
       "lockedBadge": "Locked",
       "memberCount": "{{count}} members",
-      "memberCount_one": "groupSettings.header.memberCount",
-      "memberCount_other": "groupSettings.header.memberCount"
+      "memberCount_one": "1 member",
+      "memberCount_other": "{{count}} members"
     },
     "loadError": "Couldn't load this group.",
     "members": {
@@ -438,8 +442,8 @@
     "balancesEmpty": "Nothing settled or owed yet.",
     "errorStrip": "{{host}} unavailable",
     "groupsCount": "your groups · {{count}}",
-    "groupsCount_one": "home.groupsCount",
-    "groupsCount_other": "home.groupsCount",
+    "groupsCount_one": "your groups · {{count}}",
+    "groupsCount_other": "your groups · {{count}}",
     "hostChip": "on {{host}}",
     "netBalance": "net balance",
     "noActivity": "No activity yet.",
@@ -447,8 +451,8 @@
     "noGroupsCta": "Create your first group",
     "noGroupsTitle": "No groups yet",
     "recentCount": "recent · {{count}}",
-    "recentCount_one": "home.recentCount",
-    "recentCount_other": "home.recentCount",
+    "recentCount_one": "recent · {{count}}",
+    "recentCount_other": "recent · {{count}}",
     "retry": "Retry",
     "seeAll": "see all →",
     "statusActive": "active",
@@ -463,8 +467,8 @@
     "affectedSettlements": {
       "heading": "Affected settlements (not changed)",
       "more": "+{{count}} more",
-      "more_one": "impactSheet.affectedSettlements.more",
-      "more_other": "impactSheet.affectedSettlements.more"
+      "more_one": "+{{count}} more",
+      "more_other": "+{{count}} more"
     },
     "cancel": "Cancel",
     "delete": "Delete expense",
@@ -473,8 +477,8 @@
     "lead": {
       "deletePlain": "Deleting will reverse balances for {{count}} members.",
       "plain": "Saving will update balances for {{count}} members.",
-      "plain_one": "impactSheet.lead.plain",
-      "plain_other": "impactSheet.lead.plain",
+      "plain_one": "Saving will update balances for 1 member.",
+      "plain_other": "Saving will update balances for {{count}} members.",
       "withSettlements": "This expense has been settled since it was added. Your changes will shift balances:"
     },
     "note": {
@@ -528,8 +532,8 @@
   },
   "members": {
     "count": "members · {{count}}",
-    "count_one": "members.count",
-    "count_other": "members.count",
+    "count_one": "members · {{count}}",
+    "count_other": "members · {{count}}",
     "emptyBody": "Invite friends to start splitting.",
     "emptyTitle": "No members yet",
     "eyebrow": "members of",
@@ -609,8 +613,8 @@
     "everyone": "Everyone",
     "perPerson": "Per person",
     "qty": "× {{count}}",
-    "qty_one": "scanItems.qty",
-    "qty_other": "scanItems.qty",
+    "qty_one": "× {{count}}",
+    "qty_other": "× {{count}}",
     "shareEqually": "Share everything equally",
     "skip": "Skip — split equally",
     "subtitle": "Tap an item to assign it to people.",
@@ -620,8 +624,8 @@
     "totalMismatch": "Items + tax + tip don't match the receipt total. Adjust amounts before continuing.",
     "unassigned": "Unassigned",
     "unassignedWarning": "{{count}} item is unassigned — its amount will split equally.",
-    "unassignedWarning_one": "scanItems.unassignedWarning",
-    "unassignedWarning_other": "scanItems.unassignedWarning",
+    "unassignedWarning_one": "1 item is unassigned — its amount will split equally.",
+    "unassignedWarning_other": "{{count}} items are unassigned — their amounts will split equally.",
     "unassignedWarning_plural": "{{count}} items are unassigned — their amounts will split equally."
   },
   "scanJoin": {
@@ -664,8 +668,8 @@
     "allQuitsBody": "No transfers needed in this group.",
     "allQuitsTitle": "All quits.",
     "betweenOthers": "between others · {{count}}",
-    "betweenOthers_one": "settle.betweenOthers",
-    "betweenOthers_other": "settle.betweenOthers",
+    "betweenOthers_one": "between others · {{count}}",
+    "betweenOthers_other": "between others · {{count}}",
     "errorBody": "Settlement failed. Please try again.",
     "errorTitle": "Error",
     "owesYou": "owes you",
@@ -673,14 +677,14 @@
     "settledTitle": "Settled. Nice.",
     "title": "Settle up",
     "transfersCaption": "fewest payments · {{count}} transfers instead of {{naive}}",
-    "transfersCaption_one": "settle.transfersCaption",
-    "transfersCaption_other": "settle.transfersCaption",
+    "transfersCaption_one": "fewest payments · 1 transfer instead of {{naive}}",
+    "transfersCaption_other": "fewest payments · {{count}} transfers instead of {{naive}}",
     "unknownUser": "Unknown",
     "youOwe": "you owe",
     "yourNet": "your net · {{group}}",
     "yourTransfers": "your transfers · {{count}}",
-    "yourTransfers_one": "settle.yourTransfers",
-    "yourTransfers_other": "settle.yourTransfers"
+    "yourTransfers_one": "your transfers · {{count}}",
+    "yourTransfers_other": "your transfers · {{count}}"
   },
   "settleMethod": {
     "bank": "Bank transfer",
@@ -737,13 +741,13 @@
     "addExpenseLabel": "Add expense",
     "chooseGroup": "Choose a group",
     "home": "Home",
-    "you": "You"
+    "you": "Profile"
   },
   "you": {
     "about": "About the app",
     "accountsRowMany": "Accounts · {{count}}",
-    "accountsRowMany_one": "you.accountsRowMany",
-    "accountsRowMany_other": "you.accountsRowMany",
+    "accountsRowMany_one": "Accounts · {{count}}",
+    "accountsRowMany_other": "Accounts · {{count}}",
     "accountsRowSingle": "Accounts · 1",
     "avatar": {
       "choosePhoto": "Choose from library",
@@ -775,12 +779,13 @@
     "rateUnavailableBody": "Chara isn't published to a store yet.",
     "rateUnavailableTitle": "Not available yet",
     "language": "Language",
+    "languageAuto": "Automatic",
     "replayOnboarding": "Replay onboarding",
     "settingsEyebrow": "settings",
     "shareMessage": "I've been splitting bills with Chara — check it out: https://chara.app",
     "signOut": "Sign out",
     "signOutAll": "Sign out of everything",
     "tellFriend": "Tell a friend",
-    "title": "You"
+    "title": "Profile"
   }
 }

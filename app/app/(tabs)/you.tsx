@@ -17,11 +17,17 @@ import { Feather } from '@expo/vector-icons';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as Application from 'expo-application';
 import * as ImagePicker from 'expo-image-picker';
+import { getLocales } from 'expo-localization';
 import { TopBar } from '@/components/TopBar';
 import { Avatar } from '@/components/Avatar';
 import { ActionSheet, openNativeActionSheet, ActionSheetOption } from '@/components/ActionSheet';
+import { LanguagePicker } from '@/components/LanguagePicker';
 import { useTranslation } from 'react-i18next';
-import i18n, { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/lib/i18n';
+import i18n, {
+  LANGUAGE_NATIVE_NAMES,
+  SUPPORTED_LANGUAGES,
+  type SupportedLanguage,
+} from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 import { useAccounts } from '@/lib/accounts';
 import { initialsOf } from '@/lib/name';
@@ -42,9 +48,12 @@ function hostFor(serverUrl: string): string {
   return serverUrl.replace(/^https?:\/\//i, '').replace(/\/$/, '');
 }
 import {
+  clearPreferredLanguage,
   getConfirmWithFaceId,
+  getPreferredLanguage,
   hasSecurityCode,
   setConfirmWithFaceId,
+  setPreferredLanguage,
 } from '@/lib/preferences';
 import { storeReviewUrl, type StorePlatform } from '@/lib/store-url';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
@@ -65,6 +74,7 @@ export default function YouScreen() {
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [avatarSheetVisible, setAvatarSheetVisible] = useState(false);
   const [languageSheetVisible, setLanguageSheetVisible] = useState(false);
+  const [storedLanguage, setStoredLanguage] = useState<string | null>(null);
   const [avatarToken, setAvatarToken] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -79,15 +89,17 @@ export default function YouScreen() {
   }, [user?.id]);
 
   const refresh = useCallback(async () => {
-    const [has, fid, compat, enrolled] = await Promise.all([
+    const [has, fid, compat, enrolled, lang] = await Promise.all([
       hasSecurityCode(),
       getConfirmWithFaceId(),
       LocalAuthentication.hasHardwareAsync(),
       LocalAuthentication.isEnrolledAsync(),
+      getPreferredLanguage(),
     ]);
     setPinSet(has);
     setFaceIdEnabled(fid);
     setBiometricAvailable(compat && enrolled);
+    setStoredLanguage(lang);
   }, []);
 
   useFocusEffect(
@@ -202,15 +214,48 @@ export default function YouScreen() {
       : []),
   ];
 
-  const currentLanguage = (i18n.language?.split('-')[0] ?? 'en') as SupportedLanguage;
-  const LANGUAGE_NAMES: Record<SupportedLanguage, string> = {
-    en: 'English',
-    sv: 'Svenska',
-  };
-  const languageSheetOptions: ActionSheetOption[] = SUPPORTED_LANGUAGES.map((code) => ({
-    label: LANGUAGE_NAMES[code],
-    onPress: () => i18n.changeLanguage(code),
-  }));
+  const currentLanguage = (() => {
+    const raw = i18n.language ?? 'en';
+    const lower = raw.toLowerCase();
+    // Prefer exact-tag match (zh-Hans), fall back to bare code (en, sv, ...).
+    const tagMatch = (SUPPORTED_LANGUAGES as readonly string[]).find((s) =>
+      lower.startsWith(s.toLowerCase()),
+    );
+    return (tagMatch ?? lower.split('-')[0] ?? 'en') as SupportedLanguage;
+  })();
+  // Row value: explicit pick name, or "Automatic · <detected>" so the user
+  // always sees what's active without having to open the picker.
+  const languageRowValue = storedLanguage
+    ? LANGUAGE_NATIVE_NAMES[storedLanguage as SupportedLanguage] ?? storedLanguage
+    : `${t('you.languageAuto')} · ${LANGUAGE_NATIVE_NAMES[currentLanguage]}`;
+  async function pickAutomatic() {
+    await clearPreferredLanguage();
+    setStoredLanguage(null);
+    // Fall back to device-locale detection on next cold start. For this
+    // session, switch immediately so the user sees the effect.
+    const locales = getLocales();
+    const supported = SUPPORTED_LANGUAGES as readonly string[];
+    let code: string = 'en';
+    for (const l of locales) {
+      const tag = (l.languageTag ?? '').toLowerCase();
+      const lc = (l.languageCode ?? '').toLowerCase();
+      const tagMatch = supported.find((s) => tag.startsWith(s.toLowerCase()));
+      if (tagMatch) {
+        code = tagMatch;
+        break;
+      }
+      if (supported.includes(lc)) {
+        code = lc;
+        break;
+      }
+    }
+    i18n.changeLanguage(code);
+  }
+  async function pickLanguage(code: SupportedLanguage) {
+    await setPreferredLanguage(code);
+    setStoredLanguage(code);
+    i18n.changeLanguage(code);
+  }
 
   async function toggleFaceId(next: boolean) {
     if (next) {
@@ -386,7 +431,7 @@ export default function YouScreen() {
           />
           <NavRow
             label={t('you.language')}
-            value={LANGUAGE_NAMES[currentLanguage]}
+            value={languageRowValue}
             onPress={() => setLanguageSheetVisible(true)}
           />
           <NavRow label={t('privacy.title')} onPress={() => router.push('/settings/privacy')} />
@@ -422,11 +467,12 @@ export default function YouScreen() {
         title={t('you.avatar.chooseTitle')}
         options={avatarSheetOptions}
       />
-      <ActionSheet
+      <LanguagePicker
         visible={languageSheetVisible}
+        selected={(storedLanguage as SupportedLanguage | null) ?? null}
         onClose={() => setLanguageSheetVisible(false)}
-        title={t('you.language')}
-        options={languageSheetOptions}
+        onSelectAutomatic={pickAutomatic}
+        onSelect={pickLanguage}
       />
     </View>
   );
