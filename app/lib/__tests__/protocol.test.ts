@@ -7,16 +7,16 @@ import {
 } from '../protocol';
 
 describe('protocol constants', () => {
-  it('APP_PROTOCOL_VERSION is 1', () => {
-    expect(APP_PROTOCOL_VERSION).toBe(1);
+  it('APP_PROTOCOL_VERSION is 2', () => {
+    expect(APP_PROTOCOL_VERSION).toBe(2);
   });
 
   it('MIN_SERVER_PROTOCOL is 1', () => {
     expect(MIN_SERVER_PROTOCOL).toBe(1);
   });
 
-  it('MAX_SERVER_PROTOCOL is 1', () => {
-    expect(MAX_SERVER_PROTOCOL).toBe(1);
+  it('MAX_SERVER_PROTOCOL is 2', () => {
+    expect(MAX_SERVER_PROTOCOL).toBe(2);
   });
 
   it('PROTOCOL_HEADER is X-Chara-App-Protocol', () => {
@@ -28,9 +28,9 @@ describe('checkProtocolCompat — success', () => {
   it('returns ok when everything matches', () => {
     expect(
       checkProtocolCompat({
-        serverProtocol: 1,
+        serverProtocol: 2,
         serverMinApp: 1,
-        serverMaxApp: 1,
+        serverMaxApp: 2,
       }),
     ).toEqual({ ok: true });
   });
