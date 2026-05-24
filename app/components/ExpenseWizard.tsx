@@ -133,7 +133,6 @@ export interface ExpenseWizardProps {
   topSlot?: React.ReactNode;
   /** Rendered between the scroll and the CTA bar (e.g. duplicate banner). */
   preCtaSlot?: React.ReactNode;
-  showChangeGroup?: boolean;
   onValuesChange?: (snapshot: {
     title: string;
     amount: string;
@@ -209,7 +208,6 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       onSubmit,
       topSlot,
       preCtaSlot,
-      showChangeGroup,
       onValuesChange,
     } = props;
 
@@ -604,7 +602,6 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
                 setDate={setDate}
                 onOpenDatePicker={() => setShowDatePicker(true)}
                 groupName={groupName}
-                showChangeGroup={!!showChangeGroup}
                 onOpenKeypad={() => setKeypadTarget({ kind: 'amount' })}
                 topSlot={topSlot}
                 isForeignCurrency={isForeignCurrency}
@@ -749,7 +746,6 @@ interface Step1Props {
   setDate: (d: Date) => void;
   onOpenDatePicker: () => void;
   groupName: string;
-  showChangeGroup: boolean;
   onOpenKeypad: () => void;
   topSlot?: React.ReactNode;
   isForeignCurrency: boolean;
@@ -771,7 +767,6 @@ function Step1({
   setDate,
   onOpenDatePicker,
   groupName,
-  showChangeGroup,
   onOpenKeypad,
   topSlot,
   isForeignCurrency,
@@ -850,9 +845,6 @@ function Step1({
         <Text style={styles.fieldLabel}>{t('addExpense.groupLabel')}</Text>
         <View style={styles.groupRow}>
           <Text style={styles.groupName}>{groupName}</Text>
-          {showChangeGroup && (
-            <Text style={styles.changeLink}>{t('addExpense.change')} →</Text>
-          )}
         </View>
       </View>
     </View>
@@ -1053,7 +1045,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   groupName: { fontFamily: fontBody, fontSize: fontSize.bodyL, color: colors.graphite },
-  changeLink: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.vermillion },
 
   recapWrap: { paddingHorizontal: spacing.s5, paddingTop: 10, paddingBottom: spacing.s4 },
   recapCard: {
