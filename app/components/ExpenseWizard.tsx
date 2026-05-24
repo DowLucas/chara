@@ -29,7 +29,6 @@ import {
   View,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { showAlert } from '@/lib/app-alert';
@@ -37,6 +36,7 @@ import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
 import { AmountKeypad } from '@/components/AmountKeypad';
+import { AmountField } from '@/components/AmountField';
 import { CurrencyPicker } from '@/components/CurrencyPicker';
 import {
   FxConversionSection,
@@ -783,33 +783,13 @@ function Step1({
 
       <View style={styles.hero}>
         <Text style={styles.eyebrow}>{t('addExpense.amount')}</Text>
-        <View style={styles.amountRow}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={onOpenKeypad}
-            style={styles.amountTouchable}
-          >
-            <Text
-              style={[
-                styles.amountInput,
-                !amount && { color: colors.lead },
-              ]}
-            >
-              {amount || '0'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={onOpenCurrencyPicker}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={t('addExpense.changeCurrency')}
-            style={styles.currencyTouchable}
-          >
-            <Text style={styles.currency}>{currency.toLowerCase()}</Text>
-            <Feather name="chevron-down" size={16} color={colors.lead} />
-          </TouchableOpacity>
-        </View>
+        <AmountField
+          amount={amount}
+          currency={currency}
+          onPress={onOpenKeypad}
+          onCurrencyPress={onOpenCurrencyPicker}
+          currencyAccessibilityLabel={t('addExpense.changeCurrency')}
+        />
         <View style={styles.rule} />
         {isForeignCurrency && amountMinor > 0 && (
           <FxConversionSection
@@ -1000,24 +980,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     marginBottom: 6,
   },
-  amountRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
-  amountTouchable: { flex: 1 },
-  amountInput: {
-    fontFamily: fontMono,
-    fontSize: 56,
-    letterSpacing: -1.5,
-    color: colors.graphite,
-    padding: 0,
-    fontVariant: ['tabular-nums'],
-  },
-  currencyTouchable: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 4,
-  },
-  currency: { fontFamily: fontMono, fontSize: 24, color: colors.lead },
   rule: { height: 1.5, backgroundColor: colors.graphite, marginTop: 12 },
 
   fieldWrap: {
