@@ -374,7 +374,24 @@ func TestGroups_InviteLink_MemberCanGet(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rr.Code)
 	var body map[string]any
 	require.NoError(t, json.NewDecoder(rr.Body).Decode(&body))
-	assert.Contains(t, body["invite_url"].(string), group.InviteToken)
+	inviteURL := body["invite_url"].(string)
+	assert.Contains(t, inviteURL, group.InviteToken)
+	// Universal link form: <baseURL>/i/<token>. The old /api/groups/join/<token>
+	// form was an API endpoint, not a shareable link — see invite-deep-links spec.
+	assert.Regexp(t, `^https?://[^/]+/i/[^/]+$`, inviteURL)
+	assert.Equal(t, env.Config.BaseURL+"/i/"+group.InviteToken, inviteURL)
+}
+
+// TestInviteLandingStub_Returns501 asserts that /i/{token} is registered at the
+// router root (outside /api/...) and currently returns 501 Not Implemented.
+// The real landing-page handler is Wave 3 of the invite-deep-links plan; this
+// stub guarantees the route reserves the path so the frontend can ship.
+func TestInviteLandingStub_Returns501(t *testing.T) {
+	env := setupEnv(t)
+	req, err := http.NewRequest("GET", "/i/anything", nil)
+	require.NoError(t, err)
+	rr := env.Do(t, req)
+	assert.Equal(t, http.StatusNotImplemented, rr.Code)
 }
 
 func TestGroups_InviteLink_NonMemberCannotGet(t *testing.T) {

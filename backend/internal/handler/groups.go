@@ -555,7 +555,10 @@ func (h *GroupHandler) GetInviteLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inviteURL := h.cfg.BaseURL + "/api/groups/join/" + group.InviteToken
+	// Universal-link form: handled by GET /i/{token} at the router root. The
+	// real landing page is Wave 3 of the invite-deep-links plan; today the
+	// route is a 501 stub but the link itself is what we ship to users.
+	inviteURL := h.cfg.BaseURL + "/i/" + group.InviteToken
 	writeJSON(w, http.StatusOK, map[string]string{"invite_url": inviteURL})
 }
 
