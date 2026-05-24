@@ -102,14 +102,14 @@ const styles = StyleSheet.create({
   header: { gap: spacing.s2, marginBottom: spacing.s5 },
   eyebrow: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
   },
   headline: {
     fontFamily: fontDisplay,
-    fontSize: 32,
-    lineHeight: 36,
+    fontSize: fontSize.displayL,
+    lineHeight: 44,
     color: colors.graphite,
     letterSpacing: -1,
   },

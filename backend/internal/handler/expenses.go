@@ -73,6 +73,7 @@ type ExpenseResponse struct {
 	OriginalCurrency *string         `json:"original_currency,omitempty"`
 	FxRate           *string         `json:"fx_rate,omitempty"`
 	FxAsOf           *string         `json:"fx_as_of,omitempty"`
+	FxSource         *string         `json:"fx_source,omitempty"`
 }
 
 func buildExpenseResponse(
@@ -84,6 +85,7 @@ func buildExpenseResponse(
 	splits []SplitResponse,
 	originalAmount pgtype.Int8, originalCurrency pgtype.Text,
 	fxRate pgtype.Numeric, fxAsOf pgtype.Date,
+	fxSource pgtype.Text,
 ) ExpenseResponse {
 	resp := ExpenseResponse{
 		ID:              id,
@@ -127,6 +129,10 @@ func buildExpenseResponse(
 		d := fxAsOf.Time.Format("2006-01-02")
 		resp.FxAsOf = &d
 	}
+	if fxSource.Valid {
+		s := fxSource.String
+		resp.FxSource = &s
+	}
 	return resp
 }
 
@@ -162,6 +168,16 @@ type createExpenseReq struct {
 	IsReimbursement bool           `json:"is_reimbursement"`
 	Participants    []string       `json:"participants"`
 	Splits          []splitReqItem `json:"splits"`
+
+	// Optional client-supplied FX snapshot. All five fields must be set
+	// together — partial submissions are rejected. When present and
+	// well-formed, the backend trusts the snapshot verbatim and skips
+	// the ECB lookup. fx_source must be "ecb" or "manual".
+	OriginalAmount   *money.Amount `json:"original_amount,omitempty"`
+	OriginalCurrency *string       `json:"original_currency,omitempty"`
+	FxRate           *string       `json:"fx_rate,omitempty"`
+	FxAsOf           *string       `json:"fx_as_of,omitempty"`
+	FxSource         *string       `json:"fx_source,omitempty"`
 }
 
 type updateExpenseReq struct {
@@ -174,6 +190,83 @@ type updateExpenseReq struct {
 	Notes        *string        `json:"notes"`
 	Participants []string       `json:"participants"`
 	Splits       []splitReqItem `json:"splits"`
+
+	// See createExpenseReq for the FX-snapshot contract.
+	OriginalAmount   *money.Amount `json:"original_amount,omitempty"`
+	OriginalCurrency *string       `json:"original_currency,omitempty"`
+	FxRate           *string       `json:"fx_rate,omitempty"`
+	FxAsOf           *string       `json:"fx_as_of,omitempty"`
+	FxSource         *string       `json:"fx_source,omitempty"`
+}
+
+// parseClientFxSnapshot validates a request's optional FX-snapshot fields.
+// Returns (present, ok, err):
+//   - present=false: caller sent zero fx fields → fall through to ECB path.
+//   - present=true, ok=true: all five fields well-formed; ready to store.
+//   - present=true, ok=false, err != nil: partial or invalid submission;
+//     caller should 400 with err.Error().
+//
+// On the happy path it also sets the returned pgtype values ready to pass
+// into the sqlc params.
+type clientFxSnapshot struct {
+	OriginalAmount   pgtype.Int8
+	OriginalCurrency pgtype.Text
+	FxRate           pgtype.Numeric
+	FxAsOf           pgtype.Date
+	FxSource         pgtype.Text
+}
+
+func parseClientFxSnapshot(
+	origAmount *money.Amount, origCurrency *string,
+	fxRate *string, fxAsOf *string, fxSource *string,
+) (present bool, snap clientFxSnapshot, err error) {
+	count := 0
+	if origAmount != nil {
+		count++
+	}
+	if origCurrency != nil {
+		count++
+	}
+	if fxRate != nil {
+		count++
+	}
+	if fxAsOf != nil {
+		count++
+	}
+	if fxSource != nil {
+		count++
+	}
+	if count == 0 {
+		return false, clientFxSnapshot{}, nil
+	}
+	if count != 5 {
+		return true, clientFxSnapshot{}, fmt.Errorf("fx snapshot is all-or-none: original_amount, original_currency, fx_rate, fx_as_of, fx_source must all be provided together")
+	}
+	if *origAmount <= 0 {
+		return true, clientFxSnapshot{}, fmt.Errorf("original_amount must be positive")
+	}
+	normalizedOrigCcy, ok := currency.Normalize(*origCurrency)
+	if !ok {
+		return true, clientFxSnapshot{}, fmt.Errorf("unknown original_currency code")
+	}
+	if *fxSource != "ecb" && *fxSource != "manual" {
+		return true, clientFxSnapshot{}, fmt.Errorf("fx_source must be 'ecb' or 'manual'")
+	}
+	var n pgtype.Numeric
+	if err := n.Scan(*fxRate); err != nil {
+		return true, clientFxSnapshot{}, fmt.Errorf("invalid fx_rate: %w", err)
+	}
+	asOfTime, err := time.Parse("2006-01-02", *fxAsOf)
+	if err != nil {
+		return true, clientFxSnapshot{}, fmt.Errorf("invalid fx_as_of, expected YYYY-MM-DD")
+	}
+	return true, clientFxSnapshot{
+		OriginalAmount:   pgtype.Int8{Int64: int64(*origAmount), Valid: true},
+		OriginalCurrency: pgtype.Text{String: normalizedOrigCcy, Valid: true},
+		FxRate:           n,
+		FxAsOf:           pgtype.Date{Time: asOfTime, Valid: true},
+		FxSource:         pgtype.Text{String: *fxSource, Valid: true},
+	}, nil
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -382,22 +475,52 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		expenseDate = pgtype.Date{Time: t, Valid: true}
 	}
 
-	// If the expense was paid in a currency other than the group's, convert
-	// to the group currency now and stash the original-currency snapshot so
-	// the expense detail can show both. Same-currency expenses skip this
-	// entirely (the common case).
+	// FX handling. Three paths:
+	//
+	//  1. Client sent a complete fx snapshot (all 5 fields) → trust it
+	//     verbatim, skip ECB. `req.Amount`/`req.Currency` are assumed to
+	//     already be the canonical (group-currency) values.
+	//  2. Client sent zero fx fields but req.Currency != group.Currency
+	//     → run the ECB conversion path; fx_source := 'ecb'.
+	//  3. Same-currency expense, no fx at all (common case).
 	canonicalAmount := int64(req.Amount)
 	canonicalCurrency := req.Currency
 	var fxOriginalAmount pgtype.Int8
 	var fxOriginalCurrency pgtype.Text
 	var fxRate pgtype.Numeric
 	var fxAsOf pgtype.Date
+	var fxSource pgtype.Text
 	group, err := h.queries.GetGroupByID(r.Context(), groupID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not load group")
 		return
 	}
-	if req.Currency != group.Currency {
+	fxPresent, clientSnap, fxErr := parseClientFxSnapshot(
+		req.OriginalAmount, req.OriginalCurrency, req.FxRate, req.FxAsOf, req.FxSource,
+	)
+	if fxErr != nil {
+		writeError(w, http.StatusBadRequest, fxErr.Error())
+		return
+	}
+	if fxPresent {
+		// Trust the client snapshot. Sanity-check the canonical side: the
+		// payload's `currency` should match the group currency (since the
+		// client has already converted) and `original_currency` should
+		// differ from it.
+		if req.Currency != group.Currency {
+			writeError(w, http.StatusBadRequest, "currency must equal group currency when fx snapshot is supplied")
+			return
+		}
+		if clientSnap.OriginalCurrency.String == group.Currency {
+			writeError(w, http.StatusBadRequest, "original_currency must differ from group currency")
+			return
+		}
+		fxOriginalAmount = clientSnap.OriginalAmount
+		fxOriginalCurrency = clientSnap.OriginalCurrency
+		fxRate = clientSnap.FxRate
+		fxAsOf = clientSnap.FxAsOf
+		fxSource = clientSnap.FxSource
+	} else if req.Currency != group.Currency {
 		conv, err := fx.Convert(r.Context(), h.queries, int64(req.Amount), req.Currency, group.Currency, expenseDate.Time)
 		if err != nil {
 			if errors.Is(err, fx.ErrRateUnavailable) {
@@ -418,6 +541,7 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		}
 		fxRate = n
 		fxAsOf = pgtype.Date{Time: conv.AsOf, Valid: true}
+		fxSource = pgtype.Text{String: "ecb", Valid: true}
 
 		// Recompute splits using the converted amount so members owe the
 		// group-currency value, not the original one.
@@ -454,6 +578,7 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		OriginalCurrency: fxOriginalCurrency,
 		FxRate:           fxRate,
 		FxAsOf:           fxAsOf,
+		FxSource:         fxSource,
 	})
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not create expense")
@@ -489,6 +614,7 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		expense.IsReimbursement, expense.CreatedByID, expense.CreatedAt, expense.UpdatedAt,
 		splitResp,
 		expense.OriginalAmount, expense.OriginalCurrency, expense.FxRate, expense.FxAsOf,
+		expense.FxSource,
 	)
 	writeJSON(w, http.StatusCreated, resp)
 }
@@ -545,6 +671,7 @@ func (h *ExpenseHandler) List(w http.ResponseWriter, r *http.Request) {
 			e.IsReimbursement, e.CreatedByID, e.CreatedAt, e.UpdatedAt,
 			dbSplitsToResponse(splitsByExpense[e.ID]),
 			e.OriginalAmount, e.OriginalCurrency, e.FxRate, e.FxAsOf,
+			e.FxSource,
 		)
 	}
 	writeJSON(w, http.StatusOK, resp)
@@ -583,6 +710,7 @@ func (h *ExpenseHandler) Get(w http.ResponseWriter, r *http.Request) {
 		expense.IsReimbursement, expense.CreatedByID, expense.CreatedAt, expense.UpdatedAt,
 		dbSplitsToResponse(dbSplits),
 		expense.OriginalAmount, expense.OriginalCurrency, expense.FxRate, expense.FxAsOf,
+		expense.FxSource,
 	)
 	writeJSON(w, http.StatusOK, resp)
 }
@@ -723,19 +851,53 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Compute the new canonical amount and FX snapshot. If the input currency
-	// equals the group currency, FX is cleared. Otherwise we re-run
-	// fx.Convert so the canonical amount stays consistent with
-	// original_amount × fx_rate, mirroring Create.
+	// Compute the new canonical amount and FX snapshot. Three paths mirror
+	// Create:
+	//   1. Client sent a complete fx snapshot → trust verbatim.
+	//   2. Recompute via ECB when the (post-edit) input currency differs
+	//      from the group currency.
+	//   3. Same-currency edit → clear FX snapshot.
 	var (
 		newCanonicalAmount    = inputAmount
 		fxOriginalAmount      pgtype.Int8
 		fxOriginalCurrency    pgtype.Text
 		fxRateNumeric         pgtype.Numeric
 		fxAsOfDate            pgtype.Date
+		fxSourceText          pgtype.Text
 		needsFxSnapshotUpdate bool
 	)
-	if amountChanging || currencyChanging {
+	clientFxPresent, clientSnap, fxErr := parseClientFxSnapshot(
+		req.OriginalAmount, req.OriginalCurrency, req.FxRate, req.FxAsOf, req.FxSource,
+	)
+	if fxErr != nil {
+		writeError(w, http.StatusBadRequest, fxErr.Error())
+		return
+	}
+	if clientFxPresent {
+		// When the client sends a manual snapshot, req.Amount (if present)
+		// is the canonical group-currency amount. If req.Amount is nil we
+		// keep the existing canonical amount.
+		if req.Currency != nil && *req.Currency != group.Currency {
+			writeError(w, http.StatusBadRequest, "currency must equal group currency when fx snapshot is supplied")
+			return
+		}
+		if clientSnap.OriginalCurrency.String == group.Currency {
+			writeError(w, http.StatusBadRequest, "original_currency must differ from group currency")
+			return
+		}
+		needsFxSnapshotUpdate = true
+		if req.Amount != nil {
+			newCanonicalAmount = int64(*req.Amount)
+		} else {
+			newCanonicalAmount = existing.Amount
+		}
+		fxOriginalAmount = clientSnap.OriginalAmount
+		fxOriginalCurrency = clientSnap.OriginalCurrency
+		fxRateNumeric = clientSnap.FxRate
+		fxAsOfDate = clientSnap.FxAsOf
+		fxSourceText = clientSnap.FxSource
+		params.Currency = pgtype.Text{String: group.Currency, Valid: true}
+	} else if amountChanging || currencyChanging {
 		needsFxSnapshotUpdate = true
 		if inputCurrency != group.Currency {
 			conv, err := fx.Convert(r.Context(), h.queries, inputAmount, inputCurrency, group.Currency, existing.ExpenseDate.Time)
@@ -757,6 +919,7 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 			}
 			fxRateNumeric = n
 			fxAsOfDate = pgtype.Date{Time: conv.AsOf, Valid: true}
+			fxSourceText = pgtype.Text{String: "ecb", Valid: true}
 		}
 		// Canonical currency is always the group currency for the stored row.
 		params.Currency = pgtype.Text{String: group.Currency, Valid: true}
@@ -789,6 +952,7 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 			OriginalCurrency: fxOriginalCurrency,
 			FxRate:           fxRateNumeric,
 			FxAsOf:           fxAsOfDate,
+			FxSource:         fxSourceText,
 		})
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal error")
@@ -802,6 +966,7 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		updated.OriginalCurrency = fxRow.OriginalCurrency
 		updated.FxRate = fxRow.FxRate
 		updated.FxAsOf = fxRow.FxAsOf
+		updated.FxSource = fxRow.FxSource
 		updated.UpdatedAt = fxRow.UpdatedAt
 	}
 
@@ -898,6 +1063,7 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		updated.IsReimbursement, updated.CreatedByID, updated.CreatedAt, updated.UpdatedAt,
 		splitResp,
 		updated.OriginalAmount, updated.OriginalCurrency, updated.FxRate, updated.FxAsOf,
+		updated.FxSource,
 	)
 	writeJSON(w, http.StatusOK, resp)
 }

@@ -241,18 +241,19 @@ const styles = StyleSheet.create({
   },
   cardName: {
     fontFamily: fontDisplay,
-    fontSize: fontSize.bodyL,
+    fontSize: fontSize.displayS,
     color: colors.graphite,
-    letterSpacing: -0.2,
+    letterSpacing: -0.4,
   },
   cardEmail: {
     fontFamily: fontBody,
     fontSize: fontSize.bodyS,
     color: colors.lead,
+    marginTop: 3,
   },
   cardHost: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     letterSpacing: 0.3,
     marginTop: 2,

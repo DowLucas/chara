@@ -125,11 +125,24 @@ The JSON payload follows the Swish "Send via App-Switch" spec (v1):
 {
   "version": 1,
   "payee":   { "value": "0701234567" },
-  "amount":  { "value": "240.00", "editable": false },
-  "message": { "value": "Chara · Friday dinner",  "editable": false },
-  "callbackurl": "chara://settle/swish/return?pendingId=01HGZ…"
+  "amount":  { "value": 240 },
+  "message": { "value": "Chara: Friday dinner" }
 }
 ```
+
+⚠️ `amount.value` is a **bare integer** number of kronor (not a string,
+not decimal). The Swish consumer deep-link parser rejects decimals
+(`226.82` → "Felaktig länk") and rejects strings (`"227"` → fail).
+Confirmed empirically and matches two independent live implementations
+([stefangeneralao/swish-link-generator](https://github.com/stefangeneralao/swish-link-generator/blob/master/src/utils/index.js),
+[filleokus gist](https://gist.github.com/filleokus/a8f1ffee4d49e09572aacd6239bc84cd)).
+The **merchant HTTP API** (§9) takes a decimal string with öre; the
+deep-link parser does not. Don't confuse the two.
+
+`editable` keys and `callbackurl` are not included — unknown top-level
+keys or `editable:false` both trigger "Felaktig länk" on the consumer
+parser. Auto-return is handled by iOS's "Return to Chara" affordance,
+not by a callback URL.
 
 ### 3.0.1 `callbackurl` — what it does and doesn't do
 
@@ -157,9 +170,9 @@ Notes:
 
 - Payee number is sent **without** the `+46` prefix and **without spaces**,
   i.e. national format `0701234567`. Conversion happens in the link builder.
-- `amount.value` is a decimal string with exactly 2 fraction digits. We
-  convert from internal `int64` minor units at link build time (the only
-  place outside money formatting where we render minor units as decimal).
+- `amount.value` is a **bare integer** number of kronor (see warning
+  above). We round UP from internal `int64` minor units at link build
+  time (`Math.ceil(minor / 100)`) so the payee is never short.
 - `message.value` is `"Chara · {group name truncated to 40 chars}"` —
   identifies the source but doesn't leak emails or member names.
 - `editable: false` locks both fields so the user cannot accidentally send

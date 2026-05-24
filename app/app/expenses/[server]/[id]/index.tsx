@@ -207,52 +207,69 @@ export default function ExpenseDetailScreen() {
             <Text style={styles.amount}>{amountDisplay}</Text>
             <Text style={styles.currency}>{expense.currency}</Text>
           </View>
-          {/* FX snapshot: original-currency amount, converted canonical
-              amount, and the rate's source/as_of. Only rendered when the
-              backend tagged this expense with a foreign-currency snapshot. */}
+
+          {/* FX card — promoted out of a one-liner so the rate (and whether
+              it was a custom override vs ECB) is impossible to miss. Only
+              rendered when the expense was paid in a non-group currency. */}
           {expense.original_currency &&
           expense.original_amount &&
+          expense.fx_rate &&
           expense.original_currency !== expense.currency ? (
-            <Text style={styles.fxLine} numberOfLines={1}>
-              {t('expenseDetail.fx.originalLine', {
-                amount: formatMinorUnits(
-                  Math.round(parseFloat(expense.original_amount) * 100),
-                  expense.original_currency,
-                ),
-                converted: formatMinorUnits(amountMinor, expense.currency),
-                source: t('expenseDetail.fx.sourceECB'),
-                asOf: expense.fx_as_of ? formatDate(expense.fx_as_of) : '',
-              })}
-            </Text>
+            <View style={styles.fxCard}>
+              <View style={styles.fxCardHeaderRow}>
+                <Text style={styles.fxCardEyebrow}>{t('expenseDetail.fx.card')}</Text>
+                {expense.fx_source === 'manual' ? (
+                  <View style={styles.fxSourceChipManual}>
+                    <Text style={styles.fxSourceChipTextManual}>
+                      {t('expenseDetail.fx.sourceManual')}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+              <Text style={styles.fxRateLine}>
+                {t('expenseDetail.fx.rateLine', {
+                  from: expense.original_currency,
+                  rate: formatRate(expense.fx_rate),
+                  to: expense.currency,
+                })}
+              </Text>
+              <Text style={styles.fxPaidLine}>
+                {t('expenseDetail.fx.paidLine', {
+                  original: formatMinorUnits(
+                    Math.round(parseFloat(expense.original_amount) * 100),
+                    expense.original_currency,
+                  ),
+                  converted: formatMinorUnits(amountMinor, expense.currency),
+                })}
+              </Text>
+              {expense.fx_as_of ? (
+                <Text style={styles.fxAsOfLine}>
+                  {t('expenseDetail.fx.asOf', { date: formatDate(expense.fx_as_of) })}
+                </Text>
+              ) : null}
+            </View>
           ) : null}
-          <View style={styles.rule} />
 
-          {/* Meta strip */}
-          <View style={styles.metaStrip}>
-            <View style={styles.metaCol}>
-              <Text style={styles.metaLabel}>{t('expenseDetail.paidBy')}</Text>
-              <View style={styles.metaPaidBy}>
-                <Avatar
-                  initials={payer ? initialsOf(payer.name) : '??'}
-                  size="sm"
-                  source={avatarImageSource(payer, token)}
-                />
-                <Text style={styles.metaName} numberOfLines={1}>
-                  {payer ? shortenMember(payer.name) : t('common.dash')}
-                </Text>
-              </View>
+          {/* Compact meta — one tight row instead of three labeled columns.
+              Avatar + name pairs with date + category as inline meta. */}
+          <View style={styles.metaRow}>
+            <View style={styles.metaPaidBy}>
+              <Avatar
+                initials={payer ? initialsOf(payer.name) : '??'}
+                size="sm"
+                source={avatarImageSource(payer, token)}
+              />
+              <Text style={styles.metaName} numberOfLines={1}>
+                {payer ? shortenMember(payer.name) : t('common.dash')}
+              </Text>
             </View>
-            <View style={[styles.metaCol, { alignItems: 'flex-end' }]}>
-              <Text style={styles.metaLabel}>{t('expenseDetail.date')}</Text>
-              <Text style={styles.metaDate}>{expense.expense_date ?? t('common.dash')}</Text>
-            </View>
-            <View style={[styles.metaCol, { alignItems: 'flex-end' }]}>
-              <Text style={styles.metaLabel}>{t('expenseDetail.category')}</Text>
-              <View style={styles.categoryTag}>
-                <Text style={styles.categoryText}>
-                  {t(`categories.${expense.category}`, expense.category)}
-                </Text>
-              </View>
+            <Text style={styles.metaDot}>·</Text>
+            <Text style={styles.metaDate}>{expense.expense_date ?? t('common.dash')}</Text>
+            <View style={styles.metaSpacer} />
+            <View style={styles.categoryTag}>
+              <Text style={styles.categoryText}>
+                {t(`categories.${expense.category}`, expense.category)}
+              </Text>
             </View>
           </View>
         </View>
@@ -266,7 +283,6 @@ export default function ExpenseDetailScreen() {
             {t('expenseDetail.eachOwes', { amount: formatMinorUnits(Math.abs(eachOwes), expense.currency) })}
           </Text>
         </View>
-        <View style={styles.sectionRule} />
 
         {/* Splits list */}
         {splits.length === 0
@@ -305,17 +321,14 @@ export default function ExpenseDetailScreen() {
               );
             })}
 
-        {/* Receipt */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>{t('expenseDetail.receipt')}</Text>
-        </View>
-        <View style={styles.sectionRule} />
+        {/* Receipt — demoted: no section header, single compact row. Empty
+            state is rendered as a hairline-bordered ghost row to stay quiet
+            until the user actually has something to look at. */}
         <View style={styles.receiptWrap}>
           {attachments.length === 0 ? (
-            <View style={[styles.receiptCard, styles.receiptCardEmpty]}>
-              <Text style={[styles.receiptText, { color: colors.lead }]}>
-                {t('expenseDetail.noReceipt')}
-              </Text>
+            <View style={styles.receiptEmpty}>
+              <Feather name="image" size={14} color={colors.lead} />
+              <Text style={styles.receiptEmptyText}>{t('expenseDetail.noReceipt')}</Text>
             </View>
           ) : (
             attachments.map((a) => (
@@ -369,16 +382,17 @@ export default function ExpenseDetailScreen() {
           </View>
         </Modal>
 
-        {/* Activity */}
-        <View style={styles.activityWrap}>
-          <Text style={styles.activityHeader}>
-            {t('expenseDetail.activityHeader', {
-              created: expense.created_at ? new Date(expense.created_at).toLocaleDateString(currentLocale(), { day: 'numeric', month: 'short' }) : '',
-              time: expense.created_at ? new Date(expense.created_at).toLocaleTimeString(currentLocale(), { hour: '2-digit', minute: '2-digit' }) : '',
-            })}
-          </Text>
-          <View style={styles.activityRule} />
-        </View>
+        {/* Activity — single muted mono line; no rule, no section header. */}
+        <Text style={styles.activityFooter}>
+          {t('expenseDetail.activityHeader', {
+            created: expense.created_at
+              ? new Date(expense.created_at).toLocaleDateString(currentLocale(), { day: 'numeric', month: 'short' })
+              : '',
+            time: expense.created_at
+              ? new Date(expense.created_at).toLocaleTimeString(currentLocale(), { hour: '2-digit', minute: '2-digit' })
+              : '',
+          })}
+        </Text>
       </ScrollView>
 
       <ActionSheet
@@ -427,6 +441,17 @@ export default function ExpenseDetailScreen() {
   );
 }
 
+// Trim a decimal string like "11.5000000000" to a humane display width
+// (max 6 fractional digits, trailing zeros stripped). Keeps integers
+// integer-looking ("12").
+function formatRate(s: string): string {
+  const n = parseFloat(s);
+  if (!Number.isFinite(n)) return s;
+  const fixed = n.toFixed(6);
+  if (!fixed.includes('.')) return fixed;
+  return fixed.replace(/0+$/, '').replace(/\.$/, '');
+}
+
 interface SplitRowProps {
   name: string;
   initials: string;
@@ -461,7 +486,7 @@ const styles = StyleSheet.create({
     fontFamily: fontMono,
     fontSize: fontSize.bodyS,
     color: colors.lead,
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
     marginBottom: 6,
   },
   title: {
@@ -482,22 +507,63 @@ const styles = StyleSheet.create({
     lineHeight: 66,
   },
   currency: { fontFamily: fontMono, fontSize: fontSize.displayS, color: colors.lead },
-  fxLine: {
+  fxCard: {
+    marginTop: spacing.s4,
+    padding: spacing.s4,
+    backgroundColor: colors.bone,
+    borderRadius: 10,
+    gap: 4,
+  },
+  fxCardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  fxCardEyebrow: {
     fontFamily: fontMono,
     fontSize: fontSize.bodyS,
     color: colors.lead,
-    marginTop: 8,
+    letterSpacing: 0.4,
+  },
+  fxSourceChipManual: {
+    backgroundColor: colors.graphite,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  fxSourceChipTextManual: {
+    fontFamily: fontMono,
+    fontSize: fontSize.bodyS,
+    color: colors.paper,
+    letterSpacing: 0.3,
+  },
+  fxRateLine: {
+    fontFamily: fontMono,
+    fontSize: fontSize.body,
+    color: colors.graphite,
     fontVariant: ['tabular-nums'],
   },
-  rule: { height: 1, backgroundColor: colors.ruleSoft, marginTop: spacing.s4 },
-  metaStrip: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.s4, gap: 8 },
-  metaCol: { flex: 1 },
-  metaLabel: {
+  fxPaidLine: {
     fontFamily: fontMono,
     fontSize: fontSize.bodyS,
     color: colors.lead,
-    marginBottom: 6,
+    fontVariant: ['tabular-nums'],
   },
+  fxAsOfLine: {
+    fontFamily: fontMono,
+    fontSize: fontSize.bodyS,
+    color: colors.lead,
+    marginTop: 2,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: spacing.s4,
+  },
+  metaSpacer: { flex: 1 },
+  metaDot: { fontFamily: fontMono, fontSize: fontSize.body, color: colors.lead },
   metaPaidBy: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   metaName: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite, flexShrink: 1 },
   metaDate: { fontFamily: fontMono, fontSize: fontSize.body, color: colors.graphite },
@@ -507,7 +573,6 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    alignSelf: 'flex-end',
   },
   categoryText: { fontFamily: fontMono, fontSize: fontSize.bodyS, color: colors.lead },
   sectionHeader: {
@@ -519,12 +584,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   sectionLabel: { fontFamily: fontMono, fontSize: fontSize.bodyS, color: colors.lead },
-  sectionRule: {
-    height: 1,
-    backgroundColor: colors.ruleSoft,
-    marginHorizontal: spacing.s5,
-    marginBottom: spacing.s1,
-  },
   splitRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -550,7 +609,11 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
   },
-  receiptWrap: { paddingHorizontal: spacing.s4, paddingTop: spacing.s2, gap: spacing.s2 },
+  receiptWrap: {
+    paddingHorizontal: spacing.s4,
+    paddingTop: spacing.s5,
+    gap: spacing.s2,
+  },
   receiptCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -560,8 +623,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bone,
     borderRadius: 10,
   },
-  receiptCardEmpty: {
-    justifyContent: 'center',
+  receiptEmpty: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: spacing.s2,
+    paddingVertical: spacing.s2,
+  },
+  receiptEmptyText: {
+    fontFamily: fontMono,
+    fontSize: fontSize.bodyS,
+    color: colors.lead,
   },
   receiptText: {
     fontFamily: fontBody,
@@ -588,12 +660,12 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   viewerImage: { width: '100%', height: '100%' },
-  activityWrap: { paddingHorizontal: spacing.s5, paddingTop: spacing.s6 },
-  activityHeader: {
+  activityFooter: {
     fontFamily: fontMono,
     fontSize: fontSize.bodyS,
     color: colors.lead,
-    marginBottom: 8,
+    textAlign: 'center',
+    paddingHorizontal: spacing.s5,
+    paddingTop: spacing.s6,
   },
-  activityRule: { height: 0.5, backgroundColor: colors.ruleSoft },
 });

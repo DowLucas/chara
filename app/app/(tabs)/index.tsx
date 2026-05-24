@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,9 +13,14 @@ import { useAccounts } from '@/lib/accounts';
 import {
   useAggregatedGroups,
   useAggregatedBalances,
+  useAggregatedMyNet,
+  refreshAggregatedReads,
   // useAggregatedActivity, // re-enable with the recent-activity section
 } from '@/lib/aggregated-reads';
-import { formatMinorUnits, decimalToMinor } from '@/lib/i18n';
+import { showAlert } from '@/lib/app-alert';
+import { useHomeCurrency } from '@/lib/use-home-currency';
+import { aggregateMyNetReads } from '@/lib/aggregate-mynet';
+import { formatMinorUnits, formatMinorUnitsCompact, decimalToMinor } from '@/lib/i18n';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import {
   colors,
@@ -29,6 +34,10 @@ import {
 
 const fmtBalance = (minor: string, currency: string) =>
   formatMinorUnits(minor, currency, { relative: true });
+/** Hero-only formatter: hair-spaces in place of locale spaces so a long
+ *  number like "−10 019 JPY" doesn't blow past the screen edge. */
+const fmtHero = (minor: number | string, currency: string) =>
+  formatMinorUnitsCompact(minor, currency, { relative: true });
 const fmtAmount = (minor: string, currency: string) => formatMinorUnits(minor, currency);
 
 /** Extract hostname from a server URL for the host chip. */
@@ -71,9 +80,12 @@ export default function HomeScreen() {
   // Host chip rule (spec §14): only when ≥ 2 accounts.
   const showHostChip = accounts.length >= 2;
 
-  // Refresh state — composite across both reads.
-  const refreshing = groupReads.some((r) => r.status === 'loading') ||
-    balanceReads.some((r) => r.status === 'loading');
+  // Pull-to-refresh has its own short-lived spinner state — `status` only
+  // becomes 'loading' on the *first* fetch (data == null), so a subsequent
+  // refetch would otherwise show no spinner at all. The hook is fire-and-
+  // forget; we keep the spinner up for ~600 ms so the gesture has tactile
+  // feedback even on a fast network.
+  const [refreshing, setRefreshing] = useState(false);
 
   // Merge: concatenate all groups, attach matching per-account balance.
   const mergedGroups: MergedGroup[] = useMemo(() => {
@@ -114,11 +126,66 @@ export default function HomeScreen() {
   const primaryCurrency = netByCurrency[0]?.currency ?? 'SEK';
   const primaryNet = netByCurrency[0]?.minor ?? 0;
 
+  // Cross-currency "≈" aggregate. Each per-account `/api/me/net?in=<home>`
+  // returns the server's locked-in historical-FX sum; we add them up here
+  // for the cross-server total. Spec:
+  // docs/superpowers/specs/2026-05-24-home-currency-aggregation-design.md.
+  const { homeCurrency } = useHomeCurrency();
+  const myNetReads = useAggregatedMyNet(homeCurrency);
+
+  const aggregatedHomeNet = useMemo(
+    () => aggregateMyNetReads(myNetReads, accounts.length),
+    [myNetReads, accounts.length],
+  );
+
+  // Render the "≈" line only when at least one balance row is in a
+  // currency other than the home currency. For monocurrency users the
+  // aggregate is identical to the per-currency hero — extra chrome with
+  // no information (council §"Gating", Reviewer 5).
+  const hasForeignBalance = useMemo(
+    () =>
+      balanceReads.some((r) =>
+        (r.data ?? []).some((b) => b.currency !== homeCurrency),
+      ),
+    [balanceReads, homeCurrency],
+  );
+  const showHomeNet = !!aggregatedHomeNet && hasForeignBalance;
+  const homeNetEstimated =
+    !!aggregatedHomeNet &&
+    (aggregatedHomeNet.skippedAccounts > 0 ||
+      aggregatedHomeNet.estimatedLegs > 0);
+
+  function explainHomeNet() {
+    if (!aggregatedHomeNet) return;
+    const lines: string[] = [];
+    if (aggregatedHomeNet.skippedAccounts > 0) {
+      lines.push(
+        t('home.homeNetSheetPartial', {
+          ok: aggregatedHomeNet.okAccounts,
+          total: aggregatedHomeNet.totalAccounts,
+        }),
+      );
+    }
+    if (aggregatedHomeNet.estimatedLegs > 0) {
+      lines.push(
+        t('home.homeNetSheetEstimated', { count: aggregatedHomeNet.estimatedLegs }),
+      );
+    }
+    if (lines.length === 0) lines.push(t('home.homeNetSheetHealthy'));
+    showAlert({
+      title: t('home.homeNetSheetTitle'),
+      message: [t('home.homeNetSheetIntro'), ...lines].join('\n\n'),
+      buttons: [{ key: 'ok', label: t('common.ok') }],
+    });
+  }
+
   const onRefresh = () => {
-    // Refresh is automatic via the hook's foreground trigger. The pull-to-refresh
-    // gesture is mostly for affordance; the hook will re-fire on the next data
-    // change. A future iteration could expose an imperative refresh from the
-    // hook — out of scope for this wave.
+    setRefreshing(true);
+    refreshAggregatedReads();
+    // Hide the spinner shortly after the fetches have a chance to land.
+    // The hook's internal state will have updated by then; if not, the
+    // user can pull again.
+    setTimeout(() => setRefreshing(false), 600);
   };
 
   // Failing-account strips, one per failing account per section.
@@ -162,47 +229,88 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: spacing.s5 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        {/* Net balance hero */}
+        {/* Net balance hero
+            When the user has any non-home-currency exposure (showHomeNet),
+            the home-currency aggregate IS the hero. The per-currency
+            natives demote to chips below — they're still the source of
+            truth per-currency, just secondary. For monocurrency users
+            the per-currency hero stays as-is. */}
         <View style={styles.hero}>
           <Text style={styles.eyebrow}>{t('home.netBalance')}</Text>
-          {netByCurrency.length === 0 ? (
+          {showHomeNet ? (
+            <>
+              <View style={styles.heroRow}>
+                <Text
+                  style={[
+                    styles.heroBalance,
+                    { color: aggregatedHomeNet!.minor >= 0 ? colors.moss : colors.brick },
+                    { flexShrink: 1 },
+                  ]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.35}
+                >
+                  {fmtHero(aggregatedHomeNet!.minor, homeCurrency)}
+                </Text>
+                <TouchableOpacity
+                  onPress={explainHomeNet}
+                  hitSlop={12}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('home.homeNetInfoLabel')}
+                  style={styles.heroInfoBtn}
+                >
+                  <Feather
+                    name="info"
+                    size={18}
+                    color={homeNetEstimated ? colors.vermillion : colors.lead}
+                    strokeWidth={1.5}
+                  />
+                </TouchableOpacity>
+              </View>
+              {/* Per-currency native chips intentionally omitted in the
+                  home-aggregate view — with N groups in N currencies the
+                  chip row explodes. The info sheet covers the disclosure
+                  the chips used to carry. */}
+            </>
+          ) : netByCurrency.length === 0 ? (
             <Text
               style={[styles.heroBalance, { color: colors.lead }]}
               numberOfLines={1}
               adjustsFontSizeToFit
-              minimumFontScale={0.5}
+              minimumFontScale={0.35}
             >
-              {fmtBalance('0', primaryCurrency)}
+              {fmtHero('0', primaryCurrency)}
             </Text>
           ) : (
-            <Text
-              style={[
-                styles.heroBalance,
-                { color: primaryNet >= 0 ? colors.moss : colors.brick },
-              ]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.5}
-            >
-              {fmtBalance(String(primaryNet), primaryCurrency)}
-            </Text>
-          )}
-          {/* Multi-currency totals: stacked Stamps, sorted by absolute amount desc. */}
-          {netByCurrency.length > 1 && (
-            <View style={styles.multiCurrencyRow}>
-              {netByCurrency.slice(1).map((c) => (
-                <View key={c.currency} style={styles.currencyChip}>
-                  <Text
-                    style={[
-                      styles.currencyChipAmt,
-                      { color: c.minor >= 0 ? colors.moss : colors.brick },
-                    ]}
-                  >
-                    {fmtBalance(String(c.minor), c.currency)}
-                  </Text>
+            <>
+              <Text
+                style={[
+                  styles.heroBalance,
+                  { color: primaryNet >= 0 ? colors.moss : colors.brick },
+                ]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.35}
+              >
+                {fmtHero(primaryNet, primaryCurrency)}
+              </Text>
+              {netByCurrency.length > 1 && (
+                <View style={styles.multiCurrencyRow}>
+                  {netByCurrency.slice(1).map((c) => (
+                    <View key={c.currency} style={styles.currencyChip}>
+                      <Text
+                        style={[
+                          styles.currencyChipAmt,
+                          { color: c.minor >= 0 ? colors.moss : colors.brick },
+                        ]}
+                      >
+                        {fmtBalance(String(c.minor), c.currency)}
+                      </Text>
+                    </View>
+                  ))}
                 </View>
-              ))}
-            </View>
+              )}
+            </>
           )}
         </View>
 
@@ -497,12 +605,43 @@ const styles = StyleSheet.create({
   heroBalance: {
     fontFamily: fontMono,
     fontSize: fontSize.displayXl,
-    letterSpacing: -1,
+    letterSpacing: -1.5,
     fontVariant: ['tabular-nums'],
     lineHeight: 66,
     includeFontPadding: false,
     textAlignVertical: 'center',
     paddingTop: 2,
+  },
+  homeNetLine: {
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.body,
+    color: colors.lead,
+    letterSpacing: 0.3,
+    fontVariant: ['tabular-nums'],
+    marginBottom: 6,
+  },
+  homeNetSuffix: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    letterSpacing: 0.4,
+    textTransform: 'lowercase',
+  },
+  heroSubLine: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    letterSpacing: 0.5,
+    textTransform: 'lowercase',
+    marginTop: 2,
+  },
+  heroRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.s2,
+  },
+  heroInfoBtn: {
+    paddingTop: 12,
   },
   multiCurrencyRow: {
     flexDirection: 'row',

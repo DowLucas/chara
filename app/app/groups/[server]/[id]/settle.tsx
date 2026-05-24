@@ -279,9 +279,9 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
     marginBottom: 6,
   },
   heroBalance: {
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   },
   caption: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     letterSpacing: 0.3,
     marginTop: 12,
@@ -311,9 +311,9 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
     marginBottom: 6,
   },
   sectionRule: {
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
+    paddingVertical: 18,
     paddingHorizontal: spacing.s5,
     borderBottomWidth: 0.5,
     borderBottomColor: colors.ruleSoft,
@@ -349,21 +349,21 @@ const styles = StyleSheet.create({
   rowLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
     flex: 1,
     minWidth: 0,
   },
   rowTextWrap: { flex: 1, minWidth: 0 },
   rowName: {
     fontFamily: fontDisplay,
-    fontSize: 16,
-    letterSpacing: -0.3,
+    fontSize: fontSize.displayS,
+    letterSpacing: -0.4,
     color: colors.graphite,
   },
   rowMeta: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    marginTop: 2,
+    fontSize: fontSize.bodyS,
+    marginTop: 3,
   },
   rowRight: {
     flexDirection: 'row',
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
   },
   rowAmount: {
     fontFamily: fontMonoMedium,
-    fontSize: 17,
+    fontSize: fontSize.displayS,
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
   },

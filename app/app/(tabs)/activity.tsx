@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   },
   dayLabel: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     letterSpacing: 0.3,
     marginBottom: 6,
@@ -365,14 +365,14 @@ const styles = StyleSheet.create({
   rowLeft: { flex: 1, minWidth: 0 },
   rowTitle: {
     fontFamily: fontDisplay,
-    fontSize: 15,
+    fontSize: fontSize.bodyS,
     letterSpacing: -0.2,
     color: colors.graphite,
     lineHeight: 20,
   },
   rowMeta: {
     fontFamily: fontMonoMedium,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     marginTop: 3,
     letterSpacing: 0.3,

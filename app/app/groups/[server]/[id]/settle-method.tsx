@@ -20,6 +20,7 @@ import {
   buildSwishLink,
   isSwishEligible,
   normalizeSwishNumber,
+  swishRoundedKronor,
   type Platform as SwishPlatform,
 } from '@/lib/swish';
 import {
@@ -94,6 +95,16 @@ export default function SettleMethodScreen() {
 
   const amountMinor = useMemo(() => decimalToMinor(amount ?? '0.00'), [amount]);
   const formattedAmount = formatMinorUnits(amountMinor, currency ?? 'SEK');
+  // Swish's consumer deep-link parser only accepts integer kronor — non-zero
+  // öre trigger "Felaktig länk". We round UP so the payee is never short,
+  // but the *settlement record* uses the original debt amount (`amount`).
+  // The tiny over-pay (≤0.99 SEK) is a one-way tip from payer to payee,
+  // not a new reverse balance — otherwise every settle would yo-yo:
+  // payee owes 0.86 back, payer rounds to 1, and so on forever.
+  const swishMinor = swishRoundedKronor(amountMinor) * 100;
+  const formattedSwishAmount = formatMinorUnits(swishMinor, currency ?? 'SEK');
+  const swishTipMinor = swishMinor - amountMinor;
+  const formattedSwishTip = formatMinorUnits(swishTipMinor, currency ?? 'SEK');
 
   // The Swish row is the recipient's phone; the rest still need real
   // payment profiles (Vipps handle, PayPal email, IBAN). Until those land,
@@ -106,9 +117,6 @@ export default function SettleMethodScreen() {
   });
   const methods: MethodRow[] = [
     { id: 'swish',  enabled: swishEligible, primary: true, badge: t('settleMethod.instantBadge') },
-    { id: 'vipps',  enabled: false, primary: false },
-    { id: 'paypal', enabled: true,  primary: false },
-    { id: 'bank',   enabled: true,  primary: false },
     { id: 'manual', enabled: true,  primary: false },
   ];
 
@@ -203,10 +211,11 @@ export default function SettleMethodScreen() {
   }
 
   if (stage === 'awaiting') {
+    const rounded = swishMinor !== amountMinor;
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <TopBar
-          title={t('settleMethod.swishWaitTitle', { amount: formattedAmount })}
+          title={t('settleMethod.swishWaitTitle', { amount: formattedSwishAmount })}
           left={<IconButton icon="arrow-left" onPress={() => { setStage('pick'); setSwishUrl(null); setSwishOpened(false); }} />}
         />
         <ScrollView style={styles.scroll} contentContainerStyle={styles.awaitingScroll}>
@@ -226,17 +235,27 @@ export default function SettleMethodScreen() {
               adjustsFontSizeToFit
               minimumFontScale={0.5}
             >
-              {formattedAmount}
+              {formattedSwishAmount}
             </Text>
           </View>
           <View style={styles.heroRule} />
           <View style={styles.awaitingBodyWrap}>
             <Text style={styles.awaitingBody}>
               {t('settleMethod.swishWaitBody', {
-                amount: formattedAmount,
+                amount: formattedSwishAmount,
                 name: counter?.name ?? '',
               })}
             </Text>
+            {rounded && (
+              <Text style={styles.awaitingRoundingNote}>
+                {t('settleMethod.swishTipNote', {
+                  swish: formattedSwishAmount,
+                  debt: formattedAmount,
+                  tip: formattedSwishTip,
+                  name: counter?.name?.split(' ')[0] ?? '',
+                })}
+              </Text>
+            )}
           </View>
         </ScrollView>
         <View style={[styles.ctaBar, { paddingBottom: insets.bottom + 8 }]}>
@@ -452,6 +471,7 @@ export default function SettleMethodScreen() {
             : t('settleMethod.requestVia', { method: t('settleMethod.swish') })}
         </Button>
       </View>
+
     </View>
   );
 }
@@ -497,27 +517,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 14,
     paddingHorizontal: spacing.s5,
-    paddingTop: 10,
-    paddingBottom: 18,
+    paddingTop: 2,
+    paddingBottom: 14,
   },
   counterTextWrap: { flex: 1, minWidth: 0 },
   counterName: {
     fontFamily: fontDisplay,
-    fontSize: 17,
+    fontSize: fontSize.displayS,
     color: colors.graphite,
-    letterSpacing: -0.4,
+    letterSpacing: -0.5,
   },
   counterMeta: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
-    marginTop: 2,
+    marginTop: 3,
   },
   counterAmount: {
     fontFamily: fontMonoMedium,
-    fontSize: 22,
+    fontSize: fontSize.displayS,
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
+    letterSpacing: -0.4,
   },
   heroRule: {
     height: 1.5,
@@ -526,15 +547,15 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     paddingHorizontal: spacing.s5,
-    paddingTop: 16,
+    paddingTop: 8,
     paddingBottom: 6,
   },
   sectionLabel: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
-    letterSpacing: 0.3,
-    marginBottom: 6,
+    letterSpacing: 0.4,
+    marginBottom: 8,
   },
   softRule: {
     height: 0.5,
@@ -544,7 +565,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
+    paddingVertical: 18,
     paddingHorizontal: spacing.s5,
     borderBottomWidth: 0.5,
     borderBottomColor: colors.ruleSoft,
@@ -553,14 +574,14 @@ const styles = StyleSheet.create({
   methodLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
     flex: 1,
     minWidth: 0,
   },
   methodTile: {
-    width: 36,
-    height: 36,
-    borderRadius: 6,
+    width: 44,
+    height: 44,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 0.5,
@@ -584,7 +605,7 @@ const styles = StyleSheet.create({
   },
   methodTileLetter: {
     fontFamily: fontMonoMedium,
-    fontSize: 11,
+    fontSize: 14,
     color: colors.lead,
     letterSpacing: 0.5,
   },
@@ -597,32 +618,32 @@ const styles = StyleSheet.create({
   },
   methodName: {
     fontFamily: fontDisplay,
-    fontSize: 16,
-    letterSpacing: -0.3,
+    fontSize: fontSize.displayS,
+    letterSpacing: -0.4,
     color: colors.graphite,
   },
   badge: {
     borderWidth: 0.5,
     borderColor: colors.vermillion,
     borderRadius: 999,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
   badgeText: {
     fontFamily: fontMono,
-    fontSize: 10,
+    fontSize: 11,
     color: colors.vermillion,
     letterSpacing: 0.5,
   },
   methodSub: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
-    marginTop: 2,
+    marginTop: 3,
   },
   methodArrow: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.body,
     color: colors.lead,
   },
   noteCardWrap: {

@@ -165,9 +165,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fontDisplay,
-    fontSize: fontSize.body,
+    fontSize: fontSize.displayS,
     color: colors.graphite,
-    letterSpacing: -0.3,
+    letterSpacing: -0.4,
   },
   searchWrap: {
     marginHorizontal: spacing.s5,
@@ -194,9 +194,9 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
     textTransform: 'lowercase',
   },
   row: {

@@ -203,9 +203,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fontDisplay,
-    fontSize: fontSize.body,
+    fontSize: fontSize.displayS,
     color: colors.graphite,
-    letterSpacing: -0.3,
+    letterSpacing: -0.4,
   },
   searchWrap: {
     marginHorizontal: spacing.s5,

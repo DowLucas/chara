@@ -5,37 +5,37 @@
 INSERT INTO expenses (
     id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
     expense_date, is_reimbursement, created_by_id,
-    original_amount, original_currency, fx_rate, fx_as_of
+    original_amount, original_currency, fx_rate, fx_as_of, fx_source
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
 RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
           expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
-          original_amount, original_currency, fx_rate, fx_as_of;
+          original_amount, original_currency, fx_rate, fx_as_of, fx_source;
 
 -- name: GetExpenseByID :one
 SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
        expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
-       original_amount, original_currency, fx_rate, fx_as_of
+       original_amount, original_currency, fx_rate, fx_as_of, fx_source
 FROM expenses WHERE id = $1 AND NOT is_deleted;
 
 -- name: GetExpenseByIDAndGroup :one
 SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
        expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
-       original_amount, original_currency, fx_rate, fx_as_of
+       original_amount, original_currency, fx_rate, fx_as_of, fx_source
 FROM expenses WHERE id = $1 AND group_id = $2 AND NOT is_deleted;
 
 -- name: ListExpensesByGroup :many
 SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
        expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
-       original_amount, original_currency, fx_rate, fx_as_of
+       original_amount, original_currency, fx_rate, fx_as_of, fx_source
 FROM expenses
 WHERE group_id = $1 AND NOT is_deleted
 ORDER BY expense_date DESC, created_at DESC
 LIMIT $2 OFFSET $3;
 
 -- name: UpdateExpense :one
--- NOTE: fx columns (original_amount, original_currency, fx_rate, fx_as_of)
--- are intentionally not editable via this query — change-amount or
+-- NOTE: fx columns (original_amount, original_currency, fx_rate, fx_as_of,
+-- fx_source) are intentionally not editable via this query — change-amount or
 -- change-currency edits will leave the original snapshot pointing at the
 -- old conversion. The simpler v1 behaviour is to require a delete+recreate
 -- for foreign-currency expenses; a follow-up can plumb fx recomputation.
@@ -52,7 +52,7 @@ SET title        = COALESCE(sqlc.narg(title), title),
 WHERE id = $1
 RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
           expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
-          original_amount, original_currency, fx_rate, fx_as_of;
+          original_amount, original_currency, fx_rate, fx_as_of, fx_source;
 
 -- name: SoftDeleteExpense :exec
 UPDATE expenses SET is_deleted = TRUE, updated_at = NOW() WHERE id = $1;
@@ -76,16 +76,17 @@ SET amount            = $2,
     original_currency = $4,
     fx_rate           = $5,
     fx_as_of          = $6,
+    fx_source         = $7,
     updated_at        = NOW()
 WHERE id = $1
 RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
           expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
-          original_amount, original_currency, fx_rate, fx_as_of;
+          original_amount, original_currency, fx_rate, fx_as_of, fx_source;
 
 -- name: SearchExpenses :many
 SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
        expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
-       original_amount, original_currency, fx_rate, fx_as_of
+       original_amount, original_currency, fx_rate, fx_as_of, fx_source
 FROM expenses
 WHERE group_id = $1
   AND NOT is_deleted

@@ -701,6 +701,7 @@ func TestUpdateExpense_RecomputesFx_WhenCurrencyChanges(t *testing.T) {
 	assert.Equal(t, "USD", resp["original_currency"])
 	assert.NotEmpty(t, resp["fx_rate"])
 	assert.Equal(t, "2026-05-21", resp["fx_as_of"])
+	assert.Equal(t, "ecb", resp["fx_source"])
 
 	// 30 USD at rate(USD→SEK) = 11.2825/1.0824 ≈ 10.4236.. → 30 × ≈10.4236 ≈ 312.71 SEK
 	amt := resp["amount"].(string)
@@ -741,6 +742,8 @@ func TestUpdateExpense_ClearsFx_WhenCurrencyMatchesGroup(t *testing.T) {
 	assert.False(t, hasRate, "fx_rate should be cleared")
 	_, hasAsOf := resp["fx_as_of"]
 	assert.False(t, hasAsOf, "fx_as_of should be cleared")
+	_, hasSource := resp["fx_source"]
+	assert.False(t, hasSource, "fx_source should be cleared")
 }
 
 func TestUpdateExpense_KeepsFx_WhenAmountChangesSameCurrency(t *testing.T) {
@@ -768,6 +771,113 @@ func TestUpdateExpense_KeepsFx_WhenAmountChangesSameCurrency(t *testing.T) {
 	parsed, err := strconv.ParseFloat(amt, 64)
 	require.NoError(t, err)
 	assert.InDelta(t, 451.30, parsed, 0.5)
+}
+
+// ── Create: client-supplied FX snapshot ──────────────────────────────────────
+
+// When the client sends a complete FX snapshot with fx_source='manual',
+// the backend must trust it verbatim — no ECB lookup, no re-conversion. The
+// stored `amount` is what the client sent in `amount` (already in group
+// currency), and `fx_source` echoes back as 'manual'.
+func TestExpenses_Create_AcceptsManualFxSnapshot(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, _ := setupExpenseEnv(t)
+
+	// Group is SEK. Client sends a manual snapshot: 25.00 EUR @ 11.5 = 287.50 SEK.
+	// No ECB rate seeded — the manual path must skip fx.Convert entirely.
+	body := fmt.Sprintf(`{
+		"title": "Manual rate dinner",
+		"amount": "287.50",
+		"currency": "SEK",
+		"paid_by_id": %q,
+		"split_method": "equal",
+		"participants": [%q],
+		"original_amount": "25.00",
+		"original_currency": "EUR",
+		"fx_rate": "11.5",
+		"fx_as_of": "2026-05-21",
+		"fx_source": "manual"
+	}`, aliceMemberID, aliceMemberID)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", body, alice.Token))
+	require.Equal(t, http.StatusCreated, rr.Code, "body: %s", rr.Body.String())
+
+	var resp map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	assert.Equal(t, "287.50", resp["amount"], "amount stored verbatim (no re-conversion)")
+	assert.Equal(t, "SEK", resp["currency"])
+	assert.Equal(t, "25.00", resp["original_amount"])
+	assert.Equal(t, "EUR", resp["original_currency"])
+	assert.Equal(t, "2026-05-21", resp["fx_as_of"])
+	assert.Equal(t, "manual", resp["fx_source"])
+	assert.NotEmpty(t, resp["fx_rate"])
+}
+
+// Foreign-currency expense without a client snapshot must use ECB and label
+// the snapshot 'ecb' in the response.
+func TestExpenses_Create_EcbPathLabelsFxSourceEcb(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, _ := setupExpenseEnv(t)
+	asOf, _ := time.Parse("2006-01-02", "2026-05-21")
+	testutil.SeedFxRate(t, env.Pool, "SEK", 11.2825, asOf)
+
+	body := fmt.Sprintf(`{
+		"title": "ECB dinner",
+		"amount": "25.00",
+		"currency": "EUR",
+		"paid_by_id": %q,
+		"split_method": "equal",
+		"expense_date": "2026-05-21",
+		"participants": [%q]
+	}`, aliceMemberID, aliceMemberID)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", body, alice.Token))
+	require.Equal(t, http.StatusCreated, rr.Code, "body: %s", rr.Body.String())
+
+	var resp map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	assert.Equal(t, "ecb", resp["fx_source"], "ECB-converted expense must label snapshot 'ecb'")
+	assert.Equal(t, "EUR", resp["original_currency"])
+}
+
+// Partial FX snapshot (e.g. fx_rate provided without original_amount) must be
+// rejected — all 5 fx fields go together or none.
+func TestExpenses_Create_PartialFxSnapshotReturns400(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, _ := setupExpenseEnv(t)
+
+	body := fmt.Sprintf(`{
+		"title": "Partial fx",
+		"amount": "287.50",
+		"currency": "SEK",
+		"paid_by_id": %q,
+		"split_method": "equal",
+		"participants": [%q],
+		"fx_rate": "11.5"
+	}`, aliceMemberID, aliceMemberID)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", body, alice.Token))
+	assert.Equal(t, http.StatusBadRequest, rr.Code, "partial fx snapshot must be rejected")
+}
+
+// fx_source values other than 'ecb' / 'manual' must be rejected at the
+// handler before the DB CHECK fires (clearer error).
+func TestExpenses_Create_InvalidFxSourceReturns400(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, _ := setupExpenseEnv(t)
+
+	body := fmt.Sprintf(`{
+		"title": "Bad source",
+		"amount": "287.50",
+		"currency": "SEK",
+		"paid_by_id": %q,
+		"split_method": "equal",
+		"participants": [%q],
+		"original_amount": "25.00",
+		"original_currency": "EUR",
+		"fx_rate": "11.5",
+		"fx_as_of": "2026-05-21",
+		"fx_source": "wishful"
+	}`, aliceMemberID, aliceMemberID)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", body, alice.Token))
+	assert.Equal(t, http.StatusBadRequest, rr.Code, "unknown fx_source must be rejected")
 }
 
 func TestUpdateExpense_FxRateUnavailable_Returns422(t *testing.T) {
@@ -1080,6 +1190,64 @@ func TestEditExpense_CurrencyChangePreservesOldSettlements(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "SEK", sCurrency)
 	assert.Equal(t, int64(4500), sAmount)
+}
+
+// TestEditExpense_OverSettledReverses: an over-settled expense (paid > new
+// share) flips direction when the user edits the amount down. The settler now
+// has a positive net (they overpaid); the original payer now owes.
+func TestEditExpense_OverSettledReverses(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+
+	// 90.00 SEK equal split → bob owes 45.
+	fix := testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	// Bob settles 45.00 in full → both at 0.
+	settleBody := fmt.Sprintf(`{"from_member_id":%q,"to_member_id":%q,"amount":"45.00","currency":"SEK"}`, bobMemberID, aliceMemberID)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", settleBody, bob.Token))
+	require.Equal(t, http.StatusCreated, rr.Code, "settle: %s", rr.Body.String())
+
+	require.Equal(t, int64(0), balanceFor(t, env, groupID, aliceMemberID, "SEK"))
+	require.Equal(t, int64(0), balanceFor(t, env, groupID, bobMemberID, "SEK"))
+
+	// Alice realises the dinner was cheaper — edits down to 60.00. Bob's new
+	// share is 30, but he already paid 45 → bob is now +15 (overpaid by 15),
+	// alice is -15 (owes bob 15). The settlement row stays put.
+	patch := fmt.Sprintf(`{"amount":"60.00","split_method":"equal","participants":[%q,%q]}`, aliceMemberID, bobMemberID)
+	rr = env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+groupID+"/expenses/"+fix.Expense.ID, patch, alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code, "patch: %s", rr.Body.String())
+
+	assert.Equal(t, int64(-1500), balanceFor(t, env, groupID, aliceMemberID, "SEK"), "alice -15.00 SEK (now owes)")
+	assert.Equal(t, int64(1500), balanceFor(t, env, groupID, bobMemberID, "SEK"), "bob +15.00 SEK (overpaid)")
+}
+
+// TestEditExpense_RemoveSettledParticipant: dropping a participant who has
+// already settled their share leaves them with a credit (they paid for
+// something they're no longer on the hook for) and the payer in debt by the
+// same amount.
+func TestEditExpense_RemoveSettledParticipant(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+
+	// 90.00 SEK equal split → bob owes 45.
+	fix := testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	// Bob settles in full.
+	settleBody := fmt.Sprintf(`{"from_member_id":%q,"to_member_id":%q,"amount":"45.00","currency":"SEK"}`, bobMemberID, aliceMemberID)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", settleBody, bob.Token))
+	require.Equal(t, http.StatusCreated, rr.Code)
+	require.Equal(t, int64(0), balanceFor(t, env, groupID, aliceMemberID, "SEK"))
+	require.Equal(t, int64(0), balanceFor(t, env, groupID, bobMemberID, "SEK"))
+
+	// Alice realises Bob wasn't at the dinner — removes him from the split,
+	// expense now alice-only. New shares: alice owes/is-owed nothing from the
+	// expense itself, but the settlement row (bob → alice, 45) still stands.
+	// Resulting balances: bob is +45 (his payment now buys him nothing),
+	// alice is -45 (she received the payment but is no longer owed it).
+	patch := fmt.Sprintf(`{"split_method":"equal","participants":[%q]}`, aliceMemberID)
+	rr = env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+groupID+"/expenses/"+fix.Expense.ID, patch, alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code, "patch: %s", rr.Body.String())
+
+	assert.Equal(t, int64(-4500), balanceFor(t, env, groupID, aliceMemberID, "SEK"), "alice -45.00 SEK (owes bob his overpayment)")
+	assert.Equal(t, int64(4500), balanceFor(t, env, groupID, bobMemberID, "SEK"), "bob +45.00 SEK (paid for nothing)")
 }
 
 // ── Activity payload (changed_fields + collapsing) ───────────────────────────

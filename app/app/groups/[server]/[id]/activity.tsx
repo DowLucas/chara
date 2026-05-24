@@ -261,9 +261,9 @@ const styles = StyleSheet.create({
   },
   dayLabel: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
     marginBottom: 6,
   },
   dayRule: {
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.graphite,
   },
   row: {
-    paddingVertical: 12,
+    paddingVertical: 18,
     paddingHorizontal: spacing.s5,
     borderBottomWidth: 0.5,
     borderBottomColor: colors.ruleSoft,
@@ -279,14 +279,14 @@ const styles = StyleSheet.create({
   rowLeft: { flex: 1, minWidth: 0 },
   rowTitle: {
     fontFamily: fontDisplay,
-    fontSize: 15,
-    letterSpacing: -0.2,
+    fontSize: fontSize.displayS,
+    letterSpacing: -0.4,
     color: colors.graphite,
-    lineHeight: 20,
+    lineHeight: 26,
   },
   rowMeta: {
     fontFamily: fontMonoMedium,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     marginTop: 3,
     letterSpacing: 0.3,
