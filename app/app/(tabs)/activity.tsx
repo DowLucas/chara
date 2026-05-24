@@ -22,7 +22,9 @@ import {
   ScrollView,
   StyleSheet,
   RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
+import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
@@ -165,23 +167,85 @@ export default function ActivityScreen() {
 
 function ActivityRow({ row, youUserId }: { row: Row; youUserId: string }) {
   const { t } = useTranslation();
-  const { event } = row;
+  const { event, serverUrl } = row;
   const isYou = event.actor_id === youUserId;
   const actor = isYou ? t('activity.you') : event.actor_name || t('common.dash');
   const group = event.group_name ?? '';
   const sentence = describeEvent(event, { actor, group, t });
   const time = formatTime(new Date(event.created_at));
 
+  const target = resolveActivityTarget(event, serverUrl);
+  const Wrapper: any = target ? TouchableOpacity : View;
+
   return (
-    <View style={styles.row}>
+    <Wrapper
+      style={styles.row}
+      activeOpacity={target ? 0.7 : 1}
+      onPress={target ? () => router.push(target as any) : undefined}
+      accessibilityRole={target ? 'button' : undefined}
+    >
       <View style={styles.rowLeft}>
         <Text style={styles.rowTitle} numberOfLines={2}>
           {sentence}
         </Text>
         <Text style={styles.rowMeta}>{time}</Text>
       </View>
-    </View>
+    </Wrapper>
   );
+}
+
+/**
+ * Where each activity row should deep-link to when tapped. Returns `null`
+ * when there's no useful destination (e.g. a deleted expense — the detail
+ * page would 404).
+ *
+ *   expense_added / expense_edited / expense_updated → expense detail
+ *   expense_deleted                                  → group overview
+ *                                                      (expense is gone)
+ *   settlement_added / settlement_reverted           → group → payments tab
+ *   member_joined                                    → group → standings tab
+ *                                                      (where members live)
+ *   group_* / invite_link_rotated                    → group overview
+ */
+function resolveActivityTarget(
+  event: ActivityEvent,
+  serverUrl: string,
+):
+  | { pathname: string; params: Record<string, string> }
+  | null {
+  const enc = encodeURIComponent(serverUrl);
+  const groupHref = {
+    pathname: '/groups/[server]/[id]',
+    params: { server: enc, id: event.group_id },
+  };
+  switch (event.event_type) {
+    case 'expense_added':
+    case 'expense_edited':
+    case 'expense_updated':
+      if (event.entity_id) {
+        return {
+          pathname: '/expenses/[server]/[id]',
+          params: { server: enc, id: event.entity_id, groupId: event.group_id },
+        };
+      }
+      return groupHref;
+    case 'expense_deleted':
+      // The expense is gone — sending the user to a 404 is hostile. Drop
+      // them on the group instead.
+      return groupHref;
+    case 'settlement_added':
+    case 'settlement_reverted':
+      return { ...groupHref, params: { ...groupHref.params, tab: 'payments' } };
+    case 'member_joined':
+      return { ...groupHref, params: { ...groupHref.params, tab: 'standings' } };
+    case 'group_created':
+    case 'group_updated':
+    case 'group_archived':
+    case 'invite_link_rotated':
+      return groupHref;
+    default:
+      return groupHref;
+  }
 }
 
 interface DescribeCtx {

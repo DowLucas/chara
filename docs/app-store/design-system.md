@@ -2,6 +2,19 @@
 
 Source: `app/lib/theme.ts`. If this doc drifts from the code, the code wins.
 
+## Two surfaces, two aesthetics
+
+Chara intentionally maintains **two distinct visual identities**:
+
+| Surface | Aesthetic | Source of truth |
+|---|---|---|
+| **The app itself** (and App Store screenshots) | Warm Nordic paper — cream, espresso, mono digits | `app/lib/theme.ts` |
+| **The marketing site** ([getchara.lovable.app](https://getchara.lovable.app/)) | Japanese ukiyo-e influence — Hokusai/Hiroshige imagery, chapter labels | The live site |
+
+**This document covers the first surface only.** The ukiyo-e treatment belongs on the marketing site and stays there. App Store screenshots use the Nordic-paper aesthetic exclusively — they're a product surface, not a marketing surface, and must look like what the user opens after they tap "Get."
+
+The **voice and copy** is unified across both surfaces — see [`voice-and-copy.md`](./voice-and-copy.md).
+
 ## The Theme in One Sentence
 
 **Warm Nordic financial paper.** Cream backgrounds, espresso text, mono digits, with rust/sage signal color only where money direction matters. Mullvad's restraint meets a leather-bound ledger — not Splitwise's cheery green.

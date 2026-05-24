@@ -72,7 +72,7 @@ export default function TabsLayout() {
       tabBar={(props) => <TabBar {...props} />}
     >
       <Tabs.Screen name="index" />
-      <Tabs.Screen name="activity" options={{ href: null }} />
+      <Tabs.Screen name="activity" />
       <Tabs.Screen name="you" />
     </Tabs>
   );

@@ -115,28 +115,30 @@ describe('buildSwishLink', () => {
     expect(data.startsWith('%7B')).toBe(true);
   });
 
-  it('encodes amount 24000 minor → 240 (number, not string)', () => {
+  it('encodes amount 24000 minor → "240.00" (decimal string)', () => {
     const payload = decodeSwishLink(buildSwishLink(baseOpts));
-    expect(payload.amount.value).toBe(240);
-    expect(typeof payload.amount.value).toBe('number');
+    expect(payload.amount.value).toBe('240.00');
+    expect(typeof payload.amount.value).toBe('string');
   });
 
-  it('encodes amount 100 minor → 1 (number)', () => {
+  it('encodes amount 100 minor → "1.00"', () => {
     const payload = decodeSwishLink(buildSwishLink({ ...baseOpts, amountMinor: 100 }));
-    expect(payload.amount.value).toBe(1);
+    expect(payload.amount.value).toBe('1.00');
   });
 
-  it('rounds öre UP to whole kronor (2949 minor → 30, never 29)', () => {
-    // Swish's consumer parser rejects decimal amounts with
-    // "Felaktig länk". We round up so the payee is never short.
-    const payload = decodeSwishLink(buildSwishLink({ ...baseOpts, amountMinor: 2949 }));
-    expect(payload.amount.value).toBe(30);
-    expect(Number.isInteger(payload.amount.value)).toBe(true);
+  it('preserves öre exactly (59014 minor → "590.14", no rounding)', () => {
+    const payload = decodeSwishLink(buildSwishLink({ ...baseOpts, amountMinor: 59014 }));
+    expect(payload.amount.value).toBe('590.14');
   });
 
-  it('rounds 226.82 SEK (22682 minor) up to 227', () => {
+  it('preserves öre exactly (22682 minor → "226.82", no rounding up to 227)', () => {
     const payload = decodeSwishLink(buildSwishLink({ ...baseOpts, amountMinor: 22682 }));
-    expect(payload.amount.value).toBe(227);
+    expect(payload.amount.value).toBe('226.82');
+  });
+
+  it('pads single-digit öre to 2 fraction digits (2901 minor → "29.01")', () => {
+    const payload = decodeSwishLink(buildSwishLink({ ...baseOpts, amountMinor: 2901 }));
+    expect(payload.amount.value).toBe('29.01');
   });
 
   it('encodes payee in national format (0XXXXXXXXX), not E.164', () => {

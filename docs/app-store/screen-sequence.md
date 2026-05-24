@@ -1,124 +1,143 @@
 # Chara — App Store Screenshot Sequence
 
-Ten screens, in this order. The first three matter most — they're what shows in the App Store search result preview and the listing's above-the-fold carousel.
+Ten screens, in this order. The first three are what shows in the App Store search-result preview and the listing's above-the-fold carousel — they carry the most weight.
+
+Headlines are taken from or written in the voice of the live marketing site at [getchara.lovable.app](https://getchara.lovable.app/). Read [`voice-and-copy.md`](./voice-and-copy.md) before changing a single word.
 
 Each entry specifies:
-- **Eyebrow** (mono caps, citrine, 13pt)
+- **Eyebrow** (mono caps, citrine, 13pt, letter-spacing 1.0)
 - **Headline** (display sans, graphite)
-- **Subhead** (body sans, graphite 75%)
+- **Subhead** (body sans, graphite at 75%)
 - **Device shows** — what the real screen capture must contain
-- **Why this slide** — what value it sells
+- **Why this slide** — the moment of value it sells
 
 ---
 
 ## Slide 1 — Hero
 
-- **Eyebrow:** `OPEN SOURCE · NATIVE · NORDIC`
-- **Headline:** Split it. Settle it. Call it Chara.
-- **Subhead:** Bill splitting that respects your data. Run it on our servers, or your own.
-- **Device shows:** Home tab. Giant hero amount `SEK 240,00` in mono, label "You're owed" in graphite, three group cards below (bone surface, mono amounts).
-- **Why:** Sets brand voice, palette, and the core promise in two sentences.
+- **Eyebrow:** `CH.01 · THE PROMISE`
+- **Headline:** Splitwise capped you. Steven dropped you. Chara won't.
+- **Subhead:** Take a photo of the receipt. Chara figures out the rest.
+- **Device shows:** Home tab. Giant hero amount `SEK 240,00` in mono, label "You're owed" in graphite, three group cards below ("Tokyo trip · oct", "Apartment 4B", "Mira's wedding") on bone surfaces.
+- **Why:** Names the pain by name. Sets brand voice, palette, and the core promise in one breath.
 
-## Slide 2 — Multi-server accounts (the unique one)
+## Slide 2 — Snap
 
-- **Eyebrow:** `MULTI-SERVER`
-- **Headline:** Your homelab. Their server. One app.
-- **Subhead:** Hold every Chara account at once. Groups, balances, and activity aggregated into one inbox.
-- **Device shows:** Settings → Accounts list, three rows with different server hostnames (chara.app, lurkhuset.com, friend.example), each with a status dot.
-- **Why:** Differentiator nobody else has. Lead with the moat.
+- **Eyebrow:** `CH.02 · SNAP`
+- **Headline:** The receipt reads itself.
+- **Subhead:** Snap the photo. Chara pulls merchant, date, total — and every line item.
+- **Device shows:** Add-expense screen mid-flow. Camera viewfinder overlay at the top with corner ticks. Form below pre-filled from a scan — merchant `ICA Maxi`, amount `1 240,00 SEK`, date `oct 12`.
+- **Why:** The headline value. If only one screen makes it into the search preview, this is the one.
 
-## Slide 3 — Standings + Settle-up suggestions
+## Slide 3 — Fair
 
-- **Eyebrow:** `MINIMUM TRANSFERS`
-- **Headline:** Pay the fewest people possible.
-- **Subhead:** Chara computes the minimum-cardinality settlement. No "I'll Venmo you, you Swish them" chains.
-- **Device shows:** Group standings tab. Suggestion list at top — three rows like "Alice → Bob · SEK 420,00" with citrine chevrons. Below, per-member balances colored rust/sage.
-- **Why:** Concrete algorithmic value. Shows the math working.
+- **Eyebrow:** `CH.03 · FAIR`
+- **Headline:** You pay for what you ate.
+- **Subhead:** Tap each line to assign it to whoever ordered it. The split builds itself.
+- **Device shows:** ScanItemsAssign screen. Receipt line items down the left ("Sushi platter", "Sapporo · 2", "Tofu salad"), member-avatar chips beside each. Selected lines highlighted in moss.
+- **Why:** Itemized splits — a feature Splitwise gates behind Pro and most OSS doesn't have. Specificity (wine vs. dessert) is the entire trick.
 
-## Slide 4 — Add expense + receipt scan
+## Slide 4 — Home (any currency)
 
-- **Eyebrow:** `ADD AN EXPENSE IN SECONDS`
-- **Headline:** Snap. Split. Done.
-- **Subhead:** Photograph the receipt. Chara pulls merchant, date, and total. Equal split unless you say otherwise.
-- **Device shows:** Add-expense screen mid-flow. Scanner overlay near the top with viewfinder ticks. Form below pre-filled with merchant `ICA Maxi`, amount `1 240,00 SEK`.
-- **Why:** Speed claim, backed by visible OCR.
+- **Eyebrow:** `CH.04 · HOME`
+- **Headline:** In your own currency, at today's rate.
+- **Subhead:** Per-currency truthful. FX for display, never for silent conversion.
+- **Device shows:** Group balances panel with mixed currencies — `SEK 240,00 to be paid` and `EUR 22,50 owed`, each on its own line. Citrine FX rate row underneath ("EUR 1 = SEK 11,30 · today").
+- **Why:** The travel scenario from the site's hero. Closes the multi-currency story without the technical jargon.
 
-## Slide 5 — Itemized split
+## Slide 5 — Done (settle in a tap)
 
-- **Eyebrow:** `ITEM-BY-ITEM`
-- **Headline:** Itemized splits without the spreadsheet.
-- **Subhead:** Tap each line to assign it to whoever ordered it. Chara builds the split for you.
-- **Device shows:** ScanItemsAssign screen. Receipt line items down the left, member avatar chips beside each. Selected lines highlighted in moss.
-- **Why:** Demonstrates a feature Splitwise gates behind Pro and most OSS doesn't have at all.
-
-## Slide 6 — Swish settle
-
-- **Eyebrow:** `SWISH · SE`
-- **Headline:** One tap to settle. Real Swish, not a workaround.
-- **Subhead:** Settle SEK in two seconds via the Swish app. Vipps and MobilePay next.
+- **Eyebrow:** `CH.05 · DONE`
+- **Headline:** Settled in a tap.
+- **Subhead:** Swish in Sweden. Vipps and MobilePay next. Or any payment link you already use.
 - **Device shows:** Settlement Impact Sheet open. Citrine "Settle with Swish" button at the bottom. Above, recipient name, `SEK 420,00`, and the message `Chara · Tokyo trip`.
 - **Why:** The Nordic wedge. Shows the moat working.
 
-## Slide 7 — Activity feed
+## Slide 6 — Pay the fewest people
 
-- **Eyebrow:** `EVERY CHANGE, LOGGED`
-- **Headline:** A receipt for every move.
-- **Subhead:** Edits and deletes are audit-trailed in the same transaction as the change. Trust by construction.
-- **Device shows:** Activity tab. Timeline of mono-dated entries: "Alice added · ICA Maxi · SEK 1 240,00", "You settled · Bob · SEK 420,00", in graphite with soft hairline dividers.
-- **Why:** Sells the trust story. Critical for finance-adjacent apps.
+- **Eyebrow:** `CH.06 · ONE TAB, ZERO CHAIN`
+- **Headline:** Pay the fewest people possible.
+- **Subhead:** Chara computes the minimum-cardinality settlement. No "I'll Venmo you, you Swish them."
+- **Device shows:** Group standings tab. Suggestion list at top — three rows like "Alice → Bob · SEK 420,00" with citrine chevrons. Per-member balances below in rust/sage.
+- **Why:** Concrete algorithmic value. Shows the math working without explaining it.
 
-## Slide 8 — Self-host
+## Slide 7 — Rent, Netflix, the cleaner
 
-- **Eyebrow:** `RUN IT YOURSELF`
-- **Headline:** Or run it on your own server.
-- **Subhead:** Docker Compose, ARM64 + AMD64, OIDC out of the box. Same app, same code, your hardware.
-- **Device shows:** Settings → "Add a server" flow with URL field `https://chara.lurkhuset.com`. Behind it, faint terminal mock with `docker compose up -d` text.
-- **Why:** Captures the self-hosting audience. Signals AGPL gravity.
+- **Eyebrow:** `CH.07 · IT REPEATS`
+- **Headline:** Rent, Netflix, the cleaner.
+- **Subhead:** Set the recurring once. Chara drops the expense in and pings the right people to settle.
+- **Device shows:** Recurring expenses list in a group. Three rows — "Rent · 12 000 SEK · 1st of each month", "Netflix · 159 SEK · monthly", "Cleaner · 600 SEK · every other week".
+- **Why:** The household scenario. Splitwise charges for this. Chara doesn't.
+- *Note: only ship this slide once recurring expenses lands (currently P1).*
 
-## Slide 9 — Multi-currency, per-currency truthful
+## Slide 8 — Your homelab. Their server.
 
-- **Eyebrow:** `MONEY MATH YOU CAN TRUST`
-- **Headline:** Per-currency, never per-floating-point.
-- **Subhead:** Every value stored as integer minor units. FX for display, never for silent conversion.
-- **Device shows:** Group with mixed currencies. Balances panel showing `SEK 240,00 to be paid` and `EUR 22,50 owed`, each on its own line. Citrine FX rate row underneath.
-- **Why:** Differentiator for the technically careful. Catches the "I tried Splitwise and the math was off" complaint.
+- **Eyebrow:** `CH.08 · MULTI-SERVER`
+- **Headline:** Your homelab. Their server. One app.
+- **Subhead:** Hold every Chara account at once. Groups, balances, and activity aggregated into one inbox.
+- **Device shows:** Settings → Accounts list, three rows with different server hostnames (`chara.app`, `chara.lurkhuset.com`, `friend.example`), each with a status dot.
+- **Why:** Differentiator nobody else has. The technically-curious audience will pause on this one.
 
-## Slide 10 — Localized
+## Slide 9 — One file. One command.
+
+- **Eyebrow:** `CH.09 · SELF-HOST`
+- **Headline:** One file. One command.
+- **Subhead:** Docker Compose, ARM64 and AMD64, OIDC out of the box. Same app, same code.
+- **Device shows:** "Add a server" flow with a URL field `https://chara.lurkhuset.com`. Faint terminal mock behind showing `docker compose up -d` and a green health-check line.
+- **Why:** Captures the self-hoster. Quiet signal of AGPL gravity without the lecture.
+
+## Slide 10 — Keep your peace
+
+- **Eyebrow:** `CH.10 · THE OUTRO`
+- **Headline:** Split bills. Keep your peace.
+- **Subhead:** Open source. EU-hosted, or your own server. No ads, ever.
+- **Device shows:** Activity feed showing a settled timeline. Moss "settled" stamps on each row, mono dates, soft hairline dividers. A small `CHARA` mono stamp top-right of the card.
+- **Why:** Closes on the emotional outcome from the site's outro. "Keep your peace" is the line the user remembers.
+
+---
+
+## Optional eleventh slide (Play Store / longer carousel)
+
+**Localized**
 
 - **Eyebrow:** `SVENSKA · BOKMÅL · DANSK · ENGLISH`
 - **Headline:** Speaks your language. Quietly.
-- **Subhead:** Swedish, Norwegian Bokmål, Danish, and English on launch. Add a new locale by dropping in a JSON file.
-- **Device shows:** Same group view in Swedish — "Du är skyldig", "Att betala", "Avräkna". Flag chips along the side or a language picker open.
-- **Why:** Closes the Nordic positioning. Signals i18n maturity.
+- **Subhead:** Swedish, Norwegian Bokmål, Danish, and English on launch.
+- **Device shows:** Same group view in Swedish — "Du är skyldig", "Att betala", "Avräkna".
 
 ---
 
-## Optional eleventh slide (Play Store only)
+## Headline cadence rules
 
-**Privacy & data**
+Every headline on this list follows the same set of patterns from `voice-and-copy.md`:
 
-- **Eyebrow:** `YOUR DATA, FULL STOP`
-- **Headline:** No ads. No trackers. No bank linking.
-- **Subhead:** AGPLv3 source. Full CSV/JSON export. EU-hosted on Chara Cloud, or your basement on self-host.
+- **Three-clause cadence with periods**, no commas: *"Splitwise capped you. Steven dropped you. Chara won't."*
+- **Triple-negative closer**: *"No spreadsheet, no awkward Venmo request, no 'I'll get you next time.'"*
+- **Outcome over feature**: *"Keep your peace."* not *"Audit-trailed activity log."*
+- **Specifics over abstractions**: *"Rent, Netflix, the cleaner."* not *"Recurring expenses."*
 
----
+If a proposed headline doesn't match one of these patterns, it's wrong for the slide. Rewrite.
+
+## Localized versions (Swedish storefront)
+
+For the `sv-SE` storefront, translate to:
+
+| EN | SV |
+|---|---|
+| Splitwise capped you. Steven dropped you. Chara won't. | Splitwise tog betalt. Steven gick ner. Chara stannar. |
+| The receipt reads itself. | Kvittot läser sig självt. |
+| You pay for what you ate. | Du betalar för det du åt. |
+| In your own currency, at today's rate. | I din valuta, dagens kurs. |
+| Settled in a tap. | Avräknat med en knapp. |
+| Pay the fewest people possible. | Betala så få som möjligt. |
+| Rent, Netflix, the cleaner. | Hyran, Netflix, städaren. |
+| Your homelab. Their server. One app. | Din server. Deras server. En app. |
+| One file. One command. | En fil. Ett kommando. |
+| Split bills. Keep your peace. | Dela notan. Behåll lugnet. |
 
 ## Copy notes
 
 - **Headlines:** one line, two at the absolute maximum. Period at the end is fine — these are statements, not slogans.
 - **Subheads:** one sentence. If it needs a second, the headline is wrong.
 - **Never:** exclamation points, emoji in headlines, "🚀", "world's first", "10x", "AI-powered", "next-gen", "revolutionary."
-- **Always:** specific over abstract. "SEK 240,00" beats "your balance." `ICA Maxi` beats "Grocery Store."
-
-## Localized versions
-
-If shipping screenshots in Swedish, the headlines translate as:
-
-| EN | SV |
-|---|---|
-| Split it. Settle it. Call it Chara. | Dela. Avräkna. Klart. |
-| Your homelab. Their server. One app. | Din server. Deras server. En app. |
-| Pay the fewest people possible. | Betala så få som möjligt. |
-| Snap. Split. Done. | Knäpp. Dela. Klart. |
-| One tap to settle. Real Swish. | En knapp. Riktigt Swish. |
-| Or run it on your own server. | Eller kör den själv. |
+- **Always:** specific over abstract. `SEK 240,00` beats "your balance." `ICA Maxi` beats "Grocery Store." "Wine vs. dessert" beats "itemized splits."

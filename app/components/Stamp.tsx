@@ -74,7 +74,7 @@ export function Stamp({ size = 'sm', animateIn, speed = 1 }: Props) {
       ]}
     >
       <Text style={[styles.text, size === 'lg' && styles.textLg]}>
-        {t('app.name').toUpperCase()}
+        {t('home.statusSettled').toUpperCase()}
       </Text>
     </Animated.View>
   );

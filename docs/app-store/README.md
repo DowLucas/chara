@@ -7,9 +7,25 @@ This directory is the source of truth for App Store / Play Store screenshot gene
 | File | Purpose |
 |---|---|
 | [`design-system.md`](./design-system.md) | Colors, typography, layout, and "what makes a Chara screen feel like Chara." Pulled directly from `app/lib/theme.ts`. |
-| [`screen-sequence.md`](./screen-sequence.md) | The 10-screen sequence for the App Store, with headline, subhead, and what the device frame should show. |
+| [`voice-and-copy.md`](./voice-and-copy.md) | Tone, cadence, and verbatim phrasings from the live marketing site at [getchara.lovable.app](https://getchara.lovable.app/). Read this before writing any headline. |
+| [`screen-sequence.md`](./screen-sequence.md) | The 10-screen sequence for the App Store — headlines lifted from the site's voice, with subhead and what the device frame must show. |
 | [`ai-prompt.md`](./ai-prompt.md) | The master AI prompt — paste-and-run for Midjourney / Flux / DALL·E / Figma AI. Includes per-screen variations. |
 | [`technical-spec.md`](./technical-spec.md) | Dimensions, export formats, file naming, and submission notes. |
+
+## The two aesthetics — resolved
+
+Chara has two visual surfaces and they look different on purpose:
+
+- **The app itself** — warm Nordic paper. Cream `#F0E5CC`, espresso text, mono digits. This is `app/lib/theme.ts`.
+- **The marketing site** — minimalist Japanese ukiyo-e influence, chapter-label structure, Hokusai/Hiroshige imagery references.
+
+**Rule for App Store screenshots:**
+
+- **Inside the device frame** = the app's Nordic-paper aesthetic (because that's what the user actually sees when they install).
+- **Around the device frame** (background, headlines, eyebrow tags) = also Nordic-paper, *not* ukiyo-e. App Store screenshots are a *product* surface, not a *marketing site* surface. Keep them consistent with what the user opens.
+- **Copy and voice** (headlines, subheads) = lifted straight from the marketing site. See [`voice-and-copy.md`](./voice-and-copy.md).
+
+The ukiyo-e treatment belongs on the .lovable.app site only. Don't mix it into the App Store kit.
 
 ## How to use this kit
 

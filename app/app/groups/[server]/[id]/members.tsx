@@ -14,7 +14,7 @@ import { useAuth } from '@/lib/auth';
 import { apiFor, inviteDeepLink, GroupDetail, GroupMember } from '@/lib/api';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import { formatLeaveReasons } from '@/lib/group-settings';
-import { formatMinorUnits } from '@/lib/i18n';
+import { formatMinorUnits, formatDate } from '@/lib/i18n';
 import { initialsOf } from '@/lib/name';
 import {
   colors,
@@ -145,7 +145,6 @@ export default function GroupMembersScreen() {
           <Text style={styles.listHeaderLabel}>
             {t('members.count', { count: members.length })}
           </Text>
-          <Text style={styles.listHeaderRight}>{t('members.role')}</Text>
         </View>
         <View style={styles.listRule} />
 
@@ -154,9 +153,21 @@ export default function GroupMembersScreen() {
         ) : (
           sorted.map((m) => {
             const isYou = m.user_id === user?.id;
-            const role = m.role === 'owner' ? t('members.roleOwner') : t('members.roleMember');
-            const canKick = !!isOwner && !isYou && m.role !== 'owner';
+            const isOwnerRow = m.role === 'owner';
+            const canKick = !!isOwner && !isYou && !isOwnerRow;
             const RowComp: any = canKick ? TouchableOpacity : View;
+            // Meta line precedence: ghost > joined+role(owner) > joined > role.
+            let meta: string;
+            if (m.is_ghost) {
+              meta = t('members.ghost');
+            } else if (m.joined_at) {
+              const d = formatDate(m.joined_at);
+              meta = isOwnerRow
+                ? t('members.joinedWithRole', { date: d, role: t('members.roleOwner') })
+                : t('members.joined', { date: d });
+            } else {
+              meta = isOwnerRow ? t('members.roleOwner') : t('members.roleUnknownJoin');
+            }
             return (
               <RowComp
                 key={m.id}
@@ -176,16 +187,13 @@ export default function GroupMembersScreen() {
                       {isYou ? ` · ${t('members.you')}` : ''}
                     </Text>
                     <Text style={styles.rowMeta} numberOfLines={1}>
-                      {m.is_ghost ? t('members.ghost') : m.email ?? t('common.dash')}
+                      {meta}
                     </Text>
                   </View>
                 </View>
-                <View style={styles.rowRight}>
-                  <Text style={styles.rowRole}>{role}</Text>
-                  {canKick && (
-                    <Feather name="chevron-right" size={16} color={colors.lead} />
-                  )}
-                </View>
+                {canKick && (
+                  <Feather name="chevron-right" size={20} color={colors.lead} />
+                )}
               </RowComp>
             );
           })
@@ -243,20 +251,24 @@ export default function GroupMembersScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
-  header: { paddingHorizontal: spacing.s5, paddingTop: spacing.s2, paddingBottom: spacing.s4 },
+  header: {
+    paddingHorizontal: spacing.s5,
+    paddingTop: spacing.s6,
+    paddingBottom: spacing.s5,
+  },
   eyebrow: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
-    letterSpacing: 0.3,
-    marginBottom: 2,
+    letterSpacing: 0.4,
+    marginBottom: 6,
   },
   title: {
     fontFamily: fontDisplay,
-    fontSize: fontSize.displayM,
-    letterSpacing: -0.8,
+    fontSize: fontSize.displayL,
+    letterSpacing: -1,
     color: colors.graphite,
-    lineHeight: 34,
+    lineHeight: 44,
   },
   listHeader: {
     flexDirection: 'row',
@@ -272,17 +284,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
+    paddingVertical: 18,
     paddingHorizontal: spacing.s5,
     borderBottomWidth: 0.5,
     borderBottomColor: colors.ruleSoft,
   },
-  rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  rowText: { flex: 1, flexShrink: 1 },
+  rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 },
+  rowText: { flex: 1, flexShrink: 1, minWidth: 0 },
   avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.bone,
     borderWidth: 1,
     borderColor: colors.ruleSoft,
@@ -294,30 +306,20 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontFamily: fontMonoMedium,
-    fontSize: 12,
+    fontSize: 14,
     color: colors.graphite,
   },
   rowName: {
     fontFamily: fontDisplay,
-    fontSize: fontSize.bodyL,
-    letterSpacing: -0.3,
+    fontSize: fontSize.displayS,
+    letterSpacing: -0.4,
     color: colors.graphite,
   },
   rowMeta: {
     fontFamily: fontBody,
-    fontSize: fontSize.bodyS,
+    fontSize: fontSize.body,
     color: colors.lead,
-    marginTop: 2,
-  },
-  rowRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  rowRole: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
+    marginTop: 3,
   },
   ctaBar: {
     flexDirection: 'row',
