@@ -40,6 +40,7 @@ type Expense struct {
 	OriginalCurrency pgtype.Text        `db:"original_currency" json:"original_currency"`
 	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
 	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
+	FxSource         pgtype.Text        `db:"fx_source" json:"fx_source"`
 }
 
 type ExpenseAttachment struct {
@@ -119,18 +120,22 @@ type PushToken struct {
 }
 
 type Settlement struct {
-	ID          string             `db:"id" json:"id"`
-	GroupID     string             `db:"group_id" json:"group_id"`
-	FromMember  string             `db:"from_member" json:"from_member"`
-	ToMember    string             `db:"to_member" json:"to_member"`
-	Amount      int64              `db:"amount" json:"amount"`
-	Currency    string             `db:"currency" json:"currency"`
-	Note        pgtype.Text        `db:"note" json:"note"`
-	CreatedByID string             `db:"created_by_id" json:"created_by_id"`
-	CreatedAt   pgtype.Timestamptz `db:"created_at" json:"created_at"`
-	Method      string             `db:"method" json:"method"`
-	ExternalRef pgtype.Text        `db:"external_ref" json:"external_ref"`
-	RevertedAt  pgtype.Timestamptz `db:"reverted_at" json:"reverted_at"`
+	ID               string             `db:"id" json:"id"`
+	GroupID          string             `db:"group_id" json:"group_id"`
+	FromMember       string             `db:"from_member" json:"from_member"`
+	ToMember         string             `db:"to_member" json:"to_member"`
+	Amount           int64              `db:"amount" json:"amount"`
+	Currency         string             `db:"currency" json:"currency"`
+	Note             pgtype.Text        `db:"note" json:"note"`
+	CreatedByID      string             `db:"created_by_id" json:"created_by_id"`
+	CreatedAt        pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	Method           string             `db:"method" json:"method"`
+	ExternalRef      pgtype.Text        `db:"external_ref" json:"external_ref"`
+	RevertedAt       pgtype.Timestamptz `db:"reverted_at" json:"reverted_at"`
+	OriginalAmount   pgtype.Int8        `db:"original_amount" json:"original_amount"`
+	OriginalCurrency pgtype.Text        `db:"original_currency" json:"original_currency"`
+	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
+	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
 }
 
 type User struct {

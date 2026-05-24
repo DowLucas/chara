@@ -22,6 +22,8 @@ import { TopBar } from '@/components/TopBar';
 import { Avatar } from '@/components/Avatar';
 import { ActionSheet, openNativeActionSheet, ActionSheetOption } from '@/components/ActionSheet';
 import { LanguagePicker } from '@/components/LanguagePicker';
+import { CurrencyPicker } from '@/components/CurrencyPicker';
+import { useHomeCurrency } from '@/lib/use-home-currency';
 import { useTranslation } from 'react-i18next';
 import i18n, {
   LANGUAGE_NATIVE_NAMES,
@@ -66,7 +68,8 @@ export default function YouScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { user, signOut, refreshUser } = useAuth();
-  const { accounts, removeAccount } = useAccounts();
+  const { accounts, removeAccount, setHomeCurrency } = useAccounts();
+  const { homeCurrency, isExplicit: homeCurrencyExplicit } = useHomeCurrency();
   const accountCount = accounts.length;
   const hasMultipleAccounts = accountCount >= 2;
   const [pinSet, setPinSet] = useState(false);
@@ -74,6 +77,7 @@ export default function YouScreen() {
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [avatarSheetVisible, setAvatarSheetVisible] = useState(false);
   const [languageSheetVisible, setLanguageSheetVisible] = useState(false);
+  const [currencySheetVisible, setCurrencySheetVisible] = useState(false);
   const [storedLanguage, setStoredLanguage] = useState<string | null>(null);
   const [avatarToken, setAvatarToken] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -434,6 +438,15 @@ export default function YouScreen() {
             value={languageRowValue}
             onPress={() => setLanguageSheetVisible(true)}
           />
+          <NavRow
+            label={t('you.homeCurrency')}
+            value={
+              homeCurrencyExplicit
+                ? homeCurrency
+                : `${t('you.languageAuto')} · ${homeCurrency}`
+            }
+            onPress={() => setCurrencySheetVisible(true)}
+          />
           <NavRow label={t('privacy.title')} onPress={() => router.push('/settings/privacy')} />
           <NavRow label={t('you.about')} onPress={() => router.push('/settings/about')} />
           <NavRow label={t('you.tellFriend')} onPress={handleTellFriend} />
@@ -473,6 +486,15 @@ export default function YouScreen() {
         onClose={() => setLanguageSheetVisible(false)}
         onSelectAutomatic={pickAutomatic}
         onSelect={pickLanguage}
+      />
+      <CurrencyPicker
+        visible={currencySheetVisible}
+        selected={homeCurrency}
+        onClose={() => setCurrencySheetVisible(false)}
+        onSelect={(code) => {
+          void setHomeCurrency(code);
+          setCurrencySheetVisible(false);
+        }}
       />
     </View>
   );
@@ -561,7 +583,7 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     marginTop: spacing.s3,
   },
-  email: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead, marginTop: 4 },
+  email: { fontFamily: fontMono, fontSize: fontSize.bodyS, color: colors.lead, marginTop: 4 },
   editBtn: {
     marginTop: spacing.s4,
     paddingVertical: spacing.s2,
@@ -584,7 +606,7 @@ const styles = StyleSheet.create({
   },
   sectionEyebrow: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     letterSpacing: 0.3,
     marginBottom: spacing.s2,
@@ -606,13 +628,13 @@ const styles = StyleSheet.create({
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.s2 },
   rowValue: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     letterSpacing: 0.3,
   },
   rowHint: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     letterSpacing: 0.3,
     marginTop: 2,
@@ -627,7 +649,7 @@ const styles = StyleSheet.create({
   devBlock: { width: '100%', marginBottom: spacing.s4 },
   devEyebrow: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     letterSpacing: 0.3,
     marginBottom: spacing.s2,

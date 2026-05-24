@@ -94,11 +94,10 @@ const styles = StyleSheet.create({
   rowTextWrap: { flex: 1 },
   rowLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite },
   description: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontFamily: fontBody,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
-    letterSpacing: 0.3,
-    lineHeight: 18,
+    lineHeight: 20,
     marginTop: spacing.s3,
   },
 });

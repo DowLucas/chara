@@ -12,21 +12,28 @@ import (
 )
 
 const createSettlement = `-- name: CreateSettlement :one
-INSERT INTO settlements (id, group_id, from_member, to_member, amount, currency, note, method, created_by_id)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-RETURNING id, group_id, from_member, to_member, amount, currency, note, created_by_id, created_at, method, external_ref, reverted_at
+INSERT INTO settlements (
+    id, group_id, from_member, to_member, amount, currency, note, method, created_by_id,
+    original_amount, original_currency, fx_rate, fx_as_of
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+RETURNING id, group_id, from_member, to_member, amount, currency, note, created_by_id, created_at, method, external_ref, reverted_at, original_amount, original_currency, fx_rate, fx_as_of
 `
 
 type CreateSettlementParams struct {
-	ID          string      `db:"id" json:"id"`
-	GroupID     string      `db:"group_id" json:"group_id"`
-	FromMember  string      `db:"from_member" json:"from_member"`
-	ToMember    string      `db:"to_member" json:"to_member"`
-	Amount      int64       `db:"amount" json:"amount"`
-	Currency    string      `db:"currency" json:"currency"`
-	Note        pgtype.Text `db:"note" json:"note"`
-	Method      string      `db:"method" json:"method"`
-	CreatedByID string      `db:"created_by_id" json:"created_by_id"`
+	ID               string         `db:"id" json:"id"`
+	GroupID          string         `db:"group_id" json:"group_id"`
+	FromMember       string         `db:"from_member" json:"from_member"`
+	ToMember         string         `db:"to_member" json:"to_member"`
+	Amount           int64          `db:"amount" json:"amount"`
+	Currency         string         `db:"currency" json:"currency"`
+	Note             pgtype.Text    `db:"note" json:"note"`
+	Method           string         `db:"method" json:"method"`
+	CreatedByID      string         `db:"created_by_id" json:"created_by_id"`
+	OriginalAmount   pgtype.Int8    `db:"original_amount" json:"original_amount"`
+	OriginalCurrency pgtype.Text    `db:"original_currency" json:"original_currency"`
+	FxRate           pgtype.Numeric `db:"fx_rate" json:"fx_rate"`
+	FxAsOf           pgtype.Date    `db:"fx_as_of" json:"fx_as_of"`
 }
 
 func (q *Queries) CreateSettlement(ctx context.Context, arg CreateSettlementParams) (Settlement, error) {
@@ -40,6 +47,10 @@ func (q *Queries) CreateSettlement(ctx context.Context, arg CreateSettlementPara
 		arg.Note,
 		arg.Method,
 		arg.CreatedByID,
+		arg.OriginalAmount,
+		arg.OriginalCurrency,
+		arg.FxRate,
+		arg.FxAsOf,
 	)
 	var i Settlement
 	err := row.Scan(
@@ -55,12 +66,16 @@ func (q *Queries) CreateSettlement(ctx context.Context, arg CreateSettlementPara
 		&i.Method,
 		&i.ExternalRef,
 		&i.RevertedAt,
+		&i.OriginalAmount,
+		&i.OriginalCurrency,
+		&i.FxRate,
+		&i.FxAsOf,
 	)
 	return i, err
 }
 
 const getSettlement = `-- name: GetSettlement :one
-SELECT id, group_id, from_member, to_member, amount, currency, note, created_by_id, created_at, method, external_ref, reverted_at FROM settlements WHERE id = $1
+SELECT id, group_id, from_member, to_member, amount, currency, note, created_by_id, created_at, method, external_ref, reverted_at, original_amount, original_currency, fx_rate, fx_as_of FROM settlements WHERE id = $1
 `
 
 func (q *Queries) GetSettlement(ctx context.Context, id string) (Settlement, error) {
@@ -79,12 +94,16 @@ func (q *Queries) GetSettlement(ctx context.Context, id string) (Settlement, err
 		&i.Method,
 		&i.ExternalRef,
 		&i.RevertedAt,
+		&i.OriginalAmount,
+		&i.OriginalCurrency,
+		&i.FxRate,
+		&i.FxAsOf,
 	)
 	return i, err
 }
 
 const listSettlementsByGroup = `-- name: ListSettlementsByGroup :many
-SELECT id, group_id, from_member, to_member, amount, currency, note, created_by_id, created_at, method, external_ref, reverted_at FROM settlements
+SELECT id, group_id, from_member, to_member, amount, currency, note, created_by_id, created_at, method, external_ref, reverted_at, original_amount, original_currency, fx_rate, fx_as_of FROM settlements
 WHERE group_id = $1
 ORDER BY created_at DESC
 `
@@ -111,6 +130,10 @@ func (q *Queries) ListSettlementsByGroup(ctx context.Context, groupID string) ([
 			&i.Method,
 			&i.ExternalRef,
 			&i.RevertedAt,
+			&i.OriginalAmount,
+			&i.OriginalCurrency,
+			&i.FxRate,
+			&i.FxAsOf,
 		); err != nil {
 			return nil, err
 		}
@@ -128,7 +151,7 @@ SET reverted_at = NOW()
 WHERE id = $1
   AND created_at > NOW() - INTERVAL '24 hours'
   AND reverted_at IS NULL
-RETURNING id, group_id, from_member, to_member, amount, currency, note, created_by_id, created_at, method, external_ref, reverted_at
+RETURNING id, group_id, from_member, to_member, amount, currency, note, created_by_id, created_at, method, external_ref, reverted_at, original_amount, original_currency, fx_rate, fx_as_of
 `
 
 // Soft-revert a settlement. The caller (handler) is expected to have already
@@ -152,6 +175,10 @@ func (q *Queries) MarkSettlementReverted(ctx context.Context, id string) (Settle
 		&i.Method,
 		&i.ExternalRef,
 		&i.RevertedAt,
+		&i.OriginalAmount,
+		&i.OriginalCurrency,
+		&i.FxRate,
+		&i.FxAsOf,
 	)
 	return i, err
 }

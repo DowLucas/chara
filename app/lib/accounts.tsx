@@ -27,6 +27,7 @@ import {
   load,
   removeAccount as storeRemoveAccount,
   setDefault as storeSetDefault,
+  setHomeCurrency as storeSetHomeCurrency,
   setLastUsedCreate as storeSetLastUsedCreate,
   snapshot,
   subscribe,
@@ -42,6 +43,8 @@ interface AccountsState {
   defaultAccount: Account | null;
   defaultServerUrl: string | null;
   lastUsedCreateServerUrl: string | null;
+  /** ISO 4217 currency for the home-screen aggregate, or null if unset. */
+  homeCurrency: string | null;
   loading: boolean;
   accountFor: (serverUrl: string) => Account | null;
   addAccount: (account: Account) => Promise<void>;
@@ -49,6 +52,7 @@ interface AccountsState {
   updateAccount: (serverUrl: string, patch: Partial<Account>) => Promise<void>;
   setDefault: (serverUrl: string) => Promise<void>;
   setLastUsedCreate: (serverUrl: string) => Promise<void>;
+  setHomeCurrency: (currency: string | null) => Promise<void>;
 }
 
 const AccountsContext = createContext<AccountsState | null>(null);
@@ -116,6 +120,7 @@ export function AccountsProvider({ children }: { children: React.ReactNode }) {
       defaultAccount: def,
       defaultServerUrl: blob.defaultServerUrl,
       lastUsedCreateServerUrl: blob.lastUsedCreateServerUrl,
+      homeCurrency: blob.homeCurrency ?? null,
       loading,
       accountFor,
       addAccount: storeAddAccount,
@@ -123,6 +128,7 @@ export function AccountsProvider({ children }: { children: React.ReactNode }) {
       updateAccount: storeUpdateAccount,
       setDefault: storeSetDefault,
       setLastUsedCreate: storeSetLastUsedCreate,
+      setHomeCurrency: storeSetHomeCurrency,
     };
   }, [blob, loading]);
 

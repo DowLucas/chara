@@ -104,6 +104,13 @@ func formatFloatFixed(f float64) string {
 // CreateExpense inserts an expense with equal splits across memberIDs directly in the DB.
 // Use this to set up state for List/Get/Update/Delete tests.
 func CreateExpense(t *testing.T, pool *pgxpool.Pool, groupID, title string, amountMinorUnits int64, currency, paidByMemberID, createdByUserID string, memberIDs []string) ExpenseFixture {
+	return CreateExpenseOn(t, pool, groupID, title, amountMinorUnits, currency, paidByMemberID, createdByUserID, memberIDs, time.Now())
+}
+
+// CreateExpenseOn is CreateExpense with an explicit expense_date — needed
+// by FX-aggregate tests that pin the leg to a date the seeded ECB rate
+// matches.
+func CreateExpenseOn(t *testing.T, pool *pgxpool.Pool, groupID, title string, amountMinorUnits int64, currency, paidByMemberID, createdByUserID string, memberIDs []string, expenseDate time.Time) ExpenseFixture {
 	t.Helper()
 	ctx := context.Background()
 	q := db.New(pool)
@@ -118,7 +125,7 @@ func CreateExpense(t *testing.T, pool *pgxpool.Pool, groupID, title string, amou
 		SplitMethod: "equal",
 		Category:    "general",
 		Notes:       pgtype.Text{Valid: false},
-		ExpenseDate: pgtype.Date{Time: time.Now(), Valid: true},
+		ExpenseDate: pgtype.Date{Time: expenseDate, Valid: true},
 		IsReimbursement: false,
 		CreatedByID: createdByUserID,
 	})

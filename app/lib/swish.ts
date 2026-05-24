@@ -94,11 +94,16 @@ export function isSwishEligible(opts: {
  *   - Encoding is `encodeURIComponent(JSON.stringify(payload))`. Base64
  *     is rejected outright.
  *   - `payee.value` is E.164 (`+46...`) or national (`07...`). Both work.
- *   - `amount.value` is a **decimal string with exactly 2 fraction
- *     digits** (`"590.14"`, `"240.00"`). This matches both the merchant
- *     API spec and what the consumer deep-link parser actually accepts;
- *     dropping the öre on handoff was a longstanding bug that this
- *     module now fixes (öre stay intact end-to-end).
+ *   - `amount.value` is an **integer number of kronor**. The consumer
+ *     deep-link parser rejects decimals (`226.82` → "Felaktig länk")
+ *     and strings (`"227"` → fail). Confirmed empirically and matches
+ *     two independent live implementations:
+ *     https://github.com/stefangeneralao/swish-link-generator
+ *     https://gist.github.com/filleokus/a8f1ffee4d49e09572aacd6239bc84cd
+ *     The merchant HTTP API takes a decimal string with öre; the
+ *     deep-link parser does not — `docs/swish-integration.md` confused
+ *     the two and is being corrected. Round up at build time so the
+ *     payee is never short.
  *   - `message.value` is restricted to `[a-zA-ZåäöÅÄÖ0-9:;.,?!()" ]`
  *     (max 50 chars). `·`, `-`, `*`, emoji, etc. all trigger
  *     "Felaktig länk". We sanitize at build time.
@@ -133,13 +138,22 @@ export function buildSwishLink(opts: {
   const payload = {
     version: 1,
     payee: { value: national },
-    // Decimal string with 2 fraction digits, per docs/swish-integration.md
-    // §3. Never rounds — 590.14 SEK stays 590.14 SEK end-to-end.
-    amount: { value: formatMinorAsDecimal(opts.amountMinor) },
+    // Bare integer kronor (no string, no decimals). Round up so the
+    // payee is never short by the öre fraction. The wait screen and
+    // recorded settlement use the matching rounded amount so the
+    // ledger reflects what Swish moved.
+    amount: { value: swishRoundedKronor(opts.amountMinor) },
     message: { value: buildMessage(opts.groupName) },
   };
 
   return `swish://payment?data=${encodeURIComponent(JSON.stringify(payload))}`;
+}
+
+/** Rounds a minor-unit amount up to whole kronor — matching what
+ *  `buildSwishLink` sends, so the UI can show the user the rounded
+ *  amount and any settlement record can be written for the same value. */
+export function swishRoundedKronor(amountMinor: number): number {
+  return Math.ceil(amountMinor / 100);
 }
 
 /**

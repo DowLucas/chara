@@ -429,6 +429,9 @@ export interface Expense {
   fx_rate?: string;
   /** ISO date the FX rate was sourced for. */
   fx_as_of?: string;
+  /** Where the rate came from: backend ECB lookup, or a user-entered
+   *  override. Present iff fx_rate is present. */
+  fx_source?: 'ecb' | 'manual';
 }
 
 export interface ExpenseSplit {
@@ -452,6 +455,14 @@ export interface CreateExpenseInput {
   expense_date: string;
   participants?: string[];
   splits?: Array<{ member_id: string; share?: string; basis_points?: number }>;
+  /** Optional all-or-none FX snapshot. When provided, `amount`/`currency`
+   *  must already be in the group's canonical currency; the backend stores
+   *  the snapshot verbatim and skips its own ECB conversion. */
+  original_amount?: string;
+  original_currency?: string;
+  fx_rate?: string;
+  fx_as_of?: string;
+  fx_source?: 'ecb' | 'manual';
 }
 
 // PATCH /api/groups/{groupID}/expenses/{expenseID}.
@@ -467,6 +478,12 @@ export interface UpdateExpenseInput {
   expense_date?: string;
   participants?: string[];
   splits?: Array<{ member_id: string; share?: string; basis_points?: number }>;
+  /** Optional all-or-none FX snapshot. See CreateExpenseInput. */
+  original_amount?: string;
+  original_currency?: string;
+  fx_rate?: string;
+  fx_as_of?: string;
+  fx_source?: 'ecb' | 'manual';
 }
 
 export function listExpenses(groupId: string) {
@@ -524,6 +541,14 @@ export interface Settlement {
   /** Set when the settlement has been soft-reverted. Reverted rows are
    *  excluded from balance math but kept in the audit list. */
   reverted_at?: string;
+  /** FX snapshot — present iff the user paid in a currency other than
+   *  the canonical settlement currency. All four are present or all
+   *  four are absent (DB CHECK enforces). Mirrors the expense FX
+   *  snapshot; see 2026-05-24-home-currency-aggregation-design.md. */
+  original_amount?: string;
+  original_currency?: string;
+  fx_rate?: string;
+  fx_as_of?: string;
 }
 
 export interface SettleInput {
@@ -532,6 +557,13 @@ export interface SettleInput {
   amount: string;
   currency: string;
   note?: string;
+  /** Optional FX snapshot. All-or-none — partial input is 400'd by the
+   *  backend. Only set when the user paid in a different currency than
+   *  the canonical settlement currency. */
+  original_amount?: string;
+  original_currency?: string;
+  fx_rate?: string;
+  fx_as_of?: string;
 }
 
 export function listGroupBalances(groupId: string) {
@@ -815,6 +847,16 @@ export interface FxConvertResponse {
   source: string;
 }
 
+/** Most-recent ECB snapshot from a server. base is always EUR (the
+ *  /api/fx/rates endpoint rejects anything else); cross-rates are
+ *  computed client-side. Used by the home-currency aggregate. */
+export interface FxRatesResponse {
+  base: string;
+  as_of: string;
+  source: string;
+  rates: Array<{ quote: string; rate: string }>;
+}
+
 export function convertFx(input: {
   from: string;
   to: string;
@@ -828,6 +870,32 @@ export function convertFx(input: {
   });
   if (input.asOf) params.set('as_of', input.asOf);
   return request<FxConvertResponse>(`/api/fx/convert?${params.toString()}`);
+}
+
+export function listFxRates(asOf?: string) {
+  const params = new URLSearchParams({ base: 'EUR' });
+  if (asOf) params.set('as_of', asOf);
+  return request<FxRatesResponse>(`/api/fx/rates?${params.toString()}`);
+}
+
+/** Per-account aggregate: the user's net balance across every group on
+ *  this server, summed in `homeCurrency` using ECB rates locked at each
+ *  leg's own date. Never uses today's rate. Spec:
+ *  2026-05-24-home-currency-aggregation-design.md. */
+export interface MyNetResponse {
+  home_currency: string;
+  /** Signed decimal string, e.g. "-1240.50". */
+  net_minor: string;
+  total_legs: number;
+  converted_legs: number;
+  estimated_legs: number;
+  contributing_groups: number;
+}
+
+export function getMyNet(homeCurrency: string) {
+  return request<MyNetResponse>(
+    `/api/me/net?in=${encodeURIComponent(homeCurrency)}`,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -972,6 +1040,12 @@ export function apiFor(serverUrl: string) {
       return requestOn<FxConvertResponse>(serverUrl, `/api/fx/convert?${params.toString()}`);
     },
 
+    listFxRates: (asOf?: string) => {
+      const params = new URLSearchParams({ base: 'EUR' });
+      if (asOf) params.set('as_of', asOf);
+      return requestOn<FxRatesResponse>(serverUrl, `/api/fx/rates?${params.toString()}`);
+    },
+
     // Receipt OCR (group-scoped — uses the group's home server)
     scanReceipt: (imageBase64: string, mimeType: string, language?: string) =>
       requestOn<ScannedReceipt>(serverUrl, '/api/receipts/scan', {
@@ -991,6 +1065,11 @@ export function apiFor(serverUrl: string) {
 
     // Aggregated home/balances/activity (Wave 4 fan-out targets)
     listMyBalances: () => requestOn<MyBalance[]>(serverUrl, '/api/me/balances'),
+    getMyNet: (homeCurrency: string) =>
+      requestOn<MyNetResponse>(
+        serverUrl,
+        `/api/me/net?in=${encodeURIComponent(homeCurrency)}`,
+      ),
     listMyActivity: (limit = 50, offset = 0) =>
       requestOn<ActivityEvent[]>(
         serverUrl,

@@ -385,6 +385,99 @@ describe('computeBalanceImpact', () => {
     expect(byMember['b'].deltaMinor).toBe(5000n);
   });
 
+  // Boundary: the filter requires strict inequality `settlement.created_at >
+  // expense.created_at`. A settlement created at exactly the same instant as
+  // the expense represents money moved *before* the new shares took effect and
+  // must not be flagged as "affected by this edit".
+  it('affected settlements: created_at equal to expense.created_at is excluded (strict >)', () => {
+    const exp = expense({
+      amountMinor: 100_00,
+      paid_by_id: 'a',
+      created_at: '2026-01-01T00:00:00Z',
+    });
+    const currentSplits = [split('a', 5000), split('b', 5000)];
+    const members = [member('a', 'Alice'), member('b', 'Bob')];
+    const result = computeBalanceImpact({
+      expense: exp,
+      currentSplits,
+      newAmountMinor: 200_00n,
+      newPayerId: 'a',
+      newSplitMethod: 'equal',
+      newParticipants: ['a', 'b'],
+      members,
+      settlements: [
+        settlement({
+          id: 's-same-instant',
+          from_member_id: 'b',
+          to_member_id: 'a',
+          created_at: '2026-01-01T00:00:00Z', // exact tie
+        }),
+      ],
+    });
+    expect(result.affectedSettlements).toEqual([]);
+  });
+
+  // Explicit single-arm coverage of `from OR to` membership. The combined test
+  // earlier bundles many filter conditions; this pair keeps each arm honest as
+  // an independent regression.
+  it('affected settlements: settlement is flagged when only the from-member has a delta', () => {
+    const exp = expense({
+      amountMinor: 100_00,
+      paid_by_id: 'a',
+      created_at: '2026-01-01T00:00:00Z',
+    });
+    // Only b's net moves (payer a's net moves too, but we'll point the
+    // settlement at b ↔ c — c is unchanged).
+    const currentSplits = [split('a', 5000), split('b', 5000)];
+    const members = [member('a', 'Alice'), member('b', 'Bob'), member('c', 'Carol')];
+    const result = computeBalanceImpact({
+      expense: exp,
+      currentSplits,
+      newAmountMinor: 200_00n,
+      newPayerId: 'a',
+      newSplitMethod: 'equal',
+      newParticipants: ['a', 'b'],
+      members,
+      settlements: [
+        settlement({
+          id: 's-from-only',
+          from_member_id: 'b', // ← changed member is the payer-of-the-settlement
+          to_member_id: 'c',   // ← unchanged
+          created_at: '2026-02-01T00:00:00Z',
+        }),
+      ],
+    });
+    expect(result.affectedSettlements.map((s) => s.id)).toEqual(['s-from-only']);
+  });
+
+  it('affected settlements: settlement is flagged when only the to-member has a delta', () => {
+    const exp = expense({
+      amountMinor: 100_00,
+      paid_by_id: 'a',
+      created_at: '2026-01-01T00:00:00Z',
+    });
+    const currentSplits = [split('a', 5000), split('b', 5000)];
+    const members = [member('a', 'Alice'), member('b', 'Bob'), member('c', 'Carol')];
+    const result = computeBalanceImpact({
+      expense: exp,
+      currentSplits,
+      newAmountMinor: 200_00n,
+      newPayerId: 'a',
+      newSplitMethod: 'equal',
+      newParticipants: ['a', 'b'],
+      members,
+      settlements: [
+        settlement({
+          id: 's-to-only',
+          from_member_id: 'c', // ← unchanged
+          to_member_id: 'b',   // ← changed member is the recipient
+          created_at: '2026-02-01T00:00:00Z',
+        }),
+      ],
+    });
+    expect(result.affectedSettlements.map((s) => s.id)).toEqual(['s-to-only']);
+  });
+
   it('returns empty deltas when nothing changes (no-op edit)', () => {
     const exp = expense({ amountMinor: 100_00, paid_by_id: 'a' });
     const currentSplits = [split('a', 5000), split('b', 5000)];

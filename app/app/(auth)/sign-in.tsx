@@ -7,6 +7,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -273,10 +274,14 @@ export default function SignInScreen() {
       style={[styles.container, { paddingTop: insets.top }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Wordmark */}
-      <View style={styles.wordmarkRow}>
-        <Text style={styles.wordmarkText}>{t('app.name')}</Text>
-        <View style={styles.wordmarkRule} />
+      {/* Logo */}
+      <View style={styles.logoRow}>
+        <Image
+          source={require('@/assets/chara-logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+          accessibilityLabel={t('app.name')}
+        />
       </View>
 
       {/* Tagline */}
@@ -376,38 +381,29 @@ const styles = StyleSheet.create({
     backgroundColor: colors.paper,
     paddingHorizontal: spacing.s5,
   },
-  wordmarkRow: {
-    flexDirection: 'row',
+  logoRow: {
     alignItems: 'center',
-    gap: 10,
     marginTop: spacing.s2,
   },
-  wordmarkText: {
-    fontFamily: fontDisplay,
-    fontSize: 28,
-    letterSpacing: -1,
-    color: colors.graphite,
-  },
-  wordmarkRule: {
-    flex: 1,
-    height: 1.5,
-    backgroundColor: colors.graphite,
+  logo: {
+    width: 220,
+    height: 110,
   },
   tagline: {
     marginTop: 56,
   },
   eyebrow: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     letterSpacing: 0.3,
     marginBottom: 12,
   },
   headline: {
     fontFamily: fontDisplay,
-    fontSize: 36,
-    letterSpacing: -1.3,
-    lineHeight: 38,
+    fontSize: fontSize.displayL,
+    letterSpacing: -1,
+    lineHeight: 44,
     color: colors.graphite,
   },
   serverRow: {

@@ -31,12 +31,12 @@ const createExpense = `-- name: CreateExpense :one
 INSERT INTO expenses (
     id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
     expense_date, is_reimbursement, created_by_id,
-    original_amount, original_currency, fx_rate, fx_as_of
+    original_amount, original_currency, fx_rate, fx_as_of, fx_source
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
 RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
           expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
-          original_amount, original_currency, fx_rate, fx_as_of
+          original_amount, original_currency, fx_rate, fx_as_of, fx_source
 `
 
 type CreateExpenseParams struct {
@@ -56,6 +56,7 @@ type CreateExpenseParams struct {
 	OriginalCurrency pgtype.Text    `db:"original_currency" json:"original_currency"`
 	FxRate           pgtype.Numeric `db:"fx_rate" json:"fx_rate"`
 	FxAsOf           pgtype.Date    `db:"fx_as_of" json:"fx_as_of"`
+	FxSource         pgtype.Text    `db:"fx_source" json:"fx_source"`
 }
 
 type CreateExpenseRow struct {
@@ -78,6 +79,7 @@ type CreateExpenseRow struct {
 	OriginalCurrency pgtype.Text        `db:"original_currency" json:"original_currency"`
 	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
 	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
+	FxSource         pgtype.Text        `db:"fx_source" json:"fx_source"`
 }
 
 // Explicit column list everywhere to exclude the generated `search_vector` column,
@@ -100,6 +102,7 @@ func (q *Queries) CreateExpense(ctx context.Context, arg CreateExpenseParams) (C
 		arg.OriginalCurrency,
 		arg.FxRate,
 		arg.FxAsOf,
+		arg.FxSource,
 	)
 	var i CreateExpenseRow
 	err := row.Scan(
@@ -122,6 +125,7 @@ func (q *Queries) CreateExpense(ctx context.Context, arg CreateExpenseParams) (C
 		&i.OriginalCurrency,
 		&i.FxRate,
 		&i.FxAsOf,
+		&i.FxSource,
 	)
 	return i, err
 }
@@ -129,7 +133,7 @@ func (q *Queries) CreateExpense(ctx context.Context, arg CreateExpenseParams) (C
 const getExpenseByID = `-- name: GetExpenseByID :one
 SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
        expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
-       original_amount, original_currency, fx_rate, fx_as_of
+       original_amount, original_currency, fx_rate, fx_as_of, fx_source
 FROM expenses WHERE id = $1 AND NOT is_deleted
 `
 
@@ -153,6 +157,7 @@ type GetExpenseByIDRow struct {
 	OriginalCurrency pgtype.Text        `db:"original_currency" json:"original_currency"`
 	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
 	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
+	FxSource         pgtype.Text        `db:"fx_source" json:"fx_source"`
 }
 
 func (q *Queries) GetExpenseByID(ctx context.Context, id string) (GetExpenseByIDRow, error) {
@@ -178,6 +183,7 @@ func (q *Queries) GetExpenseByID(ctx context.Context, id string) (GetExpenseByID
 		&i.OriginalCurrency,
 		&i.FxRate,
 		&i.FxAsOf,
+		&i.FxSource,
 	)
 	return i, err
 }
@@ -185,7 +191,7 @@ func (q *Queries) GetExpenseByID(ctx context.Context, id string) (GetExpenseByID
 const getExpenseByIDAndGroup = `-- name: GetExpenseByIDAndGroup :one
 SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
        expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
-       original_amount, original_currency, fx_rate, fx_as_of
+       original_amount, original_currency, fx_rate, fx_as_of, fx_source
 FROM expenses WHERE id = $1 AND group_id = $2 AND NOT is_deleted
 `
 
@@ -214,6 +220,7 @@ type GetExpenseByIDAndGroupRow struct {
 	OriginalCurrency pgtype.Text        `db:"original_currency" json:"original_currency"`
 	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
 	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
+	FxSource         pgtype.Text        `db:"fx_source" json:"fx_source"`
 }
 
 func (q *Queries) GetExpenseByIDAndGroup(ctx context.Context, arg GetExpenseByIDAndGroupParams) (GetExpenseByIDAndGroupRow, error) {
@@ -239,6 +246,7 @@ func (q *Queries) GetExpenseByIDAndGroup(ctx context.Context, arg GetExpenseByID
 		&i.OriginalCurrency,
 		&i.FxRate,
 		&i.FxAsOf,
+		&i.FxSource,
 	)
 	return i, err
 }
@@ -246,7 +254,7 @@ func (q *Queries) GetExpenseByIDAndGroup(ctx context.Context, arg GetExpenseByID
 const listExpensesByGroup = `-- name: ListExpensesByGroup :many
 SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
        expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
-       original_amount, original_currency, fx_rate, fx_as_of
+       original_amount, original_currency, fx_rate, fx_as_of, fx_source
 FROM expenses
 WHERE group_id = $1 AND NOT is_deleted
 ORDER BY expense_date DESC, created_at DESC
@@ -279,6 +287,7 @@ type ListExpensesByGroupRow struct {
 	OriginalCurrency pgtype.Text        `db:"original_currency" json:"original_currency"`
 	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
 	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
+	FxSource         pgtype.Text        `db:"fx_source" json:"fx_source"`
 }
 
 func (q *Queries) ListExpensesByGroup(ctx context.Context, arg ListExpensesByGroupParams) ([]ListExpensesByGroupRow, error) {
@@ -310,6 +319,7 @@ func (q *Queries) ListExpensesByGroup(ctx context.Context, arg ListExpensesByGro
 			&i.OriginalCurrency,
 			&i.FxRate,
 			&i.FxAsOf,
+			&i.FxSource,
 		); err != nil {
 			return nil, err
 		}
@@ -324,7 +334,7 @@ func (q *Queries) ListExpensesByGroup(ctx context.Context, arg ListExpensesByGro
 const searchExpenses = `-- name: SearchExpenses :many
 SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
        expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
-       original_amount, original_currency, fx_rate, fx_as_of
+       original_amount, original_currency, fx_rate, fx_as_of, fx_source
 FROM expenses
 WHERE group_id = $1
   AND NOT is_deleted
@@ -358,6 +368,7 @@ type SearchExpensesRow struct {
 	OriginalCurrency pgtype.Text        `db:"original_currency" json:"original_currency"`
 	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
 	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
+	FxSource         pgtype.Text        `db:"fx_source" json:"fx_source"`
 }
 
 func (q *Queries) SearchExpenses(ctx context.Context, arg SearchExpensesParams) ([]SearchExpensesRow, error) {
@@ -389,6 +400,7 @@ func (q *Queries) SearchExpenses(ctx context.Context, arg SearchExpensesParams) 
 			&i.OriginalCurrency,
 			&i.FxRate,
 			&i.FxAsOf,
+			&i.FxSource,
 		); err != nil {
 			return nil, err
 		}
@@ -423,7 +435,7 @@ SET title        = COALESCE($2, title),
 WHERE id = $1
 RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
           expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
-          original_amount, original_currency, fx_rate, fx_as_of
+          original_amount, original_currency, fx_rate, fx_as_of, fx_source
 `
 
 type UpdateExpenseParams struct {
@@ -458,10 +470,11 @@ type UpdateExpenseRow struct {
 	OriginalCurrency pgtype.Text        `db:"original_currency" json:"original_currency"`
 	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
 	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
+	FxSource         pgtype.Text        `db:"fx_source" json:"fx_source"`
 }
 
-// NOTE: fx columns (original_amount, original_currency, fx_rate, fx_as_of)
-// are intentionally not editable via this query — change-amount or
+// NOTE: fx columns (original_amount, original_currency, fx_rate, fx_as_of,
+// fx_source) are intentionally not editable via this query — change-amount or
 // change-currency edits will leave the original snapshot pointing at the
 // old conversion. The simpler v1 behaviour is to require a delete+recreate
 // for foreign-currency expenses; a follow-up can plumb fx recomputation.
@@ -498,6 +511,7 @@ func (q *Queries) UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (U
 		&i.OriginalCurrency,
 		&i.FxRate,
 		&i.FxAsOf,
+		&i.FxSource,
 	)
 	return i, err
 }
@@ -509,11 +523,12 @@ SET amount            = $2,
     original_currency = $4,
     fx_rate           = $5,
     fx_as_of          = $6,
+    fx_source         = $7,
     updated_at        = NOW()
 WHERE id = $1
 RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
           expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
-          original_amount, original_currency, fx_rate, fx_as_of
+          original_amount, original_currency, fx_rate, fx_as_of, fx_source
 `
 
 type UpdateExpenseFxSnapshotParams struct {
@@ -523,6 +538,7 @@ type UpdateExpenseFxSnapshotParams struct {
 	OriginalCurrency pgtype.Text    `db:"original_currency" json:"original_currency"`
 	FxRate           pgtype.Numeric `db:"fx_rate" json:"fx_rate"`
 	FxAsOf           pgtype.Date    `db:"fx_as_of" json:"fx_as_of"`
+	FxSource         pgtype.Text    `db:"fx_source" json:"fx_source"`
 }
 
 type UpdateExpenseFxSnapshotRow struct {
@@ -545,6 +561,7 @@ type UpdateExpenseFxSnapshotRow struct {
 	OriginalCurrency pgtype.Text        `db:"original_currency" json:"original_currency"`
 	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
 	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
+	FxSource         pgtype.Text        `db:"fx_source" json:"fx_source"`
 }
 
 // Explicitly sets the FX snapshot columns and the canonical amount. The
@@ -560,6 +577,7 @@ func (q *Queries) UpdateExpenseFxSnapshot(ctx context.Context, arg UpdateExpense
 		arg.OriginalCurrency,
 		arg.FxRate,
 		arg.FxAsOf,
+		arg.FxSource,
 	)
 	var i UpdateExpenseFxSnapshotRow
 	err := row.Scan(
@@ -582,6 +600,7 @@ func (q *Queries) UpdateExpenseFxSnapshot(ctx context.Context, arg UpdateExpense
 		&i.OriginalCurrency,
 		&i.FxRate,
 		&i.FxAsOf,
+		&i.FxSource,
 	)
 	return i, err
 }

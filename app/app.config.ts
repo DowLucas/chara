@@ -24,6 +24,7 @@ const config: ExpoConfig = {
   },
   android: {
     adaptiveIcon: {
+      foregroundImage: './assets/adaptive-icon.png',
       backgroundColor: '#F0E5CC',
     },
     package: 'app.chara',

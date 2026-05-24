@@ -43,6 +43,18 @@ export { REFRESH_FLOOR_MS } from './aggregated-reads-internal';
 
 type Fetcher<T> = (serverUrl: string) => Promise<T>;
 
+// Module-level pub/sub so any component (e.g. the home pull-to-refresh)
+// can force every mounted aggregated-read hook to refetch immediately.
+// No floor, no AppState dance — explicit user intent.
+const refreshListeners = new Set<() => void>();
+
+/** Imperatively refresh every mounted aggregated-read hook. Used by the
+ *  home pull-to-refresh and any mutator that wants the next render to
+ *  reflect freshly-fetched server state without waiting for AppState. */
+export function refreshAggregatedReads(): void {
+  for (const l of refreshListeners) l();
+}
+
 /**
  * Shared implementation for all three aggregated-read hooks.
  *
@@ -183,6 +195,16 @@ function useAggregated<T>(
     return () => sub.remove();
   }, []);
 
+  // Imperative pull-to-refresh: subscribe to the module bus so external
+  // callers (HomeScreen's RefreshControl, mutators) can force a refetch.
+  useEffect(() => {
+    const listener = () => setRefreshTick((n) => n + 1);
+    refreshListeners.add(listener);
+    return () => {
+      refreshListeners.delete(listener);
+    };
+  }, []);
+
   // In-app navigation refresh: when the screen consuming this hook is
   // re-focused (e.g. after creating a group, joining via QR, settling),
   // force a refresh. No floor — the user explicitly came back, the data
@@ -225,5 +247,23 @@ export function useAggregatedActivity(limit = 50): AccountRead<ActivityEvent[]>[
     'activity',
     (serverUrl) => apiFor(serverUrl).listMyActivity(limit),
     false,
+  );
+}
+
+/**
+ * Per-account `/api/me/net?in=<currency>` fan-out. Each row carries the
+ * server's locked-in historical-FX aggregate in `homeCurrency`. The
+ * caller sums `net_minor` across rows for the cross-server total.
+ *
+ * Keyed on `homeCurrency` so switching home in You-tab refetches all
+ * accounts instead of showing stale per-server numbers.
+ */
+export function useAggregatedMyNet(
+  homeCurrency: string,
+): AccountRead<import('./api').MyNetResponse>[] {
+  return useAggregated<import('./api').MyNetResponse>(
+    `mynet:${homeCurrency}`,
+    (serverUrl) => apiFor(serverUrl).getMyNet(homeCurrency),
+    true,
   );
 }

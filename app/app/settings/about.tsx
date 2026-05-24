@@ -72,16 +72,17 @@ const styles = StyleSheet.create({
   content: { padding: spacing.s5, paddingBottom: spacing.s7 },
   eyebrow: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
+    marginBottom: 6,
   },
   appName: {
     fontFamily: fontDisplay,
-    fontSize: 44,
-    lineHeight: 48,
+    fontSize: fontSize.displayL,
+    lineHeight: 44,
     color: colors.graphite,
-    letterSpacing: -1.5,
+    letterSpacing: -1,
     marginTop: spacing.s2,
   },
   tagline: {
@@ -103,8 +104,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: spacing.s2,
   },
-  rowLabel: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead, letterSpacing: 0.3 },
-  rowValue: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.graphite },
+  rowLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite },
+  rowValue: { fontFamily: fontMono, fontSize: fontSize.bodyS, color: colors.lead, letterSpacing: 0.3 },
   body: {
     fontFamily: fontBody,
     fontSize: fontSize.bodyS,

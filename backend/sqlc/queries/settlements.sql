@@ -1,6 +1,9 @@
 -- name: CreateSettlement :one
-INSERT INTO settlements (id, group_id, from_member, to_member, amount, currency, note, method, created_by_id)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+INSERT INTO settlements (
+    id, group_id, from_member, to_member, amount, currency, note, method, created_by_id,
+    original_amount, original_currency, fx_rate, fx_as_of
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 RETURNING *;
 
 -- name: ListSettlementsByGroup :many

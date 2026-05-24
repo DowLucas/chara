@@ -72,6 +72,11 @@ export interface AccountsBlob {
   accounts: Account[];
   defaultServerUrl: string | null;
   lastUsedCreateServerUrl: string | null;
+  /** ISO 4217 currency the home-screen hero aggregates into. Optional —
+   *  when unset, the home aggregate falls back to the device-locale
+   *  currency (resolved in `useHomeCurrency()`). See
+   *  2026-05-24-home-currency-aggregation-design.md. */
+  homeCurrency?: string;
 }
 
 const EMPTY: AccountsBlob = {
@@ -229,6 +234,15 @@ export async function setDefault(serverUrl: string): Promise<void> {
 export async function setLastUsedCreate(serverUrl: string): Promise<void> {
   if (!accountFor(serverUrl)) return;
   await persist({ ...blob, lastUsedCreateServerUrl: serverUrl });
+}
+
+export async function setHomeCurrency(currency: string | null): Promise<void> {
+  if (currency != null) {
+    // ISO 4217 is 3 uppercase letters; reject anything that obviously isn't
+    // one so we never persist garbage that breaks downstream rate lookups.
+    if (!/^[A-Z]{3}$/.test(currency)) return;
+  }
+  await persist({ ...blob, homeCurrency: currency ?? undefined });
 }
 
 export async function markReauthRequired(serverUrl: string): Promise<void> {

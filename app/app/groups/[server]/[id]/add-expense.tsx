@@ -1,100 +1,49 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
   Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { showAlert } from '@/lib/app-alert';
 import { Feather } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
+
+import { showAlert } from '@/lib/app-alert';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
-import { Button } from '@/components/Button';
-import { Chip } from '@/components/Chip';
-import { Avatar } from '@/components/Avatar';
-import { AmountKeypad } from '@/components/AmountKeypad';
-import { useTranslation } from 'react-i18next';
 import {
   apiFor,
   authToken,
-  avatarImageSource,
   Expense,
   GroupDetail,
   GroupMember,
-  ScannedReceipt,
   ScannedReceiptItem,
 } from '@/lib/api';
-import { decimalToMinor } from '@/lib/i18n';
+import { decimalToMinor, currentLocale } from '@/lib/i18n';
 import { ReceiptScanner, ReceiptScanResult } from '@/components/ReceiptScanner';
-import { CurrencyPicker } from '@/components/CurrencyPicker';
-import {
-  FxConversionSection,
-  useFxConversion,
-} from '@/components/FxConversionSection';
 import { ExpenseSavedOverlay } from '@/components/ExpenseSavedOverlay';
 import { notifyGroupChanged } from '@/lib/group-refresh';
 import { ScanItemsAssign } from '@/components/ScanItemsAssign';
 import { useAuth } from '@/lib/auth';
-import { currentLocale } from '@/lib/i18n';
-import { initialsOf } from '@/lib/name';
-import { evalExpression, hasOperator } from '@/lib/evalExpression';
+import {
+  ExpenseWizard,
+  ExpenseWizardHandle,
+  ExpenseWizardSubmitPayload,
+} from '@/components/ExpenseWizard';
 import {
   colors,
-  fontDisplay,
-  fontBody,
-  fontBodyMedium,
   fontMono,
   fontMonoMedium,
   fontSize,
   spacing,
 } from '@/lib/theme';
 
-const SPLIT_METHODS = [
-  { id: 'equal', labelKey: 'addExpense.methodEqual' },
-  { id: 'exact', labelKey: 'addExpense.methodManual' },
-  { id: 'percentage', labelKey: 'addExpense.methodPercent' },
-] as const;
-
-type Step = 1 | 2;
-type SplitMethod = 'equal' | 'exact' | 'percentage';
-
-function toDateStr(d: Date): string {
-  return d.toISOString().split('T')[0];
-}
-
 function fmtMinor(n: number, currency: string): string {
   const abs = Math.abs(n);
   return `${(abs / 100).toLocaleString(currentLocale(), { minimumFractionDigits: 0 })} ${currency}`;
-}
-
-// Distribute an integer total across `count` buckets as evenly as possible.
-// Any remainder lands in the first `rem` buckets, so the sum always equals total.
-function distributeInt(total: number, count: number): number[] {
-  if (count <= 0) return [];
-  if (total <= 0) return new Array(count).fill(0);
-  const base = Math.floor(total / count);
-  const rem = total - base * count;
-  return Array.from({ length: count }, (_, i) => base + (i < rem ? 1 : 0));
-}
-
-// Render an exact-amount auto value (minor units) for the input placeholder.
-function fmtAutoMinor(minor: number): string {
-  return (Math.max(0, minor) / 100).toFixed(2);
-}
-
-// Render an auto basis-point value as a percentage string. Drops trailing zeros.
-function fmtAutoPct(bp: number): string {
-  const safe = Math.max(0, bp);
-  if (safe % 100 === 0) return String(safe / 100);
-  return (safe / 100).toFixed(2);
 }
 
 export default function AddExpenseScreen() {
@@ -108,6 +57,33 @@ export default function AddExpenseScreen() {
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [token, setToken] = useState<string | null>(null);
+  const [groupCount, setGroupCount] = useState<number>(1);
+
+  const [ocrAvailable, setOcrAvailable] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [savedSubtitle, setSavedSubtitle] = useState<string | null>(null);
+  const [existingExpenses, setExistingExpenses] = useState<Expense[]>([]);
+  const [pendingReceiptImage, setPendingReceiptImage] = useState<
+    { base64: string; mime_type: string } | null
+  >(null);
+  const [scanItemsState, setScanItemsState] = useState<{
+    items: ScannedReceiptItem[];
+    taxMinor: number;
+    tipMinor: number;
+    totalMinor: number;
+    currency: string;
+  } | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // Live snapshot of wizard values for duplicate detection.
+  const [liveValues, setLiveValues] = useState<{
+    title: string;
+    amount: string;
+    amountMinor: number;
+    currency: string;
+  }>({ title: '', amount: '', amountMinor: 0, currency: '' });
+
+  const wizardRef = useRef<ExpenseWizardHandle | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -118,70 +94,6 @@ export default function AddExpenseScreen() {
       cancelled = true;
     };
   }, []);
-  const [groupCount, setGroupCount] = useState<number>(1);
-  const [step, setStep] = useState<Step>(1);
-
-  // Step 1 state
-  const [amount, setAmount] = useState('');
-  const [title, setTitle] = useState('');
-  const [date, setDate] = useState<Date>(() => new Date());
-  // Currency override for the expense. Defaults to the group currency once
-  // the group loads. When this differs from the group currency the user is
-  // entering a foreign-currency expense and we show a live FX preview.
-  const [selectedCurrency, setSelectedCurrency] = useState<string>('');
-  const [pickerOpen, setPickerOpen] = useState(false);
-  // Android opens picker on tap; iOS shows inline picker permanently.
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
-  // Payer is always the current user (member-id resolved once group loads).
-  const [payerMemberId, setPayerMemberId] = useState<string>('');
-
-  // Step 2 state
-  const [method, setMethod] = useState<SplitMethod>('equal');
-  const [included, setIncluded] = useState<Record<string, boolean>>({});
-  const [exactByMember, setExactByMember] = useState<Record<string, string>>({});
-  const [pctByMember, setPctByMember] = useState<Record<string, string>>({});
-
-  const [saving, setSaving] = useState(false);
-
-  // OCR: gated by the server's /.well-known/chara-instance feature flag.
-  const [ocrAvailable, setOcrAvailable] = useState(false);
-  const [scannerOpen, setScannerOpen] = useState(false);
-  // Save-success overlay state — set after createExpense returns. Holds the
-  // subtitle ("Title · 200 SEK") for display; the user dismisses via the
-  // Continue button which routes back to the group page.
-  const [savedSubtitle, setSavedSubtitle] = useState<string | null>(null);
-  // Existing expenses for the group, used to spot accidental duplicates as
-  // the user types. Re-fetched only on mount — duplicate detection on a
-  // single open form doesn't need live updates.
-  const [existingExpenses, setExistingExpenses] = useState<Expense[]>([]);
-  // Captured receipt image bytes from the last scan, persisted in form
-  // state until expense save. Uploaded as an attachment in handleSubmit
-  // — at which point we know the expense id to link it to.
-  const [pendingReceiptImage, setPendingReceiptImage] = useState<
-    { base64: string; mime_type: string } | null
-  >(null);
-  // Itemized assign-to-people step. Populated by handleReceiptScanned when
-  // Gemini returned line items AND no FX conversion happened (items live in
-  // the receipt's currency — if we FX'd the headline total we'd also need
-  // to FX every item, out of scope for v1).
-  const [scanItemsState, setScanItemsState] = useState<{
-    items: ScannedReceiptItem[];
-    taxMinor: number;
-    tipMinor: number;
-    totalMinor: number;
-    currency: string;
-  } | null>(null);
-
-  // Math keypad target — null = closed.
-  type KeypadTarget = { kind: 'amount' };
-  const [keypadTarget, setKeypadTarget] = useState<KeypadTarget | null>(null);
-
-  const keypadValue = keypadTarget?.kind === 'amount' ? amount : '';
-  const setKeypadValue = (next: string) => {
-    if (!keypadTarget) return;
-    if (keypadTarget.kind === 'amount') setAmount(next);
-  };
 
   useEffect(() => {
     if (!id || !serverUrl) return;
@@ -190,17 +102,9 @@ export default function AddExpenseScreen() {
       .then((g) => {
         setGroup(g);
         setMembers(g.members);
-        const me = g.members.find((m) => m.user_id === user?.id);
-        if (me) setPayerMemberId(me.id);
-        const inc: Record<string, boolean> = {};
-        g.members.forEach((m) => (inc[m.id] = true));
-        setIncluded(inc);
-        // Default the expense currency to the group's. The user can still
-        // open the picker to override per-expense.
-        setSelectedCurrency(g.currency);
       })
       .catch(() => {});
-  }, [id, serverUrl, user?.id]);
+  }, [id, serverUrl]);
 
   useEffect(() => {
     if (!serverUrl) return;
@@ -226,37 +130,28 @@ export default function AddExpenseScreen() {
       .catch(() => setExistingExpenses([]));
   }, [id, serverUrl]);
 
+  const currentUserMemberId = useMemo(
+    () => members.find((m) => m.user_id === user?.id)?.id ?? '',
+    [members, user?.id],
+  );
+
   function handleReceiptScanned(result: ReceiptScanResult) {
     setScannerOpen(false);
     const { receipt, applied } = result;
     if (result.image) setPendingReceiptImage(result.image);
-    // The scanner already resolved which amount + currency the form should
-    // use:
-    //   • same currency  → applied = receipt total in receipt currency
-    //   • FX conversion  → applied = converted total in group currency
-    //   • FX failed      → applied = receipt total in receipt currency
-    //                       (the form's FX preview takes over)
-    if (applied.amount_minor > 0) {
-      setAmount((applied.amount_minor / 100).toFixed(2));
-    }
-    setSelectedCurrency(applied.currency);
-    // The AI's `title` is a natural-language "what was this for" string
-    // (combining merchant + items), which matches the form field's intent
-    // far better than the bare merchant name. Falls back to merchant on
-    // older backends or when the model omits it.
-    const inferredTitle = receipt.title || receipt.merchant;
-    if (inferredTitle) {
-      setTitle(inferredTitle);
-    }
-    if (receipt.date) {
-      const parsed = new Date(receipt.date + 'T00:00:00');
-      if (!Number.isNaN(parsed.getTime())) setDate(parsed);
-    }
 
-    // Open the itemized assign step when we have line items AND the form
-    // currency matches the receipt's (no FX conversion happened). Items
-    // are in the receipt's currency — converting them would need per-line
-    // FX which isn't in scope for v1.
+    wizardRef.current?.applyReceiptResult({
+      amount: applied.amount_minor > 0 ? (applied.amount_minor / 100).toFixed(2) : undefined,
+      currency: applied.currency,
+      title: receipt.title || receipt.merchant || undefined,
+      date: receipt.date
+        ? (() => {
+            const parsed = new Date(receipt.date + 'T00:00:00');
+            return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+          })()
+        : undefined,
+    });
+
     const items = receipt.items ?? [];
     if (items.length > 0 && applied.currency === receipt.currency) {
       setScanItemsState({
@@ -269,248 +164,56 @@ export default function AddExpenseScreen() {
     }
   }
 
-  // Apply itemized assignment results: flip the split to "exact" and seed
-  // per-member amounts. We then close the modal; the user can still review
-  // on step 2 before saving.
   function applyScanItemsAssignment(perMemberMinor: Record<string, number>) {
     setScanItemsState(null);
-    if (Object.keys(perMemberMinor).length === 0) {
-      // User chose to skip — leave the form on equal split.
-      return;
-    }
-    setMethod('exact');
-    // Include any member with a non-zero share; uncheck the rest so they
-    // don't appear as "0.00" rows in step 2.
-    const nextIncluded: Record<string, boolean> = {};
-    const nextExact: Record<string, string> = {};
-    for (const m of members) {
-      const minor = perMemberMinor[m.id] ?? 0;
-      nextIncluded[m.id] = minor > 0;
-      if (minor > 0) {
-        nextExact[m.id] = (minor / 100).toFixed(2);
-      }
-    }
-    setIncluded(nextIncluded);
-    setExactByMember(nextExact);
+    wizardRef.current?.applyScanItemsAssignment(perMemberMinor);
   }
 
-  const amountMinor = useMemo(() => {
-    const cleaned = amount.replace(',', '.');
-    const n = hasOperator(cleaned) ? evalExpression(cleaned) : parseFloat(cleaned);
-    if (n === null || !Number.isFinite(n) || n <= 0) return 0;
-    return Math.round(n * 100);
-  }, [amount]);
-
-  const groupCurrency = group?.currency ?? 'SEK';
-  const currency = selectedCurrency || groupCurrency;
-  const isForeignCurrency = currency !== groupCurrency;
-
-  // FX conversion. Mirrors the scan-receipt flow: fetch the rate, let the
-  // user override it, and submit the converted amount in the group's
-  // currency. Debounced because amountMinor changes on every keystroke.
-  const fxAsOf = toDateStr(date);
-  const { fx, rateInput, setRateInput, rateNumber, convertedMinor } =
-    useFxConversion({
-      from: currency,
-      to: groupCurrency,
-      amountMinor,
-      asOf: fxAsOf,
-      enabled: isForeignCurrency,
-      convertFx: api.convertFx,
-      debounceMs: 350,
-    });
-
-  // When the user enters in a foreign currency and FX is ready, step 2
-  // (split) operates in the group's currency at the converted total.
-  // Every split derivation below pivots off these "effective" values so
-  // the user picks amounts in the same currency that ultimately gets
-  // saved on the expense.
-  const fxApplied =
-    isForeignCurrency && fx?.kind === 'ready' && rateNumber !== null;
-  const effectiveAmountMinor = fxApplied ? convertedMinor : amountMinor;
-  const effectiveCurrency = fxApplied ? groupCurrency : currency;
-
-  const includedMembers = members.filter((m) => included[m.id]);
-  const equalShare =
-    method === 'equal' && includedMembers.length > 0
-      ? Math.round(effectiveAmountMinor / includedMembers.length)
-      : 0;
-
-  // Switching split method wipes any per-member entries so values from one
-  // mode (e.g. exact kronor) don't bleed into another (percentages).
-  // Also wipe when the effective split currency flips (foreign ↔ group on
-  // FX toggle) — exact amounts typed in one currency don't carry over.
-  useEffect(() => {
-    setExactByMember({});
-    setPctByMember({});
-  }, [method, effectiveCurrency]);
-
-  // A row is "locked" if the user has typed anything in it. Empty rows are
-  // "auto" and split the remainder evenly among themselves.
-  function lockedExactMinor(memberId: string): number | null {
-    const v = exactByMember[memberId];
-    if (v === undefined || v === '') return null;
-    const n = parseFloat(v.replace(',', '.'));
-    if (!Number.isFinite(n)) return 0;
-    return Math.round(n * 100);
-  }
-  function lockedPctBp(memberId: string): number | null {
-    const v = pctByMember[memberId];
-    if (v === undefined || v === '') return null;
-    const n = parseFloat(v.replace(',', '.'));
-    if (!Number.isFinite(n)) return 0;
-    return Math.round(n * 100);
-  }
-
-  // For exact mode: compute per-member auto-fill (in minor units) for any
-  // included row the user hasn't typed into.
-  const autoExactMinor = useMemo<Record<string, number>>(() => {
-    if (method !== 'exact') return {};
-    let lockedSum = 0;
-    const autoIds: string[] = [];
-    for (const m of includedMembers) {
-      const locked = lockedExactMinor(m.id);
-      if (locked === null) autoIds.push(m.id);
-      else lockedSum += locked;
-    }
-    const remaining = effectiveAmountMinor - lockedSum;
-    const shares = distributeInt(remaining, autoIds.length);
-    const out: Record<string, number> = {};
-    autoIds.forEach((id, i) => (out[id] = shares[i] ?? 0));
-    return out;
-  }, [method, includedMembers, exactByMember, effectiveAmountMinor]);
-
-  // For percentage mode: same idea, but the budget is 10000 basis points.
-  const autoPctBp = useMemo<Record<string, number>>(() => {
-    if (method !== 'percentage') return {};
-    let lockedSum = 0;
-    const autoIds: string[] = [];
-    for (const m of includedMembers) {
-      const locked = lockedPctBp(m.id);
-      if (locked === null) autoIds.push(m.id);
-      else lockedSum += locked;
-    }
-    const remaining = 10000 - lockedSum;
-    const shares = distributeInt(remaining, autoIds.length);
-    const out: Record<string, number> = {};
-    autoIds.forEach((id, i) => (out[id] = shares[i] ?? 0));
-    return out;
-  }, [method, includedMembers, pctByMember]);
-
-  // Resolve each member to a concrete amount in minor units, blending typed
-  // values with computed auto-fill. Used for reconciliation and submission.
-  function effectiveMinor(memberId: string): number {
-    if (method === 'exact') {
-      return lockedExactMinor(memberId) ?? autoExactMinor[memberId] ?? 0;
-    }
-    if (method === 'percentage') {
-      const bp = lockedPctBp(memberId) ?? autoPctBp[memberId] ?? 0;
-      return Math.round((effectiveAmountMinor * bp) / 10000);
-    }
-    return 0;
-  }
-
-  const totalSplitMinor = useMemo(() => {
-    // Equal-mode shares are reconciled by the backend's SplitEqual, which
-    // distributes the rounding remainder one minor unit at a time so the
-    // shares always sum back to the total. Multiplying the displayed
-    // per-member figure here would drift by up to N-1 cents and surface a
-    // bogus "0.03 off" line. By definition, equal mode is never off.
-    if (method === 'equal') return effectiveAmountMinor;
-    return includedMembers.reduce((s, m) => s + effectiveMinor(m.id), 0);
-  }, [method, equalShare, includedMembers, exactByMember, pctByMember, effectiveAmountMinor, autoExactMinor, autoPctBp]);
-
-  const offBy = totalSplitMinor - effectiveAmountMinor;
-
-  const canContinueStep1 = title.trim().length > 0 && amountMinor > 0;
-
-  // Subtle duplicate warning: an existing expense in this group shares the
-  // same title (case-insensitive, trimmed), amount (minor units), and
-  // currency. We only check against same-currency rows — cross-currency
-  // matches would need FX and would surface too many false positives.
-  // Soft-deleted rows are already filtered server-side in listExpenses.
-  const titleKey = title.trim().toLowerCase();
+  // Duplicate detection: title + amount + currency match against any existing
+  // expense in the group. Same-currency only — cross-currency would need FX
+  // and produces false positives.
   const duplicate = useMemo<Expense | null>(() => {
-    if (!titleKey || amountMinor <= 0) return null;
+    const titleKey = liveValues.title.trim().toLowerCase();
+    if (!titleKey || liveValues.amountMinor <= 0) return null;
     return (
       existingExpenses.find(
         (e) =>
           e.title.trim().toLowerCase() === titleKey &&
-          decimalToMinor(e.amount) === amountMinor &&
-          e.currency === currency,
+          decimalToMinor(e.amount) === liveValues.amountMinor &&
+          e.currency === liveValues.currency,
       ) ?? null
     );
-  }, [existingExpenses, titleKey, amountMinor, currency]);
+  }, [existingExpenses, liveValues]);
 
-  const canSubmit =
-    canContinueStep1 && !!payerMemberId && offBy === 0 && includedMembers.length > 0;
-
-  function effectiveDate(): string {
-    return toDateStr(date);
-  }
-
-  async function handleSubmit() {
-    if (!id || !canSubmit || !payerMemberId) return;
-
-    const MAX_AMOUNT_MINOR = 9_999_999_99;
-    if (amountMinor > MAX_AMOUNT_MINOR) {
-      showAlert({
-        title: t('addExpense.saveErrorTitle'),
-        message: `Amount too large. Maximum is ${fmtMinor(MAX_AMOUNT_MINOR, currency)}.`,
-      });
-      return;
-    }
-
+  async function handleSubmit(payload: ExpenseWizardSubmitPayload) {
+    if (!id) return;
     setSaving(true);
     try {
-      // Step 2 already operates in `effectiveCurrency` (group currency
-      // when FX is applied, otherwise the user's selected currency), so
-      // submitting those values directly is enough — no further rate
-      // scaling. Same-currency / FX-loading / FX-error all fall through
-      // to the original amount + currency and let the backend handle it.
-      const amountDecimal = (effectiveAmountMinor / 100).toFixed(2);
       const base = {
-        title: title.trim(),
-        amount: amountDecimal,
-        currency: effectiveCurrency,
-        paid_by_id: payerMemberId,
-        expense_date: effectiveDate(),
-        split_method: method,
-      } as const;
+        title: payload.title,
+        amount: payload.amount,
+        currency: payload.currency,
+        paid_by_id: payload.paid_by_id,
+        expense_date: payload.expense_date,
+        split_method: payload.split_method,
+        ...(payload.fx ?? {}),
+      };
 
       let created;
-      if (method === 'equal') {
+      if (payload.split_method === 'equal') {
         created = await api.createExpense(id, {
           ...base,
-          participants: includedMembers.map((m) => m.id),
-        });
-      } else if (method === 'exact') {
-        created = await api.createExpense(id, {
-          ...base,
-          splits: includedMembers.map((m) => ({
-            member_id: m.id,
-            share: (effectiveMinor(m.id) / 100).toFixed(2),
-          })),
+          participants: payload.participants ?? [],
         });
       } else {
         created = await api.createExpense(id, {
           ...base,
-          splits: includedMembers.map((m) => ({
-            member_id: m.id,
-            basis_points: lockedPctBp(m.id) ?? autoPctBp[m.id] ?? 0,
-          })),
+          splits: payload.splits ?? [],
         });
       }
 
-      // Tell the group-detail screen to refetch. Fire before any
-      // navigation / overlay so subscribers landing back on the group
-      // page (via overlay-continue or deep-link return) get fresh data.
       notifyGroupChanged(serverUrl, id);
 
-      // If a receipt was scanned, persist the image now that we have an
-      // expense id to link it to. A failed upload is non-fatal — the
-      // expense itself is already saved and the user can re-attach later
-      // (a future feature). We just log and move on.
       if (pendingReceiptImage && created?.id) {
         try {
           await api.uploadExpenseAttachment(
@@ -524,177 +227,81 @@ export default function AddExpenseScreen() {
         }
       }
 
-      // Show the success overlay instead of immediate router.back(). The
-      // Continue button dismisses back to the group page; we keep the
-      // form mounted underneath so a quick add->add->add flow could be
-      // wired in later without re-mounting the screen.
-      setSavedSubtitle(`${base.title} · ${fmtMinor(effectiveAmountMinor, effectiveCurrency)}`);
+      const amountMinor = Math.round(parseFloat(payload.amount) * 100);
+      setSavedSubtitle(`${payload.title} · ${fmtMinor(amountMinor, payload.currency)}`);
     } catch (e: any) {
-      showAlert({ title: t('addExpense.saveErrorTitle'), message: e?.message || t('addExpense.saveErrorBody') });
+      showAlert({
+        title: t('addExpense.saveErrorTitle'),
+        message: e?.message || t('addExpense.saveErrorBody'),
+      });
     } finally {
       setSaving(false);
     }
   }
 
-  function memberLabel(m: GroupMember): string {
-    return m.user_id === user?.id ? t('addExpense.you') : m.name;
-  }
+  const topSlot = ocrAvailable ? (
+    <TouchableOpacity
+      style={styles.scanRow}
+      onPress={() => setScannerOpen(true)}
+      accessibilityRole="button"
+      accessibilityLabel={t('addExpense.scanReceipt')}
+    >
+      <Feather name="camera" size={18} color={colors.graphite} />
+      <Text style={styles.scanLabel}>{t('addExpense.scanReceipt')}</Text>
+    </TouchableOpacity>
+  ) : null;
 
-  const recapMeta = fmtMinor(amountMinor, currency);
+  const preCtaSlot = duplicate ? (
+    <View style={[styles.dupWrap, { paddingBottom: 4 }]}>
+      <View style={styles.dupBanner}>
+        <Feather name="alert-circle" size={14} color={colors.lead} />
+        <Text style={styles.dupText} numberOfLines={2}>
+          {t('addExpense.dupWarning', { title: duplicate.title })}
+        </Text>
+        <TouchableOpacity
+          onPress={() =>
+            router.push({
+              pathname: '/expenses/[server]/[id]',
+              params: {
+                server: encodeURIComponent(serverUrl),
+                id: duplicate.id,
+                groupId: id,
+              },
+            })
+          }
+          hitSlop={6}
+          accessibilityRole="link"
+        >
+          <Text style={styles.dupLink}>{t('addExpense.dupView')}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  ) : null;
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <TopBar
-          title={group?.name ? t('addExpense.titleInGroup', { group: group.name }) : t('addExpense.title')}
-          left={
-            <IconButton
-              icon={step === 1 ? 'x' : 'arrow-left'}
-              onPress={() => (step === 1 ? router.back() : setStep((step - 1) as Step))}
-            />
-          }
-        />
-
-        <Stepper current={step} t={t} />
-
-        <ScrollView
-          style={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingBottom: 100 }}
-        >
-          {step === 1 && (
-            <Step1
-              t={t}
-              amount={amount}
-              setAmount={setAmount}
-              currency={currency}
-              onOpenCurrencyPicker={() => setPickerOpen(true)}
-              title={title}
-              setTitle={setTitle}
-              date={date}
-              setDate={setDate}
-              onOpenDatePicker={() => setShowDatePicker(true)}
-              groupName={group?.name ?? '—'}
-              showChangeGroup={groupCount > 1}
-              onOpenKeypad={() => setKeypadTarget({ kind: 'amount' })}
-              ocrAvailable={ocrAvailable}
-              onScanReceipt={() => setScannerOpen(true)}
-              isForeignCurrency={isForeignCurrency}
-              groupCurrency={groupCurrency}
-              amountMinor={amountMinor}
-              fx={fx}
-              rateInput={rateInput}
-              setRateInput={setRateInput}
-              rateNumber={rateNumber}
-            />
-          )}
-
-          {step === 2 && (
-            <Step2
-              t={t}
-              currency={effectiveCurrency}
-              amountMinor={effectiveAmountMinor}
-              recapMeta={recapMeta}
-              groupName={group?.name ?? '—'}
-              members={members}
-              memberLabel={memberLabel}
-              method={method}
-              setMethod={setMethod}
-              included={included}
-              setIncluded={setIncluded}
-              equalShare={equalShare}
-              exactByMember={exactByMember}
-              setExactByMember={setExactByMember}
-              pctByMember={pctByMember}
-              setPctByMember={setPctByMember}
-              autoExactMinor={autoExactMinor}
-              autoPctBp={autoPctBp}
-              totalSplitMinor={totalSplitMinor}
-              offBy={offBy}
-              authToken={token}
-            />
-          )}
-        </ScrollView>
-
-        {duplicate && (
-          <View style={[styles.dupWrap, { paddingBottom: 4 }]}>
-            <View style={styles.dupBanner}>
-              <Feather name="alert-circle" size={14} color={colors.lead} />
-              <Text style={styles.dupText} numberOfLines={2}>
-                {t('addExpense.dupWarning', { title: duplicate.title })}
-              </Text>
-              <TouchableOpacity
-                onPress={() =>
-                  router.push({
-                    pathname: '/expenses/[server]/[id]',
-                    params: { server: encodeURIComponent(serverUrl), id: duplicate.id, groupId: id },
-                  })
-                }
-                hitSlop={6}
-                accessibilityRole="link"
-              >
-                <Text style={styles.dupLink}>{t('addExpense.dupView')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-        <View style={[styles.ctaBar, { paddingBottom: insets.bottom + 8 }]}>
-          {step > 1 && (
-            <Button kind="secondary" onPress={() => setStep((step - 1) as Step)} style={{ flex: 1 }}>
-              {t('addExpense.back')}
-            </Button>
-          )}
-          {step < 2 ? (
-            <Button
-              kind="primary"
-              onPress={() => setStep((step + 1) as Step)}
-              disabled={!canContinueStep1}
-              style={{ flex: 1 }}
-            >
-              {t('addExpense.continue')}
-            </Button>
-          ) : (
-            <Button
-              kind="primary"
-              onPress={handleSubmit}
-              disabled={!canSubmit || saving}
-              style={{ flex: 1 }}
-            >
-              {saving ? t('addExpense.saving') : t('addExpense.submit')}
-            </Button>
-          )}
-        </View>
-      </View>
-
-      <AmountKeypad
-        visible={keypadTarget !== null}
-        value={keypadValue}
-        currency={currency}
-        onChange={setKeypadValue}
-        onSubmit={() => setKeypadTarget(null)}
-        onClose={() => setKeypadTarget(null)}
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <ExpenseWizard
+        ref={wizardRef}
+        mode="create"
+        topBarTitle={
+          group?.name
+            ? t('addExpense.titleInGroup', { group: group.name })
+            : t('addExpense.title')
+        }
+        onCancel={() => router.back()}
+        groupName={group?.name ?? '—'}
+        groupCurrency={group?.currency ?? 'SEK'}
+        members={members}
+        currentUserMemberId={currentUserMemberId}
+        convertFx={api.convertFx}
+        authToken={token}
+        submitting={saving}
+        showChangeGroup={groupCount > 1}
+        onSubmit={handleSubmit}
+        onValuesChange={setLiveValues}
+        topSlot={topSlot}
+        preCtaSlot={preCtaSlot}
       />
-
-      {showDatePicker && Platform.OS === 'android' && (
-        <DateTimePicker
-          value={date}
-          mode="date"
-          maximumDate={new Date()}
-          minimumDate={(() => {
-            const d = new Date();
-            d.setFullYear(d.getFullYear() - 5);
-            return d;
-          })()}
-          display="default"
-          onChange={(event, selected) => {
-            setShowDatePicker(false);
-            if (event.type === 'set' && selected) setDate(selected);
-          }}
-        />
-      )}
 
       <Modal
         visible={scannerOpen}
@@ -703,22 +310,12 @@ export default function AddExpenseScreen() {
         statusBarTranslucent
       >
         <ReceiptScanner
-          groupCurrency={groupCurrency}
+          groupCurrency={group?.currency ?? 'SEK'}
           groupLanguage={group?.language}
           onScanned={handleReceiptScanned}
           onCancel={() => setScannerOpen(false)}
         />
       </Modal>
-
-      <CurrencyPicker
-        visible={pickerOpen}
-        selected={currency}
-        onClose={() => setPickerOpen(false)}
-        onSelect={(code) => {
-          setSelectedCurrency(code);
-          setPickerOpen(false);
-        }}
-      />
 
       <ScanItemsAssign
         visible={scanItemsState !== null}
@@ -726,9 +323,9 @@ export default function AddExpenseScreen() {
         taxMinor={scanItemsState?.taxMinor ?? 0}
         tipMinor={scanItemsState?.tipMinor ?? 0}
         totalMinor={scanItemsState?.totalMinor ?? 0}
-        currency={scanItemsState?.currency ?? currency}
+        currency={scanItemsState?.currency ?? group?.currency ?? 'SEK'}
         members={members}
-        currentMemberId={payerMemberId}
+        currentMemberId={currentUserMemberId}
         authToken={token}
         onCancel={() => setScanItemsState(null)}
         onApply={applyScanItemsAssignment}
@@ -742,550 +339,12 @@ export default function AddExpenseScreen() {
           router.back();
         }}
       />
-    </KeyboardAvoidingView>
-  );
-}
-
-// ─── Stepper ──────────────────────────────────────────────────────────────────
-function Stepper({ current, t }: { current: Step; t: (k: string) => string }) {
-  const labels = [t('addExpense.stepWhat'), t('addExpense.stepSplit')];
-  return (
-    <View style={styles.stepperWrap}>
-      {labels.map((label, i) => {
-        const n = (i + 1) as Step;
-        const done = n < current;
-        const active = n === current;
-        return (
-          <React.Fragment key={i}>
-            <View style={styles.stepItem}>
-              <View
-                style={[
-                  styles.stepCircle,
-                  (done || active) && styles.stepCircleActive,
-                ]}
-              >
-                <Text style={[styles.stepNum, (done || active) && styles.stepNumActive]}>
-                  {done ? '✓' : n}
-                </Text>
-              </View>
-              <Text style={[styles.stepLabel, active && styles.stepLabelActive]}>{label}</Text>
-            </View>
-            {n < 2 && <View style={[styles.stepLine, done && styles.stepLineDone]} />}
-          </React.Fragment>
-        );
-      })}
     </View>
   );
 }
 
-// ─── Step 1 ───────────────────────────────────────────────────────────────────
-interface Step1Props {
-  t: (k: string, opts?: any) => string;
-  amount: string;
-  setAmount: (v: string) => void;
-  currency: string;
-  onOpenCurrencyPicker: () => void;
-  title: string;
-  setTitle: (v: string) => void;
-  date: Date;
-  setDate: (d: Date) => void;
-  onOpenDatePicker: () => void;
-  groupName: string;
-  showChangeGroup: boolean;
-  onOpenKeypad: () => void;
-  ocrAvailable: boolean;
-  onScanReceipt: () => void;
-  isForeignCurrency: boolean;
-  groupCurrency: string;
-  amountMinor: number;
-  fx: ReturnType<typeof useFxConversion>['fx'];
-  rateInput: string;
-  setRateInput: (v: string) => void;
-  rateNumber: number | null;
-}
-function Step1({
-  t,
-  amount,
-  setAmount,
-  currency,
-  onOpenCurrencyPicker,
-  title,
-  setTitle,
-  date,
-  setDate,
-  onOpenDatePicker,
-  groupName,
-  showChangeGroup,
-  onOpenKeypad,
-  ocrAvailable,
-  onScanReceipt,
-  isForeignCurrency,
-  groupCurrency,
-  amountMinor,
-  fx,
-  rateInput,
-  setRateInput,
-  rateNumber,
-}: Step1Props) {
-  return (
-    <View>
-      {ocrAvailable && (
-        <TouchableOpacity
-          style={styles.scanRow}
-          onPress={onScanReceipt}
-          accessibilityRole="button"
-          accessibilityLabel={t('addExpense.scanReceipt')}
-        >
-          <Feather name="camera" size={18} color={colors.graphite} />
-          <Text style={styles.scanLabel}>{t('addExpense.scanReceipt')}</Text>
-        </TouchableOpacity>
-      )}
-
-      <View style={styles.hero}>
-        <Text style={styles.eyebrow}>{t('addExpense.amount')}</Text>
-        <View style={styles.amountRow}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={onOpenKeypad}
-            style={styles.amountTouchable}
-          >
-            <Text
-              style={[
-                styles.amountInput,
-                !amount && { color: colors.lead },
-              ]}
-            >
-              {amount || '0'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={onOpenCurrencyPicker}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={t('addExpense.changeCurrency')}
-            style={styles.currencyTouchable}
-          >
-            <Text style={styles.currency}>{currency.toLowerCase()}</Text>
-            <Feather name="chevron-down" size={16} color={colors.lead} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.rule} />
-        {isForeignCurrency && amountMinor > 0 && (
-          <FxConversionSection
-            from={currency}
-            to={groupCurrency}
-            amountMinor={amountMinor}
-            fx={fx}
-            rateInput={rateInput}
-            setRateInput={setRateInput}
-            rateNumber={rateNumber}
-          />
-        )}
-      </View>
-
-      <View style={styles.fieldWrap}>
-        <Text style={styles.fieldLabel}>{t('addExpense.titleLabel')}</Text>
-        <TextInput
-          value={title}
-          onChangeText={setTitle}
-          placeholder={t('addExpense.titlePlaceholder')}
-          placeholderTextColor={colors.lead}
-          style={styles.titleInput}
-          maxLength={120}
-        />
-      </View>
-
-      <View style={styles.fieldWrap}>
-        <Text style={styles.fieldLabel}>{t('addExpense.whenLabel')}</Text>
-        <DateInput date={date} setDate={setDate} onOpenPicker={onOpenDatePicker} />
-      </View>
-
-      <View style={[styles.fieldWrap, { borderBottomWidth: 0 }]}>
-        <Text style={styles.fieldLabel}>{t('addExpense.groupLabel')}</Text>
-        <View style={styles.groupRow}>
-          <Text style={styles.groupName}>{groupName}</Text>
-          {showChangeGroup && (
-            <Text style={styles.changeLink}>{t('addExpense.change')} →</Text>
-          )}
-        </View>
-      </View>
-    </View>
-  );
-}
-
-// ─── Step 2 ───────────────────────────────────────────────────────────────────
-interface Step2Props {
-  t: (k: string, opts?: any) => string;
-  currency: string;
-  amountMinor: number;
-  recapMeta: string;
-  groupName: string;
-  members: GroupMember[];
-  memberLabel: (m: GroupMember) => string;
-  method: SplitMethod;
-  setMethod: (v: SplitMethod) => void;
-  included: Record<string, boolean>;
-  setIncluded: (v: Record<string, boolean>) => void;
-  equalShare: number;
-  exactByMember: Record<string, string>;
-  setExactByMember: (v: Record<string, string>) => void;
-  pctByMember: Record<string, string>;
-  setPctByMember: (v: Record<string, string>) => void;
-  autoExactMinor: Record<string, number>;
-  autoPctBp: Record<string, number>;
-  totalSplitMinor: number;
-  offBy: number;
-  authToken: string | null;
-}
-function Step2({
-  t,
-  currency,
-  amountMinor,
-  recapMeta,
-  groupName,
-  members,
-  memberLabel,
-  method,
-  setMethod,
-  included,
-  setIncluded,
-  equalShare,
-  exactByMember,
-  setExactByMember,
-  pctByMember,
-  setPctByMember,
-  autoExactMinor,
-  autoPctBp,
-  totalSplitMinor,
-  offBy,
-  authToken: token,
-}: Step2Props) {
-  const includedCount = members.filter((m) => included[m.id]).length;
-  const methodHint = method === 'equal' ? t('addExpense.nWays', { count: includedCount }) : undefined;
-
-  return (
-    <View>
-      <Recap
-        eyebrow={recapMeta}
-        line={groupName}
-        amount={fmtMinor(amountMinor, currency)}
-      />
-
-      <SectionLabel>{t('addExpense.splitMethodLabel')}</SectionLabel>
-      <View style={styles.segmentWrap}>
-        {SPLIT_METHODS.map((m, i) => (
-          <SegmentButton
-            key={m.id}
-            label={t(m.labelKey)}
-            active={method === m.id}
-            onPress={() => setMethod(m.id as SplitMethod)}
-            first={i === 0}
-            last={i === SPLIT_METHODS.length - 1}
-          />
-        ))}
-      </View>
-
-      <SectionLabel hint={methodHint}>{t('addExpense.between')}</SectionLabel>
-      {(method === 'exact' || method === 'percentage') && (
-        <Text style={styles.autoFillHint}>{t('addExpense.autoFillHint')}</Text>
-      )}
-      <View style={{ paddingHorizontal: spacing.s5 }}>
-        {members.map((m) => {
-          const inc = included[m.id];
-          return (
-            <View key={m.id} style={styles.payerRow}>
-              <TouchableOpacity
-                onPress={() => setIncluded({ ...included, [m.id]: !inc })}
-                style={styles.payerLeft}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.checkbox, inc && styles.checkboxOn]}>
-                  {inc && <Text style={styles.checkmark}>✓</Text>}
-                </View>
-                <Avatar initials={initialsOf(m.name)} size="sm" source={avatarImageSource(m, token)} />
-                <Text style={[styles.payerName, !inc && { color: colors.lead }]}>
-                  {memberLabel(m)}
-                </Text>
-              </TouchableOpacity>
-              {inc && method === 'equal' && (
-                <Text style={styles.equalShare}>{fmtMinor(equalShare, currency)}</Text>
-              )}
-              {inc && method === 'exact' && (
-                <AutoSplitField
-                  value={exactByMember[m.id] ?? ''}
-                  onChange={(v) => setExactByMember({ ...exactByMember, [m.id]: v })}
-                  onClear={() => {
-                    const next = { ...exactByMember };
-                    delete next[m.id];
-                    setExactByMember(next);
-                  }}
-                  autoPlaceholder={fmtAutoMinor(autoExactMinor[m.id] ?? 0)}
-                  unit={currency.toLowerCase()}
-                />
-              )}
-              {inc && method === 'percentage' && (
-                <AutoSplitField
-                  value={pctByMember[m.id] ?? ''}
-                  onChange={(v) => setPctByMember({ ...pctByMember, [m.id]: v })}
-                  onClear={() => {
-                    const next = { ...pctByMember };
-                    delete next[m.id];
-                    setPctByMember(next);
-                  }}
-                  autoPlaceholder={fmtAutoPct(autoPctBp[m.id] ?? 0)}
-                  unit="%"
-                  narrow
-                />
-              )}
-            </View>
-          );
-        })}
-      </View>
-
-      <View style={styles.reconcileWrap}>
-        <View style={styles.reconcileCard}>
-          <View style={styles.reconcileRow}>
-            <Text style={styles.reconcileLabel}>{t('addExpense.totalSplit')}</Text>
-            <Text style={styles.reconcileValue}>{fmtMinor(totalSplitMinor, currency)}</Text>
-          </View>
-          <View style={styles.reconcileRow}>
-            <Text style={styles.reconcileLabel}>{t('addExpense.matchesPaid')}</Text>
-            <Text
-              style={[
-                styles.reconcileValue,
-                { color: offBy === 0 ? colors.moss : colors.brick },
-              ]}
-            >
-              {offBy === 0
-                ? ''
-                : `${fmtMinor(Math.abs(offBy), currency)} ${offBy > 0 ? t('addExpense.leftToAssign') : t('addExpense.overBy')}`}
-            </Text>
-          </View>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-// ─── Shared subcomponents ─────────────────────────────────────────────────────
-function SectionLabel({ children, hint }: { children: React.ReactNode; hint?: string }) {
-  return (
-    <View style={styles.sectionLabelWrap}>
-      <Text style={styles.sectionLabel}>{children}</Text>
-      {hint && <Text style={styles.sectionLabel}>{hint}</Text>}
-    </View>
-  );
-}
-
-function SegmentButton({
-  label,
-  active,
-  onPress,
-  first,
-  last,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-  first?: boolean;
-  last?: boolean;
-}) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.7}
-      style={[
-        styles.segmentBtn,
-        active && styles.segmentBtnActive,
-        first && styles.segmentBtnFirst,
-        last && styles.segmentBtnLast,
-      ]}
-    >
-      <Text style={[styles.segmentBtnLabel, active && styles.segmentBtnLabelActive]}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
-// Field that shows the auto-split suggestion as a placeholder when empty, and
-// becomes "locked" (with a clear ✕) as soon as the user types anything.
-function AutoSplitField({
-  value,
-  onChange,
-  onClear,
-  autoPlaceholder,
-  unit,
-  narrow,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  onClear: () => void;
-  autoPlaceholder: string;
-  unit: string;
-  narrow?: boolean;
-}) {
-  const locked = value !== '';
-  return (
-    <View style={styles.amountField}>
-      <TextInput
-        value={value}
-        onChangeText={onChange}
-        keyboardType="decimal-pad"
-        placeholder={autoPlaceholder}
-        placeholderTextColor={colors.lead}
-        style={[
-          styles.amountFieldInput,
-          narrow && { width: 50 },
-          !locked && styles.amountFieldInputAuto,
-        ]}
-      />
-      <Text style={styles.amountFieldUnit}>{unit}</Text>
-      {locked ? (
-        <TouchableOpacity onPress={onClear} hitSlop={10} style={styles.clearBtn}>
-          <Text style={styles.clearBtnLabel}>✕</Text>
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.autoBadge}>
-          <Text style={styles.autoBadgeLabel}>auto</Text>
-        </View>
-      )}
-    </View>
-  );
-}
-
-function Recap({ eyebrow, line, amount }: { eyebrow: string; line: string; amount: string }) {
-  return (
-    <View style={styles.recapWrap}>
-      <View style={styles.recapCard}>
-        <View style={{ flex: 1, marginRight: 12 }}>
-          <Text style={styles.recapEyebrow} numberOfLines={1}>
-            {eyebrow}
-          </Text>
-          <Text style={styles.recapLine} numberOfLines={1}>
-            {line}
-          </Text>
-        </View>
-        <Text style={styles.recapAmount}>{amount}</Text>
-      </View>
-    </View>
-  );
-}
-
-function DateInput({
-  date,
-  setDate,
-  onOpenPicker,
-}: {
-  date: Date;
-  setDate: (d: Date) => void;
-  onOpenPicker: () => void;
-}) {
-  const formatted = date.toLocaleDateString(currentLocale(), {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-
-  if (Platform.OS === 'ios') {
-    return (
-      <View style={styles.dateInputIos}>
-        <DateTimePicker
-          value={date}
-          mode="date"
-          maximumDate={new Date()}
-          minimumDate={(() => {
-            const d = new Date();
-            d.setFullYear(d.getFullYear() - 5);
-            return d;
-          })()}
-          display="compact"
-          themeVariant="light"
-          accentColor={colors.vermillion}
-          onChange={(_, selected) => {
-            if (selected) setDate(selected);
-          }}
-        />
-      </View>
-    );
-  }
-
-  return (
-    <TouchableOpacity activeOpacity={0.7} onPress={onOpenPicker} style={styles.dateInputAndroid}>
-      <Text style={styles.dateInputValue}>{formatted}</Text>
-      <Text style={styles.dateInputCaret}>▾</Text>
-    </TouchableOpacity>
-  );
-}
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper },
-  scroll: { flex: 1 },
-
-  stepBadge: { paddingHorizontal: 8 },
-  stepBadgeText: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
-    letterSpacing: 0.4,
-  },
-
-  stepperWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.s5,
-    paddingTop: spacing.s4,
-    paddingBottom: spacing.s3,
-    gap: 8,
-  },
-  stepItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  stepCircle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 1,
-    borderColor: colors.ruleSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-  },
-  stepCircleActive: { backgroundColor: colors.graphite, borderColor: colors.graphite },
-  stepNum: { fontFamily: fontMonoMedium, fontSize: 10, color: colors.lead },
-  stepNumActive: { color: colors.paper },
-  stepLabel: { fontFamily: fontMono, fontSize: 11, color: colors.lead, letterSpacing: 0.4 },
-  stepLabelActive: { color: colors.graphite, fontFamily: fontMonoMedium },
-  stepLine: { flex: 1, height: 1, backgroundColor: colors.ruleSoft },
-  stepLineDone: { backgroundColor: colors.graphite },
-
-  hero: { padding: spacing.s5, paddingTop: 14, paddingBottom: spacing.s4 },
-  eyebrow: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
-    letterSpacing: 0.3,
-    marginBottom: 6,
-  },
-  amountRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
-  amountTouchable: { flex: 1 },
-  amountInput: {
-    fontFamily: fontMono,
-    fontSize: 56,
-    letterSpacing: -1.5,
-    color: colors.graphite,
-    padding: 0,
-    fontVariant: ['tabular-nums'],
-  },
-  currencyTouchable: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 4,
-  },
-  currency: { fontFamily: fontMono, fontSize: 24, color: colors.lead },
-  rule: { height: 1.5, backgroundColor: colors.graphite, marginTop: 12 },
-
   scanRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1305,207 +364,6 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     letterSpacing: 0.3,
   },
-
-  fieldWrap: {
-    paddingHorizontal: spacing.s5,
-    paddingVertical: 14,
-    borderBottomWidth: 0.5,
-    borderBottomColor: colors.ruleSoft,
-  },
-  fieldLabel: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
-    letterSpacing: 0.3,
-    marginBottom: 8,
-  },
-  titleInput: {
-    fontFamily: fontBody,
-    fontSize: fontSize.bodyL,
-    color: colors.graphite,
-    padding: 0,
-  },
-  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  groupRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  groupName: { fontFamily: fontBody, fontSize: fontSize.bodyL, color: colors.graphite },
-  changeLink: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.vermillion },
-
-  sectionLabelWrap: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-    paddingHorizontal: spacing.s5,
-    marginBottom: 6,
-    marginTop: spacing.s3,
-  },
-  sectionLabel: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
-
-  segmentWrap: { flexDirection: 'row', paddingHorizontal: spacing.s5, marginBottom: spacing.s3 },
-  segmentBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.graphite,
-    borderLeftWidth: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  segmentBtnFirst: { borderLeftWidth: 1, borderTopLeftRadius: 6, borderBottomLeftRadius: 6 },
-  segmentBtnLast: { borderTopRightRadius: 6, borderBottomRightRadius: 6 },
-  segmentBtnActive: { backgroundColor: colors.graphite },
-  segmentBtnLabel: { fontFamily: fontBodyMedium, fontSize: fontSize.bodyS, color: colors.graphite },
-  segmentBtnLabelActive: { color: colors.paper },
-
-  recapWrap: { paddingHorizontal: spacing.s5, paddingTop: 10, paddingBottom: spacing.s4 },
-  recapCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    backgroundColor: colors.bone,
-    borderWidth: 0.5,
-    borderColor: colors.ruleSoft,
-    borderRadius: 8,
-  },
-  recapEyebrow: {
-    fontFamily: fontMono,
-    fontSize: 10,
-    color: colors.lead,
-    letterSpacing: 0.4,
-    marginBottom: 2,
-  },
-  recapLine: { fontFamily: fontBody, fontSize: fontSize.bodyS, color: colors.graphite },
-  recapAmount: {
-    fontFamily: fontMonoMedium,
-    fontSize: 22,
-    color: colors.graphite,
-    fontVariant: ['tabular-nums'],
-  },
-
-  payerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 0.5,
-    borderBottomColor: colors.ruleSoft,
-  },
-  payerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  payerName: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite, flexShrink: 1 },
-
-  radio: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 1.5,
-    borderColor: colors.ruleSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioActive: { borderColor: colors.vermillion },
-  radioDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.vermillion },
-
-  checkbox: {
-    width: 18,
-    height: 18,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: colors.ruleSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-  },
-  checkboxOn: { backgroundColor: colors.graphite, borderColor: colors.graphite },
-  checkmark: { color: colors.paper, fontSize: 11, lineHeight: 12, fontFamily: fontMonoMedium },
-
-  equalShare: {
-    fontFamily: fontMonoMedium,
-    fontSize: fontSize.body,
-    color: colors.graphite,
-    fontVariant: ['tabular-nums'],
-  },
-
-  amountField: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
-  amountFieldInput: {
-    fontFamily: fontMonoMedium,
-    fontSize: 18,
-    color: colors.graphite,
-    width: 70,
-    textAlign: 'right',
-    padding: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.ruleSoft,
-    fontVariant: ['tabular-nums'],
-  },
-  amountFieldUnit: { fontFamily: fontMono, fontSize: 11, color: colors.lead },
-  amountFieldInputAuto: { fontStyle: 'italic', color: colors.lead },
-  clearBtn: {
-    marginLeft: 6,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.bone,
-  },
-  clearBtnLabel: { fontFamily: fontMono, fontSize: 10, color: colors.lead, lineHeight: 11 },
-  autoBadge: {
-    marginLeft: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    backgroundColor: colors.bone,
-  },
-  autoBadgeLabel: {
-    fontFamily: fontMono,
-    fontSize: 9,
-    letterSpacing: 0.5,
-    color: colors.lead,
-    textTransform: 'uppercase',
-  },
-  autoFillHint: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
-    paddingHorizontal: spacing.s5,
-    marginBottom: 4,
-  },
-
-  reconcileWrap: { paddingHorizontal: spacing.s5, paddingTop: spacing.s4 },
-  reconcileCard: {
-    padding: 12,
-    backgroundColor: colors.bone,
-    borderWidth: 0.5,
-    borderColor: colors.ruleSoft,
-    borderRadius: 6,
-    gap: 4,
-  },
-  reconcileRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  reconcileLabel: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
-  reconcileValue: {
-    fontFamily: fontMono,
-    fontSize: fontSize.bodyS,
-    color: colors.graphite,
-    fontVariant: ['tabular-nums'],
-  },
-
-  ctaBar: {
-    flexDirection: 'row',
-    gap: spacing.s2,
-    paddingHorizontal: spacing.s5,
-    paddingTop: spacing.s3,
-    borderTopWidth: 1.5,
-    borderTopColor: colors.graphite,
-    backgroundColor: colors.paper,
-  },
-
-  // Subtle duplicate warning surface — bone fill, no border, lead-grey
-  // text so it reads as an info hint rather than an error.
   dupWrap: {
     paddingHorizontal: spacing.s5,
     paddingTop: spacing.s3,
@@ -1533,28 +391,5 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     letterSpacing: 0.3,
     textDecorationLine: 'underline',
-  },
-
-  dateInputIos: { alignSelf: 'flex-start', marginLeft: -8 },
-  dateInputAndroid: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: colors.bone,
-    borderWidth: 0.5,
-    borderColor: colors.ruleSoft,
-    borderRadius: 8,
-  },
-  dateInputValue: {
-    fontFamily: fontBody,
-    fontSize: fontSize.body,
-    color: colors.graphite,
-  },
-  dateInputCaret: {
-    fontFamily: fontMono,
-    fontSize: fontSize.bodyS,
-    color: colors.lead,
   },
 });

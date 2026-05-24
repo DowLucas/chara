@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   StyleSheet,
-  TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import ReactNativeColorPicker from 'react-native-wheel-color-picker';
 import { markPopupClosed } from '@/lib/popup-guard';
 import {
   clearOverride,
@@ -18,7 +18,6 @@ import {
   hashSwatch,
   hasOverride,
   setOverride,
-  validateHex,
 } from '@/lib/group-color';
 import {
   colors,
@@ -44,70 +43,103 @@ const SWATCH_A11Y_KEY: Record<string, string> = {
   '#1F1A18': 'groupColor.swatch.black',
 };
 
-interface Props {
+type PersistedProps = {
   visible: boolean;
   onClose: () => void;
   serverUrl: string;
   groupId: string;
+};
+
+type EphemeralProps = {
+  visible: boolean;
+  onClose: () => void;
+  /** Currently picked hex (null = no selection / auto). */
+  value: string | null;
+  /** Called with the picked hex, or null to reset to auto. */
+  onChange: (hex: string | null) => void;
+  /** Seed used for the "auto" preview dot when no value is picked.
+   *  For the create-group flow there's no groupId yet, so any stable
+   *  string (e.g. the typed name) works; an empty string falls back to
+   *  the first swatch via hashSwatch. */
+  autoSeed?: string;
+};
+
+type Props = PersistedProps | EphemeralProps;
+
+function isEphemeral(p: Props): p is EphemeralProps {
+  return (p as EphemeralProps).onChange !== undefined;
 }
 
-/** Bottom sheet for picking a group's accent color. 8 swatches + reset +
- *  custom-hex input. Per-device, per-(serverUrl, groupId). */
-export function GroupColorPicker({ visible, onClose, serverUrl, groupId }: Props) {
+/** Bottom sheet for picking a group's accent color. 8 Edo swatches +
+ *  a "Custom color" affordance opening a hue-saturation wheel + lightness
+ *  slider. Two modes:
+ *   - Persisted: pass (serverUrl, groupId); writes via group-color overrides.
+ *   - Ephemeral: pass (value, onChange); used before the group exists. */
+export function GroupColorPicker(props: Props) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const [customOpen, setCustomOpen] = useState(false);
-  const [hexInput, setHexInput] = useState('');
-  const [hexError, setHexError] = useState(false);
+  const [wheelColor, setWheelColor] = useState<string>('#6B4B7E');
 
-  const current = groupColorFor(serverUrl, groupId);
-  const isOverridden = hasOverride(serverUrl, groupId);
-  const autoColor = hashSwatch(groupId);
+  const ephemeral = isEphemeral(props);
+  const current = ephemeral
+    ? props.value ?? hashSwatch(props.autoSeed ?? '')
+    : groupColorFor(props.serverUrl, props.groupId);
+  const isOverridden = ephemeral
+    ? props.value !== null
+    : hasOverride(props.serverUrl, props.groupId);
+  const autoColor = ephemeral
+    ? hashSwatch(props.autoSeed ?? '')
+    : hashSwatch(props.groupId);
 
-  // Reset internal state every time the sheet is reopened.
+  // Reset internal state every time the sheet is reopened, seeding the
+  // wheel from the group's currently-resolved color so the user starts
+  // from "where they are" instead of an arbitrary default.
   useEffect(() => {
-    if (visible) {
+    if (props.visible) {
       setCustomOpen(false);
-      setHexInput('');
-      setHexError(false);
+      setWheelColor(current);
     }
-  }, [visible]);
+    // `current` deliberately omitted — only seed at open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.visible]);
 
   const close = React.useCallback(() => {
     markPopupClosed();
-    onClose();
-  }, [onClose]);
+    props.onClose();
+  }, [props]);
 
   async function pickSwatch(hex: string) {
-    await setOverride(serverUrl, groupId, hex);
+    if (ephemeral) {
+      props.onChange(hex);
+    } else {
+      await setOverride(props.serverUrl, props.groupId, hex);
+    }
     close();
   }
 
   async function resetToAuto() {
-    await clearOverride(serverUrl, groupId);
+    if (ephemeral) {
+      props.onChange(null);
+    } else {
+      await clearOverride(props.serverUrl, props.groupId);
+    }
     close();
   }
 
   async function submitCustom() {
-    const v = hexInput.trim();
-    const normalized = v.startsWith('#') ? v : `#${v}`;
-    if (!validateHex(normalized)) {
-      setHexError(true);
-      return;
+    const hex = wheelColor.toLowerCase();
+    if (ephemeral) {
+      props.onChange(hex);
+    } else {
+      await setOverride(props.serverUrl, props.groupId, hex);
     }
-    await setOverride(serverUrl, groupId, normalized.toLowerCase());
     close();
   }
 
-  const previewHex = (() => {
-    const v = hexInput.trim();
-    const normalized = v.startsWith('#') ? v : `#${v}`;
-    return validateHex(normalized) ? normalized : null;
-  })();
-
   return (
     <Modal
-      visible={visible}
+      visible={props.visible}
       transparent
       animationType="fade"
       onRequestClose={close}
@@ -126,33 +158,27 @@ export function GroupColorPicker({ visible, onClose, serverUrl, groupId }: Props
 
         {customOpen ? (
           <View style={styles.customWrap}>
-            <View style={styles.customRow}>
+            <View style={styles.previewRow}>
               <View
-                style={[
-                  styles.previewDisk,
-                  { backgroundColor: previewHex ?? colors.ruleSoft },
-                ]}
+                style={[styles.previewDisk, { backgroundColor: wheelColor }]}
               />
-              <TextInput
-                value={hexInput}
-                onChangeText={(v) => {
-                  setHexInput(v);
-                  setHexError(false);
-                }}
-                placeholder={t('groupColor.hexPlaceholder')}
-                placeholderTextColor={colors.lead}
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="off"
-                maxLength={7}
-                style={styles.hexInput}
-                onSubmitEditing={submitCustom}
-                returnKeyType="done"
+              <Text style={styles.previewLabel} numberOfLines={1}>
+                {wheelColor.toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.wheelWrap}>
+              <ReactNativeColorPicker
+                color={wheelColor}
+                onColorChange={(c: string) => setWheelColor(c)}
+                thumbSize={28}
+                sliderSize={22}
+                gapSize={spacing.s4}
+                noSnap
+                swatches={false}
+                shadeWheelThumb
+                shadeSliderThumb
               />
             </View>
-            {hexError && (
-              <Text style={styles.hexError}>{t('groupColor.hexInvalid')}</Text>
-            )}
             <View style={styles.customActions}>
               <TouchableOpacity
                 onPress={() => setCustomOpen(false)}
@@ -163,9 +189,8 @@ export function GroupColorPicker({ visible, onClose, serverUrl, groupId }: Props
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={submitCustom}
-                style={[styles.primaryBtn, !previewHex && styles.primaryBtnDisabled]}
-                activeOpacity={previewHex ? 0.7 : 1}
-                disabled={!previewHex}
+                style={styles.primaryBtn}
+                activeOpacity={0.7}
               >
                 <Text style={styles.primaryBtnLabel}>{t('common.save')}</Text>
               </TouchableOpacity>
@@ -313,10 +338,11 @@ const styles = StyleSheet.create({
   customWrap: {
     paddingBottom: spacing.s3,
   },
-  customRow: {
+  previewRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.s3,
+    marginBottom: spacing.s3,
   },
   previewDisk: {
     width: 40,
@@ -325,21 +351,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.ruleSoft,
   },
-  hexInput: {
-    flex: 1,
+  previewLabel: {
     fontFamily: fontMono,
-    fontSize: fontSize.bodyL,
-    color: colors.graphite,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.ruleSoft,
-    paddingVertical: spacing.s2,
+    fontSize: fontSize.body,
+    color: colors.lead,
     letterSpacing: 0.5,
   },
-  hexError: {
-    fontFamily: fontBody,
-    fontSize: fontSize.bodyS,
-    color: colors.brick,
-    marginTop: spacing.s2,
+  wheelWrap: {
+    // Fixed height so the bottom sheet has a stable size regardless of
+    // the wheel library's internal layout pass.
+    height: 280,
+    marginBottom: spacing.s3,
   },
   customActions: {
     flexDirection: 'row',
@@ -353,9 +375,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.vermillion,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  primaryBtnDisabled: {
-    backgroundColor: colors.lead,
   },
   primaryBtnLabel: {
     fontFamily: fontBodyMedium,

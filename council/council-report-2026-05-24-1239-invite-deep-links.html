@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Council Verdict — Invite Deep Links Spec</title>
+<style>
+  :root {
+    --bone: #f7f3ea;
+    --paper: #fcfaf4;
+    --graphite: #1f1d1a;
+    --lead: #6b665b;
+    --rule: #ddd6c5;
+    --rule-soft: #ece6d4;
+    --brick: #a94432;
+    --moss: #5c7a4a;
+    --indigo: #2f4f7a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bone); color: var(--graphite); }
+  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; line-height: 1.55; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 48px 24px 96px; }
+  .eyebrow { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--lead); }
+  h1 { font-size: 32px; font-weight: 600; margin: 4px 0 8px; letter-spacing: -0.01em; }
+  h2 { font-size: 20px; font-weight: 600; margin: 36px 0 12px; letter-spacing: -0.005em; }
+  h3 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; }
+  .meta { color: var(--lead); font-size: 13px; margin-bottom: 32px; }
+  .meta code { background: var(--rule-soft); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .question { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 16px 20px; margin-bottom: 32px; font-size: 14px; }
+  .question p { margin: 0 0 8px; }
+  .question p:last-child { margin-bottom: 0; }
+  .verdict { background: var(--paper); border: 1.5px solid var(--graphite); border-radius: 10px; padding: 24px 28px; margin-bottom: 32px; }
+  .verdict h2 { margin-top: 0; }
+  .verdict-section { margin-bottom: 18px; }
+  .verdict-section:last-child { margin-bottom: 0; }
+  .verdict-label { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lead); margin-bottom: 4px; }
+  .first-action { background: var(--graphite); color: var(--bone); border-radius: 8px; padding: 20px 24px; margin: 24px 0 36px; }
+  .first-action .verdict-label { color: var(--rule-soft); }
+  .first-action p { margin: 6px 0 0; font-size: 16px; }
+  .alignment-grid { display: grid; grid-template-columns: 1.2fr 0.6fr 1.6fr; gap: 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); margin: 16px 0 8px; }
+  .alignment-grid > div { padding: 10px 12px; border-bottom: 1px solid var(--rule-soft); font-size: 13px; }
+  .alignment-grid .header { background: var(--rule-soft); font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lead); }
+  .alignment-grid > div:nth-last-child(-n+3) { border-bottom: none; }
+  .pos-agree { color: var(--moss); font-weight: 600; }
+  .pos-clash { color: var(--brick); font-weight: 600; }
+  .pos-flag { color: var(--indigo); font-weight: 600; }
+  details { background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 16px; margin-bottom: 12px; }
+  details[open] { padding-bottom: 18px; }
+  summary { cursor: pointer; font-weight: 600; font-size: 14px; padding: 6px 0; outline: none; user-select: none; list-style: none; }
+  summary::before { content: "▸ "; color: var(--lead); font-family: ui-monospace, monospace; font-size: 11px; margin-right: 4px; display: inline-block; transition: transform 0.15s; }
+  details[open] > summary::before { content: "▾ "; }
+  summary .role { color: var(--lead); font-weight: 400; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; margin-left: 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+  details > div { padding-top: 12px; border-top: 1px solid var(--rule-soft); margin-top: 6px; font-size: 14px; }
+  details p { margin: 0 0 10px; }
+  details p:last-child { margin-bottom: 0; }
+  details strong { font-weight: 600; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 6px; font-size: 14px; }
+  .footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--rule); color: var(--lead); font-size: 12px; font-family: "JetBrains Mono", ui-monospace, monospace; }
+  .footer a { color: var(--lead); }
+  .tag { display: inline-block; background: var(--rule-soft); color: var(--lead); font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px; padding: 1px 6px; border-radius: 3px; letter-spacing: 0.06em; text-transform: uppercase; }
+  blockquote { border-left: 3px solid var(--graphite); margin: 0; padding: 0 0 0 14px; color: var(--lead); font-style: italic; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="eyebrow">Council verdict</div>
+<h1>Invite Deep Links Spec — Pressure-Tested</h1>
+<div class="meta">2026-05-24 12:39 · reviewing <code>docs/superpowers/specs/2026-05-24-invite-deep-links-design.md</code></div>
+
+<div class="question">
+  <p><strong>The question:</strong> Pressure-test a two-phase plan for incoming invite deep links in Chara (open-source self-hostable Splitwise alternative). Phase 1 = HTTPS landing page at <code>/i/&lt;token&gt;</code> + public preview endpoint + <code>chara://</code> fallback button. Phase 2 = Universal Links / App Links, gated on Apple Developer + Google Play accounts existing.</p>
+</div>
+
+<div class="verdict">
+  <h2>Verdict</h2>
+
+  <div class="verdict-section">
+    <div class="verdict-label">Recommendation</div>
+    <p><strong>Don't ship Phase 1 as currently specified. Don't scrap the spec either. Re-sequence around the actual gating dependency.</strong></p>
+    <ul>
+      <li><strong>Enroll in Apple Developer Program + Google Play Console today.</strong> Reserve <code>app.chara</code> under both. Without these, Phase 1's App Store badges are dead links and Phase 2 is fiction.</li>
+      <li><strong>Land the ten-line first commit</strong> (URL shape change + 501 route stub) while paperwork provisions. Preserves spec optionality without committing to the landing page today.</li>
+      <li><strong>Reverse one non-goal:</strong> ship the 20-line "paste invite link" field in <code>add-server</code>. This is the actual pre-launch unblock for dogfood + TestFlight; removes the landing page dependency.</li>
+      <li><strong>Defer the rest of Phase 1</strong> (HTML template, preview endpoint, four-state copy) until the week of TestFlight submission. When built: adopt B's copy fixes, D's privacy hardening, E's inviter attribution, C's <code>embed.FS</code>.</li>
+      <li><strong>Pre-build Phase 2 native config</strong> in <code>app.config.ts</code> so the rebuild after accounts clear is just inserting the Apple Team ID.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="first-action">
+  <div class="verdict-label">The one thing to do first</div>
+  <p>Open the Apple Developer Program enrollment page today and start the membership purchase. Without an Apple Team ID, the entire Phase 2 plan is fiction and Phase 1's App Store badges are dead links. Everything else can run in parallel while the account provisions.</p>
+</div>
+
+<h2>Where the Council Aligned</h2>
+<div class="alignment-grid">
+  <div class="header">Topic</div>
+  <div class="header">Position</div>
+  <div class="header">Notes</div>
+
+  <div>The spec is mistimed</div>
+  <div class="pos-agree">4/5 agree</div>
+  <div>First Principles, Outsider, Expansionist reviewer, Executor reviewer all converged: building infrastructure for a funnel whose entrance (an app in a store) doesn't exist.</div>
+
+  <div>Landing page doesn't explain what Chara <em>is</em></div>
+  <div class="pos-agree">strong agree</div>
+  <div>"hosted at lurkhuset.com" reads as phishing to a stranger. No tagline. No product explanation. Written for insiders.</div>
+
+  <div><code>embed.FS</code> from day one</div>
+  <div class="pos-agree">tactical agree</div>
+  <div>Spec hand-waved "where templates live"; Docker COPY will bite the alternative.</div>
+
+  <div>Verification matrix too narrow</div>
+  <div class="pos-agree">agree</div>
+  <div>Only iMessage→Safari tested. WhatsApp/Slack/Instagram in-app browsers swallow custom schemes silently.</div>
+
+  <div>OG cards vs preview privacy</div>
+  <div class="pos-clash">D vs E clash</div>
+  <div>D: noindex + rate-limit the preview. E: ship rich OG unfurls. Directly contradictory — OG requires public crawlable preview. Unresolved.</div>
+
+  <div>Should the landing page ship at all</div>
+  <div class="pos-clash">A vs C clash</div>
+  <div>A: defer the whole thing, ship paste-link field. C: here's the first commit. Chairman: both partially right — sequence A's path with C's first commit as the bridge.</div>
+
+  <div>Pre-launch growth posture</div>
+  <div class="pos-clash">A vs E clash</div>
+  <div>A: don't optimize a funnel with no exit. E: cheapest moment to build is now. Chairman sides with A on timing, defers E's growth levers to TestFlight week.</div>
+
+  <div>Preview endpoint is an enumeration surface</div>
+  <div class="pos-flag">caught in peer review only</div>
+  <div>None of the five named token entropy or rate limiting. Public token-shaped URL is a scraping magnet. Inherits from existing token design.</div>
+
+  <div>Apple Dev + Play accounts are <em>the</em> gate</div>
+  <div class="pos-flag">caught in peer review only</div>
+  <div>Spec mentions it; no advisor named it as the single highest-priority action. Everything else is downstream.</div>
+
+  <div>"Why would a stranger trust this URL?"</div>
+  <div class="pos-flag">caught in peer review only</div>
+  <div>Actual user path: screenshot + "join my Chara" + Google search. Not link-tap. Spec models a behavior scam-trained users don't perform.</div>
+
+  <div>Inviter-side viral loop</div>
+  <div class="pos-flag">caught in peer review only</div>
+  <div>Splitwise grew creator-driven. Nothing in spec prompts the creator to share after group creation.</div>
+</div>
+
+<h2>Advisor Responses</h2>
+
+<details>
+  <summary>The First Principles Thinker <span class="role">strongest · 3 votes</span></summary>
+  <div>
+    <p><strong>The premise is wrong.</strong> You're solving #3 of a 3-step funnel whose #1 (app in store) doesn't exist. Phase 1 ships a landing page whose primary CTAs are dead links. Phase 1 + Phase 2 aren't phases of one project — Phase 1 is "fix the URL-stripping bug and unblock internal testing," Phase 2 is "launch in stores." The "95% of UX" claim is 95% of rendering, 0% of acquisition.</p>
+    <p><strong>Re-frame:</strong> the pre-launch invite primitive that matters is the QR code (phone-to-phone, already works via <code>classifyInvite</code>). Ship a 20-line "paste invite link" field in <code>add-server</code> (currently cut as non-goal — reconsider). Defer the whole landing page until TestFlight submission week.</p>
+  </div>
+</details>
+
+<details>
+  <summary>The Outsider <span class="role">strongest · 1 vote</span></summary>
+  <div>
+    <blockquote>I tap the link. "You're invited to 'Roommates' · 4 members · hosted at charaapp.lurkhuset.com". I have no idea what I just got invited to.</blockquote>
+    <p>Roommates <em>what</em>? A chat? A calendar? A Google Doc? Page never says "Chara is a way to split bills with friends." "hosted at lurkhuset.com" reads as phishing. "Open in Chara →" — why is this button here if I don't have Chara?</p>
+    <p>The four-state copy is written for someone who already knows the product. Add a one-line product tagline above the fold. Drop "hosted at" for normals. Put "Chara" + tagline on the install CTA.</p>
+  </div>
+</details>
+
+<details>
+  <summary>The Executor <span class="role">strongest · 1 vote</span></summary>
+  <div>
+    <p><strong>Step 1 is the trap.</strong> "HTML template asset" hand-waves <code>embed.FS</code> vs filesystem, Docker COPY semantics, badge/asset shipping. Use <code>embed.FS</code> from day one or you'll redo it when Docker breaks.</p>
+    <p><strong>Step ordering wrong.</strong> Do Step 4 (URL shape change in <code>GetInviteLink</code>) first as a 5-min change — unblocks frontend (Steps 6-8) to run in parallel.</p>
+    <p><strong>Cut from Phase 1:</strong> the <code>locked</code> vs <code>archived/invalid</code> split. One "doesn't work" page + <code>ok</code> is enough.</p>
+    <p><strong>Verification gap:</strong> only iMessage→Safari tested. Add Slack/Gmail in-app browser case.</p>
+    <p><strong>First commit:</strong> ten-line diff — change <code>GetInviteLink</code> to HTTPS URL, update test, add <code>GET /i/{token}</code> stub returning 501.</p>
+  </div>
+</details>
+
+<details>
+  <summary>The Contrarian <span class="role">biggest blind spot caller</span></summary>
+  <div>
+    <p><strong>Phase 2 is a lie.</strong> Without Universal Links, every existing user inviting a friend gets shoved through Safari + scheme prompt — the worst path for your most valuable users. Bet you a beer Phase 2 slips six months.</p>
+    <p><strong>The <code>chara://</code> button is broken, not "acceptable."</strong> WhatsApp/Instagram/Slack/Messenger silently swallow custom schemes in their in-app webview. Spec waves this away with no mitigation.</p>
+    <p><strong>Decision #6 is a privacy footgun.</strong> Bots scrape pastebin/Slack/Discord for <code>/i/&lt;token&gt;</code> URLs. Preview leaks group name + member count publicly. Add <code>X-Robots-Tag: noindex, nofollow</code> and rate-limit. Neither specified.</p>
+    <p><strong>Self-hosted has no Phase 2 story.</strong> Decision #2 says self-hosted gets no Universal Links ever — so self-hosters live in <code>chara://</code> hell permanently. Self-hosters are who you can't disappoint; that's the whole thesis.</p>
+    <p><strong>The cold-launch race is shipping as a TODO.</strong> "Verify; if it flashes, fix it" isn't a mitigation. Android cold-launch is slower than iOS; the flash <em>will</em> happen.</p>
+  </div>
+</details>
+
+<details>
+  <summary>The Expansionist <span class="role">flagged for blind spot · 3 reviewers</span></summary>
+  <div>
+    <p><strong>The invite link is the entire top of the acquisition funnel</strong> and the only protocol-level handshake Chara has with the outside world. Treating <code>/i/&lt;token&gt;</code> as a tappable fallback is wildly undervalued.</p>
+    <p><strong>Promote to Phase 1:</strong></p>
+    <ul>
+      <li>Open Graph + Twitter cards — iMessage/Slack unfurls into rich preview before tap. 6 meta tags + one OG image endpoint. The difference between "weird link" and "real app."</li>
+      <li>One-line product tagline. The landing page IS Chara's marketing site at launch.</li>
+      <li>Inviter attribution. "Lucas invited you" converts dramatically better. One column, zero rows to backfill pre-launch.</li>
+      <li>Document <code>/i/&lt;token&gt;</code> as a protocol surface — how Matrix and ActivityPub got an ecosystem.</li>
+      <li>Web-join is one step away. Preview endpoint + landing page already exist.</li>
+    </ul>
+    <p>The "non-goal" list is a list of growth levers being declined at the moment they're cheapest to build.</p>
+    <p><em>Peer-review consensus:</em> growth thinking for a product that can't yet be installed; OG cards directly contradict the privacy-hardening the Contrarian called for.</p>
+  </div>
+</details>
+
+<h2>Peer Review Highlights</h2>
+
+<details>
+  <summary>What the council collectively missed</summary>
+  <div>
+    <p><strong>Token enumeration is the actual fatal flaw.</strong> The preview endpoint has no auth and no rate limit on a token-shaped URL. Token entropy isn't specified. Bots can scrape and enumerate group metadata across every self-hosted Chara instance via the standardized <code>/i/&lt;token&gt;/preview</code> grammar — and standardizing the protocol (E's proposal) makes it worse, not better.</p>
+    <p><strong>App Store + Play Console paperwork is the single highest-priority action.</strong> 1-3 days. Without bundle ID reservation, AASA/assetlinks can't be valid. The entire spec is theory until these clear.</p>
+    <p><strong>"Strangers don't tap links from strangers."</strong> Real user path: screenshot of the link + "join my Chara" in plain text, then the recipient Googles "Chara app." Spec assumes link-tap as the canonical interaction; scam-trained users do not behave this way.</p>
+    <p><strong>Inviter-side viral loop missing.</strong> Splitwise grew via group creators sharing proactively. Nothing in the spec prompts the creator to share after group creation.</p>
+    <p><strong>Jargon overload.</strong> "Custom-scheme fallback," "Universal Links," "protocol surface," "OG unfurl" — the recipient is someone's mom splitting a dinner bill. The council was designing for developers forwarding links to developers.</p>
+  </div>
+</details>
+
+<div class="footer">
+  Generated 2026-05-24 12:39 · LLM Council skill (5 advisors, 5 peer reviews, chairman synthesis) ·
+  full transcript at <code>council/council-transcript-2026-05-24-1239-invite-deep-links.md</code>
+</div>
+
+</div>
+</body>
+</html>
