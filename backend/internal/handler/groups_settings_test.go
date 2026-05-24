@@ -693,3 +693,73 @@ func TestCanLeave_OpenBalanceReturnsRows(t *testing.T) {
 	reasons := resp["reasons"].([]any)
 	require.NotEmpty(t, reasons)
 }
+
+// ── Recurring-rule pause cascades (Phase 3) ──────────────────────────────────
+
+// TestLock_PausesActiveRecurring confirms that locking a group cascades a
+// "group_locked" pause to every active recurring rule in that group.
+func TestLock_PausesActiveRecurring(t *testing.T) {
+	e := setupSettingsEnv(t)
+
+	// Seed two active rules + one already-paused rule.
+	active1 := testutil.SeedRecurringExpense(t, e.env.Pool, e.groupID, e.alice.ID, e.aliceMID,
+		[]string{e.aliceMID, e.bobMID},
+		testutil.RecurringSeed{Title: "Active 1", NextFireAt: time.Now().UTC().Add(time.Hour)})
+	active2 := testutil.SeedRecurringExpense(t, e.env.Pool, e.groupID, e.alice.ID, e.aliceMID,
+		[]string{e.aliceMID, e.bobMID},
+		testutil.RecurringSeed{Title: "Active 2", NextFireAt: time.Now().UTC().Add(time.Hour)})
+	paused := testutil.SeedRecurringExpense(t, e.env.Pool, e.groupID, e.alice.ID, e.aliceMID,
+		[]string{e.aliceMID, e.bobMID},
+		testutil.RecurringSeed{Title: "Already paused", Status: "paused",
+			NextFireAt: time.Now().UTC().Add(time.Hour)})
+
+	lockGroup(t, e)
+
+	r1, err := e.env.Queries.GetRecurringExpense(context.Background(), active1.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "paused", r1.Status)
+	assert.Equal(t, "group_locked", r1.PausedReason.String)
+
+	r2, err := e.env.Queries.GetRecurringExpense(context.Background(), active2.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "paused", r2.Status)
+	assert.Equal(t, "group_locked", r2.PausedReason.String)
+
+	// The already-paused rule keeps its existing (NULL) paused_reason.
+	r3, err := e.env.Queries.GetRecurringExpense(context.Background(), paused.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "paused", r3.Status)
+	assert.False(t, r3.PausedReason.Valid, "previously-paused rule's reason should be untouched")
+}
+
+// TestRemoveMember_PausesAffectedRecurring confirms that kicking a member
+// cascades a "member_left" pause to every rule that references the
+// removed member (as payer or in splits).
+func TestRemoveMember_PausesAffectedRecurring(t *testing.T) {
+	e := setupSettingsEnv(t)
+
+	// Rule where bob is in the splits: should pause.
+	bobSplit := testutil.SeedRecurringExpense(t, e.env.Pool, e.groupID, e.alice.ID, e.aliceMID,
+		[]string{e.aliceMID, e.bobMID},
+		testutil.RecurringSeed{Title: "Bob in splits", NextFireAt: time.Now().UTC().Add(time.Hour)})
+
+	// Rule that only references alice: should remain active.
+	aliceOnly := testutil.SeedRecurringExpense(t, e.env.Pool, e.groupID, e.alice.ID, e.aliceMID,
+		[]string{e.aliceMID},
+		testutil.RecurringSeed{Title: "Alice only", NextFireAt: time.Now().UTC().Add(time.Hour)})
+
+	// Alice kicks Bob.
+	req := e.env.AuthRequest(t, "DELETE",
+		"/api/groups/"+e.groupID+"/members/"+e.bobMID, "", e.alice.Token)
+	rr := e.env.Do(t, req)
+	require.Equal(t, http.StatusNoContent, rr.Code, "kick failed: %s", rr.Body.String())
+
+	r1, err := e.env.Queries.GetRecurringExpense(context.Background(), bobSplit.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "paused", r1.Status)
+	assert.Equal(t, "member_left", r1.PausedReason.String)
+
+	r2, err := e.env.Queries.GetRecurringExpense(context.Background(), aliceOnly.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "active", r2.Status, "rule not referencing the removed member must stay active")
+}

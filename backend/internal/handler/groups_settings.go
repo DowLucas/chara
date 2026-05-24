@@ -179,6 +179,21 @@ func (h *GroupHandler) setLocked(w http.ResponseWriter, r *http.Request, locked 
 		return
 	}
 
+	// Lock cascade: any active recurring rules in this group pause with
+	// reason "group_locked". Unlock does NOT auto-resume — owners opt in
+	// via a separate "resume my locked rules" action so newly-locked
+	// rules aren't silently restarted by a momentary unlock-relock.
+	if locked {
+		if err := q.PauseActiveRecurringExpensesByGroup(r.Context(),
+			db.PauseActiveRecurringExpensesByGroupParams{
+				GroupID:      groupID,
+				PausedReason: pgtype.Text{String: "group_locked", Valid: true},
+			}); err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+	}
+
 	event := EventGroupLocked
 	if !locked {
 		event = EventGroupUnlocked
@@ -513,6 +528,21 @@ func (h *GroupHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback(context.Background())
 	q := db.New(tx)
+
+	// Pause any active recurring rules that reference the departing
+	// member as payer or splittee. Must run BEFORE DeleteGroupMember:
+	// the recurring_expense_splits FK has ON DELETE CASCADE, so once the
+	// member row is gone the EXISTS subquery would no longer match. We
+	// discard the returned rows here — Wave B will pick them up to fan
+	// out push notifications to each rule's creator.
+	if _, err := q.PauseRecurringExpensesAffectedByMember(r.Context(),
+		db.PauseRecurringExpensesAffectedByMemberParams{
+			GroupID:  groupID,
+			MemberID: target.ID,
+		}); err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
 
 	if err := q.DeleteGroupMember(r.Context(), target.ID); err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error")
