@@ -20,6 +20,7 @@ import (
 	"github.com/DowLucas/chara/internal/config"
 	"github.com/DowLucas/chara/internal/db"
 	"github.com/DowLucas/chara/internal/fx"
+	"github.com/DowLucas/chara/internal/jobs"
 	"github.com/DowLucas/chara/internal/server"
 	"github.com/DowLucas/chara/internal/storage"
 )
@@ -80,6 +81,30 @@ func main() {
 		slog.Info("storage ready", "bucket", store.Bucket(), "endpoint", cfg.S3Endpoint)
 	} else {
 		slog.Warn("S3_ENDPOINT not set; receipt attachments will be unavailable")
+	}
+
+	// River-backed recurring-expense queue. Bootstrapped behind
+	// RECURRING_ENABLED (default off) so the API still starts cleanly on
+	// instances that haven't yet rolled out the queue tables.
+	if cfg.RecurringEnabled {
+		workers := jobs.RegisterWorkers(pool, queries)
+		rc, err := jobs.New(pool, workers)
+		if err != nil {
+			slog.Error("recurring: river client init failed", "error", err)
+			os.Exit(1)
+		}
+		if err := rc.Start(context.Background()); err != nil {
+			slog.Error("recurring: river start failed", "error", err)
+			os.Exit(1)
+		}
+		defer func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			if err := rc.Stop(ctx); err != nil {
+				slog.Warn("recurring: river stop returned error", "error", err)
+			}
+		}()
+		slog.Info("recurring: river queue started")
 	}
 
 	srv := &http.Server{
