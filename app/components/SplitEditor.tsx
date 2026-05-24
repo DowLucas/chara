@@ -20,10 +20,11 @@
  * shown there too.
  */
 
-import React, { useMemo } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { AmountKeypad } from '@/components/AmountKeypad';
 import { Avatar } from '@/components/Avatar';
 import { avatarImageSource, GroupMember } from '@/lib/api';
 import { currentLocale } from '@/lib/i18n';
@@ -232,6 +233,28 @@ export function SplitEditor({
 
   const showMethodPicker = allowedMethods.length > 1;
 
+  // Keypad state for per-member exact/percentage editing. `draft` is the
+  // raw expression string the keypad is currently composing — kept in
+  // local state so the user can type "12.50+3" without the SplitEditor's
+  // value-commit logic re-parsing every keystroke.
+  const [keypadTarget, setKeypadTarget] = useState<{
+    memberId: string;
+  } | null>(null);
+  const [keypadDraft, setKeypadDraft] = useState<string>('');
+
+  function openKeypadFor(memberId: string) {
+    setKeypadDraft(lockedDecimalStr(memberId));
+    setKeypadTarget({ memberId });
+  }
+
+  function commitKeypad(resolved: string) {
+    if (keypadTarget) setLockedDecimal(keypadTarget.memberId, resolved);
+    setKeypadTarget(null);
+  }
+
+  const keypadCurrency =
+    method === 'percentage' ? '%' : currency.toLowerCase();
+
   return (
     <View>
       {showMethodPicker && (
@@ -288,7 +311,7 @@ export function SplitEditor({
               {inc && method === 'exact' && (
                 <AutoSplitField
                   value={lockedDecimalStr(m.id)}
-                  onChange={(v) => setLockedDecimal(m.id, v)}
+                  onPress={() => openKeypadFor(m.id)}
                   onClear={() => setLockedDecimal(m.id, '')}
                   autoPlaceholder={fmtAutoMinor(autoExactMinor[m.id] ?? 0)}
                   unit={currency.toLowerCase()}
@@ -297,7 +320,7 @@ export function SplitEditor({
               {inc && method === 'percentage' && (
                 <AutoSplitField
                   value={lockedDecimalStr(m.id)}
-                  onChange={(v) => setLockedDecimal(m.id, v)}
+                  onPress={() => openKeypadFor(m.id)}
                   onClear={() => setLockedDecimal(m.id, '')}
                   autoPlaceholder={fmtAutoPct(autoPctBp[m.id] ?? 0)}
                   unit="%"
@@ -340,6 +363,15 @@ export function SplitEditor({
           </View>
         </View>
       </View>
+
+      <AmountKeypad
+        visible={keypadTarget !== null}
+        value={keypadDraft}
+        currency={keypadCurrency}
+        onChange={setKeypadDraft}
+        onSubmit={commitKeypad}
+        onClose={() => setKeypadTarget(null)}
+      />
     </View>
   );
 }
@@ -395,14 +427,14 @@ function SegmentButton({
 
 function AutoSplitField({
   value,
-  onChange,
+  onPress,
   onClear,
   autoPlaceholder,
   unit,
   narrow,
 }: {
   value: string;
-  onChange: (v: string) => void;
+  onPress: () => void;
   onClear: () => void;
   autoPlaceholder: string;
   unit: string;
@@ -411,18 +443,24 @@ function AutoSplitField({
   const locked = value !== '';
   return (
     <View style={styles.amountField}>
-      <TextInput
-        value={value}
-        onChangeText={onChange}
-        keyboardType="decimal-pad"
-        placeholder={autoPlaceholder}
-        placeholderTextColor={colors.lead}
+      <TouchableOpacity
+        activeOpacity={0.6}
+        onPress={onPress}
         style={[
-          styles.amountFieldInput,
+          styles.amountFieldTrigger,
           narrow && { width: 50 },
-          !locked && styles.amountFieldInputAuto,
         ]}
-      />
+      >
+        <Text
+          style={[
+            styles.amountFieldValue,
+            !locked && styles.amountFieldValueAuto,
+          ]}
+          numberOfLines={1}
+        >
+          {locked ? value : autoPlaceholder}
+        </Text>
+      </TouchableOpacity>
       <Text style={styles.amountFieldUnit}>{unit}</Text>
       {locked ? (
         <TouchableOpacity onPress={onClear} hitSlop={10} style={styles.clearBtn}>
@@ -528,19 +566,21 @@ const styles = StyleSheet.create({
   },
 
   amountField: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
-  amountFieldInput: {
+  amountFieldTrigger: {
+    width: 70,
+    paddingVertical: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.ruleSoft,
+  },
+  amountFieldValue: {
     fontFamily: fontMonoMedium,
     fontSize: 18,
     color: colors.graphite,
-    width: 70,
     textAlign: 'right',
-    padding: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.ruleSoft,
     fontVariant: ['tabular-nums'],
   },
+  amountFieldValueAuto: { fontStyle: 'italic', color: colors.lead },
   amountFieldUnit: { fontFamily: fontMono, fontSize: 11, color: colors.lead },
-  amountFieldInputAuto: { fontStyle: 'italic', color: colors.lead },
   clearBtn: {
     marginLeft: 6,
     width: 18,
