@@ -109,6 +109,18 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 		r.Post("/api/groups/{groupID}/invite-link/regenerate", groupH.RegenerateInviteToken)
 		r.Post("/api/groups/join/{token}", groupH.JoinViaToken)
 
+		recurringH := handler.NewRecurringHandler(pool, queries)
+		r.Post("/api/groups/{groupID}/recurring", recurringH.Create)
+		r.Get("/api/groups/{groupID}/recurring", recurringH.List)
+		// resume-all-after-unlock comes BEFORE /{recurringID} so chi's
+		// router doesn't treat "resume-all-after-unlock" as an id.
+		r.Post("/api/groups/{groupID}/recurring/resume-all-after-unlock", recurringH.ResumeAllAfterUnlock)
+		r.Get("/api/groups/{groupID}/recurring/{recurringID}", recurringH.Get)
+		r.Patch("/api/groups/{groupID}/recurring/{recurringID}", recurringH.Update)
+		r.Delete("/api/groups/{groupID}/recurring/{recurringID}", recurringH.Delete)
+		r.Post("/api/groups/{groupID}/recurring/{recurringID}/pause", recurringH.Pause)
+		r.Post("/api/groups/{groupID}/recurring/{recurringID}/resume", recurringH.Resume)
+
 		r.Post("/api/groups/{groupID}/expenses", expenseH.Create)
 		r.Get("/api/groups/{groupID}/expenses", expenseH.List)
 		r.Get("/api/groups/{groupID}/expenses/{expenseID}", expenseH.Get)
