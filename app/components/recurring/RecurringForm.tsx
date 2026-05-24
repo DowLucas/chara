@@ -23,10 +23,13 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  InputAccessoryView,
+  Keyboard,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   TextInput,
   View,
 } from 'react-native';
@@ -108,6 +111,8 @@ function formatFireTime(d: Date): string {
   return `${hh}:${mm}`;
 }
 
+const KEYBOARD_DONE_ID = 'recurring-keyboard-done';
+
 export function RecurringForm({
   serverUrl,
   groupId,
@@ -171,9 +176,6 @@ export function RecurringForm({
   );
 
   // Picker visibility state.
-  const [showStart, setShowStart] = useState(false);
-  const [showEnd, setShowEnd] = useState(false);
-  const [showTime, setShowTime] = useState(false);
   const [payerSheetOpen, setPayerSheetOpen] = useState(false);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [keypadOpen, setKeypadOpen] = useState(false);
@@ -475,6 +477,9 @@ export function RecurringForm({
               keyboardType="number-pad"
               style={styles.intervalInput}
               maxLength={3}
+              inputAccessoryViewID={Platform.OS === 'ios' ? KEYBOARD_DONE_ID : undefined}
+              returnKeyType="done"
+              onSubmitEditing={() => Keyboard.dismiss()}
             />
             <Text style={styles.intervalSuffix}>
               {t(
@@ -491,81 +496,59 @@ export function RecurringForm({
           </View>
 
           {/* start_date */}
-          <DateRow
-            label={t('recurring.startLabel')}
-            value={formatDate(startDate)}
-            readOnly={mode === 'edit'}
-            onPress={() => {
-              if (mode === 'edit') return;
-              setShowStart(true);
-            }}
-          />
-          {showStart && (
-            <DateTimePicker
+          {mode === 'edit' ? (
+            <DateRow
+              label={t('recurring.startLabel')}
+              value={formatDate(startDate)}
+              readOnly
+            />
+          ) : (
+            <NativePickerRow
+              label={t('recurring.startLabel')}
               value={startDate}
               mode="date"
               minimumDate={new Date()}
-              onChange={(event, selected) => {
-                if (Platform.OS !== 'ios') setShowStart(false);
-                if (event.type === 'set' && selected) setStartDate(selected);
-              }}
+              onChange={setStartDate}
             />
           )}
 
-          {/* end_date toggle + picker */}
-          <Pressable
-            onPress={() => {
-              setHasEnd((v) => {
-                const next = !v;
-                if (next && !endDate) setEndDate(startDate);
-                return next;
-              });
-            }}
-            style={styles.toggleRow}
-            accessibilityRole="switch"
-            accessibilityState={{ checked: hasEnd }}
-          >
+          {/* end_date switch + picker */}
+          <View style={styles.toggleRow}>
             <Text style={styles.toggleLabel}>{t('recurring.endDateLabel')}</Text>
-            <Text style={styles.toggleValue}>
-              {hasEnd ? t('recurring.endDateOn') : t('recurring.endDateOff')}
-            </Text>
-          </Pressable>
+            <Switch
+              value={hasEnd}
+              onValueChange={(next) => {
+                setHasEnd(next);
+                if (next && !endDate) setEndDate(startDate);
+              }}
+            />
+          </View>
           {hasEnd && (
-            <>
-              <DateRow
-                label={t('recurring.endsLabel')}
-                value={endDate ? formatDate(endDate) : '—'}
-                onPress={() => setShowEnd(true)}
-              />
-              {showEnd && (
-                <DateTimePicker
-                  value={endDate ?? startDate}
-                  mode="date"
-                  minimumDate={startDate}
-                  onChange={(event, selected) => {
-                    if (Platform.OS !== 'ios') setShowEnd(false);
-                    if (event.type === 'set' && selected) setEndDate(selected);
-                  }}
-                />
-              )}
-            </>
+            <NativePickerRow
+              label={t('recurring.endsLabel')}
+              value={endDate ?? startDate}
+              mode="date"
+              minimumDate={startDate}
+              onChange={setEndDate}
+            />
           )}
 
           {/* fire time */}
-          <DateRow
+          <NativePickerRow
             label={t('recurring.timeLabel')}
-            value={formatTime(fireTime)}
-            onPress={() => setShowTime(true)}
+            value={fireTime}
+            mode="time"
+            onChange={setFireTime}
           />
-          {showTime && (
-            <DateTimePicker
-              value={fireTime}
-              mode="time"
-              onChange={(event, selected) => {
-                if (Platform.OS !== 'ios') setShowTime(false);
-                if (event.type === 'set' && selected) setFireTime(selected);
-              }}
-            />
+
+          {Platform.OS === 'ios' && (
+            <InputAccessoryView nativeID={KEYBOARD_DONE_ID}>
+              <View style={styles.keyboardAccessory}>
+                <Pressable onPress={Keyboard.dismiss} hitSlop={8}>
+                  <Text style={styles.keyboardDone}>{t('common.done')}</Text>
+                </Pressable>
+              </View>
+            </InputAccessoryView>
           )}
 
           {/* timezone — read-only (device default; we don't ship a TZ
@@ -699,6 +682,64 @@ function LabeledInput({
         maxFontSizeMultiplier={2}
       />
     </View>
+  );
+}
+
+/**
+ * Cross-platform date/time picker row. On iOS we render the native compact
+ * picker inline next to the label — tapping pops the system calendar/clock
+ * overlay, fully native, theme-aware. On Android we keep the tap-to-open
+ * pattern (the native dialog handles the rest).
+ */
+function NativePickerRow({
+  label,
+  value,
+  mode,
+  minimumDate,
+  onChange,
+}: {
+  label: string;
+  value: Date;
+  mode: 'date' | 'time';
+  minimumDate?: Date;
+  onChange: (next: Date) => void;
+}) {
+  const [androidOpen, setAndroidOpen] = React.useState(false);
+
+  if (Platform.OS === 'ios') {
+    return (
+      <View style={styles.dateRow}>
+        <Text style={styles.dateRowLabel}>{label}</Text>
+        <DateTimePicker
+          value={value}
+          mode={mode}
+          minimumDate={minimumDate}
+          display="compact"
+          accentColor={colors.vermillion}
+          onChange={(event, selected) => {
+            if (event.type === 'set' && selected) onChange(selected);
+          }}
+        />
+      </View>
+    );
+  }
+
+  const formatted = mode === 'date' ? formatDate(value) : formatTime(value);
+  return (
+    <>
+      <DateRow label={label} value={formatted} onPress={() => setAndroidOpen(true)} />
+      {androidOpen && (
+        <DateTimePicker
+          value={value}
+          mode={mode}
+          minimumDate={minimumDate}
+          onChange={(event, selected) => {
+            setAndroidOpen(false);
+            if (event.type === 'set' && selected) onChange(selected);
+          }}
+        />
+      )}
+    </>
   );
 }
 
@@ -890,11 +931,19 @@ const styles = StyleSheet.create({
     color: colors.lead,
     letterSpacing: 0.3,
   },
-  toggleValue: {
+  keyboardAccessory: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    backgroundColor: colors.bone,
+    paddingHorizontal: spacing.s4,
+    paddingVertical: spacing.s3,
+    borderTopWidth: 1,
+    borderTopColor: colors.ruleSoft,
+  },
+  keyboardDone: {
     fontFamily: fontMonoMedium,
     fontSize: fontSize.body,
-    color: colors.graphite,
-    letterSpacing: 0.3,
+    color: colors.vermillion,
   },
   previewText: {
     fontFamily: fontBody,
