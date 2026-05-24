@@ -42,6 +42,8 @@ import { IconButton } from '@/components/IconButton';
 import { Text } from '@/components/Text';
 import { Button } from '@/components/Button';
 import { ActionSheet } from '@/components/ActionSheet';
+import { AmountField } from '@/components/AmountField';
+import { AmountKeypad } from '@/components/AmountKeypad';
 import { SplitEditor, type SplitValue } from '@/components/SplitEditor';
 import { apiFor, GroupDetail } from '@/lib/api';
 import type {
@@ -174,6 +176,7 @@ export function RecurringForm({
   const [showTime, setShowTime] = useState(false);
   const [payerSheetOpen, setPayerSheetOpen] = useState(false);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
+  const [keypadOpen, setKeypadOpen] = useState(false);
 
   const [saving, setSaving] = useState(false);
 
@@ -396,17 +399,15 @@ export function RecurringForm({
             onChangeText={setTitle}
             placeholder={t('addExpense.titlePlaceholder')}
           />
-          <LabeledInput
-            label={t('addExpense.amount')}
-            value={amountInput}
-            onChangeText={setAmountInput}
-            placeholder={t('addExpense.amountPlaceholder')}
-            keyboardType="decimal-pad"
-            mono
-          />
-          <Text style={styles.helper}>
-            {t('recurring.currencyLockedHelp', { currency })}
-          </Text>
+          <View style={styles.amountFieldWrap}>
+            <Text style={styles.inputLabel}>{t('addExpense.amount')}</Text>
+            <AmountField
+              amount={amountInput}
+              currency={currency === '—' ? '' : currency}
+              onPress={() => setKeypadOpen(true)}
+              placeholder={t('addExpense.amountPlaceholder')}
+            />
+          </View>
         </Section>
 
         {/* SECTION 2 — Who pays */}
@@ -634,6 +635,18 @@ export function RecurringForm({
           },
         ]}
       />
+
+      <AmountKeypad
+        visible={keypadOpen}
+        value={amountInput}
+        currency={currency === '—' ? '' : currency}
+        onChange={setAmountInput}
+        onSubmit={(resolved) => {
+          setAmountInput(resolved);
+          setKeypadOpen(false);
+        }}
+        onClose={() => setKeypadOpen(false)}
+      />
     </View>
   );
 }
@@ -743,6 +756,12 @@ const styles = StyleSheet.create({
   inputRow: {
     paddingHorizontal: spacing.s4,
     paddingVertical: spacing.s3,
+    gap: 4,
+  },
+  amountFieldWrap: {
+    paddingHorizontal: spacing.s4,
+    paddingTop: spacing.s3,
+    paddingBottom: spacing.s2,
     gap: 4,
   },
   inputLabel: {
