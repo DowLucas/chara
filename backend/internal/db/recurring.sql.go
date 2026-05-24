@@ -289,7 +289,7 @@ RETURNING id, created_by_id
 
 type PauseRecurringExpensesAffectedByMemberParams struct {
 	GroupID  string `db:"group_id" json:"group_id"`
-	PaidByID string `db:"paid_by_id" json:"paid_by_id"`
+	MemberID string `db:"member_id" json:"member_id"`
 }
 
 type PauseRecurringExpensesAffectedByMemberRow struct {
@@ -298,7 +298,7 @@ type PauseRecurringExpensesAffectedByMemberRow struct {
 }
 
 func (q *Queries) PauseRecurringExpensesAffectedByMember(ctx context.Context, arg PauseRecurringExpensesAffectedByMemberParams) ([]PauseRecurringExpensesAffectedByMemberRow, error) {
-	rows, err := q.db.Query(ctx, pauseRecurringExpensesAffectedByMember, arg.GroupID, arg.PaidByID)
+	rows, err := q.db.Query(ctx, pauseRecurringExpensesAffectedByMember, arg.GroupID, arg.MemberID)
 	if err != nil {
 		return nil, err
 	}

@@ -61,11 +61,11 @@ WHERE group_id = $1 AND status = 'active';
 -- name: PauseRecurringExpensesAffectedByMember :many
 UPDATE recurring_expenses r
 SET status = 'paused', paused_reason = 'member_left', updated_at = NOW()
-WHERE r.group_id = $1
+WHERE r.group_id = @group_id
   AND r.status = 'active'
-  AND (r.paid_by_id = $2
+  AND (r.paid_by_id = @member_id
        OR EXISTS (SELECT 1 FROM recurring_expense_splits s
-                  WHERE s.recurring_id = r.id AND s.member_id = $2))
+                  WHERE s.recurring_id = r.id AND s.member_id = @member_id))
 RETURNING id, created_by_id;
 
 -- name: CreateRecurringSplit :exec
