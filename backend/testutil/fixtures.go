@@ -152,3 +152,126 @@ func CreateExpenseOn(t *testing.T, pool *pgxpool.Pool, groupID, title string, am
 
 	return ExpenseFixture{Expense: expense, Splits: splits}
 }
+
+// RecurringSeed describes the optional knobs for SeedRecurringExpense.
+// Any zero-valued field falls back to a "sensible monthly" default.
+type RecurringSeed struct {
+	Title         string
+	AmountMinor   int64
+	Currency      string
+	SplitMethod   string    // defaults to "equal"
+	Category      string    // defaults to "general"
+	FreqUnit      string    // defaults to "month"
+	FreqInterval  int       // defaults to 1
+	Timezone      string    // defaults to "Europe/Stockholm"
+	StartDate     time.Time // defaults to now in UTC
+	NextFireAt    time.Time // defaults to now (i.e. due immediately)
+	LastFireAt    *time.Time
+	Status        string // defaults to "active"
+	SplitValues   map[string]int64
+}
+
+// SeedRecurringExpense inserts a recurring_expenses row plus its split
+// rows. memberSplitIDs is the set of members on the rule's split; the
+// payer member is paidByMemberID (need not be in the split list).
+func SeedRecurringExpense(
+	t *testing.T,
+	pool *pgxpool.Pool,
+	groupID, createdByUserID, paidByMemberID string,
+	memberSplitIDs []string,
+	seed RecurringSeed,
+) db.RecurringExpense {
+	t.Helper()
+	ctx := context.Background()
+	q := db.New(pool)
+
+	if seed.Title == "" {
+		seed.Title = "Test recurring"
+	}
+	if seed.AmountMinor == 0 {
+		seed.AmountMinor = 1200
+	}
+	if seed.Currency == "" {
+		seed.Currency = "SEK"
+	}
+	if seed.SplitMethod == "" {
+		seed.SplitMethod = "equal"
+	}
+	if seed.Category == "" {
+		seed.Category = "general"
+	}
+	if seed.FreqUnit == "" {
+		seed.FreqUnit = "month"
+	}
+	if seed.FreqInterval == 0 {
+		seed.FreqInterval = 1
+	}
+	if seed.Timezone == "" {
+		seed.Timezone = "Europe/Stockholm"
+	}
+	now := time.Now().UTC()
+	if seed.StartDate.IsZero() {
+		seed.StartDate = now
+	}
+	if seed.NextFireAt.IsZero() {
+		seed.NextFireAt = now
+	}
+	if seed.Status == "" {
+		seed.Status = "active"
+	}
+
+	id := ulid.New()
+	row, err := q.CreateRecurringExpense(ctx, db.CreateRecurringExpenseParams{
+		ID:            id,
+		GroupID:       groupID,
+		Title:         seed.Title,
+		AmountMinor:   seed.AmountMinor,
+		Currency:      seed.Currency,
+		PaidByID:      paidByMemberID,
+		SplitMethod:   seed.SplitMethod,
+		Category:      seed.Category,
+		Notes:         pgtype.Text{Valid: false},
+		FreqUnit:      seed.FreqUnit,
+		FreqInterval:  int32(seed.FreqInterval),
+		StartDate:     pgtype.Date{Time: seed.StartDate, Valid: true},
+		EndDate:       pgtype.Date{Valid: false},
+		Timezone:      seed.Timezone,
+		FireLocalTime: pgtype.Time{Microseconds: 9 * 3600 * 1_000_000, Valid: true},
+		NextFireAt:    pgtype.Timestamptz{Time: seed.NextFireAt, Valid: true},
+		CreatedByID:   createdByUserID,
+	})
+	require.NoError(t, err)
+
+	if seed.Status != "active" {
+		_, err := q.SetRecurringStatus(ctx, db.SetRecurringStatusParams{
+			ID:           id,
+			Status:       seed.Status,
+			PausedReason: pgtype.Text{Valid: false},
+		})
+		require.NoError(t, err)
+	}
+	if seed.LastFireAt != nil {
+		_, err := pool.Exec(ctx, "UPDATE recurring_expenses SET last_fire_at = $2 WHERE id = $1",
+			id, *seed.LastFireAt)
+		require.NoError(t, err)
+	}
+
+	for _, mid := range memberSplitIDs {
+		val := int64(0)
+		if seed.SplitValues != nil {
+			val = seed.SplitValues[mid]
+		}
+		err := q.CreateRecurringSplit(ctx, db.CreateRecurringSplitParams{
+			RecurringID: id,
+			MemberID:    mid,
+			Value:       val,
+		})
+		require.NoError(t, err)
+	}
+
+	// Re-fetch with the updates applied.
+	out, err := q.GetRecurringExpense(ctx, id)
+	require.NoError(t, err)
+	_ = row
+	return out
+}

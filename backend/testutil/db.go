@@ -106,12 +106,22 @@ func TruncateAll(t *testing.T, pool *pgxpool.Pool) {
 		"expense_attachments",
 		"expenses",
 		"settlements",
+		"recurring_expense_splits",
+		"recurring_expenses",
 		"group_members",
 		"groups",
 		"usage_counters",
 		"waitlist_signups",
 		"users",
 		"fx_rates",
+		// River tables — emptied between tests so leftover jobs don't
+		// leak across cases. river_migration is left alone (it's the
+		// migration ledger, not user data).
+		"river_job",
+		"river_leader",
+		"river_queue",
+		"river_client_queue",
+		"river_client",
 	}
 	_, err := pool.Exec(context.Background(),
 		"TRUNCATE TABLE "+strings.Join(tables, ", ")+" RESTART IDENTITY CASCADE",
