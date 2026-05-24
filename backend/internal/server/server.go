@@ -37,6 +37,15 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 	// DEPRECATED: alias for /.well-known/chara-instance for one release of
 	// grace during the Quits → Chara rename. Remove after v0.2.
 	r.Get("/.well-known/quits-instance", wellknownHandler)
+
+	// Invite landing stub. The shareable invite URL is <baseURL>/i/<token>
+	// (see invite-deep-links spec). The real handler — HTML landing page that
+	// deep-links into the app or guides web users to install it — is Wave 3.
+	// Until then we reserve the path with a 501 so the frontend can ship the
+	// new link shape without 404s in the wild.
+	r.Get("/i/{token}", func(w http.ResponseWriter, _ *http.Request) {
+		http.Error(w, "invite landing page not yet implemented", http.StatusNotImplemented)
+	})
 	r.Get("/api/health/liveness", healthH.Liveness)
 	r.Get("/api/health/readiness", healthH.Readiness)
 
