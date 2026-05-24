@@ -6,10 +6,9 @@
  * Sections, top → bottom:
  *   1. What & how much  — title, amount, category, currency-locked chip
  *   2. Who pays         — payer picker scoped to current group members
- *   3. Split            — equal-only in v1 (see CONCERN in implementation
- *                         report). Exact/percentage will land later when
- *                         the shared SplitEditor is extracted from
- *                         ExpenseWizard.
+ *   3. Split            — uses the shared <SplitEditor>; supports equal,
+ *                         exact, and percentage methods (matching the
+ *                         one-off expense wizard).
  *   4. Schedule         — frequency unit chips, mono interval input,
  *                         start_date (read-only on edit), end_date,
  *                         fire_local_time, timezone.
@@ -43,6 +42,7 @@ import { IconButton } from '@/components/IconButton';
 import { Text } from '@/components/Text';
 import { Button } from '@/components/Button';
 import { ActionSheet } from '@/components/ActionSheet';
+import { SplitEditor, type SplitValue } from '@/components/SplitEditor';
 import { apiFor, GroupDetail } from '@/lib/api';
 import type {
   CreateRecurringInput,
@@ -128,12 +128,26 @@ export function RecurringForm({
   );
   const [category, setCategory] = useState(initialValue?.category ?? 'other');
   const [payerId, setPayerId] = useState(initialValue?.paid_by_id ?? '');
-  // Split is equal-only in v1; the form keeps the wire shape so the server
-  // sees a populated splits[] regardless. TODO: lift SplitEditor from
-  // ExpenseWizard once the shared component lands.
-  const [includedMemberIds, setIncludedMemberIds] = useState<string[]>(
-    initialValue ? initialValue.splits.map((s) => s.member_id) : [],
-  );
+  // Split state matches the wire shape. SplitEditor (shared with the
+  // expense wizard) handles equal/exact/percentage in one component.
+  const [split, setSplit] = useState<SplitValue>(() => {
+    if (initialValue) {
+      return {
+        method: initialValue.split_method,
+        included: initialValue.splits.map((s) => s.member_id),
+        // For 'equal', value is unused; for exact/percentage it is the
+        // locked minor / basis-points value the server stored.
+        splits:
+          initialValue.split_method === 'equal'
+            ? []
+            : initialValue.splits.map((s) => ({
+                member_id: s.member_id,
+                value: s.value,
+              })),
+      };
+    }
+    return { method: 'equal', included: [], splits: [] };
+  });
   const [freqUnit, setFreqUnit] = useState<FreqUnit>(
     initialValue?.freq_unit ?? 'month',
   );
@@ -175,8 +189,8 @@ export function RecurringForm({
         // split = all members.
         if (mode === 'create') {
           if (!payerId && g.members[0]) setPayerId(g.members[0].id);
-          if (includedMemberIds.length === 0) {
-            setIncludedMemberIds(g.members.map((m) => m.id));
+          if (split.included.length === 0) {
+            setSplit((s) => ({ ...s, included: g.members.map((m) => m.id) }));
           }
         }
       })
@@ -242,22 +256,27 @@ export function RecurringForm({
       });
       return;
     }
-    if (!payerId || includedMemberIds.length === 0) return;
+    if (!payerId || split.included.length === 0) return;
 
     const amountMinor = Math.round(amount * 100);
-    // Equal split shaped for the wire: each included member carries the
-    // share count "1"; the backend recomputes minor units per occurrence.
-    const splits = includedMemberIds.map((member_id) => ({
-      member_id,
-      value: 1,
-    }));
+    // Wire-format splits, per method:
+    //   - equal: one row per included member, value=1 (placeholder the
+    //     backend ignores; it recomputes minor units per occurrence)
+    //   - exact / percentage: one row per included member; locked values
+    //     ride as-is; unlocked (auto-fill) members get value=0 and the
+    //     backend distributes the remainder.
+    const splits = split.included.map((member_id) => {
+      if (split.method === 'equal') return { member_id, value: 1 };
+      const locked = split.splits.find((s) => s.member_id === member_id);
+      return { member_id, value: locked?.value ?? 0 };
+    });
 
     const interval = Math.max(1, parseInt(freqInterval, 10) || 1);
     const base = {
       title: title.trim(),
       amount_minor: amountMinor,
       paid_by_id: payerId,
-      split_method: 'equal' as const,
+      split_method: split.method,
       splits,
       category,
       notes: null,
@@ -337,6 +356,15 @@ export function RecurringForm({
   const members = group?.members ?? [];
   const payerName = members.find((m) => m.id === payerId)?.name ?? '—';
 
+  // Live amount in minor units — feeds the SplitEditor reconcile card so
+  // exact/percentage breakdowns show correct rounded shares as the user
+  // types. Falls back to 0 for empty/invalid input (editor handles it).
+  const amountMinorPreview = useMemo(() => {
+    const n = parseFloat(amountInput.replace(',', '.'));
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    return Math.round(n * 100);
+  }, [amountInput]);
+
   // --- render -----------------------------------------------------------
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -393,42 +421,20 @@ export function RecurringForm({
           </Pressable>
         </Section>
 
-        {/* SECTION 3 — Split (equal-only in v1) */}
+        {/* SECTION 3 — Split (shared editor: equal / exact / percentage) */}
         <Section eyebrow={t('addExpense.splitLabel')}>
-          <Text style={styles.helper}>
-            {t('addExpense.splitMeta', { count: includedMemberIds.length })}
-          </Text>
-          <View style={styles.chipsRow}>
-            {members.map((m) => {
-              const on = includedMemberIds.includes(m.id);
-              return (
-                <Pressable
-                  key={m.id}
-                  onPress={() =>
-                    setIncludedMemberIds((cur) =>
-                      cur.includes(m.id)
-                        ? cur.filter((x) => x !== m.id)
-                        : [...cur, m.id],
-                    )
-                  }
-                  style={[styles.memberChip, on && styles.memberChipOn]}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: on }}
-                >
-                  <Text
-                    style={[styles.memberChipLabel, on && styles.memberChipLabelOn]}
-                    numberOfLines={1}
-                  >
-                    {m.name}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <SplitEditor
+            members={members}
+            totalMinor={amountMinorPreview}
+            currency={currency === '—' ? '' : currency}
+            value={split}
+            onChange={setSplit}
+            authToken={null}
+          />
         </Section>
 
         {/* SECTION 4 — Schedule */}
-        <Section eyebrow={t('recurring.listHeader')}>
+        <Section eyebrow={t('recurring.scheduleEyebrow')}>
           {mode === 'edit' && (
             <Text style={styles.helper}>
               {t('recurring.editFutureOnlyNotice')}
@@ -438,6 +444,14 @@ export function RecurringForm({
           <View style={styles.chipsRow}>
             {(['day', 'week', 'month', 'year'] as FreqUnit[]).map((u) => {
               const on = freqUnit === u;
+              const unitKey =
+                u === 'day'
+                  ? 'recurring.unitDay'
+                  : u === 'week'
+                    ? 'recurring.unitWeek'
+                    : u === 'month'
+                      ? 'recurring.unitMonth'
+                      : 'recurring.unitYear';
               return (
                 <Pressable
                   key={u}
@@ -445,7 +459,7 @@ export function RecurringForm({
                   style={[styles.unitChip, on && styles.unitChipOn]}
                 >
                   <Text style={[styles.unitChipLabel, on && styles.unitChipLabelOn]}>
-                    {t(`recurring.schedule.every_${u}`, { count: 1 })}
+                    {t(unitKey, { count: 2 })}
                   </Text>
                 </Pressable>
               );
@@ -453,7 +467,7 @@ export function RecurringForm({
           </View>
 
           <View style={styles.intervalRow}>
-            <Text style={styles.intervalPrefix}>every</Text>
+            <Text style={styles.intervalPrefix}>{t('recurring.intervalPrefix')}</Text>
             <TextInput
               value={freqInterval}
               onChangeText={(v) => setFreqInterval(v.replace(/[^0-9]/g, ''))}
@@ -462,17 +476,22 @@ export function RecurringForm({
               maxLength={3}
             />
             <Text style={styles.intervalSuffix}>
-              {t(`recurring.schedule.every_${freqUnit}`, {
-                count: parseInt(freqInterval, 10) || 1,
-              })
-                .replace(/^every\s+\d*\s*/, '')
-                .replace(/^every\s+/, '')}
+              {t(
+                freqUnit === 'day'
+                  ? 'recurring.unitDay'
+                  : freqUnit === 'week'
+                    ? 'recurring.unitWeek'
+                    : freqUnit === 'month'
+                      ? 'recurring.unitMonth'
+                      : 'recurring.unitYear',
+                { count: parseInt(freqInterval, 10) || 1 },
+              )}
             </Text>
           </View>
 
           {/* start_date */}
           <DateRow
-            label="start"
+            label={t('recurring.startLabel')}
             value={formatDate(startDate)}
             readOnly={mode === 'edit'}
             onPress={() => {
@@ -505,13 +524,15 @@ export function RecurringForm({
             accessibilityRole="switch"
             accessibilityState={{ checked: hasEnd }}
           >
-            <Text style={styles.toggleLabel}>end date</Text>
-            <Text style={styles.toggleValue}>{hasEnd ? 'on' : 'off'}</Text>
+            <Text style={styles.toggleLabel}>{t('recurring.endDateLabel')}</Text>
+            <Text style={styles.toggleValue}>
+              {hasEnd ? t('recurring.endDateOn') : t('recurring.endDateOff')}
+            </Text>
           </Pressable>
           {hasEnd && (
             <>
               <DateRow
-                label="ends"
+                label={t('recurring.endsLabel')}
                 value={endDate ? formatDate(endDate) : '—'}
                 onPress={() => setShowEnd(true)}
               />
@@ -531,7 +552,7 @@ export function RecurringForm({
 
           {/* fire time */}
           <DateRow
-            label="time"
+            label={t('recurring.timeLabel')}
             value={formatTime(fireTime)}
             onPress={() => setShowTime(true)}
           />
@@ -549,12 +570,12 @@ export function RecurringForm({
           {/* timezone — read-only (device default; we don't ship a TZ
               picker in v1 since "device" is correct for every realistic
               user. Tracked as future enhancement.) */}
-          <DateRow label="timezone" value={timezone} />
+          <DateRow label={t('recurring.timezoneLabel')} value={timezone} />
         </Section>
 
         {/* SECTION 5 — Preview */}
         {previewLines && (
-          <Section eyebrow="preview">
+          <Section eyebrow={t('recurring.previewEyebrow')}>
             <Text style={styles.previewText}>{previewLines.first}</Text>
             {previewLines.then && (
               <Text style={[styles.previewText, styles.previewThen]}>
@@ -784,23 +805,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   unitChipLabelOn: { color: colors.fgOnAccent },
-  memberChip: {
-    paddingHorizontal: spacing.s3,
-    paddingVertical: spacing.s2,
-    borderRadius: 999,
-    borderWidth: 0.5,
-    borderColor: colors.lead,
-  },
-  memberChipOn: {
-    backgroundColor: colors.graphite,
-    borderColor: colors.graphite,
-  },
-  memberChipLabel: {
-    fontFamily: fontBody,
-    fontSize: fontSize.bodyS,
-    color: colors.graphite,
-  },
-  memberChipLabelOn: { color: colors.fgOnAccent },
   intervalRow: {
     flexDirection: 'row',
     alignItems: 'center',

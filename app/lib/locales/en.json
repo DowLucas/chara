@@ -75,7 +75,6 @@
     "back": "Back",
     "between": "between",
     "categoryLabel": "category",
-    "change": "change",
     "changeCurrency": "Change currency",
     "continue": "Continue",
     "dupView": "View",
@@ -109,6 +108,11 @@
     "saveErrorTitle": "Error",
     "saving": "Saving…",
     "scanReceipt": "Scan receipt — or fill in below",
+    "split": {
+      "equal": "split equally",
+      "exact": "split by amount",
+      "percentage": "split by percent"
+    },
     "splitLabel": "split between",
     "splitMeta": "equally · {{count}} ways",
     "splitMethodLabel": "split method",
@@ -212,6 +216,9 @@
     "namePlaceholder": "Group name",
     "saving": "Saving…",
     "submit": "Save changes"
+  },
+  "expense": {
+    "paidByName": "paid by {{name}}"
   },
   "expenseDetail": {
     "actions": {
@@ -644,7 +651,12 @@
     "editFutureOnlyNotice": "Changes apply to future bills only. Past expenses stay as-is.",
     "emptyBody": "Set up rent, internet, or anything that repeats — Chara will add it for you on schedule.",
     "emptyTitle": "No recurring bills yet",
+    "endDateLabel": "end date",
+    "endDateOff": "off",
+    "endDateOn": "on",
+    "endsLabel": "ends",
     "eyebrow": "automation",
+    "intervalPrefix": "every",
     "listHeader": "Recurring bills",
     "newButton": "+ New recurring bill",
     "pauseButton": "Pause",
@@ -654,6 +666,7 @@
       "manual": "Paused",
       "member_left": "{{name}} left — update splits to resume"
     },
+    "previewEyebrow": "preview",
     "previewNext": "Will create the next bill on {{date}} at {{time}} ({{tz}}).",
     "previewThen": "Then {{dates}}.",
     "push": {
@@ -679,7 +692,19 @@
       "every_year_one": "every year",
       "every_year_other": "every {{count}} years"
     },
-    "settingsRow": "Recurring bills"
+    "scheduleEyebrow": "schedule",
+    "settingsRow": "Recurring bills",
+    "startLabel": "start",
+    "timeLabel": "time",
+    "timezoneLabel": "timezone",
+    "unitDay_one": "day",
+    "unitDay_other": "days",
+    "unitMonth_one": "month",
+    "unitMonth_other": "months",
+    "unitWeek_one": "week",
+    "unitWeek_other": "weeks",
+    "unitYear_one": "year",
+    "unitYear_other": "years"
   },
   "scanItems": {
     "assignSheetHint": "Select one or more people. Tap again to remove.",
