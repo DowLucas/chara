@@ -18,6 +18,7 @@ import (
 
 	"github.com/DowLucas/chara/internal/currency"
 	"github.com/DowLucas/chara/internal/db"
+	"github.com/DowLucas/chara/internal/expense"
 	"github.com/DowLucas/chara/internal/fx"
 	"github.com/DowLucas/chara/internal/middleware"
 	"github.com/DowLucas/chara/internal/money"
@@ -559,47 +560,29 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback(context.Background())
 
-	q := db.New(tx)
-
-	expense, err := q.CreateExpense(r.Context(), db.CreateExpenseParams{
-		ID:               ulid.New(),
+	in := expense.Input{
 		GroupID:          groupID,
 		Title:            req.Title,
-		Amount:           canonicalAmount,
+		AmountMinor:      canonicalAmount,
 		Currency:         canonicalCurrency,
-		PaidByID:         req.PaidByID,
+		PaidByMemberID:   req.PaidByID,
 		SplitMethod:      req.SplitMethod,
+		Splits:           sharesToSplitInputs(shares),
 		Category:         req.Category,
-		Notes:            pgtype.Text{Valid: req.Notes != nil, String: strOrEmpty(req.Notes)},
-		ExpenseDate:      expenseDate,
+		Notes:            req.Notes,
+		ExpenseDate:      expenseDate.Time,
 		IsReimbursement:  req.IsReimbursement,
-		CreatedByID:      claims.UserID,
+		CreatedByUserID:  claims.UserID,
 		OriginalAmount:   fxOriginalAmount,
 		OriginalCurrency: fxOriginalCurrency,
 		FxRate:           fxRate,
 		FxAsOf:           fxAsOf,
 		FxSource:         fxSource,
-	})
+		// SourceKind/SourceID stay nil for the manual handler.
+	}
+	created, err := expense.Create(r.Context(), tx, h.queries, in)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not create expense")
-		return
-	}
-
-	splitResp, err := writeSplits(r.Context(), q, expense.ID, shares)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "could not create expense splits")
-		return
-	}
-
-	if err := writeActivity(r.Context(), q, groupID, claims.UserID,
-		EventExpenseAdded, expense.ID, EntityExpense,
-		&ActivityPayload{Snapshot: ExpenseSnapshot{
-			Title:         expense.Title,
-			Amount:        expense.Amount,
-			Currency:      expense.Currency,
-			PayerMemberID: expense.PaidByID,
-		}}); err != nil {
-		writeError(w, http.StatusInternalServerError, "could not write activity")
 		return
 	}
 
@@ -608,15 +591,30 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	row := created.Row
 	resp := buildExpenseResponse(
-		expense.ID, expense.GroupID, expense.Title, expense.Amount, expense.Currency,
-		expense.PaidByID, expense.SplitMethod, expense.Category, expense.Notes, expense.ExpenseDate,
-		expense.IsReimbursement, expense.CreatedByID, expense.CreatedAt, expense.UpdatedAt,
-		splitResp,
-		expense.OriginalAmount, expense.OriginalCurrency, expense.FxRate, expense.FxAsOf,
-		expense.FxSource,
+		row.ID, row.GroupID, row.Title, row.Amount, row.Currency,
+		row.PaidByID, row.SplitMethod, row.Category, row.Notes, row.ExpenseDate,
+		row.IsReimbursement, row.CreatedByID, row.CreatedAt, row.UpdatedAt,
+		dbSplitsToResponse(created.Splits),
+		row.OriginalAmount, row.OriginalCurrency, row.FxRate, row.FxAsOf,
+		row.FxSource,
 	)
 	writeJSON(w, http.StatusCreated, resp)
+}
+
+// sharesToSplitInputs adapts the handler's pre-resolved []split.MemberShare
+// into the shape expense.Create wants. Share is already in canonical
+// (group-currency) minor units, so it maps directly to SplitInput.Value.
+func sharesToSplitInputs(shares []split.MemberShare) []expense.SplitInput {
+	out := make([]expense.SplitInput, len(shares))
+	for i, s := range shares {
+		out[i] = expense.SplitInput{
+			MemberID: s.MemberID,
+			Value:    int64(s.Share),
+		}
+	}
+	return out
 }
 
 func (h *ExpenseHandler) List(w http.ResponseWriter, r *http.Request) {
