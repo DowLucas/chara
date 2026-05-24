@@ -31,6 +31,14 @@ export function ActionSheet({ visible, onClose, title, options }: Props) {
   const insets = useSafeAreaInsets();
   const cancelLabel = i18n.t('common.cancel');
 
+  // Pending option callback. We dismiss the Modal first, then fire the
+  // callback only after the Modal has fully torn down its underlying view
+  // controller (iOS) / view (Android). Without this, iOS refuses to present
+  // a follow-up VC like ImagePicker.launchCameraAsync from inside the
+  // still-mounted Modal's presenter chain — the camera call hangs forever
+  // with no resolve and no reject.
+  const pendingActionRef = React.useRef<(() => void) | null>(null);
+
   // Stamp the popup-guard whenever this sheet closes so the parent screen's
   // row underneath the backdrop can't fire `onPress` in the same gesture
   // that dismissed us. See app/lib/popup-guard.ts.
@@ -38,6 +46,12 @@ export function ActionSheet({ visible, onClose, title, options }: Props) {
     markPopupClosed();
     onClose();
   }, [onClose]);
+
+  const handleDismissed = React.useCallback(() => {
+    const action = pendingActionRef.current;
+    pendingActionRef.current = null;
+    if (action) action();
+  }, []);
 
   // On iOS, the native sheet is the right primitive — but we only invoke it
   // imperatively. Callers that want the native sheet should use openNativeSheet
@@ -48,6 +62,7 @@ export function ActionSheet({ visible, onClose, title, options }: Props) {
       transparent
       animationType="fade"
       onRequestClose={closeWithGuard}
+      onDismiss={handleDismissed}
       statusBarTranslucent
     >
       <TouchableWithoutFeedback onPress={closeWithGuard}>
@@ -64,9 +79,20 @@ export function ActionSheet({ visible, onClose, title, options }: Props) {
             key={`${opt.label}-${i}`}
             style={[styles.row, i === 0 && !title && styles.rowFirst]}
             onPress={() => {
+              // Queue the action and dismiss. On iOS the Modal fires
+              // onDismiss after its presentation animation completes, which
+              // is the only safe moment to launch another view controller
+              // (camera, image picker, share sheet). onDismiss does not
+              // fire on Android, so we fall back to a setTimeout there.
+              pendingActionRef.current = opt.onPress;
               closeWithGuard();
-              // Defer so the modal can dismiss before the next screen mounts.
-              setTimeout(opt.onPress, Platform.OS === 'android' ? 80 : 0);
+              if (Platform.OS !== 'ios') {
+                setTimeout(() => {
+                  const action = pendingActionRef.current;
+                  pendingActionRef.current = null;
+                  if (action) action();
+                }, 80);
+              }
             }}
             activeOpacity={0.7}
           >

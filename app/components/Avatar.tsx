@@ -36,7 +36,11 @@ export function Avatar({ initials, size = 'md', stack = false, style, source }: 
       {showImage ? (
         <Image
           source={source as ImageURISource}
-          style={{ width: dim, height: dim, borderRadius: dim / 2 }}
+          // Fill the wrapper so size overrides via the `style` prop (e.g.
+          // the 64x64 avatar on the You tab) apply to the image too. The
+          // wrapper has overflow:'hidden' + a matching borderRadius, so
+          // the image is automatically clipped to a circle.
+          style={StyleSheet.absoluteFill}
           onError={() => setFailed(true)}
         />
       ) : (
