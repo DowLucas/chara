@@ -12,15 +12,13 @@
  */
 
 /** The single protocol the current app build speaks. */
-// v2: recurring expenses (additive: 8 new endpoints + source_kind/source_id
-// on expense responses).
-export const APP_PROTOCOL_VERSION: number = 2;
+export const APP_PROTOCOL_VERSION: number = 1;
 
 /** Lower bound of the server-protocol range this app supports. */
 export const MIN_SERVER_PROTOCOL: number = 1;
 
 /** Upper bound of the server-protocol range this app supports. */
-export const MAX_SERVER_PROTOCOL: number = 2;
+export const MAX_SERVER_PROTOCOL: number = 1;
 
 /** Request header carrying APP_PROTOCOL_VERSION. */
 export const PROTOCOL_HEADER = 'X-Chara-App-Protocol';
