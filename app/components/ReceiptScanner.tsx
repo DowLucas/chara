@@ -3,6 +3,7 @@ import {
   View,
   Text,
   Image,
+  Linking,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
@@ -17,7 +18,9 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
-import { scanReceipt, convertFx, ScannedReceipt, ApiError } from '@/lib/api';
+import { scanReceipt, convertFx, ScannedReceipt, ApiError, isOcrCapReached, submitWaitlist } from '@/lib/api';
+import { useDefaultAccount } from '@/lib/accounts';
+import { WaitlistModal } from '@/components/WaitlistModal';
 import { formatMinorUnits } from '@/lib/i18n';
 import {
   FxConversionSection,
@@ -99,6 +102,11 @@ export function ReceiptScanner({ groupCurrency, groupLanguage, onScanned, onCanc
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView | null>(null);
   const [phase, setPhase] = useState<Phase>({ kind: 'camera' });
+  // Waitlist modal state, separate from the phase state machine. The modal
+  // floats over whichever phase the scanner happens to be in (we drop back
+  // to 'camera' on cap-hit so the analyzing animation isn't stuck behind it).
+  const [waitlistState, setWaitlistState] = useState<{ resetsAt?: string } | null>(null);
+  const defaultAccount = useDefaultAccount();
 
   useEffect(() => {
     if (permission && !permission.granted && permission.canAskAgain) {
@@ -167,6 +175,14 @@ export function ReceiptScanner({ groupCurrency, groupLanguage, onScanned, onCanc
       const receipt = await scanReceipt(base64, mimeType, groupLanguage);
       setPhase({ kind: 'result', photoUri, receipt, imageBase64: base64, imageMime: mimeType });
     } catch (e) {
+      // Hosted free-tier cap hit. Don't render the generic error state — open
+      // the waitlist modal so we capture intent instead of just an apology.
+      const cap = isOcrCapReached(e);
+      if (cap) {
+        setPhase({ kind: 'camera' });
+        setWaitlistState({ resetsAt: cap.period_resets_at });
+        return;
+      }
       const message =
         e instanceof ApiError && e.status === 422
           ? t('receiptScanner.errorUnreadable')
@@ -176,6 +192,23 @@ export function ReceiptScanner({ groupCurrency, groupLanguage, onScanned, onCanc
       setPhase({ kind: 'error', photoUri, message });
     }
   }
+
+  // Self-host docs deep-link — used as the secondary CTA in the waitlist
+  // modal ("Or self-host Chara for unlimited everything").
+  const openSelfHostDocs = React.useCallback(() => {
+    void Linking.openURL('https://github.com/DowLucas/chara#self-hosting').catch(() => {
+      // openURL throws synchronously on unsupported schemes; here it'd only
+      // happen if the device has no browser. Nothing graceful to do.
+    });
+  }, []);
+
+  const handleWaitlistSubmit = React.useCallback(async (email: string) => {
+    await submitWaitlist({
+      email,
+      trigger: 'ocr_cap',
+      source: 'mobile',
+    });
+  }, []);
 
   if (!permission) {
     return (
@@ -247,6 +280,15 @@ export function ReceiptScanner({ groupCurrency, groupLanguage, onScanned, onCanc
             </TouchableOpacity>
           </View>
         </View>
+        <WaitlistModal
+          visible={waitlistState !== null}
+          cap={3}
+          periodResetsAt={waitlistState?.resetsAt}
+          defaultEmail={defaultAccount?.user.email}
+          onSubmit={handleWaitlistSubmit}
+          onDismiss={() => setWaitlistState(null)}
+          onSelfHostPressed={openSelfHostDocs}
+        />
       </View>
     );
   }

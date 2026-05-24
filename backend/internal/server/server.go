@@ -7,6 +7,7 @@ import (
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 
 	"github.com/DowLucas/chara/internal/auth"
+	"github.com/DowLucas/chara/internal/billing"
 	"github.com/DowLucas/chara/internal/config"
 	"github.com/DowLucas/chara/internal/db"
 	"github.com/DowLucas/chara/internal/handler"
@@ -18,6 +19,11 @@ import (
 )
 
 const version = "0.1.0"
+
+// FreeOCRCap is the anti-abuse cap on free OCR scans per UTC month for
+// hosted-instance users in v1.0/v1.1. v1.2 will replace this with a
+// tier-aware lookup once paid Chara Hosted launches.
+const FreeOCRCap = 3
 
 func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *auth.JWTService, store *storage.Client) http.Handler {
 	r := chi.NewRouter()
@@ -79,6 +85,14 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 		r.Post("/api/me/push-token", pushH.Register)
 		r.Delete("/api/me/push-token", pushH.Delete)
 
+		// Waitlist signup: collects emails when users hit soft gates during
+		// the v1.0/v1.1 free beta (OCR cap, recurring request, etc.). Also
+		// mounted on selfhost so future hosted-only triggers don't break
+		// when a self-hoster turns on a feature flag — the table just won't
+		// see rows since selfhost surfaces never show waitlist UI.
+		waitlistH := handler.NewWaitlistHandler(queries)
+		r.Post("/api/waitlist", waitlistH.Submit)
+
 		r.Post("/api/groups", groupH.Create)
 		r.Get("/api/groups", groupH.List)
 		r.Get("/api/groups/{groupID}", groupH.Get)
@@ -133,8 +147,15 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 		// Receipt OCR is only mounted when a Gemini key is configured. Self-hosters
 		// who skip GEMINI_API_KEY simply do not see the feature (the instance
 		// advertises features.ocr=false via /.well-known/chara-instance).
+		//
+		// On hosted instances we wrap the scan with the usage counter
+		// (FreeOCRCap = 3/month, v1.0 anti-abuse). Self-hosters pay the
+		// Gemini bill themselves, so no metering: pass a nil counter.
 		if cfg.HasGemini() {
 			receiptH := handler.NewReceiptHandler(receipt.NewGemini(cfg.GeminiAPIKey))
+			if cfg.IsHosted() {
+				receiptH = receiptH.WithCounter(billing.NewCounter(queries), FreeOCRCap)
+			}
 			r.Post("/api/receipts/scan", receiptH.Scan)
 		}
 	})
