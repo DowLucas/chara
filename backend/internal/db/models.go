@@ -139,6 +139,13 @@ type Settlement struct {
 	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
 }
 
+type UsageCounter struct {
+	UserID      string      `db:"user_id" json:"user_id"`
+	Feature     string      `db:"feature" json:"feature"`
+	PeriodStart pgtype.Date `db:"period_start" json:"period_start"`
+	Used        int32       `db:"used" json:"used"`
+}
+
 type User struct {
 	ID              string             `db:"id" json:"id"`
 	Email           string             `db:"email" json:"email"`
@@ -150,4 +157,15 @@ type User struct {
 	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
 	AvatarObjectKey pgtype.Text        `db:"avatar_object_key" json:"avatar_object_key"`
 	AvatarUpdatedAt pgtype.Timestamptz `db:"avatar_updated_at" json:"avatar_updated_at"`
+}
+
+type WaitlistSignup struct {
+	ID         string             `db:"id" json:"id"`
+	UserID     pgtype.Text        `db:"user_id" json:"user_id"`
+	Email      string             `db:"email" json:"email"`
+	Trigger    string             `db:"trigger" json:"trigger"`
+	Source     pgtype.Text        `db:"source" json:"source"`
+	Locale     pgtype.Text        `db:"locale" json:"locale"`
+	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	LastSeenAt pgtype.Timestamptz `db:"last_seen_at" json:"last_seen_at"`
 }

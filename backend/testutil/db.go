@@ -108,6 +108,8 @@ func TruncateAll(t *testing.T, pool *pgxpool.Pool) {
 		"settlements",
 		"group_members",
 		"groups",
+		"usage_counters",
+		"waitlist_signups",
 		"users",
 		"fx_rates",
 	}

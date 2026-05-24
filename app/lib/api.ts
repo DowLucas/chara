@@ -88,8 +88,17 @@ export async function clearToken(): Promise<void> {
 }
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  /**
+   * Parsed JSON payload when the server returned `Content-Type: application/json`.
+   * Server-emitted structured errors put their machine-readable details here
+   * (e.g. the OCR cap response: `{code, remaining, period_resets_at, waitlist_prompt}`).
+   * Falls back to `null` when the body isn't JSON or didn't parse.
+   */
+  public readonly body: unknown;
+
+  constructor(public status: number, message: string, body?: unknown) {
     super(message);
+    this.body = body ?? null;
   }
 }
 
@@ -161,8 +170,20 @@ async function requestWithToken<T>(
   }
 
   if (!res.ok) {
-    const body = await res.text();
-    throw new ApiError(res.status, body);
+    const text = await res.text();
+    // Try to expose a parsed body so callers can read structured error
+    // payloads (e.g. the OCR cap's {code, remaining, period_resets_at,
+    // waitlist_prompt}). Non-JSON or empty bodies fall through to null.
+    let parsed: unknown = null;
+    const contentType = res.headers.get('Content-Type') ?? '';
+    if (text && contentType.includes('application/json')) {
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        // Server claimed JSON but sent garbage; fall back to raw text in message.
+      }
+    }
+    throw new ApiError(res.status, text, parsed);
   }
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
@@ -742,6 +763,13 @@ export interface ScannedReceipt {
    *  itemized OCR (or scans where items can't be confidently parsed) omit
    *  this field. The mobile app must tolerate missing / empty. */
   items?: ScannedReceiptItem[];
+
+  // Hosted-instance billing piggyback. Present only on hosted; selfhost
+  // responses omit these and the client treats their absence as "no
+  // metering, never show upsells." See `2026-05-24-pro-billing-design.md`.
+  tier?: 'free';
+  remaining?: number;
+  period_resets_at?: string;
 }
 
 export interface ScannedReceiptItem {
@@ -760,6 +788,49 @@ export function scanReceipt(imageBase64: string, mimeType: string, language?: st
       ...(language ? { language } : {}),
     }),
   });
+}
+
+// Waitlist — captures emails when hosted users hit a soft gate during the
+// v1.0/v1.1 free beta. The server enforces the allowed-triggers list, so
+// adding a new trigger here also requires a backend handler change.
+export type WaitlistTrigger = 'ocr_cap' | 'recurring_request' | 'export_request';
+
+export interface WaitlistSubmission {
+  email: string;
+  trigger: WaitlistTrigger;
+  /** Optional funnel-analysis hint, e.g. 'mobile' | 'web'. */
+  source?: string;
+  /** Optional device locale at submission time. */
+  locale?: string;
+}
+
+export function submitWaitlist(input: WaitlistSubmission) {
+  return request<{ ok: boolean }>('/api/waitlist', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+/**
+ * Discriminator for the 429 OCR-cap response. Matches the server-side
+ * `capReachedResponse` shape from internal/handler/receipts.go. Use with
+ * `ApiError.body` to switch from a generic error toast to the waitlist
+ * modal.
+ */
+export interface OcrCapReachedBody {
+  code: 'ocr_cap_reached';
+  message: string;
+  remaining: number;
+  period_resets_at: string;
+  waitlist_prompt: boolean;
+}
+
+export function isOcrCapReached(err: unknown): OcrCapReachedBody | null {
+  if (!(err instanceof ApiError)) return null;
+  if (err.status !== 429) return null;
+  const body = err.body as Partial<OcrCapReachedBody> | null;
+  if (!body || body.code !== 'ocr_cap_reached') return null;
+  return body as OcrCapReachedBody;
 }
 
 // Receipt attachments
@@ -1064,6 +1135,14 @@ export function apiFor(serverUrl: string) {
           mime_type: mimeType,
           ...(language ? { language } : {}),
         }),
+      }),
+
+    // Waitlist signup — hosted-only soft-gate email capture during the
+    // v1.0/v1.1 free beta.
+    submitWaitlist: (input: WaitlistSubmission) =>
+      requestOn<{ ok: boolean }>(serverUrl, '/api/waitlist', {
+        method: 'POST',
+        body: JSON.stringify(input),
       }),
 
     // Instance info (unauthenticated, but bound to a specific server)
