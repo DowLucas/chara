@@ -88,16 +88,23 @@ type Created struct {
 // beyond shape (membership, group-lock, currency match, etc.) — Create
 // trusts its Input.
 //
-// Note: in.SourceKind / in.SourceID are intentionally NOT written here —
-// the matching columns don't exist on the expenses table yet. They land
-// in a later phase along with the DB migration. Keeping the fields on
-// Input now means callers don't need to be edited again when that lands.
+// in.SourceKind / in.SourceID are written when non-nil (e.g. "recurring"
+// + rule id for materialized rows). Manual expenses leave them nil.
 func Create(ctx context.Context, tx pgx.Tx, q *db.Queries, in Input) (Created, error) {
 	qtx := q.WithTx(tx)
 
 	notes := pgtype.Text{Valid: in.Notes != nil}
 	if in.Notes != nil {
 		notes.String = *in.Notes
+	}
+
+	sourceKind := pgtype.Text{}
+	if in.SourceKind != nil {
+		sourceKind = pgtype.Text{String: *in.SourceKind, Valid: true}
+	}
+	sourceID := pgtype.Text{}
+	if in.SourceID != nil {
+		sourceID = pgtype.Text{String: *in.SourceID, Valid: true}
 	}
 
 	expense, err := qtx.CreateExpense(ctx, db.CreateExpenseParams{
@@ -118,6 +125,8 @@ func Create(ctx context.Context, tx pgx.Tx, q *db.Queries, in Input) (Created, e
 		FxRate:           in.FxRate,
 		FxAsOf:           in.FxAsOf,
 		FxSource:         in.FxSource,
+		SourceKind:       sourceKind,
+		SourceID:         sourceID,
 	})
 	if err != nil {
 		return Created{}, err

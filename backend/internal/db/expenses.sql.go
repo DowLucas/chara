@@ -31,12 +31,14 @@ const createExpense = `-- name: CreateExpense :one
 INSERT INTO expenses (
     id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
     expense_date, is_reimbursement, created_by_id,
-    original_amount, original_currency, fx_rate, fx_as_of, fx_source
+    original_amount, original_currency, fx_rate, fx_as_of, fx_source,
+    source_kind, source_id
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
 RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
           expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
-          original_amount, original_currency, fx_rate, fx_as_of, fx_source
+          original_amount, original_currency, fx_rate, fx_as_of, fx_source,
+          source_kind, source_id
 `
 
 type CreateExpenseParams struct {
@@ -57,6 +59,8 @@ type CreateExpenseParams struct {
 	FxRate           pgtype.Numeric `db:"fx_rate" json:"fx_rate"`
 	FxAsOf           pgtype.Date    `db:"fx_as_of" json:"fx_as_of"`
 	FxSource         pgtype.Text    `db:"fx_source" json:"fx_source"`
+	SourceKind       pgtype.Text    `db:"source_kind" json:"source_kind"`
+	SourceID         pgtype.Text    `db:"source_id" json:"source_id"`
 }
 
 type CreateExpenseRow struct {
@@ -80,6 +84,8 @@ type CreateExpenseRow struct {
 	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
 	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
 	FxSource         pgtype.Text        `db:"fx_source" json:"fx_source"`
+	SourceKind       pgtype.Text        `db:"source_kind" json:"source_kind"`
+	SourceID         pgtype.Text        `db:"source_id" json:"source_id"`
 }
 
 // Explicit column list everywhere to exclude the generated `search_vector` column,
@@ -103,6 +109,8 @@ func (q *Queries) CreateExpense(ctx context.Context, arg CreateExpenseParams) (C
 		arg.FxRate,
 		arg.FxAsOf,
 		arg.FxSource,
+		arg.SourceKind,
+		arg.SourceID,
 	)
 	var i CreateExpenseRow
 	err := row.Scan(
@@ -126,6 +134,8 @@ func (q *Queries) CreateExpense(ctx context.Context, arg CreateExpenseParams) (C
 		&i.FxRate,
 		&i.FxAsOf,
 		&i.FxSource,
+		&i.SourceKind,
+		&i.SourceID,
 	)
 	return i, err
 }
