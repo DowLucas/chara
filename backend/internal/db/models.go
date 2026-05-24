@@ -5,8 +5,60 @@
 package db
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type RiverJobState string
+
+const (
+	RiverJobStateAvailable RiverJobState = "available"
+	RiverJobStateCancelled RiverJobState = "cancelled"
+	RiverJobStateCompleted RiverJobState = "completed"
+	RiverJobStateDiscarded RiverJobState = "discarded"
+	RiverJobStatePending   RiverJobState = "pending"
+	RiverJobStateRetryable RiverJobState = "retryable"
+	RiverJobStateRunning   RiverJobState = "running"
+	RiverJobStateScheduled RiverJobState = "scheduled"
+)
+
+func (e *RiverJobState) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = RiverJobState(s)
+	case string:
+		*e = RiverJobState(s)
+	default:
+		return fmt.Errorf("unsupported scan type for RiverJobState: %T", src)
+	}
+	return nil
+}
+
+type NullRiverJobState struct {
+	RiverJobState RiverJobState `json:"river_job_state"`
+	Valid         bool          `json:"valid"` // Valid is true if RiverJobState is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullRiverJobState) Scan(value interface{}) error {
+	if value == nil {
+		ns.RiverJobState, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.RiverJobState.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullRiverJobState) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.RiverJobState), nil
+}
 
 type Activity struct {
 	ID         string             `db:"id" json:"id"`
@@ -41,6 +93,8 @@ type Expense struct {
 	FxRate           pgtype.Numeric     `db:"fx_rate" json:"fx_rate"`
 	FxAsOf           pgtype.Date        `db:"fx_as_of" json:"fx_as_of"`
 	FxSource         pgtype.Text        `db:"fx_source" json:"fx_source"`
+	SourceKind       pgtype.Text        `db:"source_kind" json:"source_kind"`
+	SourceID         pgtype.Text        `db:"source_id" json:"source_id"`
 }
 
 type ExpenseAttachment struct {
@@ -118,6 +172,98 @@ type PushToken struct {
 	Platform   string             `db:"platform" json:"platform"`
 	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at"`
 	LastUsedAt pgtype.Timestamptz `db:"last_used_at" json:"last_used_at"`
+}
+
+type RecurringExpense struct {
+	ID            string             `db:"id" json:"id"`
+	GroupID       string             `db:"group_id" json:"group_id"`
+	Title         string             `db:"title" json:"title"`
+	AmountMinor   int64              `db:"amount_minor" json:"amount_minor"`
+	Currency      string             `db:"currency" json:"currency"`
+	PaidByID      string             `db:"paid_by_id" json:"paid_by_id"`
+	SplitMethod   string             `db:"split_method" json:"split_method"`
+	Category      string             `db:"category" json:"category"`
+	Notes         pgtype.Text        `db:"notes" json:"notes"`
+	FreqUnit      string             `db:"freq_unit" json:"freq_unit"`
+	FreqInterval  int32              `db:"freq_interval" json:"freq_interval"`
+	StartDate     pgtype.Date        `db:"start_date" json:"start_date"`
+	EndDate       pgtype.Date        `db:"end_date" json:"end_date"`
+	Timezone      string             `db:"timezone" json:"timezone"`
+	FireLocalTime pgtype.Time        `db:"fire_local_time" json:"fire_local_time"`
+	Status        string             `db:"status" json:"status"`
+	PausedReason  pgtype.Text        `db:"paused_reason" json:"paused_reason"`
+	LastFireAt    pgtype.Timestamptz `db:"last_fire_at" json:"last_fire_at"`
+	NextFireAt    pgtype.Timestamptz `db:"next_fire_at" json:"next_fire_at"`
+	CreatedByID   string             `db:"created_by_id" json:"created_by_id"`
+	CreatedAt     pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	UpdatedAt     pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+}
+
+type RecurringExpenseSplit struct {
+	RecurringID string `db:"recurring_id" json:"recurring_id"`
+	MemberID    string `db:"member_id" json:"member_id"`
+	Value       int64  `db:"value" json:"value"`
+}
+
+type RiverClient struct {
+	ID        string             `db:"id" json:"id"`
+	CreatedAt pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	Metadata  json.RawMessage    `db:"metadata" json:"metadata"`
+	PausedAt  pgtype.Timestamptz `db:"paused_at" json:"paused_at"`
+	UpdatedAt pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+}
+
+type RiverClientQueue struct {
+	RiverClientID    string             `db:"river_client_id" json:"river_client_id"`
+	Name             string             `db:"name" json:"name"`
+	CreatedAt        pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	MaxWorkers       int64              `db:"max_workers" json:"max_workers"`
+	Metadata         json.RawMessage    `db:"metadata" json:"metadata"`
+	NumJobsCompleted int64              `db:"num_jobs_completed" json:"num_jobs_completed"`
+	NumJobsRunning   int64              `db:"num_jobs_running" json:"num_jobs_running"`
+	UpdatedAt        pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
+}
+
+type RiverJob struct {
+	ID           int64              `db:"id" json:"id"`
+	State        RiverJobState      `db:"state" json:"state"`
+	Attempt      int16              `db:"attempt" json:"attempt"`
+	MaxAttempts  int16              `db:"max_attempts" json:"max_attempts"`
+	AttemptedAt  pgtype.Timestamptz `db:"attempted_at" json:"attempted_at"`
+	CreatedAt    pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	FinalizedAt  pgtype.Timestamptz `db:"finalized_at" json:"finalized_at"`
+	ScheduledAt  pgtype.Timestamptz `db:"scheduled_at" json:"scheduled_at"`
+	Priority     int16              `db:"priority" json:"priority"`
+	Args         json.RawMessage    `db:"args" json:"args"`
+	AttemptedBy  []string           `db:"attempted_by" json:"attempted_by"`
+	Errors       []json.RawMessage  `db:"errors" json:"errors"`
+	Kind         string             `db:"kind" json:"kind"`
+	Metadata     json.RawMessage    `db:"metadata" json:"metadata"`
+	Queue        string             `db:"queue" json:"queue"`
+	Tags         []string           `db:"tags" json:"tags"`
+	UniqueKey    []byte             `db:"unique_key" json:"unique_key"`
+	UniqueStates pgtype.Bits        `db:"unique_states" json:"unique_states"`
+}
+
+type RiverLeader struct {
+	ElectedAt pgtype.Timestamptz `db:"elected_at" json:"elected_at"`
+	ExpiresAt pgtype.Timestamptz `db:"expires_at" json:"expires_at"`
+	LeaderID  string             `db:"leader_id" json:"leader_id"`
+	Name      string             `db:"name" json:"name"`
+}
+
+type RiverMigration struct {
+	ID        int64              `db:"id" json:"id"`
+	CreatedAt pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	Version   int64              `db:"version" json:"version"`
+}
+
+type RiverQueue struct {
+	Name      string             `db:"name" json:"name"`
+	CreatedAt pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	Metadata  json.RawMessage    `db:"metadata" json:"metadata"`
+	PausedAt  pgtype.Timestamptz `db:"paused_at" json:"paused_at"`
+	UpdatedAt pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
 }
 
 type Settlement struct {
