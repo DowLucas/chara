@@ -189,6 +189,21 @@ once the multi-server app build reaches the install-base threshold.
   `listSettlementSuggestions` API in `app/lib/api.ts`; i18n keys under
   `groupDetail.suggestions*` in `app/lib/locales/en.json`.
 
+### Recurring expenses (shipped 2026-05-24) ✅
+
+Spec: `docs/superpowers/specs/2026-05-24-recurring-expenses-design.md`
+Council: `docs/superpowers/specs/2026-05-24-recurring-expenses-council.html`
+Plan:  `docs/superpowers/plans/2026-05-24-recurring-expenses.md`
+
+- River queue introduced as the project's first background job system (v0.38.0, in-process inside `cmd/api`, vendored migrations at 000040..000045).
+- 2 new tables (`recurring_expenses`, `recurring_expense_splits`) at migrations 000025/000026, polymorphic `(source_kind, source_id)` columns on `expenses`.
+- Currency frozen at create; group currency-change is a no-op for existing rules.
+- Schedule presets (day/week/month/year × interval 1..365), per-rule IANA timezone, per-rule fire local time (default 09:00).
+- HTTP: 8 routes under `/api/groups/{groupID}/recurring` — CRUD + pause/resume + resume-all-after-unlock.
+- Mobile: dedicated screen family at `/groups/[server]/[id]/recurring/*`, entered from Group Settings → Automation.
+- TDD: shared JSON fixture between Go `internal/recurring` and Jest `app/lib/__tests__/next-fire.test.ts`; integration tests for happy path, catch-up within cap, catch-up overflow, lock/leave pause, idempotency, hard-delete mid-tick, currency immutability, start_date immutability.
+- Protocol bumped additively (v1 → v2). `MIN_APP_PROTOCOL` unchanged.
+
 ### Week 10 — Web client (Expo for Web) 🔲
 
 - [ ] Sign-in flow with magic link
