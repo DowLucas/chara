@@ -22,6 +22,22 @@ export const colors = {
   fgOnAccent: '#F4F1E6',
 } as const;
 
+// Per-group accent palette: 8 Edo-period pigments tuned to sit on `paper`
+// without colliding with the semantic moss/brick/vermillion signals. Used
+// only on the home dashboard group avatar; never on amounts or status.
+// Index is meaningful (hash %8 picks here), so do not reorder casually —
+// reordering changes every existing group's default color.
+export const groupAccentSwatches = [
+  '#1F3A6E', // Ai — deep indigo
+  '#3E6FA8', // Hanada — mid blue
+  '#5E908A', // Asagi — pale teal
+  '#6B4B7E', // Murasaki — imperial purple
+  '#C26A7F', // Beni — safflower pink
+  '#C99A2E', // Yamabuki — gold ochre
+  '#7A4F2E', // Cha — tea brown
+  '#1F1A18', // Sumi — ink black
+] as const;
+
 // On Android, fontWeight is ignored for custom fonts.
 // Use explicit named font files per weight instead.
 export const fonts = {

@@ -68,76 +68,75 @@ Each slide uses this structure. Copy the block, fill `[bracketed]` fields from `
 >
 > **Mood:** Mullvad VPN meets a leather-bound ledger. Stockholm studio, not Salesforce keynote."
 
-### Slide 1 — Hero
+### Slide 1 — Hero (ch.01 The Promise)
 
-> [Generic block above, with:]
-> - EYEBROW: `OPEN SOURCE · NATIVE · NORDIC`
-> - HEADLINE: `Split it. Settle it. Call it Chara.`
-> - SUBHEAD: `Bill splitting that respects your data. Run it on our servers, or your own.`
-> - Screen content note: home tab with giant mono `SEK 240,00` "You're owed" balance and three group cards below.
+> - EYEBROW: `CH.01 · THE PROMISE`
+> - HEADLINE: `Splitwise capped you. Steven dropped you. Chara won't.`
+> - SUBHEAD: `Take a photo of the receipt. Chara figures out the rest.`
+> - Screen content: home tab with giant mono `SEK 240,00` "You're owed" balance, three group cards below.
 
-### Slide 2 — Multi-server accounts
+### Slide 2 — Snap (ch.02)
 
-> - EYEBROW: `MULTI-SERVER`
+> - EYEBROW: `CH.02 · SNAP`
+> - HEADLINE: `The receipt reads itself.`
+> - SUBHEAD: `Snap the photo. Chara pulls merchant, date, total — and every line item.`
+> - Screen content: add-expense form pre-filled from a scan, camera viewfinder overlay near top with corner ticks.
+
+### Slide 3 — Fair (ch.03)
+
+> - EYEBROW: `CH.03 · FAIR`
+> - HEADLINE: `You pay for what you ate.`
+> - SUBHEAD: `Tap each line to assign it to whoever ordered it. The split builds itself.`
+> - Screen content: ScanItemsAssign screen — receipt lines down the left, member-avatar chips beside each, moss highlights on selected lines.
+
+### Slide 4 — Home (ch.04)
+
+> - EYEBROW: `CH.04 · HOME`
+> - HEADLINE: `In your own currency, at today's rate.`
+> - SUBHEAD: `Per-currency truthful. FX for display, never for silent conversion.`
+> - Screen content: balances panel with two currency lines (`SEK`, `EUR`), an amber FX rate row reading "EUR 1 = SEK 11,30 · today".
+
+### Slide 5 — Done (ch.05)
+
+> - EYEBROW: `CH.05 · DONE`
+> - HEADLINE: `Settled in a tap.`
+> - SUBHEAD: `Swish in Sweden. Vipps and MobilePay next. Or any payment link you already use.`
+> - Screen content: Settlement Impact Sheet, citrine "Settle with Swish" button, `SEK 420,00` to a named recipient, message `Chara · Tokyo trip`.
+
+### Slide 6 — One tab, zero chain (ch.06)
+
+> - EYEBROW: `CH.06 · ONE TAB, ZERO CHAIN`
+> - HEADLINE: `Pay the fewest people possible.`
+> - SUBHEAD: `Chara computes the minimum-cardinality settlement. No "I'll Venmo you, you Swish them."`
+> - Screen content: standings tab with three suggestion rows at top, per-member balances below in rust/sage.
+
+### Slide 7 — It repeats (ch.07)
+
+> - EYEBROW: `CH.07 · IT REPEATS`
+> - HEADLINE: `Rent, Netflix, the cleaner.`
+> - SUBHEAD: `Set the recurring once. Chara drops the expense in and pings the right people to settle.`
+> - Screen content: recurring expenses list — three rows (rent, Netflix, cleaner) with cadence text on the right.
+
+### Slide 8 — Multi-server (ch.08)
+
+> - EYEBROW: `CH.08 · MULTI-SERVER`
 > - HEADLINE: `Your homelab. Their server. One app.`
 > - SUBHEAD: `Hold every Chara account at once. Groups, balances, and activity aggregated into one inbox.`
 > - Screen content: settings accounts list, three rows with different server hostnames, status dots.
 
-### Slide 3 — Standings + suggestions
+### Slide 9 — Self-host (ch.09)
 
-> - EYEBROW: `MINIMUM TRANSFERS`
-> - HEADLINE: `Pay the fewest people possible.`
-> - SUBHEAD: `Chara computes the minimum-cardinality settlement. No payment chains.`
-> - Screen content: standings tab with three suggestion rows at top, member balances below in rust/sage.
-
-### Slide 4 — Add expense + scan
-
-> - EYEBROW: `ADD AN EXPENSE IN SECONDS`
-> - HEADLINE: `Snap. Split. Done.`
-> - SUBHEAD: `Photograph the receipt. Chara pulls merchant, date, and total.`
-> - Screen content: add-expense form pre-filled from a scan, viewfinder overlay near top.
-
-### Slide 5 — Itemized split
-
-> - EYEBROW: `ITEM-BY-ITEM`
-> - HEADLINE: `Itemized splits without the spreadsheet.`
-> - SUBHEAD: `Tap each line to assign it to whoever ordered it. Chara builds the split for you.`
-> - Screen content: ScanItemsAssign screen, receipt lines with member-avatar chips beside each.
-
-### Slide 6 — Swish settle
-
-> - EYEBROW: `SWISH · SE`
-> - HEADLINE: `One tap to settle. Real Swish, not a workaround.`
-> - SUBHEAD: `Settle SEK in two seconds via the Swish app. Vipps and MobilePay next.`
-> - Screen content: Settlement Impact Sheet, amber "Settle with Swish" button, `SEK 420,00` to a named recipient.
-
-### Slide 7 — Activity feed
-
-> - EYEBROW: `EVERY CHANGE, LOGGED`
-> - HEADLINE: `A receipt for every move.`
-> - SUBHEAD: `Edits and deletes are audit-trailed in the same transaction as the change.`
-> - Screen content: activity timeline with mono-dated entries, soft hairline dividers.
-
-### Slide 8 — Self-host
-
-> - EYEBROW: `RUN IT YOURSELF`
-> - HEADLINE: `Or run it on your own server.`
+> - EYEBROW: `CH.09 · SELF-HOST`
+> - HEADLINE: `One file. One command.`
 > - SUBHEAD: `Docker Compose, ARM64 and AMD64, OIDC out of the box. Same app, same code.`
-> - Screen content: "Add a server" flow with a URL field, faint terminal text behind showing `docker compose up -d`.
+> - Screen content: "Add a server" flow with a URL field, faint terminal mock behind showing `docker compose up -d`.
 
-### Slide 9 — Multi-currency
+### Slide 10 — Keep your peace (ch.10 the outro)
 
-> - EYEBROW: `MONEY MATH YOU CAN TRUST`
-> - HEADLINE: `Per-currency, never per-floating-point.`
-> - SUBHEAD: `Every value stored as integer minor units. FX for display, never for silent conversion.`
-> - Screen content: balances panel with two currency lines (`SEK`, `EUR`), an amber FX rate row.
-
-### Slide 10 — Localized
-
-> - EYEBROW: `SVENSKA · BOKMÅL · DANSK · ENGLISH`
-> - HEADLINE: `Speaks your language. Quietly.`
-> - SUBHEAD: `Swedish, Norwegian Bokmål, Danish, and English on launch.`
-> - Screen content: same group view in Swedish ("Du är skyldig", "Att betala"), language picker visible.
+> - EYEBROW: `CH.10 · THE OUTRO`
+> - HEADLINE: `Split bills. Keep your peace.`
+> - SUBHEAD: `Open source. EU-hosted, or your own server. No ads, ever.`
+> - Screen content: activity feed showing settled timeline — moss "settled" stamps on each row, mono dates, soft hairline dividers, a `CHARA` mono stamp top-right.
 
 ---
 

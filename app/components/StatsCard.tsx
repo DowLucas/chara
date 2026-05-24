@@ -65,13 +65,18 @@ export function StatsCard({ stats, loading }: Props) {
           </View>
 
           {stats.top_spender && (
-            <View style={styles.topSpenderRow}>
+            <View style={styles.topSpenderBlock}>
               <Text style={styles.label}>{t('groupSettings.stats.topSpender')}</Text>
-              <View style={styles.topSpenderRight}>
+              <View style={styles.topSpenderValueRow}>
                 <Text style={styles.topSpenderName} numberOfLines={1}>
                   {stats.top_spender.display_name}
                 </Text>
-                <Text style={styles.topSpenderAmount}>
+                <Text
+                  style={styles.topSpenderAmount}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.6}
+                >
                   {formatMinorUnits(
                     stats.top_spender.minor_units_paid,
                     stats.top_spender.currency,
@@ -153,28 +158,27 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
   },
-  topSpenderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  topSpenderBlock: {
     paddingVertical: spacing.s2,
-    gap: spacing.s3,
   },
-  topSpenderRight: {
-    alignItems: 'flex-end',
-    flex: 1,
+  topSpenderValueRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    gap: spacing.s3,
+    marginTop: spacing.s1,
   },
   topSpenderName: {
     fontFamily: fontDisplay,
-    fontSize: fontSize.bodyS,
+    fontSize: fontSize.body,
     color: colors.graphite,
+    flexShrink: 1,
   },
   topSpenderAmount: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.body,
+    color: colors.graphite,
     fontVariant: ['tabular-nums'],
-    marginTop: 2,
   },
   placeholder: {
     fontFamily: fontBody,

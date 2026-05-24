@@ -85,21 +85,20 @@ export function isSwishEligible(opts: {
  * Throws if `payeeSwishNumber` is not a valid SE mobile number — callers
  * should gate with `isSwishEligible` first.
  *
- * Wire format reverse-engineered from the Swish iOS/Android handlers and
- * cross-checked against the swish-easy reference (the only working open
- * implementation I've found) plus several live donation pages
- * (Filmstund, fluxer, biketoured/italy26). Strict-payload invariants
- * Swish enforces — any violation surfaces as the generic "Felaktig
- * länk" / "Incorrect link" error in the Swish app:
+ * Wire format reverse-engineered from the Swish iOS/Android handlers
+ * and cross-checked against the integration spec
+ * (docs/swish-integration.md §3). Strict-payload invariants Swish
+ * enforces — any violation surfaces as the generic "Felaktig länk" /
+ * "Incorrect link" error in the Swish app:
  *
  *   - Encoding is `encodeURIComponent(JSON.stringify(payload))`. Base64
  *     is rejected outright.
  *   - `payee.value` is E.164 (`+46...`) or national (`07...`). Both work.
- *   - `amount.value` MUST be an **integer** number of kronor. The
- *     consumer parser rejects decimals (226.82 → fail). The merchant
- *     HTTP API accepts decimal strings, but the deep-link parser is
- *     strict integer-only. Round at build time; the caller decides
- *     whether to use Math.round / Math.ceil / Math.floor for the öre.
+ *   - `amount.value` is a **decimal string with exactly 2 fraction
+ *     digits** (`"590.14"`, `"240.00"`). This matches both the merchant
+ *     API spec and what the consumer deep-link parser actually accepts;
+ *     dropping the öre on handoff was a longstanding bug that this
+ *     module now fixes (öre stay intact end-to-end).
  *   - `message.value` is restricted to `[a-zA-ZåäöÅÄÖ0-9:;.,?!()" ]`
  *     (max 50 chars). `·`, `-`, `*`, emoji, etc. all trigger
  *     "Felaktig länk". We sanitize at build time.
@@ -125,33 +124,22 @@ export function buildSwishLink(opts: {
   }
 
   // Swish's consumer deep-link parser wants **national format**
-  // (`0XXXXXXXXX`), not E.164. The swish-easy reference (2018) sends
-  // E.164 and worked at the time, but the current Swish iOS/Android
-  // apps reject `+46…` with "the link used to open the app has an
-  // incorrect format" — even though they accept the same number in
-  // E.164 when you type it manually. The live italy26 donation page
-  // (https://github.com/biketoured/italy26/blob/main/donate.html)
-  // ships `0725532011` and currently works.
+  // (`0XXXXXXXXX`), not E.164. The current Swish iOS/Android apps
+  // reject `+46…` with "the link used to open the app has an incorrect
+  // format" — even though they accept the same number in E.164 when
+  // you type it manually.
   const national = '0' + canonical.slice(3);
 
   const payload = {
     version: 1,
     payee: { value: national },
-    // Round up so the payee is never short — better to over-pay by <1 kr
-    // than to under-pay (which would leave a tiny residual debt and force
-    // a follow-up settlement). Caller-side display should match.
-    amount: { value: Math.ceil(opts.amountMinor / 100) },
+    // Decimal string with 2 fraction digits, per docs/swish-integration.md
+    // §3. Never rounds — 590.14 SEK stays 590.14 SEK end-to-end.
+    amount: { value: formatMinorAsDecimal(opts.amountMinor) },
     message: { value: buildMessage(opts.groupName) },
   };
 
   return `swish://payment?data=${encodeURIComponent(JSON.stringify(payload))}`;
-}
-
-/** Rounds a minor-unit amount the same way `buildSwishLink` does, so
- *  the UI can show the rounded amount the user is about to send (and
- *  any settlement record can match). */
-export function swishRoundedKronor(amountMinor: number): number {
-  return Math.ceil(amountMinor / 100);
 }
 
 /**

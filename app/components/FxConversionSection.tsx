@@ -11,12 +11,10 @@ import { useTranslation } from 'react-i18next';
 import {
   colors,
   fontBody,
-  fontDisplay,
   fontMono,
   fontSize,
   spacing,
 } from '@/lib/theme';
-import { formatMinorUnits } from '@/lib/i18n';
 import { ApiError, FxConvertResponse } from '@/lib/api';
 
 export type FxState =
@@ -162,6 +160,7 @@ export function FxConversionSection({
   return (
     <View style={styles.fxWrap}>
       <Text style={styles.fxHeader}>{t('fx.header', { to })}</Text>
+      {/* helpers defined below */}
 
       <View style={styles.fxRateRow}>
         <Text style={styles.fxRateLabel}>{t('fx.rateLabel', { from })}</Text>
@@ -181,14 +180,52 @@ export function FxConversionSection({
 
       <View style={styles.fxConvertedRow}>
         <Text style={styles.fxConvertedLabel}>{t('fx.convertedLabel')}</Text>
-        <Text style={styles.fxConvertedValue}>
-          {rateNumber !== null
-            ? formatMinorUnits(convertedMinor, to)
-            : t('fx.rateInvalid')}
-        </Text>
+        <View style={styles.fxConvertedInputWrap}>
+          <TextInput
+            value={
+              rateNumber !== null
+                ? formatMinorAsDecimal(convertedMinor)
+                : ''
+            }
+            onChangeText={(txt) => {
+              // User editing converted derives a new rate.
+              // converted (major) * 100 = amountMinor * rate
+              // → rate = (converted * 100) / amountMinor
+              if (amountMinor <= 0) return;
+              const n = parseFloat(txt.replace(',', '.'));
+              if (!Number.isFinite(n) || n < 0) {
+                setRateInput('');
+                return;
+              }
+              const newRate = (n * 100) / amountMinor;
+              setRateInput(stripTrailingZeros(newRate.toFixed(6)));
+            }}
+            keyboardType="decimal-pad"
+            placeholder={t('fx.rateInvalid')}
+            placeholderTextColor={colors.lead}
+            style={styles.fxConvertedInput}
+            selectTextOnFocus
+          />
+          <Text style={styles.fxConvertedUnit}>{to}</Text>
+        </View>
       </View>
     </View>
   );
+}
+
+/** Minor units → "240.00" decimal string for editable display. */
+function formatMinorAsDecimal(minor: number): string {
+  const negative = minor < 0;
+  const abs = Math.abs(Math.trunc(minor));
+  const major = Math.floor(abs / 100);
+  const cents = abs % 100;
+  const body = `${major}.${cents.toString().padStart(2, '0')}`;
+  return negative ? `-${body}` : body;
+}
+
+function stripTrailingZeros(s: string): string {
+  if (!s.includes('.')) return s;
+  return s.replace(/0+$/, '').replace(/\.$/, '');
 }
 
 const styles = StyleSheet.create({
@@ -249,8 +286,9 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.graphite,
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
     justifyContent: 'space-between',
+    gap: spacing.s3,
   },
   fxConvertedLabel: {
     fontFamily: fontMono,
@@ -258,11 +296,30 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     letterSpacing: 0.3,
   },
-  fxConvertedValue: {
-    fontFamily: fontDisplay,
-    fontSize: fontSize.displayS,
+  fxConvertedInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.graphite,
+    paddingBottom: 2,
+    minWidth: 140,
+    flexShrink: 1,
+  },
+  fxConvertedInput: {
+    flex: 1,
+    fontFamily: fontMono,
+    fontSize: fontSize.bodyL,
     color: colors.graphite,
-    letterSpacing: -0.5,
+    padding: 0,
+    textAlign: 'right',
+    fontVariant: ['tabular-nums'],
+  },
+  fxConvertedUnit: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    letterSpacing: 0.3,
   },
   fxLoading: { flexDirection: 'row', alignItems: 'center', gap: spacing.s3 },
   fxLoadingText: {

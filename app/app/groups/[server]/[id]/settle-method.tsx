@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Linking, Platform, Image } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -112,14 +112,14 @@ export default function SettleMethodScreen() {
     { id: 'manual', enabled: true,  primary: false },
   ];
 
-  async function recordSettlement(noteSuffix?: string) {
+  async function recordSettlement(noteSuffix?: string, amountOverride?: string) {
     if (!id || !from || !to || !amount || !currency || !serverUrl) return false;
     setSubmitting(true);
     try {
       await api.settle(id, {
         from_member_id: from,
         to_member_id: to,
-        amount,
+        amount: amountOverride ?? amount,
         currency,
         note: noteSuffix,
       });
@@ -220,7 +220,14 @@ export default function SettleMethodScreen() {
                 {t('settleMethod.subMeta', { group: group?.name ?? '' })}
               </Text>
             </View>
-            <Text style={styles.counterAmount}>{formattedAmount}</Text>
+            <Text
+              style={styles.counterAmount}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.5}
+            >
+              {formattedAmount}
+            </Text>
           </View>
           <View style={styles.heroRule} />
           <View style={styles.awaitingBodyWrap}>
@@ -243,7 +250,7 @@ export default function SettleMethodScreen() {
                 {t('settleMethod.swishWaitOpen')}
               </Button>
               <TouchableOpacity
-                onPress={() => recordSettlement('swish')}
+                onPress={() => recordSettlement('swish', amount)}
                 disabled={submitting}
                 style={styles.awaitingSecondary}
               >
@@ -261,7 +268,7 @@ export default function SettleMethodScreen() {
                   owed" semantic from CLAUDE.md. */}
               <Button
                 kind="primary"
-                onPress={() => recordSettlement('swish')}
+                onPress={() => recordSettlement('swish', amount)}
                 disabled={submitting}
                 style={{
                   marginBottom: spacing.s2,
@@ -288,21 +295,41 @@ export default function SettleMethodScreen() {
       ? t('settle.settledBody', { amount: formattedAmount, name: counter?.name ?? '' })
       : t('settle.settledBody', { amount: formattedAmount, name: counter?.name ?? '' });
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <TopBar left={<IconButton icon="x" onPress={() => router.back()} />} />
-        <View style={styles.settledScreen}>
-          <Stamp size="lg" />
-          <Text style={styles.settledTitle}>{t('settle.settledTitle')}</Text>
-          <Text style={styles.settledBody}>{sentence}</Text>
-          <View style={styles.settledRule} />
-          <Text style={styles.settledDate}>
-            {completedAt && `${formatDate(completedAt)} · ${formatTime(completedAt)}`}
-          </Text>
+      <View style={styles.settledRoot}>
+        {/* Full-bleed ukiyo-e hero. The illustration is the screen — text
+            composes against it like a tea-house bill resting on the
+            tatami below. */}
+        <Image
+          source={require('@/assets/illustrations/settled-night.png')}
+          style={styles.settledHero}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+        />
+        <View style={[styles.settledClose, { top: insets.top + 8 }]}>
+          <IconButton icon="x" onPress={() => router.back()} />
         </View>
-        <View style={[styles.ctaBar, { paddingBottom: insets.bottom + 8 }]}>
-          <Button kind="primary" onPress={() => router.back()} style={{ flex: 1 }}>
-            {t('common.done')}
-          </Button>
+
+        {/* Paper card slides up over the image edge; the vermillion
+            top rule echoes the red chop in the print. */}
+        <View style={styles.settledPanel}>
+          <View style={styles.settledPanelRule} />
+          <View style={styles.settledPanelInner}>
+            <Text style={styles.settledEyebrow}>{t('settle.settledTitle').toLowerCase()}</Text>
+            <View style={styles.settledStampRow}>
+              <View style={styles.settledStampLine} />
+              <Stamp size="lg" />
+              <View style={styles.settledStampLine} />
+            </View>
+            <Text style={styles.settledSentence}>{sentence}</Text>
+            <Text style={styles.settledChop}>
+              {completedAt && `${formatDate(completedAt)} · ${formatTime(completedAt)}`}
+            </Text>
+          </View>
+          <View style={[styles.ctaBar, styles.settledCta, { paddingBottom: insets.bottom + 8 }]}>
+            <Button kind="primary" onPress={() => router.back()} style={{ flex: 1 }}>
+              {t('common.done')}
+            </Button>
+          </View>
         </View>
       </View>
     );
@@ -316,7 +343,7 @@ export default function SettleMethodScreen() {
           : t('settleMethod.requestTitle', { amount: formattedAmount })}
         left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
       />
-      <ScrollView style={styles.scroll}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.pickScroll}>
         {/* Counterparty + amount */}
         <View style={styles.counterRow}>
           <Avatar initials={initialsOf(counter?.name)} />
@@ -330,7 +357,14 @@ export default function SettleMethodScreen() {
               {t('settleMethod.subMeta', { group: group?.name ?? '' })}
             </Text>
           </View>
-          <Text style={styles.counterAmount}>{formattedAmount}</Text>
+          <Text
+            style={styles.counterAmount}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
+          >
+            {formattedAmount}
+          </Text>
         </View>
         <View style={styles.heroRule} />
 
@@ -355,17 +389,30 @@ export default function SettleMethodScreen() {
                 <View
                   style={[
                     styles.methodTile,
-                    m.primary ? styles.methodTilePrimary : styles.methodTileMuted,
+                    m.id === 'swish'
+                      ? styles.methodTileLogo
+                      : m.primary
+                      ? styles.methodTilePrimary
+                      : styles.methodTileMuted,
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.methodTileLetter,
-                      m.primary && styles.methodTileLetterPrimary,
-                    ]}
-                  >
-                    {label.slice(0, 1).toUpperCase()}
-                  </Text>
+                  {m.id === 'swish' ? (
+                    <Image
+                      source={require('@/assets/swish-logo.png')}
+                      style={styles.methodTileImage}
+                      resizeMode="contain"
+                      accessibilityLabel="Swish"
+                    />
+                  ) : (
+                    <Text
+                      style={[
+                        styles.methodTileLetter,
+                        m.primary && styles.methodTileLetterPrimary,
+                      ]}
+                    >
+                      {label.slice(0, 1).toUpperCase()}
+                    </Text>
+                  )}
                 </View>
                 <View style={styles.methodTextWrap}>
                   <View style={styles.methodNameRow}>
@@ -526,6 +573,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bone,
     borderColor: colors.ruleSoft,
   },
+  methodTileLogo: {
+    backgroundColor: colors.paper,
+    borderColor: colors.ruleSoft,
+    padding: 4,
+  },
+  methodTileImage: {
+    width: '100%',
+    height: '100%',
+  },
   methodTileLetter: {
     fontFamily: fontMonoMedium,
     fontSize: 11,
@@ -595,6 +651,11 @@ const styles = StyleSheet.create({
   },
   awaitingScroll: {
     flexGrow: 1,
+    justifyContent: 'center',
+  },
+  pickScroll: {
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   awaitingBodyWrap: {
     paddingHorizontal: spacing.s5,
@@ -605,6 +666,14 @@ const styles = StyleSheet.create({
     fontSize: fontSize.body,
     color: colors.graphite,
     lineHeight: 22,
+  },
+  awaitingRoundingNote: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    letterSpacing: 0.3,
+    marginTop: spacing.s3,
+    lineHeight: 18,
   },
   awaitingSecondary: {
     alignItems: 'center',
@@ -623,6 +692,84 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.s6,
     gap: spacing.s3,
+  },
+  settledRoot: {
+    flex: 1,
+    backgroundColor: '#0E1A2E', // matches the deep dusk sky of the print
+  },
+  settledHero: {
+    width: '100%',
+    flex: 1,
+  },
+  settledClose: {
+    position: 'absolute',
+    left: spacing.s4,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settledPanel: {
+    backgroundColor: colors.paper,
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    marginTop: -spacing.s6,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 12,
+  },
+  settledPanelRule: {
+    height: 3,
+    backgroundColor: colors.vermillion,
+  },
+  settledPanelInner: {
+    paddingHorizontal: spacing.s6,
+    paddingTop: spacing.s5,
+    paddingBottom: spacing.s4,
+    alignItems: 'center',
+  },
+  settledEyebrow: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.vermillion,
+    letterSpacing: 4,
+    textTransform: 'lowercase',
+    marginBottom: spacing.s3,
+  },
+  settledStampRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.s3,
+    marginBottom: spacing.s4,
+  },
+  settledStampLine: {
+    width: 36,
+    height: 0.5,
+    backgroundColor: colors.graphite,
+  },
+  settledSentence: {
+    fontFamily: fontDisplay,
+    fontSize: fontSize.displayS,
+    lineHeight: 30,
+    letterSpacing: -0.4,
+    color: colors.graphite,
+    textAlign: 'center',
+    marginBottom: spacing.s4,
+  },
+  settledChop: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    letterSpacing: 1.5,
+    textTransform: 'lowercase',
+  },
+  settledCta: {
+    borderTopWidth: 0,
+    paddingTop: spacing.s2,
   },
   settledTitle: {
     fontFamily: fontDisplay,

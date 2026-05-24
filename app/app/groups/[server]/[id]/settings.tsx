@@ -30,6 +30,8 @@ import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
 import { Avatar } from '@/components/Avatar';
+import { GroupAvatar } from '@/components/GroupAvatar';
+import { GroupColorPicker } from '@/components/GroupColorPicker';
 import { Text } from '@/components/Text';
 import { DeleteGroupModal } from '@/components/DeleteGroupModal';
 import { lifecycleActionsForViewer } from '@/lib/group-settings';
@@ -100,6 +102,7 @@ export default function GroupSettingsScreen() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState<DeleteGroupModalError | null>(null);
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -332,12 +335,13 @@ export default function GroupSettingsScreen() {
       : totalsByCurrency
           .map((row) => formatMinorUnits(row.minor_units, row.currency))
           .join(' · ');
-  const topSpenderValue = stats?.top_spender
-    ? `${stats.top_spender.display_name} · ${formatMinorUnits(
+  const topSpenderName = stats?.top_spender?.display_name ?? '';
+  const topSpenderAmount = stats?.top_spender
+    ? formatMinorUnits(
         stats.top_spender.minor_units_paid,
         stats.top_spender.currency,
-      )}`
-    : t('common.dash');
+      )
+    : '';
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -400,6 +404,16 @@ export default function GroupSettingsScreen() {
                 router.push(`/groups/${encodeURIComponent(serverUrl)}/${group.id}/invite`)
               }
             />
+            {group && (
+              <GroupColorRow
+                serverUrl={serverUrl}
+                groupId={group.id}
+                onPress={() => {
+                  if (isPopupJustClosed()) return;
+                  setColorPickerOpen(true);
+                }}
+              />
+            )}
           </View>
         </View>
 
@@ -422,9 +436,10 @@ export default function GroupSettingsScreen() {
                   value={formattedTotal}
                 />
                 {stats.top_spender && (
-                  <InfoRow
+                  <TopSpenderRow
                     label={t('groupSettings.stats.topSpender')}
-                    value={topSpenderValue}
+                    name={topSpenderName}
+                    amount={topSpenderAmount}
                   />
                 )}
                 <InfoRow
@@ -526,7 +541,45 @@ export default function GroupSettingsScreen() {
         onCancel={() => setDeleteOpen(false)}
         onConfirm={handleDeleteConfirm}
       />
+
+      {group && (
+        <GroupColorPicker
+          visible={colorPickerOpen}
+          onClose={() => setColorPickerOpen(false)}
+          serverUrl={serverUrl}
+          groupId={group.id}
+        />
+      )}
     </View>
+  );
+}
+
+function GroupColorRow({
+  serverUrl,
+  groupId,
+  onPress,
+}: {
+  serverUrl: string;
+  groupId: string;
+  onPress: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <TouchableOpacity
+      style={styles.row}
+      onPress={onPress}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+    >
+      <View style={styles.rowLeft}>
+        <Feather name="droplet" size={16} color={colors.lead} />
+        <Text style={styles.rowLabel}>{t('groupColor.row')}</Text>
+      </View>
+      <View style={styles.colorRowRight}>
+        <GroupAvatar serverUrl={serverUrl} groupId={groupId} size={24} />
+        <Feather name="chevron-right" size={18} color={colors.lead} />
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -600,6 +653,35 @@ function InfoRow({ label, value }: { label: string; value: string }) {
       <Text style={styles.rowValue} numberOfLines={1}>
         {value}
       </Text>
+    </View>
+  );
+}
+
+function TopSpenderRow({
+  label,
+  name,
+  amount,
+}: {
+  label: string;
+  name: string;
+  amount: string;
+}) {
+  return (
+    <View style={styles.topSpenderRow}>
+      <Text style={styles.rowLabel}>{label}</Text>
+      <View style={styles.topSpenderValueRow}>
+        <Text style={styles.topSpenderName} numberOfLines={1}>
+          {name}
+        </Text>
+        <Text
+          style={styles.topSpenderAmount}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.6}
+        >
+          {amount}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -726,6 +808,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     marginTop: 2,
   },
+  colorRowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.s2,
+  },
   rowValue: {
     fontFamily: fontMonoMedium,
     fontSize: fontSize.bodyS,
@@ -734,6 +821,30 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
     flexShrink: 1,
     textAlign: 'right',
+  },
+  topSpenderRow: {
+    paddingVertical: spacing.s4,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.ruleSoft,
+  },
+  topSpenderValueRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    gap: spacing.s3,
+    marginTop: spacing.s1,
+  },
+  topSpenderName: {
+    fontFamily: fontDisplay,
+    fontSize: fontSize.body,
+    color: colors.graphite,
+    flexShrink: 1,
+  },
+  topSpenderAmount: {
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.body,
+    color: colors.graphite,
+    fontVariant: ['tabular-nums'],
   },
   // Members section uses memberRow for avatar+name display, sharing list borders
   memberRow: {

@@ -154,7 +154,12 @@ export default function SettleScreen() {
           <Text style={styles.eyebrow}>
             {t('settle.yourNet', { group: group?.name ?? '' })}
           </Text>
-          <Text style={[styles.heroBalance, { color: myNet >= 0 ? colors.moss : colors.brick }]}>
+          <Text
+            style={[styles.heroBalance, { color: myNet >= 0 ? colors.moss : colors.brick }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.4}
+          >
             {formatMinorUnits(myNet, heroCurrency, { relative: true })}
           </Text>
           <View style={styles.rule} />

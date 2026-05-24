@@ -829,6 +829,18 @@ function Step1({
 }: Step1Props) {
   return (
     <View>
+      {ocrAvailable && (
+        <TouchableOpacity
+          style={styles.scanRow}
+          onPress={onScanReceipt}
+          accessibilityRole="button"
+          accessibilityLabel={t('addExpense.scanReceipt')}
+        >
+          <Feather name="camera" size={18} color={colors.graphite} />
+          <Text style={styles.scanLabel}>{t('addExpense.scanReceipt')}</Text>
+        </TouchableOpacity>
+      )}
+
       <View style={styles.hero}>
         <Text style={styles.eyebrow}>{t('addExpense.amount')}</Text>
         <View style={styles.amountRow}>
@@ -871,18 +883,6 @@ function Step1({
           />
         )}
       </View>
-
-      {ocrAvailable && (
-        <TouchableOpacity
-          style={styles.scanRow}
-          onPress={onScanReceipt}
-          accessibilityRole="button"
-          accessibilityLabel={t('addExpense.scanReceipt')}
-        >
-          <Feather name="camera" size={18} color={colors.graphite} />
-          <Text style={styles.scanLabel}>{t('addExpense.scanReceipt')}</Text>
-        </TouchableOpacity>
-      )}
 
       <View style={styles.fieldWrap}>
         <Text style={styles.fieldLabel}>{t('addExpense.titleLabel')}</Text>

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, Modal, Linking } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,7 +23,7 @@ import { useAccount } from '@/lib/accounts';
 import { currentLocale, formatDate, formatMinorUnits } from '@/lib/i18n';
 import { computeBalanceImpact } from '@/lib/balance-impact';
 import { isPopupJustClosed } from '@/lib/popup-guard';
-import { initialsOf } from '@/lib/name';
+import { initialsOf, makeNameShortener } from '@/lib/name';
 import { colors, fontDisplay, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
 
 export default function ExpenseDetailScreen() {
@@ -116,6 +116,14 @@ export default function ExpenseDetailScreen() {
     if (openNativeActionSheet(undefined, options)) return;
     setActionSheetVisible(true);
   }
+
+  // Context-aware shortener over this group's members so each rendered name
+  // is the shortest unambiguous label ("Lucas" / "Lucas H." / "Lucas Heinonen").
+  // Declared above any early return so it never violates the Rules of Hooks.
+  const shortenMember = useMemo(
+    () => makeNameShortener(members.map((m) => m.name)),
+    [members],
+  );
 
   // Compute the delete impact lazily — we need it when the user opens the
   // delete confirm sheet. Returns empty arrays during loading.
@@ -230,7 +238,7 @@ export default function ExpenseDetailScreen() {
                   source={avatarImageSource(payer, token)}
                 />
                 <Text style={styles.metaName} numberOfLines={1}>
-                  {payer?.name ?? t('common.dash')}
+                  {payer ? shortenMember(payer.name) : t('common.dash')}
                 </Text>
               </View>
             </View>
@@ -267,7 +275,7 @@ export default function ExpenseDetailScreen() {
               return (
                 <SplitRow
                   key={m.id}
-                  name={isYou ? t('expenseDetail.you') : m.name}
+                  name={isYou ? t('expenseDetail.you') : shortenMember(m.name)}
                   initials={initialsOf(m.name)}
                   share={String(eachOwes)}
                   currency={expense.currency}
@@ -282,7 +290,13 @@ export default function ExpenseDetailScreen() {
               return (
                 <SplitRow
                   key={s.id}
-                  name={isYou ? t('expenseDetail.you') : member?.name ?? t('common.dash')}
+                  name={
+                    isYou
+                      ? t('expenseDetail.you')
+                      : member
+                        ? shortenMember(member.name)
+                        : t('common.dash')
+                  }
                   initials={member ? initialsOf(member.name) : '??'}
                   share={String(shareMinor)}
                   currency={expense.currency}
@@ -442,69 +456,69 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingText: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
-  header: { paddingHorizontal: spacing.s5, paddingTop: spacing.s2 },
+  header: { paddingHorizontal: spacing.s5, paddingTop: spacing.s5 },
   context: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     letterSpacing: 0.3,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   title: {
     fontFamily: fontDisplay,
-    fontSize: fontSize.displayM,
+    fontSize: fontSize.displayL,
     letterSpacing: -0.8,
     color: colors.graphite,
-    lineHeight: 32,
-    marginBottom: 14,
+    lineHeight: 46,
+    marginBottom: spacing.s4,
   },
   amountRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   amount: {
     fontFamily: fontMono,
-    fontSize: 48,
+    fontSize: fontSize.displayXl,
     letterSpacing: -1.2,
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
-    lineHeight: 52,
+    lineHeight: 66,
   },
-  currency: { fontFamily: fontMono, fontSize: 22, color: colors.lead },
+  currency: { fontFamily: fontMono, fontSize: fontSize.displayS, color: colors.lead },
   fxLine: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
-    marginTop: 6,
+    marginTop: 8,
     fontVariant: ['tabular-nums'],
   },
-  rule: { height: 1, backgroundColor: colors.ruleSoft, marginTop: 14 },
-  metaStrip: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, gap: 8 },
+  rule: { height: 1, backgroundColor: colors.ruleSoft, marginTop: spacing.s4 },
+  metaStrip: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.s4, gap: 8 },
   metaCol: { flex: 1 },
   metaLabel: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     marginBottom: 6,
   },
   metaPaidBy: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  metaName: { fontFamily: fontBody, fontSize: 14, color: colors.graphite, flexShrink: 1 },
-  metaDate: { fontFamily: fontMono, fontSize: 14, color: colors.graphite },
+  metaName: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite, flexShrink: 1 },
+  metaDate: { fontFamily: fontMono, fontSize: fontSize.body, color: colors.graphite },
   categoryTag: {
     borderWidth: 0.5,
     borderColor: colors.ruleSoft,
     borderRadius: 999,
-    paddingHorizontal: 9,
-    paddingVertical: 3,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     alignSelf: 'flex-end',
   },
-  categoryText: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
+  categoryText: { fontFamily: fontMono, fontSize: fontSize.bodyS, color: colors.lead },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'baseline',
     paddingHorizontal: spacing.s5,
-    paddingTop: spacing.s5,
-    marginBottom: 6,
+    paddingTop: spacing.s6,
+    marginBottom: 8,
   },
-  sectionLabel: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
+  sectionLabel: { fontFamily: fontMono, fontSize: fontSize.bodyS, color: colors.lead },
   sectionRule: {
     height: 1,
     backgroundColor: colors.ruleSoft,
@@ -515,7 +529,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
+    paddingVertical: spacing.s4,
     paddingHorizontal: spacing.s4,
     backgroundColor: colors.bone,
     borderRadius: 10,
@@ -525,14 +539,14 @@ const styles = StyleSheet.create({
   splitLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   splitName: {
     fontFamily: fontDisplay,
-    fontSize: 16,
+    fontSize: fontSize.displayS,
     letterSpacing: -0.3,
     color: colors.graphite,
     flexShrink: 1,
   },
   splitAmount: {
     fontFamily: fontMono,
-    fontSize: 16,
+    fontSize: fontSize.displayS,
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
   },
@@ -551,7 +565,7 @@ const styles = StyleSheet.create({
   },
   receiptText: {
     fontFamily: fontBody,
-    fontSize: fontSize.bodyS,
+    fontSize: fontSize.body,
     color: colors.graphite,
     flex: 1,
   },
@@ -574,12 +588,12 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   viewerImage: { width: '100%', height: '100%' },
-  activityWrap: { paddingHorizontal: spacing.s5, paddingTop: spacing.s5 },
+  activityWrap: { paddingHorizontal: spacing.s5, paddingTop: spacing.s6 },
   activityHeader: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   activityRule: { height: 0.5, backgroundColor: colors.ruleSoft },
 });

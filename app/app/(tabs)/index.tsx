@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { TopBar } from '@/components/TopBar';
-import { AvatarStack } from '@/components/Avatar';
+import { GroupAvatar } from '@/components/GroupAvatar';
 import { Stamp } from '@/components/Stamp';
 import { EmptyState } from '@/components/EmptyState';
 import { useTranslation } from 'react-i18next';
@@ -13,11 +13,10 @@ import { useAccounts } from '@/lib/accounts';
 import {
   useAggregatedGroups,
   useAggregatedBalances,
-  useAggregatedActivity,
+  // useAggregatedActivity, // re-enable with the recent-activity section
 } from '@/lib/aggregated-reads';
 import { formatMinorUnits, decimalToMinor } from '@/lib/i18n';
 import { isPopupJustClosed } from '@/lib/popup-guard';
-import { initialsOf } from '@/lib/name';
 import {
   colors,
   fontBody,
@@ -31,14 +30,6 @@ import {
 const fmtBalance = (minor: string, currency: string) =>
   formatMinorUnits(minor, currency, { relative: true });
 const fmtAmount = (minor: string, currency: string) => formatMinorUnits(minor, currency);
-
-/** Build a small set of avatar initials for a group. Until we fetch members on
- *  the home screen, derive a single chip from the group name so the row isn't
- *  empty. Real member avatars land here once /api/groups returns member peeks. */
-function groupInitials(g: Group): string[] {
-  const i = initialsOf(g.name);
-  return [i || '·'];
-}
 
 /** Extract hostname from a server URL for the host chip. */
 function hostOf(serverUrl: string): string {
@@ -62,21 +53,20 @@ export default function HomeScreen() {
 
   const groupReads = useAggregatedGroups();
   const balanceReads = useAggregatedBalances();
-  // Top-5 recent activity preview. Same hook the Activity tab uses, so a
-  // foreground refresh hydrates both surfaces without a second fetch.
-  const activityReads = useAggregatedActivity(50);
-  const recentActivity = useMemo(() => {
-    const all: { event: import('@/lib/api').ActivityEvent; serverUrl: string }[] = [];
-    for (const r of activityReads) {
-      for (const e of r.data ?? []) all.push({ event: e, serverUrl: r.serverUrl });
-    }
-    all.sort(
-      (a, b) =>
-        new Date(b.event.created_at).getTime() -
-        new Date(a.event.created_at).getTime(),
-    );
-    return all.slice(0, 5);
-  }, [activityReads]);
+  // Recent activity preview disabled — see commented JSX block below.
+  // const activityReads = useAggregatedActivity(50);
+  // const recentActivity = useMemo(() => {
+  //   const all: { event: import('@/lib/api').ActivityEvent; serverUrl: string }[] = [];
+  //   for (const r of activityReads) {
+  //     for (const e of r.data ?? []) all.push({ event: e, serverUrl: r.serverUrl });
+  //   }
+  //   all.sort(
+  //     (a, b) =>
+  //       new Date(b.event.created_at).getTime() -
+  //       new Date(a.event.created_at).getTime(),
+  //   );
+  //   return all.slice(0, 5);
+  // }, [activityReads]);
 
   // Host chip rule (spec §14): only when ≥ 2 accounts.
   const showHostChip = accounts.length >= 2;
@@ -253,7 +243,7 @@ export default function HomeScreen() {
                     }}
                     activeOpacity={0.7}
                   >
-                    <AvatarStack people={groupInitials(g)} />
+                    <GroupAvatar serverUrl={serverUrl} groupId={g.id} />
                     <View style={styles.groupMid}>
                       <Text style={styles.groupTitle} numberOfLines={1}>
                         {g.name}
@@ -348,8 +338,10 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* Recent activity — top 5 across every linked account, click-through
-            to the dedicated Activity tab. */}
+        {/* Recent activity preview — temporarily hidden. Re-enable by
+            uncommenting this block and the activityReads/recentActivity
+            hooks at the top of HomeScreen. */}
+        {/*
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>
             {t('home.recentCount', { count: recentActivity.length })}
@@ -378,6 +370,7 @@ export default function HomeScreen() {
             </View>
           ))
         )}
+        */}
       </ScrollView>
     </View>
   );
@@ -397,11 +390,18 @@ export default function HomeScreen() {
  * this view's role is "what just happened across all my groups" so we
  * favour brevity over precision.
  */
+function firstNameOf(name?: string | null): string | null {
+  if (!name) return null;
+  const trimmed = name.trim();
+  if (!trimmed) return null;
+  return trimmed.split(/\s+/)[0];
+}
+
 function summariseActivity(
   e: import('@/lib/api').ActivityEvent,
   t: (key: string, opts?: Record<string, unknown>) => string,
 ): string {
-  const actor = e.actor_name || t('common.dash');
+  const actor = firstNameOf(e.actor_name) ?? t('common.dash');
   const group = e.group_name ?? '';
   const s = (e.payload?.snapshot ?? {}) as {
     title?: string;
@@ -410,6 +410,8 @@ function summariseActivity(
     from_member_name?: string;
     to_member_name?: string;
   };
+  const fromShort = firstNameOf(s.from_member_name) ?? actor;
+  const toShort = firstNameOf(s.to_member_name) ?? t('common.dash');
   switch (e.event_type) {
     case 'expense_added': {
       const hasFull = !!s.title && s.amount != null && !!s.currency;
@@ -432,8 +434,8 @@ function summariseActivity(
       return t('activity.event_settlement_added', {
         actor,
         group,
-        from: s.from_member_name ?? actor,
-        to: s.to_member_name ?? t('common.dash'),
+        from: fromShort,
+        to: toShort,
         amount: s.amount != null && s.currency ? formatMinorUnits(s.amount, s.currency) : '',
       });
     case 'settlement_reverted':
@@ -482,22 +484,22 @@ const styles = StyleSheet.create({
   },
   hero: {
     paddingHorizontal: spacing.s5,
-    paddingTop: spacing.s2,
-    paddingBottom: spacing.s3,
+    paddingTop: spacing.s6,
+    paddingBottom: spacing.s5,
   },
   eyebrow: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     letterSpacing: 0.3,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   heroBalance: {
     fontFamily: fontMono,
-    fontSize: fontSize.displayL,
+    fontSize: fontSize.displayXl,
     letterSpacing: -1,
     fontVariant: ['tabular-nums'],
-    lineHeight: 50,
+    lineHeight: 66,
     includeFontPadding: false,
     textAlignVertical: 'center',
     paddingTop: 2,
@@ -518,7 +520,7 @@ const styles = StyleSheet.create({
   },
   currencyChipAmt: {
     fontFamily: fontMonoMedium,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     letterSpacing: -0.2,
     fontVariant: ['tabular-nums'],
   },
@@ -528,12 +530,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'baseline',
     paddingHorizontal: spacing.s5,
-    paddingTop: spacing.s3,
-    paddingBottom: spacing.s2,
+    paddingTop: spacing.s4,
+    paddingBottom: spacing.s3,
   },
   groupsHeaderLabel: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     letterSpacing: 0.3,
   },
@@ -548,7 +550,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bone,
     borderRadius: 10,
     paddingHorizontal: spacing.s4,
-    paddingVertical: spacing.s3,
+    paddingVertical: spacing.s4,
   },
   groupMid: {
     flex: 1,
@@ -556,44 +558,44 @@ const styles = StyleSheet.create({
   },
   groupTitle: {
     fontFamily: fontDisplay,
-    fontSize: fontSize.bodyL,
+    fontSize: fontSize.displayS,
     letterSpacing: -0.3,
     color: colors.graphite,
-    lineHeight: 22,
+    lineHeight: 26,
   },
   groupAmtMuted: {
     fontFamily: fontMono,
-    fontSize: fontSize.bodyL,
+    fontSize: fontSize.displayS,
     color: colors.lead,
   },
   groupMeta: {
     fontFamily: fontBody,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
-    marginTop: 2,
+    marginTop: 3,
   },
   hostChip: {
     fontFamily: fontMono,
-    fontSize: 10,
+    fontSize: fontSize.caption,
     color: colors.lead,
-    marginTop: 2,
+    marginTop: 3,
     letterSpacing: 0.4,
   },
   groupRight: {
     alignItems: 'flex-end',
-    minWidth: 92,
+    minWidth: 104,
   },
   groupAmtEyebrow: {
     fontFamily: fontMono,
-    fontSize: 10,
+    fontSize: fontSize.caption,
     color: colors.lead,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
-    marginBottom: 2,
+    marginBottom: 3,
   },
   groupAmt: {
     fontFamily: fontMonoMedium,
-    fontSize: fontSize.bodyL,
+    fontSize: fontSize.displayS,
     letterSpacing: -0.3,
     fontVariant: ['tabular-nums'],
   },

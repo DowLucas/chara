@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
 import { Stamp } from '@/components/Stamp';
 import { Avatar, AvatarStack } from '@/components/Avatar';
+import { GroupAvatar } from '@/components/GroupAvatar';
 import { EmptyState } from '@/components/EmptyState';
 import {
   apiFor,
@@ -34,7 +35,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
 import { formatMinorUnits, decimalToMinor, formatDate } from '@/lib/i18n';
-import { initialsOf } from '@/lib/name';
+import { initialsOf, makeNameShortener } from '@/lib/name';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import { subscribeGroupChanged } from '@/lib/group-refresh';
 import { computeStandings, expensesInvolvingMember } from '@/lib/standings';
@@ -59,7 +60,11 @@ function categoryIcon(category?: string): keyof typeof Feather.glyphMap {
 }
 
 export default function GroupDetailScreen() {
-  const { server, id } = useLocalSearchParams<{ server: string; id: string }>();
+  const { server, id, tab: initialTab } = useLocalSearchParams<{
+    server: string;
+    id: string;
+    tab?: string;
+  }>();
   const serverUrl = decodeURIComponent(server ?? '');
   const api = apiFor(serverUrl);
   const insets = useSafeAreaInsets();
@@ -133,31 +138,12 @@ export default function GroupDetailScreen() {
   // docs/superpowers/specs/2026-05-23-group-settings-design.md.
   const me = members.find((m) => m.user_id === user?.id);
 
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuOptions = [
-    {
-      label: t('groupDetail.activity'),
-      onPress: () =>
-        router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/activity`),
-    },
-    {
-      label: t('groupSettings.settings'),
-      onPress: () =>
-        router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/settings`),
-    },
-  ];
-  function openMenu() {
-    // Swallow the press if a popup was just dismissed by tapping near
-    // this trigger. See app/lib/popup-guard.ts.
-    if (isPopupJustClosed()) return;
-    if (!id || menuOptions.length === 0) return;
-    if (openNativeActionSheet(group?.name, menuOptions)) return;
-    setMenuOpen(true);
-  }
-
-  const [tab, setTab] = useState<'overview' | 'standings' | 'payments'>('overview');
+  const validInitialTab =
+    initialTab === 'standings' || initialTab === 'payments' ? initialTab : 'overview';
+  const [tab, setTab] = useState<'overview' | 'standings' | 'payments'>(validInitialTab);
   const [expandedMemberId, setExpandedMemberId] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<'expense_date' | 'created_at'>('expense_date');
+  type SortKey = 'expense_date' | 'created_at' | 'amount_desc' | 'amount_asc';
+  const [sortBy, setSortBy] = useState<SortKey>('expense_date');
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const sortOptions = [
     {
@@ -168,13 +154,45 @@ export default function GroupDetailScreen() {
       label: t('groupDetail.sortByCreatedAt'),
       onPress: () => setSortBy('created_at'),
     },
+    {
+      label: t('groupDetail.sortByAmountDesc'),
+      onPress: () => setSortBy('amount_desc'),
+    },
+    {
+      label: t('groupDetail.sortByAmountAsc'),
+      onPress: () => setSortBy('amount_asc'),
+    },
   ];
   function openSortMenu() {
     if (isPopupJustClosed()) return;
     if (openNativeActionSheet(t('groupDetail.sortTitle'), sortOptions)) return;
     setSortMenuOpen(true);
   }
+  function sortLabel(k: SortKey): string {
+    switch (k) {
+      case 'expense_date': return t('groupDetail.sortByExpenseDate');
+      case 'created_at': return t('groupDetail.sortByCreatedAt');
+      case 'amount_desc': return t('groupDetail.sortByAmountDesc');
+      case 'amount_asc': return t('groupDetail.sortByAmountAsc');
+    }
+  }
+  // Context-aware shortener: each member resolves to the shortest
+  // unambiguous label within this group ("Lucas" if unique, "Lucas H." on
+  // first-name collision, "Lucas Heinonen" if also colliding).
+  const shortenMember = useMemo(
+    () => makeNameShortener(members.map((m) => m.name)),
+    [members],
+  );
   const sortedExpenses = expenses.slice().sort((a, b) => {
+    if (sortBy === 'amount_desc' || sortBy === 'amount_asc') {
+      // Mixed-currency groups: sort by minor units regardless of currency.
+      // Within a single currency this is the obvious "biggest first" / "smallest
+      // first" order; across currencies it groups by raw magnitude, which is
+      // fine for a quick browse but not a financial calculation.
+      const am = decimalToMinor(a.amount);
+      const bm = decimalToMinor(b.amount);
+      return sortBy === 'amount_desc' ? bm - am : am - bm;
+    }
     const ad = sortBy === 'expense_date' ? (a.expense_date ?? a.created_at) : a.created_at;
     const bd = sortBy === 'expense_date' ? (b.expense_date ?? b.created_at) : b.created_at;
     return bd.localeCompare(ad);
@@ -207,6 +225,7 @@ export default function GroupDetailScreen() {
               activeOpacity={0.6}
               style={styles.titleChip}
             >
+              {id && <GroupAvatar serverUrl={serverUrl} groupId={id} size={18} />}
               <Text style={styles.titleChipText} numberOfLines={1} ellipsizeMode="tail">
                 {group?.name ?? t('common.dash')}
               </Text>
@@ -220,9 +239,16 @@ export default function GroupDetailScreen() {
               onPress={() => router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/invite`)}
               label={t('groupDetail.inviteLabel')}
             />
-            {menuOptions.length > 0 && (
-              <IconButton icon="more-horizontal" onPress={openMenu} label={t('groupDetail.menuLabel')} />
-            )}
+            <IconButton
+              icon="bell"
+              onPress={() => router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/activity`)}
+              label={t('groupDetail.activity')}
+            />
+            <IconButton
+              icon="settings"
+              onPress={() => router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/settings`)}
+              label={t('groupSettings.settings')}
+            />
           </View>
         }
       />
@@ -312,15 +338,19 @@ export default function GroupDetailScreen() {
                 const toMember = members.find((m) => m.id === s.to_member_id);
                 const fromIsYou = fromMember?.user_id === user?.id;
                 const toIsYou = toMember?.user_id === user?.id;
-                const fromName = fromIsYou ? t('expenseDetail.you') : fromMember?.name ?? t('common.dash');
-                const toName = toIsYou ? t('expenseDetail.you') : toMember?.name ?? t('common.dash');
+                const fromName = fromIsYou
+                  ? t('expenseDetail.you')
+                  : shortenMember(fromMember?.name) ?? t('common.dash');
+                const toName = toIsYou
+                  ? t('expenseDetail.you')
+                  : shortenMember(toMember?.name) ?? t('common.dash');
                 return (
                   <View
                     key={`${s.from_member_id}-${s.to_member_id}-${s.currency}-${i}`}
                     style={styles.row}
                   >
                     <View style={styles.rowLeft}>
-                      <Text style={styles.rowTitle} numberOfLines={1}>
+                      <Text style={styles.rowTitle} numberOfLines={2}>
                         {t('groupDetail.paymentRow', { from: fromName, to: toName })}
                       </Text>
                     </View>
@@ -348,8 +378,12 @@ export default function GroupDetailScreen() {
                 const toMember = members.find((m) => m.id === s.to_member_id);
                 const fromIsYou = fromMember?.user_id === user?.id;
                 const toIsYou = toMember?.user_id === user?.id;
-                const fromName = fromIsYou ? t('expenseDetail.you') : fromMember?.name ?? t('common.dash');
-                const toName = toIsYou ? t('expenseDetail.you') : toMember?.name ?? t('common.dash');
+                const fromName = fromIsYou
+                  ? t('expenseDetail.you')
+                  : shortenMember(fromMember?.name) ?? t('common.dash');
+                const toName = toIsYou
+                  ? t('expenseDetail.you')
+                  : shortenMember(toMember?.name) ?? t('common.dash');
                 const reverted = !!s.reverted_at;
                 // Revert window: 24h from creation, only the payer or payee
                 // may invoke it (server enforces; we just hide the action).
@@ -388,7 +422,7 @@ export default function GroupDetailScreen() {
                           styles.rowTitle,
                           reverted && styles.rowTitleSettled,
                         ]}
-                        numberOfLines={1}
+                        numberOfLines={2}
                       >
                         {t('groupDetail.paymentRow', { from: fromName, to: toName })}
                       </Text>
@@ -444,7 +478,7 @@ export default function GroupDetailScreen() {
                         <Avatar initials={initials} source={avatarImageSource(m, token)} />
                         <View style={styles.standingTextWrap}>
                           <Text style={styles.rowTitle} numberOfLines={1}>
-                            {isYou ? t('expenseDetail.you') : m.name}
+                            {isYou ? t('expenseDetail.you') : shortenMember(m.name)}
                           </Text>
                           <Text style={styles.rowMeta}>
                             {t('groupDetail.expensesCount', { count: memberExpenses.length })}
@@ -545,11 +579,7 @@ export default function GroupDetailScreen() {
             hitSlop={8}
             style={styles.sortBtn}
           >
-            <Text style={styles.listHeaderRight}>
-              {sortBy === 'expense_date'
-                ? t('groupDetail.sortByExpenseDate')
-                : t('groupDetail.sortByCreatedAt')}
-            </Text>
+            <Text style={styles.listHeaderRight}>{sortLabel(sortBy)}</Text>
             <Feather name="chevron-down" size={14} color={colors.lead} />
           </TouchableOpacity>
         </View>
@@ -563,7 +593,7 @@ export default function GroupDetailScreen() {
             const youPaid = payerMember?.user_id === user?.id;
             const payerLabel = youPaid
               ? t('groupDetail.youPaid')
-              : t('groupDetail.namePaid', { name: payerMember?.name.split(' ')[0] ?? t('common.dash') });
+              : t('groupDetail.namePaid', { name: shortenMember(payerMember?.name) });
             const splitsCount = e.splits?.length ?? members.length;
             const settled = false;
             // No +/− prefix in the expenses list — the amount shown is the
@@ -574,7 +604,7 @@ export default function GroupDetailScreen() {
             const amountColor = settled
               ? colors.lead
               : youPaid
-                ? colors.graphite
+                ? colors.moss
                 : colors.brick;
             return (
               <TouchableOpacity
@@ -624,12 +654,6 @@ export default function GroupDetailScreen() {
           {t('groupDetail.settle')}
         </Button>
       </View>
-      <ActionSheet
-        visible={menuOpen}
-        onClose={() => setMenuOpen(false)}
-        title={group?.name}
-        options={menuOptions}
-      />
       <ActionSheet
         visible={sortMenuOpen}
         onClose={() => setSortMenuOpen(false)}
@@ -697,11 +721,11 @@ const styles = StyleSheet.create({
   },
   serverChip: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     letterSpacing: 0.2,
     // Cap so a long hostname can't push the wordmark off-centre.
-    maxWidth: 120,
+    maxWidth: 140,
     flexShrink: 1,
   },
   titleChip: {
@@ -715,10 +739,10 @@ const styles = StyleSheet.create({
   },
   titleChipText: {
     fontFamily: fontBodyMedium,
-    fontSize: fontSize.body,
+    fontSize: fontSize.bodyL,
     color: colors.graphite,
     letterSpacing: -0.3,
-    maxWidth: 160,
+    maxWidth: 180,
     flexShrink: 1,
   },
   heroRow: {
@@ -784,15 +808,15 @@ const styles = StyleSheet.create({
   },
   hero: {
     paddingHorizontal: spacing.s5,
-    paddingTop: spacing.s3,
-    paddingBottom: spacing.s3,
+    paddingTop: spacing.s5,
+    paddingBottom: spacing.s4,
   },
   heroTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: spacing.s3,
-    marginBottom: spacing.s2,
+    marginBottom: spacing.s3,
   },
   heroTitleWrap: {
     flex: 1,
@@ -800,15 +824,15 @@ const styles = StyleSheet.create({
   },
   heroEyebrow: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     letterSpacing: 0.3,
-    marginBottom: 1,
+    marginBottom: 2,
   },
   heroTitle: {
     fontFamily: fontDisplay,
-    fontSize: fontSize.displayS,
-    lineHeight: 26,
+    fontSize: fontSize.displayM,
+    lineHeight: 36,
     letterSpacing: -0.5,
     color: colors.graphite,
   },
@@ -820,14 +844,14 @@ const styles = StyleSheet.create({
   },
   heroBalanceLabel: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     letterSpacing: 0.3,
   },
   heroBalance: {
     fontFamily: fontMono,
-    fontSize: fontSize.displayM,
-    letterSpacing: -0.6,
+    fontSize: fontSize.displayL,
+    letterSpacing: -0.8,
     fontVariant: ['tabular-nums'],
     includeFontPadding: false,
   },
@@ -835,8 +859,8 @@ const styles = StyleSheet.create({
   // graphite for contrast (moss-on-paper was unreadable).
   heroSettled: {
     fontFamily: fontDisplay,
-    fontSize: fontSize.displayM,
-    letterSpacing: -0.6,
+    fontSize: fontSize.displayL,
+    letterSpacing: -0.8,
     color: colors.graphite,
     includeFontPadding: false,
   },
@@ -862,7 +886,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontFamily: fontBodyMedium,
-    fontSize: fontSize.bodyS,
+    fontSize: fontSize.body,
     color: colors.lead,
     letterSpacing: -0.2,
   },
@@ -892,7 +916,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontFamily: fontMonoMedium,
-    fontSize: 11,
+    fontSize: fontSize.caption,
     color: colors.graphite,
   },
   memberCard: {
@@ -918,7 +942,7 @@ const styles = StyleSheet.create({
   totalsCol: { alignItems: 'flex-end' },
   memberCardTotal: {
     fontFamily: fontMonoMedium,
-    fontSize: fontSize.body,
+    fontSize: fontSize.bodyL,
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
   },
@@ -947,7 +971,7 @@ const styles = StyleSheet.create({
   memberExpenseText: { flex: 1, minWidth: 0 },
   memberExpenseAmount: {
     fontFamily: fontMonoMedium,
-    fontSize: fontSize.body,
+    fontSize: fontSize.bodyL,
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
   },
@@ -964,12 +988,12 @@ const styles = StyleSheet.create({
   },
   listHeaderLabel: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
   },
   listHeaderRight: {
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
   },
   sortBtn: {
@@ -991,7 +1015,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
+    paddingVertical: spacing.s4,
     paddingHorizontal: spacing.s4,
     backgroundColor: colors.bone,
     borderRadius: 10,
@@ -1001,7 +1025,7 @@ const styles = StyleSheet.create({
   rowLeft: { flex: 1, marginRight: 12 },
   rowTitle: {
     fontFamily: fontDisplay,
-    fontSize: fontSize.bodyL,
+    fontSize: fontSize.displayS,
     letterSpacing: -0.3,
     color: colors.graphite,
   },
@@ -1011,13 +1035,13 @@ const styles = StyleSheet.create({
   },
   rowMeta: {
     fontFamily: fontBody,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
     marginTop: 3,
   },
   rowAmount: {
     fontFamily: fontMono,
-    fontSize: fontSize.bodyL,
+    fontSize: fontSize.displayS,
     letterSpacing: -0.3,
     fontVariant: ['tabular-nums'],
   },
