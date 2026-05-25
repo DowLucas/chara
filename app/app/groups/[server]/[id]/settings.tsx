@@ -396,68 +396,7 @@ export default function GroupSettingsScreen() {
           <Text style={styles.loadError}>{t('groupSettings.loadError')}</Text>
         )}
 
-        {/* INVITE section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionEyebrow}>
-            {t('groupSettings.quickActions.eyebrow')}
-          </Text>
-          <View style={styles.list}>
-            <NavRow
-              label={t('groupSettings.quickActions.invite')}
-              icon="user-plus"
-              onPress={() =>
-                group &&
-                router.push(`/groups/${encodeURIComponent(serverUrl)}/${group.id}/invite`)
-              }
-            />
-            {group && (
-              <GroupColorRow
-                serverUrl={serverUrl}
-                groupId={group.id}
-                onPress={() => {
-                  if (isPopupJustClosed()) return;
-                  setColorPickerOpen(true);
-                }}
-              />
-            )}
-          </View>
-        </View>
-
-        {/* STATISTICS */}
-        <View style={styles.section}>
-          <Text style={styles.sectionEyebrow}>{t('groupSettings.stats.title')}</Text>
-          <View style={styles.list}>
-            {stats == null ? (
-              <View style={styles.row}>
-                <Text style={styles.rowLabel}>{t('common.loading')}</Text>
-              </View>
-            ) : (
-              <>
-                <InfoRow
-                  label={t('groupSettings.stats.totalExpenses')}
-                  value={String(stats.expense_count)}
-                />
-                <InfoRow
-                  label={t('groupSettings.stats.totalSpent')}
-                  value={formattedTotal}
-                />
-                {stats.top_spender && (
-                  <TopSpenderRow
-                    label={t('groupSettings.stats.topSpender')}
-                    name={topSpenderName}
-                    amount={topSpenderAmount}
-                  />
-                )}
-                <InfoRow
-                  label={t('groupSettings.stats.created')}
-                  value={formatDate(stats.created_at)}
-                />
-              </>
-            )}
-          </View>
-        </View>
-
-        {/* MEMBERS */}
+        {/* MEMBERS — primary content; viewed most often */}
         <View style={styles.section}>
           <Text style={styles.sectionEyebrow}>{t('groupSettings.members.title')}</Text>
           <View style={styles.list}>
@@ -498,6 +437,40 @@ export default function GroupSettingsScreen() {
           </View>
         </View>
 
+        {/* STATISTICS — passive at-a-glance numbers */}
+        <View style={styles.section}>
+          <Text style={styles.sectionEyebrow}>{t('groupSettings.stats.title')}</Text>
+          <View style={styles.list}>
+            {stats == null ? (
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>{t('common.loading')}</Text>
+              </View>
+            ) : (
+              <>
+                <InfoRow
+                  label={t('groupSettings.stats.totalExpenses')}
+                  value={String(stats.expense_count)}
+                />
+                <InfoRow
+                  label={t('groupSettings.stats.totalSpent')}
+                  value={formattedTotal}
+                />
+                {stats.top_spender && (
+                  <TopSpenderRow
+                    label={t('groupSettings.stats.topSpender')}
+                    name={topSpenderName}
+                    amount={topSpenderAmount}
+                  />
+                )}
+                <InfoRow
+                  label={t('groupSettings.stats.created')}
+                  value={formatDate(stats.created_at)}
+                />
+              </>
+            )}
+          </View>
+        </View>
+
         {/* AUTOMATION — recurring bills entry, visible to everyone */}
         <View style={styles.section}>
           <Text style={styles.sectionEyebrow}>{t('recurring.eyebrow')}</Text>
@@ -512,6 +485,33 @@ export default function GroupSettingsScreen() {
                 )
               }
             />
+          </View>
+        </View>
+
+        {/* QUICK ACTIONS — invite + cosmetic; used mostly during onboarding */}
+        <View style={styles.section}>
+          <Text style={styles.sectionEyebrow}>
+            {t('groupSettings.quickActions.eyebrow')}
+          </Text>
+          <View style={styles.list}>
+            <NavRow
+              label={t('groupSettings.quickActions.invite')}
+              icon="user-plus"
+              onPress={() =>
+                group &&
+                router.push(`/groups/${encodeURIComponent(serverUrl)}/${group.id}/invite`)
+              }
+            />
+            {group && (
+              <GroupColorRow
+                serverUrl={serverUrl}
+                groupId={group.id}
+                onPress={() => {
+                  if (isPopupJustClosed()) return;
+                  setColorPickerOpen(true);
+                }}
+              />
+            )}
           </View>
         </View>
 
