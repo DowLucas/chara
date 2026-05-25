@@ -48,9 +48,6 @@ import { unregisterForAccount } from '@/lib/push';
 import { hasOpenBalance, partitionBulkBalanceCheck } from '@/lib/balance-utils';
 import { displayHostFor } from '@/lib/server-url';
 
-function hostFor(serverUrl: string): string {
-  return serverUrl.replace(/^https?:\/\//i, '').replace(/\/$/, '');
-}
 import {
   clearPreferredLanguage,
   getConfirmWithFaceId,
@@ -299,7 +296,7 @@ export default function YouScreen() {
           r.status === 'fulfilled',
       )
       .filter((r) => hasOpenBalance(r.value.balances))
-      .map((r) => hostFor(r.value.account.serverUrl));
+      .map((r) => displayHostFor(r.value.account.serverUrl, t('common.mainServerLabel')));
 
     const hasWarning = blocked.length > 0;
     const title = hasWarning

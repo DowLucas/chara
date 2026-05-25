@@ -11,15 +11,12 @@ import { useTranslation } from 'react-i18next';
 import { useAccounts } from '@/lib/accounts';
 import { apiFor, AccountDeleteBlockedError } from '@/lib/api';
 import { hasOpenBalance } from '@/lib/balance-utils';
+import { displayHostFor } from '@/lib/server-url';
 import { unregisterForAccount } from '@/lib/push';
 import { initialsOf } from '@/lib/name';
 import { formatMinorUnits } from '@/lib/i18n';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 import type { Account } from '@/lib/accounts-store';
-
-function hostFor(serverUrl: string): string {
-  return serverUrl.replace(/^https?:\/\//i, '').replace(/\/$/, '');
-}
 
 export default function AccountsScreen() {
   const insets = useSafeAreaInsets();
@@ -50,7 +47,7 @@ export default function AccountsScreen() {
     if (hasOpenBalance(balances)) {
       showAlert({
         title: t('accounts.removeBlockedOpenBalanceTitle'),
-        message: t('accounts.removeBlockedOpenBalanceBody', { host: hostFor(account.serverUrl) }),
+        message: t('accounts.removeBlockedOpenBalanceBody', { host: displayHostFor(account.serverUrl, t('common.mainServerLabel')) }),
       });
       return;
     }
@@ -80,7 +77,7 @@ export default function AccountsScreen() {
   }
 
   async function handleDeleteForever(account: Account) {
-    const host = hostFor(account.serverUrl);
+    const host = displayHostFor(account.serverUrl, t('common.mainServerLabel'));
     const result = await showAlert({
       title: t('account.deleteFromServer.confirmTitle'),
       message: t('account.deleteFromServer.confirmBody', { server: host }),
@@ -191,7 +188,7 @@ function AccountCard({
 }: AccountCardProps) {
   const { t } = useTranslation();
   const initials = initialsOf(account.user.name);
-  const host = hostFor(account.serverUrl);
+  const host = displayHostFor(account.serverUrl, t('common.mainServerLabel'));
   const status = account.status;
 
   return (

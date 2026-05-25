@@ -15,6 +15,7 @@ import * as analytics from './analytics';
 import { apiFor, ApiError, publicApi } from './api';
 import { runDiscoveryHandshake } from './discovery';
 import { checkProtocolCompat } from './protocol';
+import { displayHostFor } from './server-url';
 import type { InviteIntent } from './invite-handler';
 
 export type DispatchResult =
@@ -31,11 +32,9 @@ export type DispatchResult =
 export type DispatchSource = 'onboarding' | 'deep_link' | 'scanner';
 
 function hostFor(serverUrl: string): string {
-  try {
-    return new URL(serverUrl).host;
-  } catch {
-    return serverUrl;
-  }
+  // Non-React call sites can't reach react-i18next's `t` hook, so we
+  // resolve the brand label via the i18n singleton.
+  return displayHostFor(serverUrl, i18n.t('common.mainServerLabel'));
 }
 
 /** Short, stable error code for `group_join_failed` analytics. */
