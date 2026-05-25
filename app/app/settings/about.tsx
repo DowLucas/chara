@@ -43,6 +43,14 @@ export default function AboutScreen() {
         <View style={styles.links}>
           <LinkRow label={t('about.website')} onPress={() => Linking.openURL(WEBSITE_URL)} />
           <LinkRow label={t('about.source')} onPress={() => Linking.openURL(SOURCE_URL)} />
+          <LinkRow
+            label={t('legal.privacyPolicy')}
+            onPress={() => Linking.openURL('https://getchara.lovable.app/privacy')}
+          />
+          <LinkRow
+            label={t('legal.termsOfService')}
+            onPress={() => Linking.openURL('https://getchara.lovable.app/terms')}
+          />
         </View>
       </ScrollView>
     </View>

@@ -36,6 +36,7 @@ import { initialsOf } from '@/lib/name';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import {
   apiFor,
+  aggregateBulkDeleteResults,
   authToken,
   avatarImageSource,
   AvatarMimeType,
@@ -341,6 +342,56 @@ export default function YouScreen() {
     router.replace('/(auth)/sign-in');
   }
 
+  async function handleDeleteFromAll() {
+    if (accounts.length === 0) return;
+    const confirmed = await showAlert({
+      title: t('account.deleteAll.confirmTitle'),
+      message: t('account.deleteAll.confirmBody', { count: accounts.length }),
+      buttons: [
+        { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
+        { key: 'delete', label: t('account.deleteAll.title'), style: 'destructive' },
+      ],
+    });
+    if (confirmed !== 'delete') return;
+
+    // Fan out — Promise.allSettled so one slow / failing server doesn't
+    // block the others (multi-server rules: never Promise.all across
+    // accounts).
+    const targets = accounts.map((a) => a.serverUrl);
+    const settled = await Promise.allSettled(
+      targets.map((url) => apiFor(url).deleteMe()),
+    );
+    const outcomes = aggregateBulkDeleteResults(targets, settled);
+
+    // Drop every successfully-deleted account locally; leave blocked /
+    // failed accounts in place so the user can retry.
+    for (const o of outcomes) {
+      if (o.status === 'deleted') {
+        await unregisterForAccount(o.serverUrl);
+        await removeAccount(o.serverUrl);
+      }
+    }
+
+    const counts = {
+      deleted: outcomes.filter((o) => o.status === 'deleted').length,
+      blocked: outcomes.filter((o) => o.status === 'blocked').length,
+      failed: outcomes.filter((o) => o.status === 'failed').length,
+    };
+    const lines = [
+      t('account.deleteAll.summaryDeleted', { count: counts.deleted }),
+      t('account.deleteAll.summaryBlocked', { count: counts.blocked }),
+      t('account.deleteAll.summaryFailed', { count: counts.failed }),
+    ].join('\n');
+    await showAlert({
+      title: t('account.deleteAll.summaryTitle'),
+      message: lines,
+    });
+
+    if (counts.deleted === targets.length) {
+      router.replace('/(auth)/sign-in');
+    }
+  }
+
   async function handleTellFriend() {
     try {
       await Share.share({
@@ -454,6 +505,24 @@ export default function YouScreen() {
           <NavRow label={rateLabel} onPress={handleRate} />
         </View>
 
+        <Text style={[styles.sectionEyebrow, { marginTop: spacing.s5 }]}>
+          {t('legal.eyebrow')}
+        </Text>
+        <View style={styles.list}>
+          <NavRow
+            label={t('legal.privacyPolicy')}
+            onPress={() => {
+              void Linking.openURL('https://getchara.lovable.app/privacy').catch(() => {});
+            }}
+          />
+          <NavRow
+            label={t('legal.termsOfService')}
+            onPress={() => {
+              void Linking.openURL('https://getchara.lovable.app/terms').catch(() => {});
+            }}
+          />
+        </View>
+
         <View style={styles.rule} />
 
         {hasHostedAccount && (
@@ -503,6 +572,25 @@ export default function YouScreen() {
             {hasMultipleAccounts ? t('you.signOutAll') : t('you.signOut')}
           </Text>
         </TouchableOpacity>
+
+        {accountCount > 0 && (
+          <View style={styles.dangerZone}>
+            <Text style={styles.dangerEyebrow}>{t('account.deleteAll.eyebrow')}</Text>
+            <View style={styles.list}>
+              <TouchableOpacity
+                style={styles.row}
+                onPress={handleDeleteFromAll}
+                activeOpacity={0.7}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.dangerRowLabel}>{t('account.deleteAll.title')}</Text>
+                  <Text style={styles.rowHint}>{t('account.deleteAll.body')}</Text>
+                </View>
+                <Feather name="chevron-right" size={18} color={colors.brick} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </ScrollView>
       <ActionSheet
         visible={avatarSheetVisible}
@@ -720,4 +808,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bone,
   },
   devRowLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite },
+  dangerZone: {
+    width: '100%',
+    marginTop: spacing.s5,
+  },
+  dangerEyebrow: {
+    fontFamily: fontMono,
+    fontSize: fontSize.bodyS,
+    color: colors.brick,
+    letterSpacing: 0.3,
+    marginBottom: spacing.s2,
+  },
+  dangerRowLabel: {
+    fontFamily: fontBody,
+    fontSize: fontSize.body,
+    color: colors.brick,
+  },
 });

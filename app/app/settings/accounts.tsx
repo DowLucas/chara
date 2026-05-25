@@ -9,10 +9,11 @@ import { IconButton } from '@/components/IconButton';
 import { Avatar } from '@/components/Avatar';
 import { useTranslation } from 'react-i18next';
 import { useAccounts } from '@/lib/accounts';
-import { apiFor } from '@/lib/api';
+import { apiFor, AccountDeleteBlockedError } from '@/lib/api';
 import { hasOpenBalance } from '@/lib/balance-utils';
 import { unregisterForAccount } from '@/lib/push';
 import { initialsOf } from '@/lib/name';
+import { formatMinorUnits } from '@/lib/i18n';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 import type { Account } from '@/lib/accounts-store';
 
@@ -78,6 +79,49 @@ export default function AccountsScreen() {
     }
   }
 
+  async function handleDeleteForever(account: Account) {
+    const host = hostFor(account.serverUrl);
+    const result = await showAlert({
+      title: t('account.deleteFromServer.confirmTitle'),
+      message: t('account.deleteFromServer.confirmBody', { server: host }),
+      buttons: [
+        { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
+        { key: 'delete', label: t('account.deleteFromServer.confirmCta'), style: 'destructive' },
+      ],
+    });
+    if (result !== 'delete') return;
+
+    try {
+      await apiFor(account.serverUrl).deleteMe();
+    } catch (e) {
+      if (e instanceof AccountDeleteBlockedError) {
+        const formatted = e.balances
+          .map((b) => formatMinorUnits(b.amount_minor, b.currency))
+          .join(', ');
+        showAlert({
+          title: t('account.deleteFromServer.blockedTitle'),
+          message: t('account.deleteFromServer.blockedBody', {
+            server: host,
+            balances: formatted || t('common.dash'),
+          }),
+        });
+        return;
+      }
+      showAlert({
+        title: t('common.error'),
+        message: e instanceof Error ? e.message : String(e),
+      });
+      return;
+    }
+
+    // Server-side deletion succeeded — drop push token & local account.
+    await unregisterForAccount(account.serverUrl);
+    await removeAccount(account.serverUrl);
+    if (accounts.length <= 1) {
+      router.replace('/(auth)/sign-in');
+    }
+  }
+
   function handleSetDefault(serverUrl: string) {
     void setDefault(serverUrl);
   }
@@ -107,6 +151,7 @@ export default function AccountsScreen() {
               onMakeDefault={() => handleSetDefault(account.serverUrl)}
               onStatusTap={() => handleStatusTap(account.serverUrl)}
               onRemove={() => handleRemove(account)}
+              onDeleteForever={() => handleDeleteForever(account)}
               onEditProfile={() => router.push('/onboarding/name')}
             />
           );
@@ -131,6 +176,7 @@ interface AccountCardProps {
   onMakeDefault: () => void;
   onStatusTap: () => void;
   onRemove: () => void;
+  onDeleteForever: () => void;
   onEditProfile: () => void;
 }
 
@@ -140,6 +186,7 @@ function AccountCard({
   onMakeDefault,
   onStatusTap,
   onRemove,
+  onDeleteForever,
   onEditProfile,
 }: AccountCardProps) {
   const { t } = useTranslation();
@@ -210,6 +257,19 @@ function AccountCard({
           <Text style={styles.cardActionDestructive}>{t('accounts.remove')}</Text>
         </TouchableOpacity>
       </View>
+
+      <TouchableOpacity
+        onPress={onDeleteForever}
+        activeOpacity={0.7}
+        style={styles.deleteForeverRow}
+      >
+        <Text style={styles.deleteForeverTitle}>
+          {t('account.deleteFromServer.title')}
+        </Text>
+        <Text style={styles.deleteForeverBody}>
+          {t('account.deleteFromServer.body', { server: host })}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -297,6 +357,24 @@ const styles = StyleSheet.create({
     fontSize: fontSize.caption,
     color: colors.vermillion,
     letterSpacing: 0.3,
+  },
+  deleteForeverRow: {
+    borderTopWidth: 1,
+    borderTopColor: colors.ruleSoft,
+    paddingTop: spacing.s3,
+    gap: 2,
+  },
+  deleteForeverTitle: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.brick,
+    letterSpacing: 0.3,
+  },
+  deleteForeverBody: {
+    fontFamily: fontBody,
+    fontSize: fontSize.bodyS,
+    color: colors.lead,
+    marginTop: 2,
   },
   addRow: {
     flexDirection: 'row',

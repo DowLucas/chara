@@ -9,6 +9,36 @@
     "version": "version",
     "website": "Website"
   },
+  "account": {
+    "deleteAll": {
+      "body": "Removes your account from every linked Chara server. Each server is processed independently.",
+      "confirmBody": "Your account on all {{count}} linked servers will be permanently deleted. This cannot be undone.",
+      "confirmBody_one": "account.deleteAll.confirmBody",
+      "confirmBody_other": "account.deleteAll.confirmBody",
+      "confirmTitle": "Delete from all servers?",
+      "eyebrow": "Danger zone",
+      "summaryBlocked": "Blocked (outstanding balance): {{count}}",
+      "summaryBlocked_one": "account.deleteAll.summaryBlocked",
+      "summaryBlocked_other": "account.deleteAll.summaryBlocked",
+      "summaryDeleted": "Deleted: {{count}}",
+      "summaryDeleted_one": "account.deleteAll.summaryDeleted",
+      "summaryDeleted_other": "account.deleteAll.summaryDeleted",
+      "summaryFailed": "Network error: {{count}}",
+      "summaryFailed_one": "account.deleteAll.summaryFailed",
+      "summaryFailed_other": "account.deleteAll.summaryFailed",
+      "summaryTitle": "Deletion complete",
+      "title": "Delete account from all servers"
+    },
+    "deleteFromServer": {
+      "blockedBody": "You can't delete your account on {{server}} while you have outstanding balances: {{balances}}.\n\nSettle up with the other group members, then try again.",
+      "blockedTitle": "Settle balances first",
+      "body": "Permanently delete your account on {{server}}. This can't be undone. Other members will still see past expenses (anonymized).",
+      "confirmBody": "Your account on {{server}} will be permanently deleted. This cannot be undone.",
+      "confirmCta": "Delete permanently",
+      "confirmTitle": "Delete account?",
+      "title": "Delete account from this server"
+    }
+  },
   "accounts": {
     "add": "Add account",
     "addAnother": "Add another",
@@ -573,6 +603,11 @@
     "empty": "No languages match.",
     "searchPlaceholder": "Search by name or code…"
   },
+  "legal": {
+    "eyebrow": "legal",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service"
+  },
   "members": {
     "count": "members · {{count}}",
     "count_one": "members · {{count}}",
@@ -862,6 +897,7 @@
     "eyebrow": "sign in",
     "headline": "Split it.\nSettle it.\nCall it quits.",
     "hostedBy": "hosted by chara.app",
+    "legalFooter": "By continuing you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
     "sending": "Sending…",
     "useMyServer": "use my server →"
   },

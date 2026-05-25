@@ -60,6 +60,12 @@ const config: ExpoConfig = {
         cameraPermission: 'Allow Chara to use the camera to scan group QR codes.',
       },
     ],
+    [
+      'expo-image-picker',
+      {
+        photosPermission: 'Allow Chara to access your photo library to upload a profile picture.',
+      },
+    ],
     'expo-localization',
     '@react-native-community/datetimepicker',
     'expo-apple-authentication',
