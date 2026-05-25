@@ -241,6 +241,12 @@
     "suggested": "suggested",
     "title": "Currency"
   },
+  "deepLink": {
+    "unknownServer": {
+      "body": "This link points to a server you're not signed into.",
+      "title": "Unknown account for this link"
+    }
+  },
   "editGroup": {
     "currencyLabel": "Currency",
     "currencyLockedHint": "Locked — this group already has expenses.",
