@@ -118,6 +118,10 @@ func newGoogleEnv(t *testing.T, audience string) (*testutil.Env, *googleTestRig)
 	return env, rig
 }
 
+// testGoogleNonce is the raw client-side nonce we use across the google tests.
+// Google echoes it back as-is in id_token.nonce.
+const testGoogleNonce = "fedcba9876543210fedcba9876543210"
+
 func validGoogleClaims(audience, email, sub string) jwt.MapClaims {
 	return jwt.MapClaims{
 		"iss":            testGoogleIssuer,
@@ -125,9 +129,14 @@ func validGoogleClaims(audience, email, sub string) jwt.MapClaims {
 		"sub":            sub,
 		"email":          email,
 		"email_verified": true,
+		"nonce":          testGoogleNonce,
 		"iat":            time.Now().Unix(),
 		"exp":            time.Now().Add(10 * time.Minute).Unix(),
 	}
+}
+
+func googleBodyWithNonce(token, nonce string) string {
+	return fmt.Sprintf(`{"identity_token":%q,"nonce":%q}`, token, nonce)
 }
 
 func postGoogle(t *testing.T, env *testutil.Env, body string) *http.Response {
@@ -144,7 +153,7 @@ func TestGoogleNative_NewUserCreatedWithEmptyName(t *testing.T) {
 	email := uniqueEmail(t, "googlenew")
 	token := rig.signToken(t, validGoogleClaims(testGoogleClientID, email, "google-sub-1"))
 
-	body := fmt.Sprintf(`{"identity_token":%q}`, token)
+	body := googleBodyWithNonce(token, testGoogleNonce)
 	resp := postGoogle(t, env, body)
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -167,7 +176,7 @@ func TestGoogleNative_NewUserCapturesNameFromBody(t *testing.T) {
 	email := uniqueEmail(t, "googlebodyname")
 	token := rig.signToken(t, validGoogleClaims(testGoogleClientID, email, "google-sub-2"))
 
-	body := fmt.Sprintf(`{"identity_token":%q,"name":"  Alice  "}`, token)
+	body := fmt.Sprintf(`{"identity_token":%q,"name":"  Alice  ","nonce":%q}`, token, testGoogleNonce)
 	resp := postGoogle(t, env, body)
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -188,7 +197,7 @@ func TestGoogleNative_NewUserCapturesNameFromIdTokenClaims(t *testing.T) {
 	claims["family_name"] = "Builder"
 	token := rig.signToken(t, claims)
 
-	body := fmt.Sprintf(`{"identity_token":%q}`, token)
+	body := googleBodyWithNonce(token, testGoogleNonce)
 	resp := postGoogle(t, env, body)
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -215,7 +224,7 @@ func TestGoogleNative_ExistingUserDoesNotOverwriteName(t *testing.T) {
 	require.NoError(t, err)
 
 	token := rig.signToken(t, validGoogleClaims(testGoogleClientID, email, "google-sub-4"))
-	body := fmt.Sprintf(`{"identity_token":%q,"name":"Should Be Ignored"}`, token)
+	body := fmt.Sprintf(`{"identity_token":%q,"name":"Should Be Ignored","nonce":%q}`, token, testGoogleNonce)
 	resp := postGoogle(t, env, body)
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -230,7 +239,7 @@ func TestGoogleNative_ExistingUserDoesNotOverwriteName(t *testing.T) {
 
 func TestGoogleNative_InvalidToken_Returns401(t *testing.T) {
 	env, _ := newGoogleEnv(t, testGoogleClientID)
-	body := `{"identity_token":"not-a-real-jwt"}`
+	body := googleBodyWithNonce("not-a-real-jwt", testGoogleNonce)
 	resp := postGoogle(t, env, body)
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 }
@@ -240,7 +249,7 @@ func TestGoogleNative_WrongAudience_Returns401(t *testing.T) {
 	email := uniqueEmail(t, "googleaud")
 	claims := validGoogleClaims("some.other.client.googleusercontent.com", email, "google-sub-5")
 	token := rig.signToken(t, claims)
-	body := fmt.Sprintf(`{"identity_token":%q}`, token)
+	body := googleBodyWithNonce(token, testGoogleNonce)
 	resp := postGoogle(t, env, body)
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 }
@@ -251,7 +260,25 @@ func TestGoogleNative_EmailNotVerified_Returns401(t *testing.T) {
 	claims := validGoogleClaims(testGoogleClientID, email, "google-sub-6")
 	claims["email_verified"] = false
 	token := rig.signToken(t, claims)
+	body := googleBodyWithNonce(token, testGoogleNonce)
+	resp := postGoogle(t, env, body)
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+}
+
+func TestGoogleNative_MissingNonce_Returns400(t *testing.T) {
+	env, rig := newGoogleEnv(t, testGoogleClientID)
+	email := uniqueEmail(t, "googlenononce")
+	token := rig.signToken(t, validGoogleClaims(testGoogleClientID, email, "google-sub-nonce-missing"))
 	body := fmt.Sprintf(`{"identity_token":%q}`, token)
+	resp := postGoogle(t, env, body)
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
+func TestGoogleNative_MismatchedNonce_Returns401(t *testing.T) {
+	env, rig := newGoogleEnv(t, testGoogleClientID)
+	email := uniqueEmail(t, "googlewrongnonce")
+	token := rig.signToken(t, validGoogleClaims(testGoogleClientID, email, "google-sub-nonce-bad"))
+	body := googleBodyWithNonce(token, "a-different-nonce-than-baked-in")
 	resp := postGoogle(t, env, body)
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 }
@@ -263,7 +290,7 @@ func TestGoogleNative_NotMountedOnSelfhost(t *testing.T) {
 	env.Config.GoogleClientSecret = "test-secret"
 	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil)
 
-	req, err := http.NewRequest("POST", "/api/auth/google/native", strings.NewReader(`{"identity_token":"x"}`))
+	req, err := http.NewRequest("POST", "/api/auth/google/native", strings.NewReader(`{"identity_token":"x","nonce":"y"}`))
 	require.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
 	rr := env.Do(t, req)

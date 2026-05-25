@@ -5,14 +5,22 @@ package handler_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
+	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
+	"github.com/DowLucas/chara/internal/auth"
 	"github.com/DowLucas/chara/internal/db"
+	"github.com/DowLucas/chara/internal/email"
+	"github.com/DowLucas/chara/internal/handler"
 	"github.com/DowLucas/chara/internal/server"
+	"github.com/DowLucas/chara/internal/ulid"
 	"github.com/DowLucas/chara/testutil"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -184,4 +192,126 @@ func TestLogout_RequiresAuth(t *testing.T) {
 	env := newAuthEnv(t)
 	rr := env.Do(t, mustReq(t, "POST", "/api/me/logout", ""))
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+}
+
+// Two concurrent verifies of the same magic-link token must result in exactly
+// one 200 and one 400 — the UPDATE … RETURNING consume is atomic.
+func TestVerify_ConcurrentSameToken_ExactlyOneWins(t *testing.T) {
+	env := newAuthEnv(t)
+	email := uniqueEmail(t, "concurrent")
+
+	rr := env.Do(t, mustReq(t, "POST", "/api/auth/magic-link", `{"email":"`+email+`"}`))
+	require.Equal(t, http.StatusOK, rr.Code)
+	var ml struct {
+		Token string `json:"token"`
+	}
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&ml))
+	require.NotEmpty(t, ml.Token)
+
+	body := `{"token":"` + ml.Token + `"}`
+	results := make([]int, 2)
+	var wg sync.WaitGroup
+	wg.Add(2)
+	for i := range results {
+		go func(idx int) {
+			defer wg.Done()
+			req := mustReq(t, "POST", "/api/auth/verify", body)
+			rr := httptest.NewRecorder()
+			env.Router.ServeHTTP(rr, req)
+			results[idx] = rr.Code
+		}(i)
+	}
+	wg.Wait()
+
+	successes, failures := 0, 0
+	for _, code := range results {
+		switch code {
+		case http.StatusOK:
+			successes++
+		case http.StatusBadRequest, http.StatusUnauthorized:
+			failures++
+		}
+	}
+	assert.Equal(t, 1, successes, "exactly one verify must succeed; got codes %v", results)
+	assert.Equal(t, 1, failures, "exactly one verify must fail; got codes %v", results)
+}
+
+func TestVerify_ExpiredToken_Returns400(t *testing.T) {
+	env := newAuthEnv(t)
+	raw, err := auth.GenerateToken()
+	require.NoError(t, err)
+	hash := auth.HashToken(raw)
+
+	_, err = env.Queries.CreateMagicLinkToken(context.Background(), db.CreateMagicLinkTokenParams{
+		ID:        ulid.New(),
+		TokenHash: hash,
+		TokenType: "magic_link",
+		Email:     uniqueEmail(t, "expired"),
+		ExpiresAt: pgtype.Timestamptz{Time: time.Now().Add(-time.Minute), Valid: true},
+	})
+	require.NoError(t, err)
+
+	rr := env.Do(t, mustReq(t, "POST", "/api/auth/verify", `{"token":"`+raw+`"}`))
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+// magicLinkRouter spins up a minimal chi-free router that just mounts a fresh
+// AuthHandler.MagicLink wired to the given email.Sender. We bypass server.New
+// because the sender is constructed inside it from cfg — this gives the test
+// direct injection without touching production wiring.
+func magicLinkRouter(t *testing.T, env *testutil.Env, sender email.Sender) http.Handler {
+	t.Helper()
+	h := handler.NewAuthHandler(env.Pool, env.Queries, env.Config, env.JWT, sender)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/auth/magic-link", h.MagicLink)
+	return mux
+}
+
+// TestMagicLink_SendsEmailViaSender — posting a magic-link request must
+// invoke the configured Sender exactly once with the requested email and a
+// non-empty subject + body containing the verify link.
+func TestMagicLink_SendsEmailViaSender(t *testing.T) {
+	env := newAuthEnv(t)
+	fake := &email.FakeSender{}
+	router := magicLinkRouter(t, env, fake)
+
+	addr := uniqueEmail(t, "mail")
+	req := mustReq(t, "POST", "/api/auth/magic-link", `{"email":"`+addr+`"}`)
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+
+	require.Len(t, fake.Messages, 1, "expected exactly one email sent")
+	msg := fake.Messages[0]
+	assert.Equal(t, addr, msg.To)
+	assert.NotEmpty(t, msg.Subject)
+	assert.Contains(t, msg.TextBody, "/api/auth/verify?token=", "text body should contain verify link")
+	assert.Contains(t, msg.HTMLBody, "/api/auth/verify?token=", "html body should contain verify link")
+	assert.Contains(t, msg.TextBody, "15 minutes", "TTL should be interpolated from cfg.MagicLinkTTL")
+}
+
+// TestMagicLink_SendFailureDoesNotBreakResponse — even when the Sender errors,
+// the magic link is still minted and the response stays 200 OK (dev mode also
+// returns the link in the body so the client can recover).
+func TestMagicLink_SendFailureDoesNotBreakResponse(t *testing.T) {
+	env := newAuthEnv(t)
+	fake := &email.FakeSender{Err: errors.New("smtp down")}
+	router := magicLinkRouter(t, env, fake)
+
+	addr := uniqueEmail(t, "mailfail")
+	req := mustReq(t, "POST", "/api/auth/magic-link", `{"email":"`+addr+`"}`)
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+
+	var resp struct {
+		OK    bool   `json:"ok"`
+		Token string `json:"token"`
+		Link  string `json:"link"`
+	}
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	assert.True(t, resp.OK)
+	assert.NotEmpty(t, resp.Token, "dev mode must still surface the token even when send fails")
+	assert.Contains(t, resp.Link, "/api/auth/verify?token=")
+	require.Len(t, fake.Messages, 1, "send was still attempted before erroring")
 }
