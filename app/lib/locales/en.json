@@ -895,6 +895,11 @@
     "couldNotSend": "Could not send magic link",
     "emailPlaceholder": "your@email.com",
     "eyebrow": "sign in",
+    "google": {
+      "errorBody": "We couldn't complete Sign in with Google. Please try again or use email.",
+      "errorTitle": "Sign in failed",
+      "noToken": "Google didn't return an identity token. Please try again."
+    },
     "headline": "Split it.\nSettle it.\nCall it quits.",
     "hostedBy": "hosted by chara.app",
     "legalFooter": "By continuing you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",

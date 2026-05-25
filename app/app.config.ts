@@ -76,6 +76,13 @@ const config: ExpoConfig = {
     'expo-localization',
     '@react-native-community/datetimepicker',
     'expo-apple-authentication',
+    [
+      '@react-native-google-signin/google-signin',
+      {
+        iosUrlScheme:
+          'com.googleusercontent.apps.53625108191-nkpr2abaukbq7s22ev6fp4vmu1djrsgf',
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

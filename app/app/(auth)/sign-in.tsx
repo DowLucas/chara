@@ -15,6 +15,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import { getGoogleSignin } from '@/lib/google-signin';
 import { Trans, useTranslation } from 'react-i18next';
 import { useAccount, useAccounts } from '@/lib/accounts';
 import {
@@ -150,9 +151,11 @@ export default function SignInScreen() {
     }
   }, [account?.instance?.auth_methods, account?.instance?.features]);
 
-  const showGoogle = authMethods === null
-    ? mode === 'first-launch' // preserve legacy first-launch UI which always showed Google
-    : authMethods.includes('google');
+  // Google sign-in is gated on the server's feature flag (selfhost instances
+  // can disable it). The native Google SDK doesn't ship a usable web flow
+  // here, so we restrict the button to native platforms — same posture as
+  // Apple, just without the iOS-only restriction.
+  const showGoogle = Platform.OS !== 'web' && features?.google_auth === true;
   // Apple sign-in is iOS-only and feature-gated by the server. We don't
   // fall back to a "show on first-launch" default the way Google does —
   // Apple requires a paid Developer account on the server side, so showing
@@ -203,6 +206,75 @@ export default function SignInScreen() {
       await showAlert({
         title: t('signIn.apple.errorTitle'),
         message: t('signIn.apple.errorBody'),
+        buttons: [{ key: 'ok', label: t('common.ok') }],
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGooglePress() {
+    analytics.track('auth_method_selected', { method: 'google' });
+    try {
+      const GoogleSignin = getGoogleSignin();
+      if (!GoogleSignin) {
+        // SDK isn't bundled in this build (Expo Go) — surface a friendly
+        // error rather than crashing. Real users hit this only if the
+        // button was rendered (features.google_auth=true on the server)
+        // but they're somehow running Expo Go against hosted, which is
+        // a dev-only situation.
+        analytics.track('auth_error', { method: 'google', code: 'sdk_unavailable' });
+        await showAlert({
+          title: t('signIn.google.errorTitle'),
+          message: t('signIn.google.errorBody'),
+          buttons: [{ key: 'ok', label: t('common.ok') }],
+        });
+        return;
+      }
+      // iOS no-op; Android requires Play Services to issue an ID token.
+      await GoogleSignin.hasPlayServices();
+      const result: any = await GoogleSignin.signIn();
+      // The SDK shape moved between major versions: v13+ wraps the payload
+      // in `{type, data}`, older versions return it flat. Accept both so a
+      // future bump doesn't silently break the flow.
+      const idToken: string | undefined = result?.data?.idToken ?? result?.idToken;
+      if (!idToken) {
+        analytics.track('auth_error', { method: 'google', code: 'no_token' });
+        await showAlert({
+          title: t('signIn.google.errorTitle'),
+          message: t('signIn.google.noToken'),
+          buttons: [{ key: 'ok', label: t('common.ok') }],
+        });
+        return;
+      }
+      const user = result?.data?.user ?? result?.user;
+      const name =
+        [user?.givenName, user?.familyName]
+          .filter(Boolean)
+          .join(' ')
+          .trim() ||
+        user?.name ||
+        undefined;
+
+      setLoading(true);
+      const resp = await publicApi(serverUrl).googleNativeSignIn({
+        identity_token: idToken,
+        name,
+      });
+      await onTokenIssued(resp.token, 'google');
+    } catch (e: unknown) {
+      // User dismissed the system sheet — silent.
+      const code = (e as { code?: string } | null)?.code;
+      if (code === 'SIGN_IN_CANCELLED' || code === '-5' || code === '12501') return;
+      const msg = e instanceof Error ? e.message : String(e);
+      console.warn('[chara] google sign-in failed', msg);
+      analytics.track('auth_error', {
+        method: 'google',
+        code: classifyAuthError(e),
+      });
+      await showAlert({
+        title: t('signIn.google.errorTitle'),
+        message: t('signIn.google.errorBody'),
         buttons: [{ key: 'ok', label: t('common.ok') }],
       });
     } finally {
@@ -419,11 +491,8 @@ export default function SignInScreen() {
             <TouchableOpacity
               style={[styles.authBtn, styles.authBtnSecondary]}
               activeOpacity={0.85}
-              onPress={() => {
-                // Google OAuth isn't wired yet; still emit the funnel event
-                // so we can see drop-off vs. magic-link before shipping it.
-                analytics.track('auth_method_selected', { method: 'google' });
-              }}
+              onPress={handleGooglePress}
+              disabled={loading}
             >
               <Feather name="chrome" size={18} color={colors.graphite} />
               <Text style={[styles.authBtnLabel, styles.authBtnLabelDefault]}>
