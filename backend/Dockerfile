@@ -22,7 +22,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -o api ./cmd/api
 
 # Runtime stage
-FROM alpine:latest
+FROM alpine:3.20
 
 WORKDIR /app
 
@@ -32,11 +32,12 @@ RUN apk add --no-cache ca-certificates tzdata
 # Copy CA certs from builder
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-# Copy binary from builder
-COPY --from=builder /build/api .
+# Copy binary and migrations from builder, owned by the non-root user
+RUN adduser -D -u 10001 chara
+COPY --from=builder --chown=chara:chara /build/api .
+COPY --chown=chara:chara migrations ./migrations
 
-# Copy migrations (must be readable from working directory)
-COPY migrations ./migrations
+USER chara
 
 # Health check
 HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 \
