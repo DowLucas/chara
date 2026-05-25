@@ -1,6 +1,8 @@
 package server
 
 import (
+	"context"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -175,7 +177,16 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 	// Hosted-only routes (Google, Apple auth)
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.HostedOnly(cfg))
-		// Social auth handlers added here
+		if cfg.HasApple() {
+			appleH, err := handler.NewAppleAuthHandler(context.Background(), pool, queries, cfg, jwtSvc)
+			if err != nil {
+				// Never panic the server because Apple's JWKS endpoint
+				// happens to be down at boot — log and skip mounting.
+				slog.Error("apple auth: failed to init handler", "error", err)
+			} else {
+				r.Post("/api/auth/apple/native", appleH.Native)
+			}
+		}
 	})
 
 	return r
