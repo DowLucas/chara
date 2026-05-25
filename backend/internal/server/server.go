@@ -46,13 +46,19 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 	// grace during the Quits → Chara rename. Remove after v0.2.
 	r.Get("/.well-known/quits-instance", wellknownHandler)
 
-	// Invite landing stub. The shareable invite URL is <baseURL>/i/<token>
-	// (see invite-deep-links spec). The real handler — HTML landing page that
-	// deep-links into the app or guides web users to install it — is Wave 3.
-	// Until then we reserve the path with a 501 so the frontend can ship the
-	// new link shape without 404s in the wild.
-	r.Get("/i/{token}", func(w http.ResponseWriter, _ *http.Request) {
-		http.Error(w, "invite landing page not yet implemented", http.StatusNotImplemented)
+	// Public invite endpoints (see invite-deep-links spec Phase 1C).
+	// Both are outside the auth/protocol middleware group — the token is the
+	// bearer credential, and the preview / landing page must be reachable
+	// pre-install so a recipient with no app can still see what they're being
+	// invited to. The preview JSON endpoint is rate-limited (per-IP and
+	// per-token) to discourage scraping; landing HTML is not (it's less
+	// attractive than the JSON surface and rate-limiting it would block
+	// legitimate refreshes).
+	invitesH := handler.NewInviteHandler(pool, queries, cfg)
+	r.Get("/i/{token}", invitesH.Landing)
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.InviteRateLimit(30, 60))
+		r.Get("/api/invites/{token}/preview", invitesH.Preview)
 	})
 	r.Get("/api/health/liveness", healthH.Liveness)
 	r.Get("/api/health/readiness", healthH.Readiness)

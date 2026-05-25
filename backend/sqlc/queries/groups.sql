@@ -9,6 +9,19 @@ SELECT * FROM groups WHERE id = $1;
 -- name: GetGroupByInviteToken :one
 SELECT * FROM groups WHERE invite_token = $1 AND NOT is_archived;
 
+-- name: GetGroupByInviteTokenAny :one
+-- Same as GetGroupByInviteToken but does NOT filter by is_archived. Used by
+-- the public invite landing page / preview endpoint to distinguish "invalid
+-- token" from "archived group" — see invite-deep-links spec, "Three landing
+-- page states".
+SELECT * FROM groups WHERE invite_token = $1;
+
+-- name: CountGroupMembers :one
+-- Member count for a group. Used by the public invite preview endpoint;
+-- factored as its own query (rather than reusing GroupStats) because preview
+-- is unauthenticated and should not leak the heavier aggregates.
+SELECT COUNT(*)::bigint AS member_count FROM group_members WHERE group_id = $1;
+
 -- name: ListGroupsByUserID :many
 SELECT g.* FROM groups g
 JOIN group_members gm ON gm.group_id = g.id

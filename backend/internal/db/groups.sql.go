@@ -11,6 +11,20 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countGroupMembers = `-- name: CountGroupMembers :one
+SELECT COUNT(*)::bigint AS member_count FROM group_members WHERE group_id = $1
+`
+
+// Member count for a group. Used by the public invite preview endpoint;
+// factored as its own query (rather than reusing GroupStats) because preview
+// is unauthenticated and should not leak the heavier aggregates.
+func (q *Queries) CountGroupMembers(ctx context.Context, groupID string) (int64, error) {
+	row := q.db.QueryRow(ctx, countGroupMembers, groupID)
+	var member_count int64
+	err := row.Scan(&member_count)
+	return member_count, err
+}
+
 const createGroup = `-- name: CreateGroup :one
 INSERT INTO groups (id, name, currency, language, created_by, invite_token, invite_token_created_by_user_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -83,6 +97,33 @@ SELECT id, name, currency, created_by, invite_token, is_archived, created_at, up
 
 func (q *Queries) GetGroupByInviteToken(ctx context.Context, inviteToken string) (Group, error) {
 	row := q.db.QueryRow(ctx, getGroupByInviteToken, inviteToken)
+	var i Group
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Currency,
+		&i.CreatedBy,
+		&i.InviteToken,
+		&i.IsArchived,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Language,
+		&i.IsLocked,
+		&i.InviteTokenCreatedByUserID,
+	)
+	return i, err
+}
+
+const getGroupByInviteTokenAny = `-- name: GetGroupByInviteTokenAny :one
+SELECT id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked, invite_token_created_by_user_id FROM groups WHERE invite_token = $1
+`
+
+// Same as GetGroupByInviteToken but does NOT filter by is_archived. Used by
+// the public invite landing page / preview endpoint to distinguish "invalid
+// token" from "archived group" — see invite-deep-links spec, "Three landing
+// page states".
+func (q *Queries) GetGroupByInviteTokenAny(ctx context.Context, inviteToken string) (Group, error) {
+	row := q.db.QueryRow(ctx, getGroupByInviteTokenAny, inviteToken)
 	var i Group
 	err := row.Scan(
 		&i.ID,

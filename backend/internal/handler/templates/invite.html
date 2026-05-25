@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>{{if eq .State "ok"}}{{if .InviterName}}{{.InviterName}} invited you to {{.GroupName}}{{else}}You're invited to {{.GroupName}}{{end}} · Chara{{else if eq .State "locked"}}{{.GroupName}} · Chara{{else}}Invite · Chara{{end}}</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f6f3ee;
+    color: #1f1d1a;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 480px; margin: 0 auto; padding: 32px 24px 48px; }
+  .brand { margin-bottom: 40px; }
+  .brand .wordmark {
+    font-size: 28px; font-weight: 700; letter-spacing: -0.02em;
+  }
+  .brand .tagline {
+    margin-top: 4px;
+    font-size: 14px;
+    color: #6b6660;
+  }
+  .card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  h1 {
+    margin: 0 0 8px 0;
+    font-size: 22px;
+    line-height: 1.25;
+    font-weight: 600;
+  }
+  .meta {
+    margin: 0 0 20px 0;
+    font-size: 15px;
+    color: #4f4a44;
+  }
+  .badges { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .badge {
+    display: inline-block;
+    padding: 10px 16px;
+    background: #1f1d1a;
+    color: #fff;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .badge:hover { opacity: 0.9; }
+  .open-link {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 14px;
+    color: #1f1d1a;
+    text-decoration: none;
+    border-bottom: 1px solid #1f1d1a;
+  }
+  .open-link:hover { opacity: 0.7; }
+  .footer {
+    margin-top: 24px;
+    font-size: 12px;
+    color: #8a857e;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .locked-message, .invalid-message {
+    margin: 0;
+    font-size: 15px;
+    color: #4f4a44;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1a1817; color: #f0ede7; }
+    .brand .tagline { color: #9a948c; }
+    .card { background: #2a2724; box-shadow: none; }
+    .meta, .locked-message, .invalid-message { color: #c0bbb4; }
+    .badge { background: #f0ede7; color: #1a1817; }
+    .open-link { color: #f0ede7; border-bottom-color: #f0ede7; }
+    .footer { color: #6e6962; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="brand">
+    <div class="wordmark">Chara</div>
+    <div class="tagline">Open-source bill splitting you can self-host.</div>
+  </header>
+
+  <section class="card">
+    {{if eq .State "ok"}}
+      <h1>{{if .InviterName}}{{.InviterName}} invited you to &lsquo;{{.GroupName}}&rsquo;{{else}}You&rsquo;re invited to &lsquo;{{.GroupName}}&rsquo;{{end}}</h1>
+      <p class="meta">{{.MemberCount}} members</p>
+      <div class="badges">
+        <!-- TODO: replace placeholder iOS App ID once TestFlight upload assigns one. -->
+        <a class="badge" href="https://apps.apple.com/app/chara/id000000000">Get Chara on the App Store</a>
+        <a class="badge" href="https://play.google.com/store/apps/details?id=app.chara">Get Chara on Google Play</a>
+      </div>
+      <a class="open-link" href="{{.CharaSchemeHref}}">Already installed? Open in Chara &rarr;</a>
+      <div class="footer">Server: {{.ServerHost}}</div>
+    {{else if eq .State "locked"}}
+      <h1>{{if .InviterName}}{{.InviterName}} invited you to &lsquo;{{.GroupName}}&rsquo;{{else}}You&rsquo;re invited to &lsquo;{{.GroupName}}&rsquo;{{end}}</h1>
+      <p class="meta">{{.MemberCount}} members</p>
+      <p class="locked-message">{{if .InviterName}}This group has stopped accepting members. Talk to {{.InviterName}} if you think you should be in it.{{else}}This group has stopped accepting members. Talk to the group owner if you think you should be in it.{{end}}</p>
+      <div class="footer">Server: {{.ServerHost}}</div>
+    {{else}}
+      <h1>This invite link doesn&rsquo;t work</h1>
+      <p class="invalid-message">It may have been replaced or the group may have been archived. Ask the sender for a new link.</p>
+    {{end}}
+  </section>
+</main>
+</body>
+</html>
