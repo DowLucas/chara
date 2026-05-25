@@ -382,17 +382,8 @@ func TestGroups_InviteLink_MemberCanGet(t *testing.T) {
 	assert.Equal(t, env.Config.BaseURL+"/i/"+group.InviteToken, inviteURL)
 }
 
-// TestInviteLandingStub_Returns501 asserts that /i/{token} is registered at the
-// router root (outside /api/...) and currently returns 501 Not Implemented.
-// The real landing-page handler is Wave 3 of the invite-deep-links plan; this
-// stub guarantees the route reserves the path so the frontend can ship.
-func TestInviteLandingStub_Returns501(t *testing.T) {
-	env := setupEnv(t)
-	req, err := http.NewRequest("GET", "/i/anything", nil)
-	require.NoError(t, err)
-	rr := env.Do(t, req)
-	assert.Equal(t, http.StatusNotImplemented, rr.Code)
-}
+// The /i/{token} 501 stub from Wave 1 has been replaced by the real
+// landing-page handler — see invites_test.go for the full state matrix.
 
 func TestGroups_InviteLink_NonMemberCannotGet(t *testing.T) {
 	env := setupEnv(t)
