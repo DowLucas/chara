@@ -207,6 +207,54 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusUnauthorized, "missing claims")
 		return
 	}
+	user, err := h.queries.GetActiveUserByID(r.Context(), claims.UserID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusUnauthorized, "user not found or deleted")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "lookup failed")
+		return
+	}
+	writeJSON(w, http.StatusOK, userToResponse(user))
+}
+
+// ── Account self-deletion ────────────────────────────────────────────────────
+//
+// Apple Guideline 5.1.1(v) requires every iOS app that supports account
+// creation to also offer in-app account deletion. We soft-delete the user
+// (see migration 000046 for the why — many FKs reference users(id) without
+// cascade, and cascading would wipe expense history that *other* members
+// of shared groups depend on). The user row stays, PII is nulled, the
+// email is rewritten to a sentinel, group_members rows become ghosts, and
+// the auth middleware refuses any future request whose JWT references a
+// deleted user.
+//
+// Precondition: every per-currency net balance across the user's groups
+// must be zero. Mirrors the group-permanent-delete and member-removal
+// gates — destructive ops never silently drop money owed to / from other
+// people.
+
+type deleteMeBalanceEntry struct {
+	Currency    string `json:"currency"`
+	AmountMinor int64  `json:"amount_minor"`
+}
+
+type deleteMeConflictResponse struct {
+	Error    string                 `json:"error"`
+	Balances []deleteMeBalanceEntry `json:"balances"`
+}
+
+// DeleteMe soft-deletes the authenticated user (Apple 5.1.1(v) compliance).
+// Returns 204 on success, 409 with per-currency balances when blocked, 401
+// when unauthenticated.
+func (h *AuthHandler) DeleteMe(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.ClaimsFromContext(r.Context())
+	if claims == nil {
+		writeError(w, http.StatusUnauthorized, "missing claims")
+		return
+	}
+
 	user, err := h.queries.GetUserByID(r.Context(), claims.UserID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -216,7 +264,97 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "lookup failed")
 		return
 	}
-	writeJSON(w, http.StatusOK, userToResponse(user))
+	// The auth middleware should already have rejected a deleted user, but
+	// belt-and-braces here: a re-delete must not silently 204 if a race
+	// somehow let one through.
+	if user.DeletedAt.Valid {
+		writeError(w, http.StatusUnauthorized, "user not found")
+		return
+	}
+
+	// Per-currency net balance across every group. Mirror the precondition
+	// used by /api/groups/{id}/members/{id} removal — non-zero in any
+	// currency blocks the destructive op so other members aren't stuck
+	// with phantom balances against a deleted ghost.
+	rows, err := h.queries.ListUserBalancesAcrossGroups(r.Context(),
+		pgtype.Text{String: claims.UserID, Valid: true},
+	)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "balance lookup failed")
+		return
+	}
+	// Sum per currency — the user is on a per-group basis in `rows`, but the
+	// contract reports one entry per currency.
+	netByCurrency := make(map[string]int64, 4)
+	for _, b := range rows {
+		netByCurrency[b.Currency.String] += b.NetBalance
+	}
+	var nonZero []deleteMeBalanceEntry
+	for currency, amount := range netByCurrency {
+		if amount != 0 {
+			nonZero = append(nonZero, deleteMeBalanceEntry{
+				Currency:    currency,
+				AmountMinor: amount,
+			})
+		}
+	}
+	if len(nonZero) > 0 {
+		writeJSON(w, http.StatusConflict, deleteMeConflictResponse{
+			Error:    "balance_not_zero",
+			Balances: nonZero,
+		})
+		return
+	}
+
+	tx, err := h.pool.Begin(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+	defer tx.Rollback(r.Context())
+	q := db.New(tx)
+
+	// Push tokens go first so Expo stops getting hits for this user even if
+	// a later step fails (the tx rollback would undo this, but the only
+	// realistic failure is a constraint violation we don't have here).
+	if err := q.DeletePushTokensByUser(r.Context(), claims.UserID); err != nil {
+		slog.Error("delete me: push token wipe failed", "error", err, "user_id", claims.UserID)
+		writeError(w, http.StatusInternalServerError, "delete failed")
+		return
+	}
+
+	// Outstanding magic-link tokens for the original email become irrelevant
+	// the moment the email is rewritten to the sentinel, but explicit is
+	// cheaper than leaving dead rows in the table.
+	if err := q.DeleteMagicLinkTokensByEmail(r.Context(), user.Email); err != nil {
+		slog.Error("delete me: magic link wipe failed", "error", err, "user_id", claims.UserID)
+		writeError(w, http.StatusInternalServerError, "delete failed")
+		return
+	}
+
+	// Detach group memberships → ghost rows so paid_by_id / expense_splits
+	// still resolve for the group's other members.
+	if err := q.GhostifyGroupMembersForUser(r.Context(),
+		pgtype.Text{String: claims.UserID, Valid: true},
+	); err != nil {
+		slog.Error("delete me: ghostify failed", "error", err, "user_id", claims.UserID)
+		writeError(w, http.StatusInternalServerError, "delete failed")
+		return
+	}
+
+	if err := q.SoftDeleteUser(r.Context(), claims.UserID); err != nil {
+		slog.Error("delete me: soft delete failed", "error", err, "user_id", claims.UserID)
+		writeError(w, http.StatusInternalServerError, "delete failed")
+		return
+	}
+
+	if err := tx.Commit(r.Context()); err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	slog.Info("account self-deleted", "user_id", claims.UserID)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 type updateMeRequest struct {

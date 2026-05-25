@@ -303,6 +303,7 @@ type User struct {
 	UpdatedAt       pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
 	AvatarObjectKey pgtype.Text        `db:"avatar_object_key" json:"avatar_object_key"`
 	AvatarUpdatedAt pgtype.Timestamptz `db:"avatar_updated_at" json:"avatar_updated_at"`
+	DeletedAt       pgtype.Timestamptz `db:"deleted_at" json:"deleted_at"`
 }
 
 type WaitlistSignup struct {
