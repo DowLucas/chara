@@ -12,10 +12,7 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
-// TODO: pin the production hostname when DNS flips during the rename.
-// Until then this matches what `BASE_URL` in app/lib/api.ts resolves to
-// in production builds.
-const PROD_URL = 'https://api.chara.app';
+const PROD_URL = 'https://chara-api.lurkhuset.com';
 
 export function legacyHostedUrl(): string {
   if (!__DEV__) return PROD_URL;

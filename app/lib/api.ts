@@ -20,7 +20,7 @@ import type {
 const TOKEN_KEY = 'auth_token';
 
 function resolveBaseUrl(): string {
-  if (!__DEV__) return 'https://api.chara.app';
+  if (!__DEV__) return 'https://chara-api.lurkhuset.com';
 
   // Explicit override always wins (e.g. EXPO_PUBLIC_API_URL=http://192.168.0.45:8080).
   const fromEnv = process.env.EXPO_PUBLIC_API_URL;
@@ -111,6 +111,94 @@ export class NoAccountError extends Error {
   constructor(public serverUrl: string) {
     super(`No account configured for server ${serverUrl}`);
   }
+}
+
+/**
+ * Thrown by `apiFor(serverUrl).deleteMe()` when the backend refuses to
+ * permanently delete the account because the user still has outstanding
+ * balances (HTTP 409 `{error: "balance_not_zero", balances: [...]}`).
+ *
+ * Apple Guideline 5.1.1(v) requires in-app self-deletion; the per-currency
+ * balance list lets the UI tell the user exactly what to settle before
+ * retrying.
+ */
+export class AccountDeleteBlockedError extends Error {
+  public balances: Array<{ currency: string; amount_minor: number }>;
+  constructor(balances: Array<{ currency: string; amount_minor: number }>) {
+    super('balance_not_zero');
+    this.name = 'AccountDeleteBlockedError';
+    this.balances = balances;
+  }
+}
+
+/**
+ * Outcome of a single account's delete attempt during a bulk
+ * "delete from all servers" run.
+ */
+export type AccountDeleteOutcome =
+  | { serverUrl: string; status: 'deleted' }
+  | {
+      serverUrl: string;
+      status: 'blocked';
+      balances: Array<{ currency: string; amount_minor: number }>;
+    }
+  | { serverUrl: string; status: 'failed'; error: string };
+
+/**
+ * Aggregate the results of `Promise.allSettled(serverUrls.map(deleteOne))`
+ * into one outcome per server. Pure function so it can be unit-tested
+ * without spinning up the network layer.
+ *
+ *   - fulfilled → `deleted`
+ *   - rejected with `AccountDeleteBlockedError` → `blocked` + balances
+ *   - any other rejection → `failed` + message
+ */
+export function aggregateBulkDeleteResults(
+  serverUrls: string[],
+  settled: PromiseSettledResult<unknown>[],
+): AccountDeleteOutcome[] {
+  return serverUrls.map((serverUrl, i) => {
+    const r = settled[i];
+    if (!r) {
+      return { serverUrl, status: 'failed', error: 'missing_result' };
+    }
+    if (r.status === 'fulfilled') {
+      return { serverUrl, status: 'deleted' };
+    }
+    const reason = r.reason;
+    if (reason instanceof AccountDeleteBlockedError) {
+      return { serverUrl, status: 'blocked', balances: reason.balances };
+    }
+    const msg = reason instanceof Error ? reason.message : String(reason ?? 'error');
+    return { serverUrl, status: 'failed', error: msg };
+  });
+}
+
+/**
+ * Parse a 409 body from `DELETE /api/me` into the structured balance list.
+ * Tolerates missing/malformed fields — returns an empty array rather than
+ * throwing, so the caller can still surface "Settle up first" without
+ * crashing on a partial payload.
+ *
+ * Exported for tests.
+ */
+export function parseDeleteBlockedBody(
+  body: unknown,
+): Array<{ currency: string; amount_minor: number }> {
+  if (!body || typeof body !== 'object') return [];
+  const raw = (body as { balances?: unknown }).balances;
+  if (!Array.isArray(raw)) return [];
+  const out: Array<{ currency: string; amount_minor: number }> = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') continue;
+    const c = (entry as { currency?: unknown }).currency;
+    const a = (entry as { amount_minor?: unknown }).amount_minor;
+    if (typeof c !== 'string') continue;
+    const n = typeof a === 'number' ? a : typeof a === 'string' ? Number(a) : NaN;
+    if (!Number.isFinite(n)) continue;
+    out.push({ currency: c, amount_minor: Math.trunc(n) });
+  }
+  return out;
 }
 
 /**
@@ -1224,6 +1312,24 @@ export function apiFor(serverUrl: string) {
 
     // Logout (advisory; spec §16 item 4)
     logout: () => requestOn<void>(serverUrl, '/api/me/logout', { method: 'POST' }),
+
+    // Permanent account self-deletion — Apple Guideline 5.1.1(v).
+    // 204 → resolves. 401 → already gone, resolves. 409 → throws
+    // `AccountDeleteBlockedError` with the per-currency outstanding balances
+    // so the UI can prompt the user to settle up first.
+    deleteMe: async (): Promise<void> => {
+      try {
+        await requestOn<void>(serverUrl, '/api/me', { method: 'DELETE' });
+      } catch (e) {
+        if (e instanceof ApiError) {
+          if (e.status === 401) return; // already deleted
+          if (e.status === 409) {
+            throw new AccountDeleteBlockedError(parseDeleteBlockedBody(e.body));
+          }
+        }
+        throw e;
+      }
+    },
   };
 }
 

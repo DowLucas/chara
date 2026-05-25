@@ -8,13 +8,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Linking,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { useAccount, useAccounts } from '@/lib/accounts';
 import {
   addAccount as storeAddAccount,
@@ -451,6 +452,32 @@ export default function SignInScreen() {
       {(mode !== 'first-launch' || params.server) && (
         <View style={{ paddingBottom: insets.bottom + spacing.s4 }} />
       )}
+
+      <View style={styles.legalFooter}>
+        <Text style={styles.legalFooterText}>
+          <Trans
+            i18nKey="signIn.legalFooter"
+            components={{
+              terms: (
+                <Text
+                  style={styles.legalFooterLink}
+                  onPress={() => {
+                    void Linking.openURL('https://getchara.lovable.app/terms').catch(() => {});
+                  }}
+                />
+              ),
+              privacy: (
+                <Text
+                  style={styles.legalFooterLink}
+                  onPress={() => {
+                    void Linking.openURL('https://getchara.lovable.app/privacy').catch(() => {});
+                  }}
+                />
+              ),
+            }}
+          />
+        </Text>
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -586,5 +613,22 @@ const styles = StyleSheet.create({
     fontFamily: fontMono,
     fontSize: fontSize.caption,
     color: colors.vermillion,
+  },
+  legalFooter: {
+    paddingHorizontal: spacing.s5,
+    paddingVertical: spacing.s4,
+  },
+  legalFooterText: {
+    textAlign: 'center',
+    color: colors.lead,
+    fontSize: 12,
+    fontFamily: fontBody,
+    lineHeight: 18,
+  },
+  legalFooterLink: {
+    textDecorationLine: 'underline',
+    color: colors.lead,
+    fontSize: 12,
+    fontFamily: fontBody,
   },
 });
