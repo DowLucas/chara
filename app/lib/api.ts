@@ -1360,5 +1360,15 @@ export function publicApi(serverUrl: string) {
         body: JSON.stringify(args),
         requireAuth: false,
       }),
+    // Native Sign in with Google — exchanges Google's identity_token for a
+    // Chara session JWT. `name` is best-effort from the Google profile and
+    // only consumed by the server on first sign-in (it sets the user's
+    // display name then; subsequent logins ignore the field).
+    googleNativeSignIn: (args: { identity_token: string; name?: string }) =>
+      requestOn<TokenResponse>(serverUrl, '/api/auth/google/native', {
+        method: 'POST',
+        body: JSON.stringify(args),
+        requireAuth: false,
+      }),
   };
 }
