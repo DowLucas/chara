@@ -360,11 +360,6 @@ export default function GroupSettingsScreen() {
             <Text style={styles.headerTitle} numberOfLines={2}>
               {group?.name ?? t('common.dash')}
             </Text>
-            <Text style={styles.headerSub}>
-              {t('groupSettings.header.memberCount', {
-                count: group?.members.length ?? 0,
-              })}
-            </Text>
             <View style={styles.badgeRow}>
               {isLocked && (
                 <Badge tone="brick" label={t('groupSettings.header.lockedBadge')} />
@@ -374,7 +369,7 @@ export default function GroupSettingsScreen() {
               )}
             </View>
           </View>
-          <Feather name="chevron-right" size={20} color={colors.lead} />
+          <Feather name="edit-2" size={18} color={colors.lead} />
         </TouchableOpacity>
 
         {loadError && (
@@ -701,12 +696,6 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
     color: colors.graphite,
     lineHeight: 44,
-  },
-  headerSub: {
-    fontFamily: fontMono,
-    fontSize: fontSize.bodyS,
-    color: colors.lead,
-    marginTop: spacing.s1,
   },
   badgeRow: {
     flexDirection: 'row',
