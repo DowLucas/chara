@@ -8,14 +8,17 @@ import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AccountsProvider } from '@/lib/accounts';
-import { snapshot as accountsSnapshot } from '@/lib/accounts-store';
+import { isLoaded as accountsIsLoaded, snapshot as accountsSnapshot } from '@/lib/accounts-store';
 import { AppAlertHost } from '@/components/AppAlert/AppAlertHost';
+import { showAlert } from '@/lib/app-alert';
 import * as analytics from '@/lib/analytics';
 import { runRecoveryProbes } from '@/lib/compat-recovery';
 import { bootstrapPush, retryPendingRegistrations } from '@/lib/push';
 import { REFRESH_FLOOR_MS } from '@/lib/aggregated-reads-internal';
 import { classifyInvite } from '@/lib/invite-handler';
 import { dispatchInviteIntent } from '@/lib/invite-dispatcher';
+import { classifyGroupDeepLink } from '@/lib/deep-link';
+import i18n from '@/lib/i18n';
 import '@/lib/i18n';
 
 /**
@@ -42,17 +45,40 @@ function handleDeepLink(url: string | null | undefined): void {
 
   // Notification-tap group route: chara://groups/<encodedServer>/<groupId>?…
   if (lower.startsWith('chara://groups/')) {
-    // Strip scheme and any query/fragment, then split.
-    const withoutScheme = url.slice('chara://'.length);
-    const [path] = withoutScheme.split(/[?#]/);
-    const parts = path.split('/').filter((p) => p.length > 0);
-    // parts: ['groups', '<encodedServer>', '<groupId>', ...]
-    if (parts.length >= 3 && parts[0] === 'groups') {
-      const encodedServer = parts[1];
-      const groupId = parts[2];
-      router.push(`/groups/${encodedServer}/${groupId}`);
+    const intent = classifyGroupDeepLink(url, {
+      accounts: accountsSnapshot().accounts,
+      isLoaded: accountsIsLoaded(),
+    });
+    switch (intent.kind) {
+      case 'navigate':
+        router.push(
+          `/groups/${encodeURIComponent(intent.serverUrl)}/${intent.groupId}`,
+        );
+        return;
+      case 'unknown_server':
+        // i18n: temporary inline strings — i18n agent owns en.json.
+        // Suggested keys: `deepLink.unknownServer.title|body`.
+        void showAlert({
+          title: i18n.t('deepLink.unknownServer.title', {
+            defaultValue: 'Unknown account for this link',
+          }),
+          message: i18n.t('deepLink.unknownServer.body', {
+            defaultValue: 'This link points to a server you’re not signed into.',
+          }),
+          buttons: [
+            {
+              key: 'ok',
+              label: i18n.t('common.ok', { defaultValue: 'OK' }),
+            },
+          ],
+        });
+        return;
+      case 'not_loaded':
+      case 'malformed':
+      case 'ignore':
+      default:
+        return;
     }
-    return;
   }
 
   // Anything else: ignore.

@@ -1,4 +1,8 @@
-import { normalizeServerUrl } from '../server-url';
+import {
+  displayHostFor,
+  isMainHostedServer,
+  normalizeServerUrl,
+} from '../server-url';
 
 describe('normalizeServerUrl — happy path', () => {
   it('passes through an already-canonical https URL', () => {
@@ -137,5 +141,39 @@ describe('normalizeServerUrl — rejections', () => {
 describe('normalizeServerUrl — input tolerance', () => {
   it('trims surrounding whitespace', () => {
     expect(normalizeServerUrl('  https://api.chara.app  ')).toBe('https://api.chara.app');
+  });
+});
+
+describe('isMainHostedServer', () => {
+  it('matches the canonical hosted URL exactly', () => {
+    expect(isMainHostedServer('https://chara-api.lurkhuset.com')).toBe(true);
+  });
+  it('matches with a trailing slash', () => {
+    expect(isMainHostedServer('https://chara-api.lurkhuset.com/')).toBe(true);
+  });
+  it('matches case-insensitively', () => {
+    expect(isMainHostedServer('https://CHARA-API.lurkhuset.com')).toBe(true);
+  });
+  it('rejects self-hosted URLs', () => {
+    expect(isMainHostedServer('https://chara.example.com')).toBe(false);
+    expect(isMainHostedServer('http://localhost:8080')).toBe(false);
+  });
+  it('rejects empty / nullish input', () => {
+    expect(isMainHostedServer('')).toBe(false);
+    expect(isMainHostedServer(undefined as unknown as string)).toBe(false);
+  });
+});
+
+describe('displayHostFor', () => {
+  it('returns the brand label for the main hosted server', () => {
+    expect(displayHostFor('https://chara-api.lurkhuset.com', 'Chara Server')).toBe(
+      'Chara Server',
+    );
+  });
+  it('strips scheme + trailing slash for self-hosted URLs', () => {
+    expect(displayHostFor('https://chara.example.com/', 'Chara Server')).toBe(
+      'chara.example.com',
+    );
+    expect(displayHostFor('http://10.0.0.5:8080', 'Chara Server')).toBe('10.0.0.5:8080');
   });
 });

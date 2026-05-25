@@ -1,4 +1,8 @@
-import { hasOpenBalance, isNonZeroDecimal } from '../balance-utils';
+import {
+  hasOpenBalance,
+  isNonZeroDecimal,
+  partitionBulkBalanceCheck,
+} from '../balance-utils';
 
 describe('isNonZeroDecimal', () => {
   it('treats "0" as zero', () => {
@@ -76,5 +80,44 @@ describe('hasOpenBalance', () => {
     expect(
       hasOpenBalance([{ net_balance: '-50.00' }, { net_balance: '0' }]),
     ).toBe(true);
+  });
+});
+
+describe('partitionBulkBalanceCheck', () => {
+  const urls = [
+    'https://a.example',
+    'https://b.example',
+    'https://c.example',
+    'https://d.example',
+  ];
+
+  it('classifies clear / blocked / errored servers, preserving order', () => {
+    const results: PromiseSettledResult<Array<{ net_balance: string }>>[] = [
+      { status: 'fulfilled', value: [{ net_balance: '0' }] },
+      { status: 'fulfilled', value: [{ net_balance: '12.50' }] },
+      { status: 'rejected', reason: new Error('network down') },
+      { status: 'fulfilled', value: [] },
+    ];
+    expect(partitionBulkBalanceCheck(urls, results)).toEqual({
+      blockedUrls: ['https://b.example'],
+      erroredUrls: ['https://c.example'],
+    });
+  });
+
+  it('treats missing result slots as errored (fail-safe)', () => {
+    expect(partitionBulkBalanceCheck(['https://x'], [])).toEqual({
+      blockedUrls: [],
+      erroredUrls: ['https://x'],
+    });
+  });
+
+  it('returns empty arrays when every server is clear', () => {
+    const results: PromiseSettledResult<Array<{ net_balance: string }>>[] = [
+      { status: 'fulfilled', value: [{ net_balance: '0' }] },
+      { status: 'fulfilled', value: [] },
+    ];
+    expect(
+      partitionBulkBalanceCheck(['https://a.example', 'https://b.example'], results),
+    ).toEqual({ blockedUrls: [], erroredUrls: [] });
   });
 });

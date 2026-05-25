@@ -69,6 +69,33 @@ function stripTrailingColon(s: string): string {
 }
 
 /**
+ * The canonical URL of the main Chara hosted server. Anything matching
+ * this should be rendered as "Chara Server" in UI rather than the
+ * domain.
+ */
+export const MAIN_HOSTED_SERVER_URL = 'https://chara-api.lurkhuset.com';
+
+/**
+ * True when `serverUrl` is the main Chara hosted instance. Comparison
+ * tolerates a trailing slash and case differences in the host part.
+ */
+export function isMainHostedServer(serverUrl: string): boolean {
+  const stripped = String(serverUrl || '').replace(/\/+$/, '').toLowerCase();
+  return stripped === MAIN_HOSTED_SERVER_URL.toLowerCase();
+}
+
+/**
+ * UI-facing label for a server. The main hosted server gets a friendly
+ * brand name; everything else falls back to the bare host. Callers pass
+ * the translated brand label so this stays i18n-aware without dragging
+ * i18next into a pure helper.
+ */
+export function displayHostFor(serverUrl: string, mainServerLabel: string): string {
+  if (isMainHostedServer(serverUrl)) return mainServerLabel;
+  return String(serverUrl || '').replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+}
+
+/**
  * True if the URL's host is a loopback/private IP — i.e. exposing it on
  * the UI in plain text leaks LAN topology. Use to decide whether to
  * mask the chip behind a tap-to-reveal.

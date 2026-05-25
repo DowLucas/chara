@@ -23,8 +23,11 @@ const config: ExpoConfig = {
     // / `assetlinks.json` are a future wave gated on Play Console.
     associatedDomains: ['applinks:chara-api.lurkhuset.com'],
     infoPlist: {
-      NSUserNotificationsUsageDescription:
-        'Chara sends push notifications when group members add expenses or settle up.',
+      ITSAppUsesNonExemptEncryption: false,
+      NSCameraUsageDescription:
+        'Allow Chara to access your camera to scan group QR codes and capture receipt photos.',
+      NSPhotoLibraryUsageDescription:
+        'Allow Chara to access your photo library to upload a profile picture or attach a receipt photo.',
       // Schemes Chara may call Linking.canOpenURL on. iOS hides apps not
       // listed here behind a `false` return, even if the app is installed.
       LSApplicationQueriesSchemes: ['swish'],

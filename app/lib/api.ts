@@ -977,10 +977,15 @@ export function deleteAvatar() {
  *  nor a fallback OAuth `avatar_url` is set — callers should then render
  *  initials.
  *
+ *  Security: only server-relative paths get the Authorization header. If
+ *  `avatar_object_url` is an absolute URL we return null — a hostile or
+ *  compromised server (or a self-set avatar URL on any server) could
+ *  otherwise capture the user's JWT via the outbound Authorization header.
+ *
  *  The OAuth fallback (`avatar_url`) is served by the provider directly and
- *  doesn't need auth headers; the server avatar does. The cache-buster
- *  (`?v=<updated_at>`) only applies to the server avatar so a fresh upload
- *  invalidates the RN image cache. */
+ *  doesn't need auth headers. The cache-buster (`?v=<updated_at>`) only
+ *  applies to the server avatar so a fresh upload invalidates the RN
+ *  image cache. */
 export function avatarImageSource(
   input:
     | { avatar_object_url?: string | null; avatar_url?: string | null; avatar_updated_at?: string | null }
@@ -991,11 +996,13 @@ export function avatarImageSource(
   if (!input) return null;
   if (input.avatar_object_url) {
     const path = input.avatar_object_url;
+    // Reject absolute URLs: never send the bearer token to an arbitrary host.
+    if (!path.startsWith('/')) return null;
     const sep = path.includes('?') ? '&' : '?';
     const bust = input.avatar_updated_at
       ? `${sep}v=${encodeURIComponent(input.avatar_updated_at)}`
       : '';
-    const uri = path.startsWith('http') ? `${path}${bust}` : `${BASE_URL}${path}${bust}`;
+    const uri = `${BASE_URL}${path}${bust}`;
     return token ? { uri, headers: { Authorization: `Bearer ${token}` } } : { uri };
   }
   if (input.avatar_url) {
@@ -1354,7 +1361,10 @@ export function publicApi(serverUrl: string) {
     // Native Sign in with Apple — exchanges Apple's identity_token for a
     // Chara session JWT. `name` is provided only on the first sign-in (Apple
     // returns it once); the server persists it as the user's display name.
-    appleNativeSignIn: (args: { identity_token: string; name?: string }) =>
+    // `nonce` is the raw (unhashed) nonce the client used when calling
+    // AppleAuthentication.signInAsync; Apple hashes it and embeds it in
+    // the JWT, the server verifies the hash matches what we send here.
+    appleNativeSignIn: (args: { identity_token: string; nonce: string; name?: string }) =>
       requestOn<TokenResponse>(serverUrl, '/api/auth/apple/native', {
         method: 'POST',
         body: JSON.stringify(args),
@@ -1363,8 +1373,10 @@ export function publicApi(serverUrl: string) {
     // Native Sign in with Google — exchanges Google's identity_token for a
     // Chara session JWT. `name` is best-effort from the Google profile and
     // only consumed by the server on first sign-in (it sets the user's
-    // display name then; subsequent logins ignore the field).
-    googleNativeSignIn: (args: { identity_token: string; name?: string }) =>
+    // display name then; subsequent logins ignore the field). `nonce` is
+    // the raw nonce we passed to GoogleSignin.signIn; Google embeds it in
+    // the ID token so the server can verify it wasn't replayed.
+    googleNativeSignIn: (args: { identity_token: string; nonce: string; name?: string }) =>
       requestOn<TokenResponse>(serverUrl, '/api/auth/google/native', {
         method: 'POST',
         body: JSON.stringify(args),
