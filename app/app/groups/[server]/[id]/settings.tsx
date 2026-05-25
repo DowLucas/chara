@@ -29,7 +29,6 @@ import { Feather } from '@expo/vector-icons';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
-import { Avatar } from '@/components/Avatar';
 import { GroupAvatar } from '@/components/GroupAvatar';
 import { GroupColorPicker } from '@/components/GroupColorPicker';
 import { Text } from '@/components/Text';
@@ -38,8 +37,6 @@ import { lifecycleActionsForViewer } from '@/lib/group-settings';
 import {
   apiFor,
   ApiError,
-  authToken,
-  avatarImageSource,
   Balance,
   CanLeaveResponse,
   GroupDetail,
@@ -50,7 +47,6 @@ import { formatLeaveReasons } from '@/lib/group-settings';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import type { DeleteGroupModalError } from '@/components/DeleteGroupModal.helpers';
 import { formatDate, formatMinorUnits } from '@/lib/i18n';
-import { initialsOf } from '@/lib/name';
 import {
   colors,
   fontBody,
@@ -98,22 +94,11 @@ export default function GroupSettingsScreen() {
   const [canLeave, setCanLeave] = useState<CanLeaveResponse | null>(null);
   const [balances, setBalances] = useState<Balance[] | null>(null);
   const [loadError, setLoadError] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState<DeleteGroupModalError | null>(null);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [recurringCount, setRecurringCount] = useState<number | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    authToken().then((t) => {
-      if (!cancelled) setToken(t);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const load = useCallback(async () => {
     if (!id || !serverUrl) return;
@@ -396,32 +381,13 @@ export default function GroupSettingsScreen() {
           <Text style={styles.loadError}>{t('groupSettings.loadError')}</Text>
         )}
 
-        {/* MEMBERS — primary content; viewed most often */}
+        {/* MEMBERS — single entry to the dedicated members page */}
         <View style={styles.section}>
           <Text style={styles.sectionEyebrow}>{t('groupSettings.members.title')}</Text>
           <View style={styles.list}>
-            {sortedMembers.slice(0, 6).map((m) => {
-              const isYou = m.user_id === me?.id;
-              const role =
-                m.role === 'owner' ? t('members.roleOwner') : t('members.roleMember');
-              return (
-                <View key={m.id} style={styles.memberRow}>
-                  <Avatar
-                    initials={initialsOf(m.name)}
-                    source={avatarImageSource(m, token)}
-                  />
-                  <View style={styles.memberText}>
-                    <Text style={styles.memberName} numberOfLines={1}>
-                      {m.name}
-                      {isYou ? ` · ${t('members.you')}` : ''}
-                    </Text>
-                    <Text style={styles.memberMeta}>{role}</Text>
-                  </View>
-                </View>
-              );
-            })}
             <NavRow
               label={t('groupSettings.members.manageCta')}
+              hint={sortedMembers.length > 0 ? String(sortedMembers.length) : undefined}
               onPress={() =>
                 group &&
                 router.push(`/groups/${encodeURIComponent(serverUrl)}/${group.id}/members`)
@@ -868,27 +834,5 @@ const styles = StyleSheet.create({
     fontSize: fontSize.body,
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
-  },
-  // Members section uses memberRow for avatar+name display, sharing list borders
-  memberRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.s3,
-    gap: spacing.s3,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.ruleSoft,
-  },
-  memberText: { flex: 1, minWidth: 0 },
-  memberName: {
-    fontFamily: fontBody,
-    fontSize: fontSize.body,
-    color: colors.graphite,
-  },
-  memberMeta: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
-    marginTop: 2,
-    letterSpacing: 0.3,
   },
 });
