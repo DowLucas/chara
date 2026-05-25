@@ -1245,5 +1245,14 @@ export function publicApi(serverUrl: string) {
         body: JSON.stringify({ token }),
         requireAuth: false,
       }),
+    // Native Sign in with Apple — exchanges Apple's identity_token for a
+    // Chara session JWT. `name` is provided only on the first sign-in (Apple
+    // returns it once); the server persists it as the user's display name.
+    appleNativeSignIn: (args: { identity_token: string; name?: string }) =>
+      requestOn<TokenResponse>(serverUrl, '/api/auth/apple/native', {
+        method: 'POST',
+        body: JSON.stringify(args),
+        requireAuth: false,
+      }),
   };
 }

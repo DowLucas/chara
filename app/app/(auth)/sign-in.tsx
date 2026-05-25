@@ -13,6 +13,7 @@ import { showAlert } from '@/lib/app-alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { useTranslation } from 'react-i18next';
 import { useAccount, useAccounts } from '@/lib/accounts';
 import {
@@ -97,6 +98,9 @@ export default function SignInScreen() {
   const [authMethods, setAuthMethods] = useState<string[] | null>(
     account?.instance?.auth_methods ?? null,
   );
+  const [features, setFeatures] = useState<Record<string, boolean> | null>(
+    account?.instance?.features ?? null,
+  );
 
   // Fire `auth_screen_seen` once per mount. Modes other than first-launch
   // (settings/invite/reauth) all originate from inside the app, so they map
@@ -121,7 +125,10 @@ export default function SignInScreen() {
         const raw = await publicApi(serverUrl).instanceInfo();
         const parsed = parseInstanceInfo(raw);
         if (cancelled) return;
-        if (parsed) setAuthMethods(parsed.auth_methods);
+        if (parsed) {
+          setAuthMethods(parsed.auth_methods);
+          setFeatures(parsed.features);
+        }
       } catch {
         /* swallow — leave authMethods null; email button always renders */
       }
@@ -137,11 +144,70 @@ export default function SignInScreen() {
     if (account?.instance?.auth_methods) {
       setAuthMethods(account.instance.auth_methods);
     }
-  }, [account?.instance?.auth_methods]);
+    if (account?.instance?.features) {
+      setFeatures(account.instance.features);
+    }
+  }, [account?.instance?.auth_methods, account?.instance?.features]);
 
   const showGoogle = authMethods === null
     ? mode === 'first-launch' // preserve legacy first-launch UI which always showed Google
     : authMethods.includes('google');
+  // Apple sign-in is iOS-only and feature-gated by the server. We don't
+  // fall back to a "show on first-launch" default the way Google does —
+  // Apple requires a paid Developer account on the server side, so showing
+  // the button without server support would just lead to broken UX.
+  const showApple = Platform.OS === 'ios' && features?.apple_auth === true;
+
+  async function handleApplePress() {
+    analytics.track('auth_method_selected', { method: 'apple' });
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      if (!credential.identityToken) {
+        analytics.track('auth_error', { method: 'apple', code: 'no_token' });
+        await showAlert({
+          title: t('signIn.apple.errorTitle'),
+          message: t('signIn.apple.noToken'),
+          buttons: [{ key: 'ok', label: t('common.ok') }],
+        });
+        return;
+      }
+      const fullName = credential.fullName;
+      const name =
+        [fullName?.givenName, fullName?.familyName]
+          .filter(Boolean)
+          .join(' ')
+          .trim() || undefined;
+
+      setLoading(true);
+      const resp = await publicApi(serverUrl).appleNativeSignIn({
+        identity_token: credential.identityToken,
+        name,
+      });
+      await onTokenIssued(resp.token, 'apple');
+    } catch (e: unknown) {
+      // User dismissed the system sheet — not an error worth surfacing.
+      const code = (e as { code?: string } | null)?.code;
+      if (code === 'ERR_REQUEST_CANCELED') return;
+      const msg = e instanceof Error ? e.message : String(e);
+      console.warn('[chara] apple sign-in failed', msg);
+      analytics.track('auth_error', {
+        method: 'apple',
+        code: classifyAuthError(e),
+      });
+      await showAlert({
+        title: t('signIn.apple.errorTitle'),
+        message: t('signIn.apple.errorBody'),
+        buttons: [{ key: 'ok', label: t('common.ok') }],
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleMagicLink() {
     if (!email.trim()) return;
@@ -334,6 +400,20 @@ export default function SignInScreen() {
             </Text>
           </TouchableOpacity>
 
+          {showApple && (
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={
+                AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
+              }
+              buttonStyle={
+                AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+              }
+              cornerRadius={6}
+              style={styles.appleBtn}
+              onPress={handleApplePress}
+            />
+          )}
+
           {showGoogle && (
             <TouchableOpacity
               style={[styles.authBtn, styles.authBtnSecondary]}
@@ -479,6 +559,10 @@ const styles = StyleSheet.create({
   },
   authBtnLabelDefault: {
     color: colors.graphite,
+  },
+  appleBtn: {
+    width: '100%',
+    height: 52,
   },
   footer: {
     paddingTop: spacing.s3,

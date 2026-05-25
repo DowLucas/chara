@@ -14,6 +14,7 @@ const config: ExpoConfig = {
   ios: {
     supportsTablet: false,
     bundleIdentifier: 'app.chara',
+    usesAppleSignIn: true,
     infoPlist: {
       NSUserNotificationsUsageDescription:
         'Chara sends push notifications when group members add expenses or settle up.',
@@ -61,16 +62,21 @@ const config: ExpoConfig = {
     ],
     'expo-localization',
     '@react-native-community/datetimepicker',
+    'expo-apple-authentication',
   ],
   experiments: {
     typedRoutes: true,
   },
+  owner: 'lucasdow1',
   extra: {
     // Only the official hosted build has POSTHOG_API_KEY supplied (via EAS
     // Secrets). Local dev / forks have it unset — the analytics wrapper
     // becomes a permanent no-op when the key is missing.
     posthogApiKey: process.env.POSTHOG_API_KEY ?? null,
     posthogHost: process.env.POSTHOG_HOST ?? 'https://eu.i.posthog.com',
+    eas: {
+      projectId: '8049463f-fe32-4462-a2eb-6cc1e63e1ed2',
+    },
   },
 };
 
