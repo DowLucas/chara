@@ -15,6 +15,13 @@ const config: ExpoConfig = {
     supportsTablet: false,
     bundleIdentifier: 'app.chara',
     usesAppleSignIn: true,
+    // Universal Links — the system fetches
+    // https://chara-api.lurkhuset.com/.well-known/apple-app-site-association
+    // at install time and routes matching https URLs (/i/*) directly to the
+    // app. See docs/superpowers/specs/2026-05-24-invite-deep-links-design.md
+    // Phase 2 and backend/internal/handler/aasa.go. Android `intentFilters`
+    // / `assetlinks.json` are a future wave gated on Play Console.
+    associatedDomains: ['applinks:chara-api.lurkhuset.com'],
     infoPlist: {
       NSUserNotificationsUsageDescription:
         'Chara sends push notifications when group members add expenses or settle up.',

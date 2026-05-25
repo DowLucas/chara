@@ -46,6 +46,14 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 	// grace during the Quits → Chara rename. Remove after v0.2.
 	r.Get("/.well-known/quits-instance", wellknownHandler)
 
+	// Apple App Site Association — published so iOS can verify the
+	// Chara app's Universal Link claim on chara-api.lurkhuset.com.
+	// See invite-deep-links spec Phase 2. Both GET and HEAD are wired
+	// because Apple's CDN validator sometimes probes with HEAD first.
+	aasaHandler := handler.NewAppleAppSiteAssociationHandler(cfg)
+	r.Get("/.well-known/apple-app-site-association", aasaHandler)
+	r.Head("/.well-known/apple-app-site-association", aasaHandler)
+
 	// Public invite endpoints (see invite-deep-links spec Phase 1C).
 	// Both are outside the auth/protocol middleware group — the token is the
 	// bearer credential, and the preview / landing page must be reachable
