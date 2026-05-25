@@ -51,11 +51,23 @@ func attachmentURL(groupID, expenseID, attachmentID string) string {
 }
 
 var allowedMimeTypes = map[string]string{
-	"image/jpeg": "jpg",
-	"image/jpg":  "jpg",
-	"image/png":  "png",
-	"image/webp": "webp",
-	"image/heic": "heic",
+	"image/jpeg":      "jpg",
+	"image/png":       "png",
+	"image/heic":      "heic",
+	"application/pdf": "pdf",
+}
+
+// normalizeMime strips any "; charset=..." parameters and lowercases the type
+// so the sniffed value can be compared to the static allowlist.
+func normalizeMime(s string) string {
+	s = strings.ToLower(strings.TrimSpace(s))
+	if i := strings.Index(s, ";"); i >= 0 {
+		s = strings.TrimSpace(s[:i])
+	}
+	if s == "image/jpg" {
+		return "image/jpeg"
+	}
+	return s
 }
 
 type uploadAttachmentRequest struct {
@@ -95,16 +107,19 @@ func (h *AttachmentHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	r.Body = http.MaxBytesReader(w, r.Body, int64(maxAttachmentBytes)*2)
+
 	var req uploadAttachmentRequest
 	// Decoder with a generous-but-finite cap. Base64 is ~33% larger than
 	// the decoded bytes, so cap the JSON body at maxAttachmentBytes * 2.
-	dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, int64(maxAttachmentBytes)*2))
+	dec := json.NewDecoder(r.Body)
 	if err := dec.Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid JSON body")
 		return
 	}
 
-	ext, ok := allowedMimeTypes[strings.ToLower(req.MimeType)]
+	claimedMime := normalizeMime(req.MimeType)
+	ext, ok := allowedMimeTypes[claimedMime]
 	if !ok {
 		writeError(w, http.StatusBadRequest, "unsupported mime_type")
 		return
@@ -125,6 +140,21 @@ func (h *AttachmentHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(data) > maxAttachmentBytes {
 		writeError(w, http.StatusRequestEntityTooLarge, "image exceeds 6 MB")
+		return
+	}
+
+	// Content sniff: defeat polyglot / mislabelled uploads. HEIC isn't
+	// detected by http.DetectContentType (it returns application/octet-stream)
+	// so we trust the client's mime_type only when it's HEIC AND no other
+	// type was sniffed; everything else must match.
+	sniffed := normalizeMime(http.DetectContentType(data[:min(len(data), 512)]))
+	if _, ok := allowedMimeTypes[sniffed]; !ok {
+		if !(claimedMime == "image/heic" && sniffed == "application/octet-stream") {
+			writeError(w, http.StatusBadRequest, "unsupported file content")
+			return
+		}
+	} else if sniffed != claimedMime {
+		writeError(w, http.StatusBadRequest, "file content does not match mime_type")
 		return
 	}
 
@@ -254,6 +284,12 @@ func (h *AttachmentHandler) Content(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Length", strconv.FormatInt(obj.Size, 10))
 	}
 	w.Header().Set("Cache-Control", "private, max-age=300")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	ext, ok := allowedMimeTypes[normalizeMime(att.MimeType)]
+	if !ok {
+		ext = "bin"
+	}
+	w.Header().Set("Content-Disposition", `inline; filename="receipt.`+ext+`"`)
 	if _, err := io.Copy(w, obj); err != nil {
 		slog.Warn("attachment stream failed", "key", att.S3Key, "err", err)
 	}

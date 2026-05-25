@@ -302,6 +302,35 @@ func TestAttachment_Delete_NonMember_403(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, rr.Code)
 }
 
+func TestAttachment_Create_MimeMismatch_400(t *testing.T) {
+	e := setupAttachEnv(t)
+	// Claim image/jpeg but ship text bytes; the MIME sniffer should detect
+	// text/plain and the upload must be rejected.
+	resp := postAttachment(t, e, e.alice.Token, e.groupAB, e.expenseAB,
+		[]byte("just some plain text not an image at all here"), "image/jpeg")
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
+func TestAttachment_Content_SecurityHeaders(t *testing.T) {
+	e := setupAttachEnv(t)
+	src := makeJPEGBytes(t, 150, 150)
+	resp := postAttachment(t, e, e.alice.Token, e.groupAB, e.expenseAB, src, "image/jpeg")
+	require.Equal(t, http.StatusCreated, resp.StatusCode)
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+	id := body["id"].(string)
+
+	req := e.env.AuthRequest(t, http.MethodGet,
+		"/api/groups/"+e.groupAB+"/expenses/"+e.expenseAB+"/attachments/"+id+"/content",
+		"", e.alice.Token)
+	rr := e.env.Do(t, req)
+	require.Equal(t, http.StatusOK, rr.Code)
+	assert.Equal(t, "nosniff", rr.Header().Get("X-Content-Type-Options"))
+	cd := rr.Header().Get("Content-Disposition")
+	assert.Contains(t, cd, "inline")
+	assert.Contains(t, cd, ".jpg")
+}
+
 func TestExpense_SoftDelete_CleansAttachments(t *testing.T) {
 	e := setupAttachEnv(t)
 	// Upload two attachments to the same expense.

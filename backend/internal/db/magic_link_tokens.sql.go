@@ -11,6 +11,29 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const consumeMagicLinkToken = `-- name: ConsumeMagicLinkToken :one
+UPDATE magic_link_tokens
+   SET used_at = NOW()
+ WHERE token_hash = $1
+   AND used_at IS NULL
+   AND expires_at > NOW()
+   AND token_type = 'magic_link'
+RETURNING id, email, expires_at
+`
+
+type ConsumeMagicLinkTokenRow struct {
+	ID        string             `db:"id" json:"id"`
+	Email     string             `db:"email" json:"email"`
+	ExpiresAt pgtype.Timestamptz `db:"expires_at" json:"expires_at"`
+}
+
+func (q *Queries) ConsumeMagicLinkToken(ctx context.Context, tokenHash string) (ConsumeMagicLinkTokenRow, error) {
+	row := q.db.QueryRow(ctx, consumeMagicLinkToken, tokenHash)
+	var i ConsumeMagicLinkTokenRow
+	err := row.Scan(&i.ID, &i.Email, &i.ExpiresAt)
+	return i, err
+}
+
 const createMagicLinkToken = `-- name: CreateMagicLinkToken :one
 INSERT INTO magic_link_tokens (id, token_hash, token_type, user_id, email, expires_at)
 VALUES ($1, $2, $3, $4, $5, $6)
@@ -60,7 +83,10 @@ func (q *Queries) DeleteExpiredTokens(ctx context.Context) error {
 
 const getMagicLinkTokenByHash = `-- name: GetMagicLinkTokenByHash :one
 SELECT id, token_hash, token_type, user_id, email, expires_at, used_at, created_at FROM magic_link_tokens
-WHERE token_hash = $1 AND used_at IS NULL AND expires_at > NOW()
+WHERE token_hash = $1
+  AND used_at IS NULL
+  AND expires_at > NOW()
+  AND token_type = 'magic_link'
 `
 
 func (q *Queries) GetMagicLinkTokenByHash(ctx context.Context, tokenHash string) (MagicLinkToken, error) {

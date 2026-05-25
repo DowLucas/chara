@@ -9,6 +9,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -138,6 +139,15 @@ func newAppleEnv(t *testing.T, audience string) (*testutil.Env, *appleTestRig) {
 	return env, rig
 }
 
+// testAppleNonce is the raw client-side nonce we use across the apple tests.
+// Apple's id_token.nonce claim contains SHA-256(testAppleNonce) (hex).
+const testAppleNonce = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
+func testAppleNonceHash() string {
+	sum := sha256.Sum256([]byte(testAppleNonce))
+	return hex.EncodeToString(sum[:])
+}
+
 func validAppleClaims(audience, email, sub string) jwt.MapClaims {
 	return jwt.MapClaims{
 		"iss":            testAppleIssuer,
@@ -145,9 +155,15 @@ func validAppleClaims(audience, email, sub string) jwt.MapClaims {
 		"sub":            sub,
 		"email":          email,
 		"email_verified": true,
+		"nonce":          testAppleNonceHash(),
 		"iat":            time.Now().Unix(),
 		"exp":            time.Now().Add(10 * time.Minute).Unix(),
 	}
+}
+
+// appleBodyWithNonce shapes the standard request body — identity_token + nonce.
+func appleBodyWithNonce(token, nonce string) string {
+	return fmt.Sprintf(`{"identity_token":%q,"nonce":%q}`, token, nonce)
 }
 
 func postApple(t *testing.T, env *testutil.Env, body string) *http.Response {
@@ -164,7 +180,7 @@ func TestAppleNative_NewUserCreatedWithEmptyName(t *testing.T) {
 	email := uniqueEmail(t, "applenew")
 	token := rig.signToken(t, validAppleClaims(testAppleBundleID, email, "apple-sub-1"))
 
-	body := fmt.Sprintf(`{"identity_token":%q}`, token)
+	body := appleBodyWithNonce(token, testAppleNonce)
 	resp := postApple(t, env, body)
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -187,7 +203,7 @@ func TestAppleNative_NewUserCapturesNameOnFirstSignIn(t *testing.T) {
 	email := uniqueEmail(t, "applename")
 	token := rig.signToken(t, validAppleClaims(testAppleBundleID, email, "apple-sub-2"))
 
-	body := fmt.Sprintf(`{"identity_token":%q,"name":"  Apple User  "}`, token)
+	body := fmt.Sprintf(`{"identity_token":%q,"name":"  Apple User  ","nonce":%q}`, token, testAppleNonce)
 	resp := postApple(t, env, body)
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -215,7 +231,7 @@ func TestAppleNative_ExistingUserDoesNotOverwriteName(t *testing.T) {
 	require.NoError(t, err)
 
 	token := rig.signToken(t, validAppleClaims(testAppleBundleID, email, "apple-sub-3"))
-	body := fmt.Sprintf(`{"identity_token":%q,"name":"Should Be Ignored"}`, token)
+	body := fmt.Sprintf(`{"identity_token":%q,"name":"Should Be Ignored","nonce":%q}`, token, testAppleNonce)
 	resp := postApple(t, env, body)
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -230,7 +246,7 @@ func TestAppleNative_ExistingUserDoesNotOverwriteName(t *testing.T) {
 
 func TestAppleNative_InvalidToken_Returns401(t *testing.T) {
 	env, _ := newAppleEnv(t, testAppleBundleID)
-	body := `{"identity_token":"not-a-real-jwt"}`
+	body := appleBodyWithNonce("not-a-real-jwt", testAppleNonce)
 	resp := postApple(t, env, body)
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 }
@@ -240,7 +256,27 @@ func TestAppleNative_WrongAudience_Returns401(t *testing.T) {
 	email := uniqueEmail(t, "appleaud")
 	claims := validAppleClaims("some.other.app", email, "apple-sub-4")
 	token := rig.signToken(t, claims)
+	body := appleBodyWithNonce(token, testAppleNonce)
+	resp := postApple(t, env, body)
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+}
+
+func TestAppleNative_MissingNonce_Returns400(t *testing.T) {
+	env, rig := newAppleEnv(t, testAppleBundleID)
+	email := uniqueEmail(t, "applenonon")
+	token := rig.signToken(t, validAppleClaims(testAppleBundleID, email, "apple-sub-nonce-missing"))
 	body := fmt.Sprintf(`{"identity_token":%q}`, token)
+	resp := postApple(t, env, body)
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
+func TestAppleNative_MismatchedNonce_Returns401(t *testing.T) {
+	env, rig := newAppleEnv(t, testAppleBundleID)
+	email := uniqueEmail(t, "applewrongnonce")
+	// Apple's token has the right nonce claim, but client supplies a different
+	// raw nonce — SHA-256(wrong) won't match.
+	token := rig.signToken(t, validAppleClaims(testAppleBundleID, email, "apple-sub-nonce-bad"))
+	body := appleBodyWithNonce(token, "different-nonce-than-the-one-baked-in")
 	resp := postApple(t, env, body)
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 }
@@ -254,7 +290,7 @@ func TestAppleNative_NotMountedOnSelfhost(t *testing.T) {
 	env.Config.AppleBundleID = testAppleBundleID
 	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil)
 
-	req, err := http.NewRequest("POST", "/api/auth/apple/native", strings.NewReader(`{"identity_token":"x"}`))
+	req, err := http.NewRequest("POST", "/api/auth/apple/native", strings.NewReader(`{"identity_token":"x","nonce":"y"}`))
 	require.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
 	rr := env.Do(t, req)

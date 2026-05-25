@@ -54,6 +54,7 @@ func main() {
 		Secret:        cfg.JWTSecret,
 		PrivateKeyPEM: cfg.JWTPrivateKeyPEM,
 		PublicKeyPEM:  cfg.JWTPublicKeyPEM,
+		Issuer:        cfg.BaseURL,
 	})
 	if err != nil {
 		slog.Error("failed to create JWT service", "error", err)

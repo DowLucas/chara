@@ -16,19 +16,48 @@ import (
 	"github.com/DowLucas/chara/internal/auth"
 	"github.com/DowLucas/chara/internal/config"
 	"github.com/DowLucas/chara/internal/db"
+	"github.com/DowLucas/chara/internal/email"
 	"github.com/DowLucas/chara/internal/middleware"
 	"github.com/DowLucas/chara/internal/ulid"
 )
+
+// authMaxBodyBytes caps every auth-handler request body. 64 KiB is far above
+// any legitimate payload (magic-link email + an OIDC identity token under 8 KB)
+// and well below an amplification attack.
+const authMaxBodyBytes = 64 << 10
 
 type AuthHandler struct {
 	pool    *pgxpool.Pool
 	queries *db.Queries
 	cfg     *config.Config
 	jwt     *auth.JWTService
+	sender  email.Sender
 }
 
-func NewAuthHandler(pool *pgxpool.Pool, queries *db.Queries, cfg *config.Config, jwt *auth.JWTService) *AuthHandler {
-	return &AuthHandler{pool: pool, queries: queries, cfg: cfg, jwt: jwt}
+// redactEmail produces a structured-log-safe email fingerprint: first
+// character + asterisks + "@" + domain. Never log the full address.
+func redactEmail(email string) string {
+	at := strings.LastIndex(email, "@")
+	if at <= 0 {
+		return "***"
+	}
+	local := email[:at]
+	domain := email[at:]
+	stars := len(local) - 1
+	if stars < 1 {
+		stars = 1
+	}
+	return string(local[0]) + strings.Repeat("*", stars) + domain
+}
+
+func NewAuthHandler(pool *pgxpool.Pool, queries *db.Queries, cfg *config.Config, jwt *auth.JWTService, sender email.Sender) *AuthHandler {
+	if sender == nil {
+		// Belt-and-braces: never let a nil sender panic the handler.
+		// Production wiring always passes a real sender, but a missed
+		// constructor in a test would otherwise NPE on the first request.
+		sender = email.NoopSender{}
+	}
+	return &AuthHandler{pool: pool, queries: queries, cfg: cfg, jwt: jwt, sender: sender}
 }
 
 type magicLinkRequest struct {
@@ -87,13 +116,14 @@ func userToResponse(u db.User) userResponse {
 // MagicLink issues a magic-link token and emails it. In dev mode the token is
 // also returned in the response body so the client can verify without email.
 func (h *AuthHandler) MagicLink(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, authMaxBodyBytes)
 	var req magicLinkRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid JSON body")
 		return
 	}
-	email := strings.ToLower(strings.TrimSpace(req.Email))
-	if _, err := mail.ParseAddress(email); err != nil {
+	addr := strings.ToLower(strings.TrimSpace(req.Email))
+	if _, err := mail.ParseAddress(addr); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid email")
 		return
 	}
@@ -109,7 +139,7 @@ func (h *AuthHandler) MagicLink(w http.ResponseWriter, r *http.Request) {
 		ID:        ulid.New(),
 		TokenHash: hash,
 		TokenType: "magic_link",
-		Email:     email,
+		Email:     addr,
 		ExpiresAt: pgtype.Timestamptz{Time: time.Now().Add(h.cfg.MagicLinkTTL), Valid: true},
 	})
 	if err != nil {
@@ -119,18 +149,41 @@ func (h *AuthHandler) MagicLink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	link := h.cfg.BaseURL + "/api/auth/verify?token=" + raw
+
+	// Send the email regardless of mode. In dev mode we *also* return the
+	// link in the response body so a client can verify without a real
+	// inbox — but we still try to send so the SMTP path actually gets
+	// exercised in local testing. Send failures never block the response:
+	// the token is already minted and (in dev) returned inline.
+	expiryMinutes := int(h.cfg.MagicLinkTTL / time.Minute)
+	if expiryMinutes < 1 {
+		expiryMinutes = 1
+	}
+	textBody, htmlBody := email.MagicLinkBody(link, expiryMinutes)
+	if err := h.sender.Send(r.Context(), email.Message{
+		To:       addr,
+		Subject:  email.MagicLinkSubject,
+		TextBody: textBody,
+		HTMLBody: htmlBody,
+	}); err != nil {
+		// Don't surface to the client — the magic link is minted regardless.
+		// In dev mode the client also has the link from the response body
+		// so the user can still complete sign-in even with a broken SMTP.
+		slog.Error("magic link send failed", "email_hash", redactEmail(addr), "error", err)
+	}
+
 	if h.cfg.DevMode {
-		slog.Info("magic link issued (dev mode)", "email", email, "link", link)
+		slog.Info("magic link issued (dev mode)", "email_hash", redactEmail(addr))
 		writeJSON(w, http.StatusOK, magicLinkResponse{OK: true, Token: raw, Link: link})
 		return
 	}
-	// TODO: send via SMTP/Resend. For now, log and return generic ok.
-	slog.Info("magic link issued", "email", email)
+	slog.Info("magic link issued", "email_hash", redactEmail(addr))
 	writeJSON(w, http.StatusOK, magicLinkResponse{OK: true})
 }
 
 // Verify exchanges a magic-link token for a JWT.
 func (h *AuthHandler) Verify(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, authMaxBodyBytes)
 	var req verifyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid JSON body")
@@ -142,17 +195,20 @@ func (h *AuthHandler) Verify(w http.ResponseWriter, r *http.Request) {
 	}
 	hash := auth.HashToken(req.Token)
 
-	row, err := h.queries.GetMagicLinkTokenByHash(r.Context(), hash)
+	// Atomic single-use consume — the UPDATE … RETURNING flips used_at and
+	// returns the row in one statement, so two concurrent verifies of the
+	// same token can never both win. Zero rows = already used, expired, or
+	// never existed; all three look the same to the caller.
+	row, err := h.queries.ConsumeMagicLinkToken(r.Context(), hash)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			writeError(w, http.StatusUnauthorized, "invalid or expired token")
+			writeError(w, http.StatusBadRequest, "invalid or expired token")
 			return
 		}
 		writeError(w, http.StatusInternalServerError, "lookup failed")
 		return
 	}
 
-	// Upsert user.
 	user, err := h.queries.GetUserByEmail(r.Context(), row.Email)
 	if err != nil {
 		if !errors.Is(err, pgx.ErrNoRows) {
@@ -170,11 +226,6 @@ func (h *AuthHandler) Verify(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusInternalServerError, "user create failed")
 			return
 		}
-	}
-
-	if err := h.queries.MarkMagicLinkTokenUsed(r.Context(), row.ID); err != nil {
-		slog.Error("verify: mark used failed", "error", err)
-		// non-fatal — continue
 	}
 
 	jwtStr, err := h.jwt.Sign(user.ID, user.Email, h.cfg.InstanceMode)
@@ -249,6 +300,7 @@ type deleteMeConflictResponse struct {
 // Returns 204 on success, 409 with per-currency balances when blocked, 401
 // when unauthenticated.
 func (h *AuthHandler) DeleteMe(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, authMaxBodyBytes)
 	claims := middleware.ClaimsFromContext(r.Context())
 	if claims == nil {
 		writeError(w, http.StatusUnauthorized, "missing claims")

@@ -321,6 +321,29 @@ func TestAvatar_Get_ETag_304(t *testing.T) {
 	assert.Equal(t, http.StatusNotModified, rr2.Code)
 }
 
+func TestAvatar_Get_ETag_DeterministicForSameKey(t *testing.T) {
+	e := setupAvatarEnv(t)
+	require.Equal(t, http.StatusOK,
+		uploadAvatar(t, e.env, e.alice.Token, makeJPEGBytes(t, 200, 200), "image/jpeg").StatusCode)
+
+	rr1 := e.env.Do(t, e.env.AuthRequest(t, http.MethodGet, "/api/users/"+e.alice.ID+"/avatar", "", e.alice.Token))
+	require.Equal(t, http.StatusOK, rr1.Code)
+	etag1 := rr1.Header().Get("ETag")
+	require.NotEmpty(t, etag1)
+
+	// Bump avatar_updated_at directly — etag must NOT change since the
+	// (userID, objectKey) is the same.
+	_, err := e.env.Pool.Exec(context.Background(),
+		"UPDATE users SET avatar_updated_at = now() + interval '1 hour' WHERE id = $1",
+		e.alice.ID)
+	require.NoError(t, err)
+
+	rr2 := e.env.Do(t, e.env.AuthRequest(t, http.MethodGet, "/api/users/"+e.alice.ID+"/avatar", "", e.alice.Token))
+	require.Equal(t, http.StatusOK, rr2.Code)
+	etag2 := rr2.Header().Get("ETag")
+	assert.Equal(t, etag1, etag2, "ETag must be content-derived (userID|objectKey), not timestamp-derived")
+}
+
 // Verify /api/me exposes the new avatar fields after upload — this is the
 // contract the frontend will rely on for the "show my avatar everywhere"
 // flow.

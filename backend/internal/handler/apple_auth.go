@@ -2,6 +2,8 @@ package handler
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -67,6 +69,10 @@ func NewAppleAuthHandlerWithVerifier(pool *pgxpool.Pool, queries *db.Queries, cf
 type appleNativeRequest struct {
 	IdentityToken string `json:"identity_token"`
 	Name          string `json:"name"`
+	// Nonce is the raw hex nonce the client generated. Apple's id_token
+	// contains SHA-256(nonce) as the nonce claim — we recompute and compare.
+	// Required: a missing nonce gets a 400 to make replay impossible.
+	Nonce string `json:"nonce"`
 }
 
 // appleClaims is the subset of fields we read off an Apple identity token.
@@ -76,6 +82,7 @@ type appleClaims struct {
 	Email         string          `json:"email"`
 	EmailVerified json.RawMessage `json:"email_verified"`
 	Sub           string          `json:"sub"`
+	Nonce         string          `json:"nonce"`
 }
 
 func (c appleClaims) emailIsVerified() bool {
@@ -90,6 +97,7 @@ func (c appleClaims) emailIsVerified() bool {
 // optional first-sign-in name), and returns a Chara JWT. Response shape
 // matches /api/auth/verify so the mobile client treats both flows the same.
 func (h *AppleAuthHandler) Native(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, authMaxBodyBytes)
 	var req appleNativeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid JSON body")
@@ -97,6 +105,10 @@ func (h *AppleAuthHandler) Native(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.TrimSpace(req.IdentityToken) == "" {
 		writeError(w, http.StatusUnauthorized, "invalid apple token")
+		return
+	}
+	if strings.TrimSpace(req.Nonce) == "" {
+		writeError(w, http.StatusBadRequest, "missing nonce")
 		return
 	}
 
@@ -114,6 +126,15 @@ func (h *AppleAuthHandler) Native(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Apple's id_token.nonce claim is SHA-256(client_nonce). Compare in
+	// constant-ish time on the hex strings — both are derived, not secrets.
+	expected := sha256.Sum256([]byte(req.Nonce))
+	if hex.EncodeToString(expected[:]) != claims.Nonce {
+		slog.Warn("apple auth: nonce mismatch")
+		writeError(w, http.StatusUnauthorized, "invalid apple token")
+		return
+	}
+
 	email := strings.ToLower(strings.TrimSpace(claims.Email))
 	if email == "" {
 		writeError(w, http.StatusUnauthorized, "invalid apple token")
@@ -126,7 +147,7 @@ func (h *AppleAuthHandler) Native(w http.ResponseWriter, r *http.Request) {
 	if claims.Sub == "" {
 		// Apple should always send sub; warn but don't reject — email is
 		// still our join key today.
-		slog.Warn("apple auth: missing sub claim", "email", email)
+		slog.Warn("apple auth: missing sub claim", "email_hash", redactEmail(email))
 	}
 
 	// Lookup-then-upsert: only first-sign-in users get the optional name.

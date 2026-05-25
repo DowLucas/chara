@@ -3,7 +3,9 @@ package handler
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"image"
@@ -257,7 +259,8 @@ func (h *AvatarHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	etag := `"` + strconv.FormatInt(target.AvatarUpdatedAt.Time.UnixNano(), 10) + `"`
+	sum := sha256.Sum256([]byte(targetID + "|" + target.AvatarObjectKey.String))
+	etag := `"` + hex.EncodeToString(sum[:])[:16] + `"`
 	if match := r.Header.Get("If-None-Match"); match != "" && match == etag {
 		w.Header().Set("ETag", etag)
 		w.WriteHeader(http.StatusNotModified)

@@ -4,6 +4,9 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"os"
+	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
@@ -12,6 +15,7 @@ import (
 	"github.com/DowLucas/chara/internal/billing"
 	"github.com/DowLucas/chara/internal/config"
 	"github.com/DowLucas/chara/internal/db"
+	"github.com/DowLucas/chara/internal/email"
 	"github.com/DowLucas/chara/internal/handler"
 	"github.com/DowLucas/chara/internal/middleware"
 	"github.com/DowLucas/chara/internal/receipt"
@@ -34,11 +38,13 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 	r.Use(chimiddleware.RequestID)
 	r.Use(chimiddleware.Logger)
 	r.Use(chimiddleware.Recoverer)
+	r.Use(middleware.SecurityHeaders())
 	r.Use(corsMiddleware)
 	r.Use(chimiddleware.Compress(5))
 
 	healthH := handler.NewHealthHandler(pool)
-	authH := handler.NewAuthHandler(pool, queries, cfg, jwtSvc)
+	emailSender := email.NewSenderFromConfig(cfg)
+	authH := handler.NewAuthHandler(pool, queries, cfg, jwtSvc, emailSender)
 
 	wellknownHandler := wellknown.Handler(cfg, version)
 	r.Get("/.well-known/chara-instance", wellknownHandler)
@@ -63,7 +69,10 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 	// attractive than the JSON surface and rate-limiting it would block
 	// legitimate refreshes).
 	invitesH := handler.NewInviteHandler(pool, queries, cfg)
-	r.Get("/i/{token}", invitesH.Landing)
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.InviteLandingCSP())
+		r.Get("/i/{token}", invitesH.Landing)
+	})
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.InviteRateLimit(30, 60))
 		r.Get("/api/invites/{token}/preview", invitesH.Preview)
@@ -71,8 +80,11 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 	r.Get("/api/health/liveness", healthH.Liveness)
 	r.Get("/api/health/readiness", healthH.Readiness)
 
-	r.Post("/api/auth/magic-link", authH.MagicLink)
-	r.Post("/api/auth/verify", authH.Verify)
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.AuthRateLimit(30, 5))
+		r.Post("/api/auth/magic-link", authH.MagicLink)
+		r.Post("/api/auth/verify", authH.Verify)
+	})
 
 	groupH := handler.NewGroupHandler(pool, queries, cfg)
 	if store != nil {
@@ -192,8 +204,11 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 	// Hosted-only routes (Google, Apple auth)
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.HostedOnly(cfg))
+		r.Use(middleware.AuthRateLimit(30, 5))
 		if cfg.HasApple() {
-			appleH, err := handler.NewAppleAuthHandler(context.Background(), pool, queries, cfg, jwtSvc)
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			appleH, err := handler.NewAppleAuthHandler(ctx, pool, queries, cfg, jwtSvc)
+			cancel()
 			if err != nil {
 				// Never panic the server because Apple's JWKS endpoint
 				// happens to be down at boot — log and skip mounting.
@@ -203,7 +218,9 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 			}
 		}
 		if cfg.HasGoogle() {
-			googleH, err := handler.NewGoogleAuthHandler(context.Background(), pool, queries, cfg, jwtSvc)
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			googleH, err := handler.NewGoogleAuthHandler(ctx, pool, queries, cfg, jwtSvc)
+			cancel()
 			if err != nil {
 				// Same boot-resilience rationale as Apple: don't crash on
 				// transient JWKS discovery failures.
@@ -217,16 +234,45 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 	return r
 }
 
+// defaultCORSAllowedOrigins is the fallback when ALLOWED_CORS_ORIGINS is unset
+// or empty. Covers the Expo dev server on its two default web ports.
+var defaultCORSAllowedOrigins = []string{
+	"http://localhost:8081",
+	"http://localhost:19006",
+}
+
+func allowedCORSOrigins() map[string]struct{} {
+	raw := strings.TrimSpace(os.Getenv("ALLOWED_CORS_ORIGINS"))
+	out := map[string]struct{}{}
+	if raw == "" {
+		for _, o := range defaultCORSAllowedOrigins {
+			out[o] = struct{}{}
+		}
+		return out
+	}
+	for _, part := range strings.Split(raw, ",") {
+		if s := strings.TrimSpace(part); s != "" {
+			out[s] = struct{}{}
+		}
+	}
+	return out
+}
+
 func corsMiddleware(next http.Handler) http.Handler {
+	allowed := allowedCORSOrigins()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Vary: Origin is set unconditionally so caches don't conflate
+		// responses for different origins, regardless of allowlist outcome.
+		w.Header().Add("Vary", "Origin")
+
 		origin := r.Header.Get("Origin")
 		if origin != "" {
-			w.Header().Set("Access-Control-Allow-Origin", origin)
-			w.Header().Set("Vary", "Origin")
-			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
-			w.Header().Set("Access-Control-Max-Age", "300")
+			if _, ok := allowed[origin]; ok {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Chara-App-Protocol")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
+				w.Header().Set("Access-Control-Max-Age", "300")
+			}
 		}
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)

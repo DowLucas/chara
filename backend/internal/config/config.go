@@ -135,11 +135,27 @@ func (c *Config) validate() error {
 	if c.InstanceMode != "hosted" && c.InstanceMode != "selfhost" {
 		return fmt.Errorf("config: INSTANCE_MODE must be 'hosted' or 'selfhost', got %q", c.InstanceMode)
 	}
-	if c.InstanceMode == "selfhost" && c.JWTSecret == "" {
-		return fmt.Errorf("config: JWT_SECRET is required for selfhost mode")
+	if c.InstanceMode == "selfhost" {
+		if c.JWTSecret == "" {
+			return fmt.Errorf("config: JWT_SECRET is required for selfhost mode")
+		}
+		if len(c.JWTSecret) < 32 {
+			return fmt.Errorf("config: JWT_SECRET must be at least 32 characters")
+		}
 	}
-	if c.InstanceMode == "hosted" && c.JWTPrivateKeyPEM == "" {
-		return fmt.Errorf("config: JWT_PRIVATE_KEY_PEM is required for hosted mode")
+	if c.InstanceMode == "hosted" {
+		if c.JWTPrivateKeyPEM == "" {
+			return fmt.Errorf("config: JWT_PRIVATE_KEY_PEM is required for hosted mode")
+		}
+		if c.JWTPublicKeyPEM == "" {
+			return fmt.Errorf("config: JWT_PUBLIC_KEY_PEM is required for hosted mode")
+		}
+		if c.DevMode {
+			return fmt.Errorf("config: DEV_MODE must be false in hosted mode")
+		}
+	}
+	if c.JWTPrivateKeyPEM != "" && c.JWTPublicKeyPEM == "" {
+		return fmt.Errorf("config: JWT_PUBLIC_KEY_PEM is required when JWT_PRIVATE_KEY_PEM is set")
 	}
 	if c.ResendAPIKey == "" && c.SMTPHost == "" && !c.DevMode {
 		return fmt.Errorf("config: at least one of RESEND_API_KEY or SMTP_HOST must be set (or DEV_MODE=true)")
@@ -149,7 +165,11 @@ func (c *Config) validate() error {
 
 func (c *Config) IsHosted() bool    { return c.InstanceMode == "hosted" }
 func (c *Config) IsSelfHost() bool  { return c.InstanceMode == "selfhost" }
-func (c *Config) HasGoogle() bool   { return c.GoogleClientID != "" && c.GoogleClientSecret != "" }
+// HasGoogle reports whether Google Sign In is configured. The native ID-token
+// flow only needs the client ID for audience verification; the secret is kept
+// in the config for the future server-side web OAuth code-exchange flow but
+// is not required to enable the native flow.
+func (c *Config) HasGoogle() bool   { return c.GoogleClientID != "" }
 func (c *Config) HasApple() bool    { return c.AppleBundleID != "" }
 func (c *Config) HasOIDC() bool     { return c.OIDCIssuerURL != "" && c.OIDCClientID != "" }
 func (c *Config) HasGemini() bool   { return c.GeminiAPIKey != "" }

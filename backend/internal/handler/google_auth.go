@@ -80,6 +80,9 @@ func NewGoogleAuthHandlerWithVerifier(pool *pgxpool.Pool, queries *db.Queries, c
 type googleNativeRequest struct {
 	IdentityToken string `json:"identity_token"`
 	Name          string `json:"name"`
+	// Nonce is the raw nonce the client supplied to Google. Google echoes
+	// it back as-is in id_token.nonce. Required: missing returns 400.
+	Nonce string `json:"nonce"`
 }
 
 // googleClaims is the subset of fields we read off a Google ID token.
@@ -92,6 +95,7 @@ type googleClaims struct {
 	Sub           string          `json:"sub"`
 	GivenName     string          `json:"given_name"`
 	FamilyName    string          `json:"family_name"`
+	Nonce         string          `json:"nonce"`
 }
 
 func (c googleClaims) emailIsVerified() bool {
@@ -106,6 +110,7 @@ func (c googleClaims) emailIsVerified() bool {
 // optional first-sign-in name — from body, or from given_name/family_name
 // claims), and returns a Chara JWT.
 func (h *GoogleAuthHandler) Native(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, authMaxBodyBytes)
 	var req googleNativeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid JSON body")
@@ -113,6 +118,10 @@ func (h *GoogleAuthHandler) Native(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.TrimSpace(req.IdentityToken) == "" {
 		writeError(w, http.StatusUnauthorized, "invalid google token")
+		return
+	}
+	if strings.TrimSpace(req.Nonce) == "" {
+		writeError(w, http.StatusBadRequest, "missing nonce")
 		return
 	}
 
@@ -136,6 +145,13 @@ func (h *GoogleAuthHandler) Native(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Google echoes the client's raw nonce back into id_token.nonce.
+	if claims.Nonce != req.Nonce {
+		slog.Warn("google auth: nonce mismatch")
+		writeError(w, http.StatusUnauthorized, "invalid google token")
+		return
+	}
+
 	email := strings.ToLower(strings.TrimSpace(claims.Email))
 	if email == "" {
 		writeError(w, http.StatusUnauthorized, "invalid google token")
@@ -148,7 +164,7 @@ func (h *GoogleAuthHandler) Native(w http.ResponseWriter, r *http.Request) {
 	if claims.Sub == "" {
 		// Google always sends sub; warn but don't reject — email is still
 		// our join key today.
-		slog.Warn("google auth: missing sub claim", "email", email)
+		slog.Warn("google auth: missing sub claim", "email_hash", redactEmail(email))
 	}
 
 	// Lookup-then-upsert: only first-sign-in users get the optional name.

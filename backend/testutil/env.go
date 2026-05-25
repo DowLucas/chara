@@ -36,6 +36,7 @@ func NewEnv(t *testing.T) *Env {
 	jwtSvc, err := auth.NewJWTService(auth.JWTConfig{
 		Mode:   "selfhost",
 		Secret: testJWTSecret,
+		Issuer: "http://localhost:8080",
 	})
 	require.NoError(t, err)
 
