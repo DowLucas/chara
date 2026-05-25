@@ -848,6 +848,11 @@
     "vippsUnlinked": "Not linked"
   },
   "signIn": {
+    "apple": {
+      "errorBody": "We couldn't complete Sign in with Apple. Please try again or use email.",
+      "errorTitle": "Sign in failed",
+      "noToken": "Apple did not return an identity token. Please try again."
+    },
     "checkEmail": "Check your email",
     "checkEmailBody": "We sent a magic link to {{email}}. Tap it to sign in.",
     "continueEmail": "Continue with email",
