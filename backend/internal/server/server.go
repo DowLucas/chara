@@ -85,7 +85,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 	// the current min/max and recover. See spec §9.
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.ProtocolVersion(cfg.MinAppProtocol, cfg.MaxAppProtocol))
-		r.Use(middleware.Authenticate(jwtSvc))
+		r.Use(middleware.Authenticate(jwtSvc, queries))
 
 		r.Get("/api/me", authH.Me)
 		r.Patch("/api/me", authH.UpdateMe)

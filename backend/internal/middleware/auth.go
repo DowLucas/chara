@@ -3,17 +3,25 @@ package middleware
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
+
 	"github.com/DowLucas/chara/internal/auth"
+	"github.com/DowLucas/chara/internal/db"
 )
 
 type contextKey string
 
 const ClaimsKey contextKey = "claims"
 
-func Authenticate(jwt *auth.JWTService) func(http.Handler) http.Handler {
+// Authenticate validates the Bearer JWT and rejects any token whose subject
+// has been soft-deleted via DELETE /api/me. The deleted-user check is what
+// makes the JWT stop working immediately after account deletion — without it
+// a still-valid (un-expired) JWT would keep working until natural expiry.
+func Authenticate(jwt *auth.JWTService, queries *db.Queries) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			header := r.Header.Get("Authorization")
@@ -25,6 +33,16 @@ func Authenticate(jwt *auth.JWTService) func(http.Handler) http.Handler {
 			if err != nil {
 				writeUnauthorized(w, "invalid token")
 				return
+			}
+			if queries != nil {
+				if _, err := queries.GetActiveUserByID(r.Context(), claims.UserID); err != nil {
+					if errors.Is(err, pgx.ErrNoRows) {
+						writeUnauthorized(w, "user not found or deleted")
+						return
+					}
+					writeUnauthorized(w, "auth lookup failed")
+					return
+				}
 			}
 			ctx := context.WithValue(r.Context(), ClaimsKey, claims)
 			next.ServeHTTP(w, r.WithContext(ctx))
