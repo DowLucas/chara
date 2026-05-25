@@ -381,12 +381,14 @@ export default function GroupSettingsScreen() {
           <Text style={styles.loadError}>{t('groupSettings.loadError')}</Text>
         )}
 
-        {/* MEMBERS — single entry to the dedicated members page */}
+        {/* MEMBERS — single entry to the dedicated members page.
+            No eyebrow: the group header already shows "N members", and a
+            separate "Members" eyebrow on top of a "Members" row is
+            redundant. */}
         <View style={styles.section}>
-          <Text style={styles.sectionEyebrow}>{t('groupSettings.members.title')}</Text>
           <View style={styles.list}>
             <NavRow
-              label={t('groupSettings.members.manageCta')}
+              label={t('groupSettings.members.title')}
               hint={sortedMembers.length > 0 ? String(sortedMembers.length) : undefined}
               onPress={() =>
                 group &&
