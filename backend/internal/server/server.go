@@ -202,6 +202,16 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 				r.Post("/api/auth/apple/native", appleH.Native)
 			}
 		}
+		if cfg.HasGoogle() {
+			googleH, err := handler.NewGoogleAuthHandler(context.Background(), pool, queries, cfg, jwtSvc)
+			if err != nil {
+				// Same boot-resilience rationale as Apple: don't crash on
+				// transient JWKS discovery failures.
+				slog.Error("google auth: failed to init handler", "error", err)
+			} else {
+				r.Post("/api/auth/google/native", googleH.Native)
+			}
+		}
 	})
 
 	return r

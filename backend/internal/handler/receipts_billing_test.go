@@ -54,7 +54,7 @@ func hostedReceiptsRouter(t *testing.T, env *testutil.Env, scanner receipt.Scann
 	}
 	h := handler.NewReceiptHandler(scanner).WithCounter(counter, freeCap)
 	mux := http.NewServeMux()
-	mux.Handle("/api/receipts/scan", middleware.Authenticate(env.JWT)(http.HandlerFunc(h.Scan)))
+	mux.Handle("/api/receipts/scan", middleware.Authenticate(env.JWT, env.Queries)(http.HandlerFunc(h.Scan)))
 	return mux
 }
 
