@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"crypto/rsa"
 	"fmt"
 	"time"
 
@@ -17,9 +18,11 @@ type Claims struct {
 }
 
 type JWTConfig struct {
-	Mode      string // "selfhost" | "hosted"
-	Secret    string // HS256, selfhost
-	AccessTTL time.Duration
+	Mode          string // "selfhost" | "hosted"
+	Secret        string // HS256, selfhost
+	PrivateKeyPEM string // RS256, hosted (PKCS8 or PKCS1 PEM)
+	PublicKeyPEM  string // RS256, hosted (PKIX PEM)
+	AccessTTL     time.Duration
 }
 
 type JWTService struct {
@@ -30,16 +33,31 @@ type JWTService struct {
 }
 
 func NewJWTService(cfg JWTConfig) (*JWTService, error) {
-	if cfg.Mode == "selfhost" {
+	if cfg.AccessTTL == 0 {
+		cfg.AccessTTL = defaultAccessTTL
+	}
+	switch cfg.Mode {
+	case "selfhost":
 		if cfg.Secret == "" {
 			return nil, fmt.Errorf("jwt: Secret is required for selfhost mode")
 		}
-		if cfg.AccessTTL == 0 {
-			cfg.AccessTTL = defaultAccessTTL
-		}
 		return &JWTService{cfg: cfg, method: jwt.SigningMethodHS256, key: []byte(cfg.Secret), verify: []byte(cfg.Secret)}, nil
+	case "hosted":
+		if cfg.PrivateKeyPEM == "" || cfg.PublicKeyPEM == "" {
+			return nil, fmt.Errorf("jwt: PrivateKeyPEM and PublicKeyPEM are required for hosted mode")
+		}
+		priv, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(cfg.PrivateKeyPEM))
+		if err != nil {
+			return nil, fmt.Errorf("jwt: parse private key: %w", err)
+		}
+		pub, err := jwt.ParseRSAPublicKeyFromPEM([]byte(cfg.PublicKeyPEM))
+		if err != nil {
+			return nil, fmt.Errorf("jwt: parse public key: %w", err)
+		}
+		return &JWTService{cfg: cfg, method: jwt.SigningMethodRS256, key: priv, verify: pub}, nil
+	default:
+		return nil, fmt.Errorf("jwt: unsupported mode %q", cfg.Mode)
 	}
-	return nil, fmt.Errorf("jwt: unsupported mode %q (hosted RS256 not yet implemented)", cfg.Mode)
 }
 
 func (s *JWTService) Sign(userID, email, instanceMode string) (string, error) {
@@ -71,4 +89,12 @@ func (s *JWTService) Verify(tokenStr string) (*Claims, error) {
 		return nil, fmt.Errorf("jwt: invalid claims")
 	}
 	return claims, nil
+}
+
+// PublicKey returns the RS256 public key for JWKS exposure. Returns nil for HS256.
+func (s *JWTService) PublicKey() *rsa.PublicKey {
+	if k, ok := s.verify.(*rsa.PublicKey); ok {
+		return k
+	}
+	return nil
 }
