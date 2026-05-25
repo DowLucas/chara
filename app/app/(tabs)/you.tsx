@@ -45,7 +45,8 @@ import {
   uploadAvatar as apiUploadAvatar,
 } from '@/lib/api';
 import { unregisterForAccount } from '@/lib/push';
-import { hasOpenBalance } from '@/lib/balance-utils';
+import { hasOpenBalance, partitionBulkBalanceCheck } from '@/lib/balance-utils';
+import { displayHostFor } from '@/lib/server-url';
 
 function hostFor(serverUrl: string): string {
   return serverUrl.replace(/^https?:\/\//i, '').replace(/\/$/, '');
@@ -344,12 +345,45 @@ export default function YouScreen() {
 
   async function handleDeleteFromAll() {
     if (accounts.length === 0) return;
+
+    // Pre-check open balances on every linked server. Per CLAUDE.md /
+    // multi-server-accounts-design, destructive flows touching an account
+    // must refuse upfront when there's a non-zero balance — and refuse on
+    // check failure too (fail-safe: better to block than silently allow a
+    // deletion we can't verify). Mirrors the per-account Remove flow in
+    // settings/accounts.tsx.
+    const checkUrls = accounts.map((a) => a.serverUrl);
+    const checkResults = await Promise.allSettled(
+      checkUrls.map((url) => apiFor(url).listMyBalances()),
+    );
+    const { blockedUrls, erroredUrls } = partitionBulkBalanceCheck(
+      checkUrls,
+      checkResults,
+    );
+    const mainLabel = t('common.mainServerLabel');
+    if (blockedUrls.length > 0) {
+      const servers = blockedUrls.map((u) => displayHostFor(u, mainLabel)).join(', ');
+      await showAlert({
+        title: t('account.deleteAll.blockedOpenBalanceTitle'),
+        message: t('account.deleteAll.blockedOpenBalanceBody', { servers }),
+      });
+      return;
+    }
+    if (erroredUrls.length > 0) {
+      const servers = erroredUrls.map((u) => displayHostFor(u, mainLabel)).join(', ');
+      await showAlert({
+        title: t('account.deleteAll.balanceCheckFailedTitle'),
+        message: t('account.deleteAll.balanceCheckFailedBody', { servers }),
+      });
+      return;
+    }
+
     const confirmed = await showAlert({
       title: t('account.deleteAll.confirmTitle'),
       message: t('account.deleteAll.confirmBody', { count: accounts.length }),
       buttons: [
         { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
-        { key: 'delete', label: t('account.deleteAll.title'), style: 'destructive' },
+        { key: 'delete', label: t('account.deleteAll.confirmCta'), style: 'destructive' },
       ],
     });
     if (confirmed !== 'delete') return;

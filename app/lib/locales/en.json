@@ -11,11 +11,16 @@
   },
   "account": {
     "deleteAll": {
-      "body": "Removes your account from every linked Chara server. Each server is processed independently.",
+      "balanceCheckFailedBody": "We need to check your balances on {{servers}} before deleting. Try again when you're online.",
+      "balanceCheckFailedTitle": "Couldn't check balances",
+      "blockedOpenBalanceBody": "You still have open balances on {{servers}}. Settle them in each group before deleting your account.",
+      "blockedOpenBalanceTitle": "Can't delete account",
+      "body": "This permanently removes your account and data from every linked Chara server. Outstanding balances must be settled first.",
       "confirmBody": "Your account on all {{count}} linked servers will be permanently deleted. This cannot be undone.",
       "confirmBody_one": "account.deleteAll.confirmBody",
       "confirmBody_other": "account.deleteAll.confirmBody",
-      "confirmTitle": "Delete from all servers?",
+      "confirmCta": "Delete Account",
+      "confirmTitle": "Delete Account?",
       "eyebrow": "Danger zone",
       "summaryBlocked": "Blocked (outstanding balance): {{count}}",
       "summaryBlocked_one": "account.deleteAll.summaryBlocked",
@@ -27,16 +32,16 @@
       "summaryFailed_one": "account.deleteAll.summaryFailed",
       "summaryFailed_other": "account.deleteAll.summaryFailed",
       "summaryTitle": "Deletion complete",
-      "title": "Delete account from all servers"
+      "title": "Delete Account"
     },
     "deleteFromServer": {
       "blockedBody": "You can't delete your account on {{server}} while you have outstanding balances: {{balances}}.\n\nSettle up with the other group members, then try again.",
       "blockedTitle": "Settle balances first",
       "body": "Permanently delete your account on {{server}}. This can't be undone. Other members will still see past expenses (anonymized).",
       "confirmBody": "Your account on {{server}} will be permanently deleted. This cannot be undone.",
-      "confirmCta": "Delete permanently",
-      "confirmTitle": "Delete account?",
-      "title": "Delete account from this server"
+      "confirmCta": "Delete Account",
+      "confirmTitle": "Delete Account?",
+      "title": "Delete Account on This Server"
     }
   },
   "accounts": {
@@ -211,6 +216,7 @@
     "done": "Done",
     "error": "Error",
     "loading": "Loading…",
+    "mainServerLabel": "Chara Server",
     "ok": "OK",
     "save": "Save",
     "saving": "Saving…"

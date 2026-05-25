@@ -36,3 +36,30 @@ export function isNonZeroDecimal(value: string): boolean {
 export function hasOpenBalance(balances: MinimalBalance[]): boolean {
   return balances.some((b) => isNonZeroDecimal(b.net_balance));
 }
+
+/**
+ * Partition a fan-out balance check across multiple servers into "blocked"
+ * (has an open balance) and "errored" (the check itself failed — treated as
+ * blocked-equivalent because the spec requires fail-safe behavior for any
+ * destructive flow that touches an account).
+ *
+ * `urls` and `results` are positionally aligned — caller passes its source
+ * URL list alongside the matching Promise.allSettled output. Mirrors the
+ * `aggregateBulkDeleteResults` pattern.
+ */
+export function partitionBulkBalanceCheck(
+  urls: string[],
+  results: PromiseSettledResult<MinimalBalance[]>[],
+): { blockedUrls: string[]; erroredUrls: string[] } {
+  const blockedUrls: string[] = [];
+  const erroredUrls: string[] = [];
+  urls.forEach((url, i) => {
+    const r = results[i];
+    if (!r || r.status === 'rejected') {
+      erroredUrls.push(url);
+      return;
+    }
+    if (hasOpenBalance(r.value)) blockedUrls.push(url);
+  });
+  return { blockedUrls, erroredUrls };
+}

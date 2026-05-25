@@ -15,6 +15,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Crypto from 'expo-crypto';
 import { getGoogleSignin } from '@/lib/google-signin';
 import { Trans, useTranslation } from 'react-i18next';
 import { useAccount, useAccounts } from '@/lib/accounts';
@@ -71,6 +72,18 @@ function decodeMaybe(value: string | undefined | null): string | null {
   }
 }
 
+/** 32 random bytes, lowercase hex. Used as the OIDC `nonce` for Apple /
+ *  Google native sign-in — the raw value goes to the backend, the
+ *  SHA-256 hash goes to Apple (Apple's spec). */
+async function generateNonce(): Promise<string> {
+  const bytes = await Crypto.getRandomBytesAsync(32);
+  let out = '';
+  for (let i = 0; i < bytes.length; i++) {
+    out += bytes[i].toString(16).padStart(2, '0');
+  }
+  return out;
+}
+
 export default function SignInScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
@@ -115,11 +128,13 @@ export default function SignInScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // For non-first-launch modes, opportunistically fetch auth_methods if we
-  // don't already have them cached on the account. Failures are silently
-  // ignored — the email path always works.
+  // Opportunistically fetch auth_methods + features if we don't already
+  // have them cached on the account. Runs for every mode including
+  // first-launch — without it, a fresh install never learns the hosted
+  // server supports Apple/Google and Apple App Review rejects under
+  // Guideline 4.8. Failures are silently ignored; the email path always
+  // works.
   useEffect(() => {
-    if (mode === 'first-launch') return;
     if (authMethods !== null) return;
     let cancelled = false;
     (async () => {
@@ -138,7 +153,7 @@ export default function SignInScreen() {
     return () => {
       cancelled = true;
     };
-  }, [serverUrl, mode, authMethods]);
+  }, [serverUrl, authMethods]);
 
   // For reauth on an existing account, keep authMethods synced with the
   // cached instance whenever it changes.
@@ -165,11 +180,21 @@ export default function SignInScreen() {
   async function handleApplePress() {
     analytics.track('auth_method_selected', { method: 'apple' });
     try {
+      // Apple wants the SHA-256 of the nonce embedded in the JWT (`nonce`
+      // claim); the backend wants the raw value so it can re-hash and
+      // compare. See https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_rest_api/authenticating_users_with_sign_in_with_apple.
+      const nonce = await generateNonce();
+      const nonceHash = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        nonce,
+        { encoding: Crypto.CryptoEncoding.HEX },
+      );
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
+        nonce: nonceHash,
       });
       if (!credential.identityToken) {
         analytics.track('auth_error', { method: 'apple', code: 'no_token' });
@@ -190,6 +215,7 @@ export default function SignInScreen() {
       setLoading(true);
       const resp = await publicApi(serverUrl).appleNativeSignIn({
         identity_token: credential.identityToken,
+        nonce,
         name,
       });
       await onTokenIssued(resp.token, 'apple');
@@ -233,7 +259,10 @@ export default function SignInScreen() {
       }
       // iOS no-op; Android requires Play Services to issue an ID token.
       await GoogleSignin.hasPlayServices();
-      const result: any = await GoogleSignin.signIn();
+      // Pass the raw nonce; Google embeds it in the ID token so the
+      // backend can verify it wasn't replayed.
+      const nonce = await generateNonce();
+      const result: any = await GoogleSignin.signIn({ nonce });
       // The SDK shape moved between major versions: v13+ wraps the payload
       // in `{type, data}`, older versions return it flat. Accept both so a
       // future bump doesn't silently break the flow.
@@ -259,6 +288,7 @@ export default function SignInScreen() {
       setLoading(true);
       const resp = await publicApi(serverUrl).googleNativeSignIn({
         identity_token: idToken,
+        nonce,
         name,
       });
       await onTokenIssued(resp.token, 'google');

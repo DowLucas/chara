@@ -36,7 +36,8 @@ import {
 import { blobStorage } from './blob-storage';
 import { migrateLegacyAuth } from './migrate-legacy-auth';
 import { legacyHostedUrl } from './legacy-hosted-url';
-import { ApiError, BASE_URL, getMe, setToken as setLegacyToken, clearToken as clearLegacyToken } from './api';
+import { apiFor, ApiError, BASE_URL, getMe, setToken as setLegacyToken, clearToken as clearLegacyToken } from './api';
+import { unregisterForAccount } from './push';
 
 interface AccountsState {
   accounts: Account[];
@@ -200,11 +201,23 @@ export function useAuth(): LegacyAuthState {
   );
 
   const signOut = useCallback(async () => {
-    await clearLegacyToken();
-    // "Sign out" in single-account land == sign out of everything.
+    // "Sign out" in single-account land == sign out of everything. Match
+    // the multi-account path in (tabs)/you.tsx: server-side logout +
+    // push-token unregister per server before forgetting the account.
     for (const a of accounts) {
+      try {
+        await apiFor(a.serverUrl).logout();
+      } catch {
+        /* best-effort */
+      }
+      try {
+        await unregisterForAccount(a.serverUrl);
+      } catch {
+        /* best-effort */
+      }
       await removeAccount(a.serverUrl);
     }
+    await clearLegacyToken();
   }, [accounts, removeAccount]);
 
   const setUser = useCallback(
