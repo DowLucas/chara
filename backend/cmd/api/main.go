@@ -50,8 +50,10 @@ func main() {
 	queries := db.New(pool)
 
 	jwtSvc, err := auth.NewJWTService(auth.JWTConfig{
-		Mode:   cfg.InstanceMode,
-		Secret: cfg.JWTSecret,
+		Mode:          cfg.InstanceMode,
+		Secret:        cfg.JWTSecret,
+		PrivateKeyPEM: cfg.JWTPrivateKeyPEM,
+		PublicKeyPEM:  cfg.JWTPublicKeyPEM,
 	})
 	if err != nil {
 		slog.Error("failed to create JWT service", "error", err)
