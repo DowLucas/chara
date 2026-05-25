@@ -89,6 +89,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 
 		r.Get("/api/me", authH.Me)
 		r.Patch("/api/me", authH.UpdateMe)
+		r.Delete("/api/me", authH.DeleteMe)
 		r.Post("/api/me/logout", authH.Logout)
 		r.Post("/api/me/push-token", pushH.Register)
 		r.Delete("/api/me/push-token", pushH.Delete)

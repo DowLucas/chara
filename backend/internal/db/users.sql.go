@@ -17,7 +17,7 @@ SET avatar_object_key = NULL,
     avatar_updated_at = NOW(),
     updated_at        = NOW()
 WHERE id = $1
-RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at
 `
 
 func (q *Queries) ClearUserAvatar(ctx context.Context, id string) (User, error) {
@@ -34,12 +34,56 @@ func (q *Queries) ClearUserAvatar(ctx context.Context, id string) (User, error) 
 		&i.UpdatedAt,
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const deleteMagicLinkTokensByEmail = `-- name: DeleteMagicLinkTokensByEmail :exec
+DELETE FROM magic_link_tokens WHERE email = $1
+`
+
+func (q *Queries) DeleteMagicLinkTokensByEmail(ctx context.Context, email string) error {
+	_, err := q.db.Exec(ctx, deleteMagicLinkTokensByEmail, email)
+	return err
+}
+
+const deletePushTokensByUser = `-- name: DeletePushTokensByUser :exec
+DELETE FROM push_tokens WHERE user_id = $1
+`
+
+func (q *Queries) DeletePushTokensByUser(ctx context.Context, userID string) error {
+	_, err := q.db.Exec(ctx, deletePushTokensByUser, userID)
+	return err
+}
+
+const getActiveUserByID = `-- name: GetActiveUserByID :one
+SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at FROM users WHERE id = $1 AND deleted_at IS NULL
+`
+
+// Used by the auth middleware to reject any JWT whose subject has been
+// soft-deleted via DELETE /api/me. Returns no row → the token is invalid.
+func (q *Queries) GetActiveUserByID(ctx context.Context, id string) (User, error) {
+	row := q.db.QueryRow(ctx, getActiveUserByID, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.DisplayName,
+		&i.AvatarUrl,
+		&i.Phone,
+		&i.Locale,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.AvatarObjectKey,
+		&i.AvatarUpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at FROM users WHERE email = $1
+SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -56,12 +100,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.UpdatedAt,
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at FROM users WHERE id = $1
+SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
@@ -78,8 +123,25 @@ func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
 		&i.UpdatedAt,
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
+}
+
+const ghostifyGroupMembersForUser = `-- name: GhostifyGroupMembersForUser :exec
+UPDATE group_members
+SET user_id  = NULL,
+    is_ghost = TRUE
+WHERE user_id = $1
+`
+
+// Detach every group_members row from a deleting user. The row itself
+// stays (so expense.paid_by_id / expense_splits.member_id keep resolving)
+// but user_id is NULLed and is_ghost flips true. The unique partial index
+// (group_id, user_id) WHERE user_id IS NOT NULL keeps this safe.
+func (q *Queries) GhostifyGroupMembersForUser(ctx context.Context, userID pgtype.Text) error {
+	_, err := q.db.Exec(ctx, ghostifyGroupMembersForUser, userID)
+	return err
 }
 
 const setUserAvatar = `-- name: SetUserAvatar :one
@@ -88,7 +150,7 @@ SET avatar_object_key = $2,
     avatar_updated_at = NOW(),
     updated_at        = NOW()
 WHERE id = $1
-RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at
 `
 
 type SetUserAvatarParams struct {
@@ -110,8 +172,33 @@ func (q *Queries) SetUserAvatar(ctx context.Context, arg SetUserAvatarParams) (U
 		&i.UpdatedAt,
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
+}
+
+const softDeleteUser = `-- name: SoftDeleteUser :exec
+UPDATE users
+SET deleted_at        = NOW(),
+    email             = 'deleted-' || id || '@deleted.invalid',
+    display_name      = '',
+    phone             = NULL,
+    avatar_url        = NULL,
+    avatar_object_key = NULL,
+    avatar_updated_at = NULL,
+    updated_at        = NOW()
+WHERE id = $1
+  AND deleted_at IS NULL
+`
+
+// Apple Guideline 5.1.1(v) account self-deletion. Marks the user deleted,
+// nulls PII, and rewrites the unique email to a sentinel so the original
+// address is free to be re-registered. group_members rows are NOT touched
+// here — the caller does that explicitly in the same transaction so the
+// balance check and the FK detach stay together.
+func (q *Queries) SoftDeleteUser(ctx context.Context, id string) error {
+	_, err := q.db.Exec(ctx, softDeleteUser, id)
+	return err
 }
 
 const updateUser = `-- name: UpdateUser :one
@@ -122,7 +209,7 @@ SET display_name = COALESCE($2, display_name),
     locale       = COALESCE($5, locale),
     updated_at   = NOW()
 WHERE id = $1
-RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at
 `
 
 type UpdateUserParams struct {
@@ -153,6 +240,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.UpdatedAt,
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
@@ -164,7 +252,7 @@ ON CONFLICT (email) DO UPDATE
     SET display_name = EXCLUDED.display_name,
         avatar_url   = COALESCE(EXCLUDED.avatar_url, users.avatar_url),
         updated_at   = NOW()
-RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at
 `
 
 type UpsertUserParams struct {
@@ -195,6 +283,7 @@ func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (User, e
 		&i.UpdatedAt,
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
