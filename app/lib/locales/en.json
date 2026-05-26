@@ -916,7 +916,26 @@
     "hostedBy": "hosted by chara.app",
     "legalFooter": "By continuing you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
     "sending": "Sending…",
-    "useMyServer": "use my server →"
+    "useMyServer": "use my server →",
+    "dict": {
+      "def1": ": even; squared up between friends",
+      "def2": ": the wiping of a small debt",
+      "def3": ": \"let's call it chara\" — let's call it even",
+      "headword": "cha·ra",
+      "partOfSpeech": "noun, from Japanese チャラ",
+      "pronunciation": "| \\ ˈtʃa-rə \\"
+    },
+    "hosting": {
+      "charaCloud": "Chara Cloud",
+      "charaCloudHint": "Hosted by us. Free to use.",
+      "charaCloudInfo": "Chara Cloud is hosted by us. It's free to use — we take care of the servers, backups, and updates so you don't have to.",
+      "label": "Where do you want to sign in?",
+      "selfHost": "Self-hosted",
+      "selfHostHint": "Connect to your own server.",
+      "signingInOn": "Signing in on",
+      "switchToSelfHost": "Use self-hosted"
+    },
+    "or": "or"
   },
   "tabs": {
     "activity": "Activity",
