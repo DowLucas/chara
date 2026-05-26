@@ -667,7 +667,7 @@
     "phonePlaceholder": "+46 70 123 45 67",
     "placeholder": "山田 太郎",
     "saving": "保存中…",
-    "submit": "続きを読む"
+    "submit": "次へ"
   },
   "privacy": {
     "analyticsDescription": "Charaの改善に役立てるため、利用状況を収集します。個人情報・IPアドレス・コンテンツは収集しません。いつでもオフにできます。",
@@ -800,7 +800,7 @@
   "securityCode": {
     "confirmBody": "コードを再入力して一致を確認してください。",
     "confirmCode": "コードを確認。",
-    "continue": "続きを読む",
+    "continue": "次へ",
     "createBody": "4桁または6桁のコードを設定します。Charaを開くときに入力します。",
     "createCode": "コードを作成。",
     "disable": "セキュリティコードをオフにする",
@@ -913,7 +913,7 @@
       "errorTitle": "サインインに失敗しました",
       "noToken": "Googleからアイデンティティトークンが返されませんでした。もう一度お試しください。"
     },
-    "headline": "決着をつけよう。終わりにしよう。",
+    "headline": "分け合おう。\n精算しよう。\nチャラにしよう。",
     "hostedBy": "chara.appがホスト",
     "legalFooter": "続行することで、<terms>利用規約</terms>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます。",
     "sending": "送信中…",
