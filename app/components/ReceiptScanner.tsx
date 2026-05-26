@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -351,6 +351,18 @@ export function ReceiptScanner({ groupCurrency, groupLanguage, onScanned, onCanc
 function AnalyzingView({ photoUri }: { photoUri: string }) {
   const { t } = useTranslation();
   const anim = useRef(new Animated.Value(0)).current;
+  const [stepIdx, setStepIdx] = useState(0);
+
+  const steps = useMemo(
+    () => [
+      t('receiptScanner.analyzingStep1'),
+      t('receiptScanner.analyzingStep2'),
+      t('receiptScanner.analyzingStep3'),
+      t('receiptScanner.analyzingStep4'),
+      t('receiptScanner.analyzingStep5'),
+    ],
+    [t],
+  );
 
   useEffect(() => {
     // Bouncing scan line: 0 → 1 → 0 in a loop. Linear easing keeps the
@@ -374,6 +386,16 @@ function AnalyzingView({ photoUri }: { photoUri: string }) {
     loop.start();
     return () => loop.stop();
   }, [anim]);
+
+  // Rotate the status text every ~1.5s. Stops on the last step so we don't
+  // loop back to "reading merchant" forever — the user reads "adding it all
+  // up" and assumes we're nearly done, which is honest about the order Gemini
+  // reports fields in.
+  useEffect(() => {
+    if (stepIdx >= steps.length - 1) return;
+    const id = setTimeout(() => setStepIdx((i) => i + 1), 1500);
+    return () => clearTimeout(id);
+  }, [stepIdx, steps.length]);
 
   // The photo box is laid out with `flex: 1`; we can't know its exact pixel
   // height ahead of time, so the scan line is positioned with `top: 0` and
@@ -402,9 +424,16 @@ function AnalyzingView({ photoUri }: { photoUri: string }) {
         <View pointerEvents="none" style={styles.scanTint} />
       </View>
       <View style={styles.analyzingMeta}>
-        <ActivityIndicator color={colors.paper} />
         <Text style={styles.analyzingTitle}>{t('receiptScanner.analyzing')}</Text>
-        <Text style={styles.analyzingHint}>{t('receiptScanner.analyzingHint')}</Text>
+        <View style={styles.analyzingStepRow}>
+          <ActivityIndicator color={colors.graphite} size="small" />
+          <Text style={styles.analyzingStep} key={stepIdx}>
+            {steps[stepIdx]}
+          </Text>
+        </View>
+        <Text style={styles.analyzingKeepOpen}>
+          {t('receiptScanner.analyzingKeepOpen')}
+        </Text>
       </View>
     </View>
   );
@@ -721,8 +750,8 @@ const styles = StyleSheet.create({
   },
 
   // Analyzing phase
-  analyzingWrap: { flex: 1, backgroundColor: '#000', paddingBottom: spacing.s6 },
-  photoBox: { flex: 1, overflow: 'hidden', backgroundColor: '#000' },
+  analyzingWrap: { flex: 1, backgroundColor: colors.paper, paddingBottom: spacing.s6 },
+  photoBox: { flex: 1, overflow: 'hidden', backgroundColor: colors.bone },
   scanLine: {
     position: 'absolute',
     left: 0,
@@ -737,27 +766,44 @@ const styles = StyleSheet.create({
   },
   scanTint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.15)',
+    backgroundColor: 'rgba(45,31,26,0.06)',
   },
   analyzingMeta: {
     alignItems: 'center',
-    gap: spacing.s2,
+    gap: spacing.s3,
     paddingTop: spacing.s5,
     paddingHorizontal: spacing.s5,
   },
   analyzingTitle: {
     fontFamily: fontDisplay,
     fontSize: fontSize.displayS,
-    color: colors.paper,
+    color: colors.graphite,
     letterSpacing: -0.5,
+  },
+  analyzingStepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.s2,
+  },
+  analyzingStep: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.graphite,
+    letterSpacing: 0.3,
   },
   analyzingHint: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
-    color: colors.paper,
-    opacity: 0.7,
+    color: colors.lead,
     letterSpacing: 0.3,
     textAlign: 'center',
+  },
+  analyzingKeepOpen: {
+    fontFamily: fontBody,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    textAlign: 'center',
+    paddingTop: spacing.s2,
   },
 
   // Error phase
