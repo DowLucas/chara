@@ -71,7 +71,6 @@ export default function YouScreen() {
   const { homeCurrency, isExplicit: homeCurrencyExplicit } = useHomeCurrency();
   const accountCount = accounts.length;
   const hasMultipleAccounts = accountCount >= 2;
-  const hasHostedAccount = accounts.some((a) => a.instance?.mode === 'hosted');
   const [pinSet, setPinSet] = useState(false);
   const [faceIdEnabled, setFaceIdEnabled] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
@@ -556,35 +555,6 @@ export default function YouScreen() {
 
         <View style={styles.rule} />
 
-        {hasHostedAccount && (
-          <View style={styles.openSourceBlock}>
-            <Text style={styles.sectionEyebrow}>{t('you.openSource.eyebrow')}</Text>
-            <View style={styles.openSourceCard}>
-              <Text style={styles.openSourceBody}>{t('you.openSource.body')}</Text>
-              <TouchableOpacity
-                style={styles.openSourceRow}
-                onPress={() => {
-                  void Linking.openURL('https://github.com/DowLucas/chara#self-hosting').catch(() => {});
-                }}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.rowLabel}>{t('you.openSource.selfHostLabel')}</Text>
-                <Feather name="external-link" size={16} color={colors.lead} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.openSourceRow, styles.openSourceRowLast]}
-                onPress={() => {
-                  void Linking.openURL('https://github.com/DowLucas/chara').catch(() => {});
-                }}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.rowLabel}>{t('you.openSource.githubLabel')}</Text>
-                <Feather name="external-link" size={16} color={colors.lead} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
         {__DEV__ && (
           <View style={styles.devBlock}>
             <Text style={styles.devEyebrow}>{t('you.devEyebrow')}</Text>
@@ -794,33 +764,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize.caption,
     color: colors.vermillion,
     letterSpacing: 0.3,
-  },
-  openSourceBlock: { width: '100%', marginBottom: spacing.s5 },
-  openSourceCard: {
-    backgroundColor: colors.bone,
-    borderRadius: 10,
-    marginHorizontal: spacing.s4,
-    paddingHorizontal: spacing.s5,
-    paddingVertical: spacing.s4,
-    marginTop: spacing.s2,
-  },
-  openSourceBody: {
-    fontFamily: fontBody,
-    fontSize: fontSize.body,
-    color: colors.graphite,
-    marginBottom: spacing.s4,
-  },
-  openSourceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.s3,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.ruleSoft,
-    gap: spacing.s3,
-  },
-  openSourceRowLast: {
-    borderBottomWidth: 0,
   },
   devBlock: { width: '100%', marginBottom: spacing.s4 },
   devEyebrow: {

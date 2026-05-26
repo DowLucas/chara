@@ -104,7 +104,7 @@ export default function CreateGroupScreen() {
           autoFocus
           maxLength={80}
           returnKeyType="done"
-          onSubmitEditing={handleCreate}
+          blurOnSubmit
           style={styles.input}
         />
       </View>

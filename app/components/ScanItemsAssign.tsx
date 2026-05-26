@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Modal,
   Platform,
+  Pressable,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -15,9 +16,12 @@ import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
 import { Avatar } from '@/components/Avatar';
+import { AmountKeypad } from '@/components/AmountKeypad';
 import { currentLocale } from '@/lib/i18n';
-import { initialsOf } from '@/lib/name';
+import { initialsOf, makeNameShortener } from '@/lib/name';
 import { avatarImageSource, GroupMember, ScannedReceiptItem } from '@/lib/api';
+import { decimalToMinor } from '@/lib/money-utils';
+import { markPopupClosed } from '@/lib/popup-guard';
 import {
   colors,
   fontBody,
@@ -28,6 +32,16 @@ import {
   spacing,
 } from '@/lib/theme';
 import { prorateItemAssignments, ScanItem } from '@/lib/scan-items';
+
+function minorToInput(n: number): string {
+  return (n / 100).toFixed(2).replace(/\.?0+$/, '');
+}
+
+type EditTarget =
+  | { kind: 'item'; id: string }
+  | { kind: 'tax' }
+  | { kind: 'tip' }
+  | { kind: 'total' };
 
 function fmtMinor(n: number, currency: string): string {
   const abs = Math.abs(n);
@@ -56,9 +70,27 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
-  // Mount stable client-side ids on the items (Gemini doesn't return ids).
-  const scanItems: ScanItem[] = useMemo(
-    () =>
+  // Mount stable client-side ids on the items (Gemini doesn't return ids) and
+  // lift them into local state so the user can correct OCR misreads. The same
+  // applies to tax/tip/total — Gemini sometimes returns a header total that
+  // doesn't match its own line items, so we need every number on this screen
+  // to be editable.
+  const [scanItems, setScanItems] = useState<ScanItem[]>(() =>
+    props.items.map((it, i) => ({
+      id: `i${i}`,
+      description: it.description,
+      qty: it.qty,
+      unit_price_minor: it.unit_price_minor,
+      total_minor: it.total_minor,
+    })),
+  );
+  const [taxMinor, setTaxMinor] = useState<number>(props.taxMinor);
+  const [tipMinor, setTipMinor] = useState<number>(props.tipMinor);
+  const [totalMinor, setTotalMinor] = useState<number>(props.totalMinor);
+
+  // Reset local edits when a new scan comes in.
+  useEffect(() => {
+    setScanItems(
       props.items.map((it, i) => ({
         id: `i${i}`,
         description: it.description,
@@ -66,11 +98,43 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
         unit_price_minor: it.unit_price_minor,
         total_minor: it.total_minor,
       })),
-    [props.items],
-  );
+    );
+    setTaxMinor(props.taxMinor);
+    setTipMinor(props.tipMinor);
+    setTotalMinor(props.totalMinor);
+  }, [props.items, props.taxMinor, props.tipMinor, props.totalMinor]);
 
   const [assignments, setAssignments] = useState<Record<string, string[]>>({});
   const [pickerOpen, setPickerOpen] = useState<string | null>(null);
+
+  // Inline amount editor (item totals, tax, tip, receipt total).
+  const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
+  const [editValue, setEditValue] = useState<string>('');
+
+  function openEditor(target: EditTarget) {
+    let initial = 0;
+    if (target.kind === 'item') {
+      initial = scanItems.find((i) => i.id === target.id)?.total_minor ?? 0;
+    } else if (target.kind === 'tax') initial = taxMinor;
+    else if (target.kind === 'tip') initial = tipMinor;
+    else initial = totalMinor;
+    setEditValue(minorToInput(initial));
+    setEditTarget(target);
+  }
+
+  function commitEditor(resolved: string) {
+    const minor = decimalToMinor(resolved);
+    const target = editTarget;
+    setEditTarget(null);
+    if (!target) return;
+    if (target.kind === 'item') {
+      setScanItems((prev) =>
+        prev.map((it) => (it.id === target.id ? { ...it, total_minor: minor } : it)),
+      );
+    } else if (target.kind === 'tax') setTaxMinor(minor);
+    else if (target.kind === 'tip') setTipMinor(minor);
+    else setTotalMinor(minor);
+  }
 
   const participants = useMemo(() => props.members.map((m) => m.id), [props.members]);
 
@@ -99,30 +163,41 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
       prorateItemAssignments({
         items: scanItems,
         assignments,
-        taxMinor: props.taxMinor,
-        tipMinor: props.tipMinor,
+        taxMinor,
+        tipMinor,
         participants,
       }),
-    [scanItems, assignments, props.taxMinor, props.tipMinor, participants],
+    [scanItems, assignments, taxMinor, tipMinor, participants],
   );
 
   const unassignedCount = scanItems.filter(
     (it) => !assignments[it.id] || assignments[it.id].length === 0,
   ).length;
 
-  // The proration always produces a sum equal to items + tax + tip. We
-  // compare that against the receipt total — if Gemini's items don't add up
-  // to its own total, we block save so the user notices the discrepancy.
+  // The proration always sums to items + tax + tip. We compare that against
+  // the receipt total — if Gemini's parse is internally inconsistent, the
+  // user can fix any of the editable values (item amounts, tax, tip, or the
+  // total) to reconcile.
   const computedTotal = useMemo(
     () => Object.values(perMember).reduce((s, v) => s + v, 0),
     [perMember],
   );
-  const totalMismatch = Math.abs(computedTotal - props.totalMinor) > 1;
+  const totalDiff = computedTotal - totalMinor;
+  const totalMismatch = Math.abs(totalDiff) > 1;
+
+  // Context-aware shortener: "Lucas" when unique in the group, "Lucas H."
+  // when there's another Lucas, "Lucas Heinonen" only on a full collision.
+  // Built once per member list so every row in this screen agrees.
+  const shorten = useMemo(
+    () => makeNameShortener(props.members.map((m) => m.name)),
+    [props.members],
+  );
 
   function nameOf(memberId: string): string {
     const m = props.members.find((mm) => mm.id === memberId);
     if (!m) return memberId;
-    return m.id === props.currentMemberId ? t('addExpense.you') : m.name;
+    if (m.id === props.currentMemberId) return t('addExpense.you');
+    return shorten(m.name);
   }
 
   function memberInitials(memberId: string): string {
@@ -178,9 +253,17 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
                       <Text style={styles.itemQty}> {t('scanItems.qty', { count: item.qty })}</Text>
                     )}
                   </Text>
-                  <Text style={styles.itemAmount}>
-                    {fmtMinor(item.total_minor, props.currency)}
-                  </Text>
+                  <TouchableOpacity
+                    onPress={() => openEditor({ kind: 'item', id: item.id })}
+                    activeOpacity={0.6}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('scanItems.editItemAmount')}
+                  >
+                    <Text style={styles.itemAmountEditable}>
+                      {fmtMinor(item.total_minor, props.currency)}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
                 <TouchableOpacity
                   style={styles.assignRow}
@@ -202,22 +285,38 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
             );
           })}
 
-          {(props.taxMinor > 0 || props.tipMinor > 0) && (
-            <View style={styles.metaWrap}>
-              {props.taxMinor > 0 && (
-                <View style={styles.metaRow}>
-                  <Text style={styles.metaLabel}>{t('scanItems.taxLine')}</Text>
-                  <Text style={styles.metaValue}>{fmtMinor(props.taxMinor, props.currency)}</Text>
-                </View>
-              )}
-              {props.tipMinor > 0 && (
-                <View style={styles.metaRow}>
-                  <Text style={styles.metaLabel}>{t('scanItems.tipLine')}</Text>
-                  <Text style={styles.metaValue}>{fmtMinor(props.tipMinor, props.currency)}</Text>
-                </View>
-              )}
-            </View>
-          )}
+          <View style={styles.metaWrap}>
+            <TouchableOpacity
+              style={styles.metaRow}
+              onPress={() => openEditor({ kind: 'tax' })}
+              activeOpacity={0.6}
+              accessibilityRole="button"
+              accessibilityLabel={t('scanItems.editTax')}
+            >
+              <Text style={styles.metaLabel}>{t('scanItems.taxLine')}</Text>
+              <Text style={styles.metaValueEditable}>{fmtMinor(taxMinor, props.currency)}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.metaRow}
+              onPress={() => openEditor({ kind: 'tip' })}
+              activeOpacity={0.6}
+              accessibilityRole="button"
+              accessibilityLabel={t('scanItems.editTip')}
+            >
+              <Text style={styles.metaLabel}>{t('scanItems.tipLine')}</Text>
+              <Text style={styles.metaValueEditable}>{fmtMinor(tipMinor, props.currency)}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.metaRow}
+              onPress={() => openEditor({ kind: 'total' })}
+              activeOpacity={0.6}
+              accessibilityRole="button"
+              accessibilityLabel={t('scanItems.editTotal')}
+            >
+              <Text style={styles.metaLabel}>{t('scanItems.receiptTotal')}</Text>
+              <Text style={styles.metaValueEditable}>{fmtMinor(totalMinor, props.currency)}</Text>
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.summaryWrap}>
             <Text style={styles.summaryHeader}>{t('scanItems.perPerson')}</Text>
@@ -250,8 +349,38 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
 
           {totalMismatch && (
             <View style={styles.errBanner}>
-              <Feather name="alert-circle" size={14} color={colors.brick} />
-              <Text style={styles.errText}>{t('scanItems.totalMismatch')}</Text>
+              <View style={styles.errHeader}>
+                <Feather name="alert-circle" size={14} color={colors.brick} />
+                <Text style={styles.errText}>{t('scanItems.totalMismatch')}</Text>
+              </View>
+              <View style={styles.errLine}>
+                <Text style={styles.errLineLabel}>{t('scanItems.computedTotal')}</Text>
+                <Text style={styles.errLineValue}>
+                  {fmtMinor(computedTotal, props.currency)}
+                </Text>
+              </View>
+              <View style={styles.errLine}>
+                <Text style={styles.errLineLabel}>{t('scanItems.receiptTotal')}</Text>
+                <Text style={styles.errLineValue}>{fmtMinor(totalMinor, props.currency)}</Text>
+              </View>
+              <View style={styles.errLine}>
+                <Text style={[styles.errLineLabel, { color: colors.brick }]}>
+                  {t('scanItems.diff')}
+                </Text>
+                <Text style={[styles.errLineValue, { color: colors.brick }]}>
+                  {(totalDiff > 0 ? '+' : '−') + fmtMinor(Math.abs(totalDiff), props.currency)}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.matchBtn}
+                onPress={() => setTotalMinor(computedTotal)}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+              >
+                <Feather name="refresh-cw" size={12} color={colors.graphite} />
+                <Text style={styles.matchBtnLabel}>{t('scanItems.matchItems')}</Text>
+              </TouchableOpacity>
+              <Text style={styles.matchHint}>{t('scanItems.matchItemsHint')}</Text>
             </View>
           )}
         </ScrollView>
@@ -275,15 +404,36 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
         </View>
       </View>
 
+      <AmountKeypad
+        visible={editTarget !== null}
+        value={editValue}
+        currency={props.currency}
+        onChange={setEditValue}
+        onSubmit={commitEditor}
+        onClose={() => setEditTarget(null)}
+      />
+
       {/* Picker sheet --------------------------------------------------- */}
       <Modal
         visible={pickerOpen !== null}
         animationType="fade"
         transparent
-        onRequestClose={() => setPickerOpen(null)}
+        onRequestClose={() => {
+          setPickerOpen(null);
+          markPopupClosed();
+        }}
       >
-        <View style={styles.sheetOverlay}>
-          <View style={[styles.sheet, { paddingBottom: insets.bottom + 12 }]}>
+        <Pressable
+          style={styles.sheetOverlay}
+          onPress={() => {
+            setPickerOpen(null);
+            markPopupClosed();
+          }}
+        >
+          <Pressable
+            style={[styles.sheet, { paddingBottom: insets.bottom + 12 }]}
+            onPress={(e) => e.stopPropagation()}
+          >
             <Text style={styles.sheetTitle}>{t('scanItems.assignSheetTitle')}</Text>
             <Text style={styles.sheetHint}>{t('scanItems.assignSheetHint')}</Text>
             <ScrollView style={{ maxHeight: 320 }}>
@@ -317,17 +467,25 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
                 onPress={() => {
                   if (pickerOpen) clearAssignment(pickerOpen);
                   setPickerOpen(null);
+                  markPopupClosed();
                 }}
                 style={{ flex: 1 }}
               >
                 {t('scanItems.cancel')}
               </Button>
-              <Button kind="primary" onPress={() => setPickerOpen(null)} style={{ flex: 1 }}>
+              <Button
+                kind="primary"
+                onPress={() => {
+                  setPickerOpen(null);
+                  markPopupClosed();
+                }}
+                style={{ flex: 1 }}
+              >
                 {t('scanItems.done')}
               </Button>
             </View>
-          </View>
-        </View>
+          </Pressable>
+        </Pressable>
       </Modal>
     </Modal>
   );
@@ -385,6 +543,15 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
   },
+  itemAmountEditable: {
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.body,
+    color: colors.graphite,
+    fontVariant: ['tabular-nums'],
+    textDecorationLine: 'underline',
+    textDecorationStyle: 'dotted',
+    textDecorationColor: colors.ruleSoft,
+  },
   assignRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -406,13 +573,22 @@ const styles = StyleSheet.create({
   },
 
   metaWrap: { paddingHorizontal: spacing.s5, paddingTop: spacing.s3 },
-  metaRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
+  metaRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
   metaLabel: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
   metaValue: {
     fontFamily: fontMono,
     fontSize: fontSize.bodyS,
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
+  },
+  metaValueEditable: {
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.bodyS,
+    color: colors.graphite,
+    fontVariant: ['tabular-nums'],
+    textDecorationLine: 'underline',
+    textDecorationStyle: 'dotted',
+    textDecorationColor: colors.ruleSoft,
   },
 
   summaryWrap: {
@@ -453,17 +629,47 @@ const styles = StyleSheet.create({
   },
   warnText: { flex: 1, fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
   errBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
     marginHorizontal: spacing.s5,
     marginTop: spacing.s3,
-    padding: 10,
+    padding: 12,
     borderWidth: 0.5,
     borderColor: colors.brick,
     borderRadius: 6,
+    gap: 6,
   },
+  errHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   errText: { flex: 1, fontFamily: fontMono, fontSize: fontSize.caption, color: colors.brick },
+  errLine: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
+  errLineLabel: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
+  errLineValue: {
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.caption,
+    color: colors.graphite,
+    fontVariant: ['tabular-nums'],
+  },
+  matchBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 4,
+    borderWidth: 0.5,
+    borderColor: colors.graphite,
+    borderRadius: 6,
+  },
+  matchBtnLabel: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.graphite,
+    letterSpacing: 0.3,
+  },
+  matchHint: {
+    fontFamily: fontBody,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+  },
 
   ctaBar: {
     flexDirection: 'row',

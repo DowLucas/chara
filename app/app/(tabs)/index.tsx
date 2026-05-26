@@ -31,6 +31,7 @@ import {
   fontSize,
   spacing,
 } from '@/lib/theme';
+import { displayHostFor } from '@/lib/server-url';
 
 const fmtBalance = (minor: string, currency: string) =>
   formatMinorUnits(minor, currency, { relative: true });
@@ -40,19 +41,18 @@ const fmtHero = (minor: number | string, currency: string) =>
   formatMinorUnitsCompact(minor, currency, { relative: true });
 const fmtAmount = (minor: string, currency: string) => formatMinorUnits(minor, currency);
 
-/** Extract hostname from a server URL for the host chip. */
-function hostOf(serverUrl: string): string {
-  try {
-    return new URL(serverUrl).host;
-  } catch {
-    return serverUrl;
-  }
-}
+// Host renders go through `displayHostFor` so the canonical hosted URL
+// (chara-api.lurkhuset.com) shows as the brand label "Chara Cloud"
+// instead of leaking infra details into the UI. Self-hosted URLs still
+// render as the bare host.
 
 interface MergedGroup {
   group: Group;
   serverUrl: string;
-  balance: MyBalance | null;
+  /** All per-currency balance rows for this group. Empty when the user has
+   *  no balance entries yet (new group / fully settled). Multi-currency
+   *  groups carry one row per currency. */
+  balances: MyBalance[];
 }
 
 export default function HomeScreen() {
@@ -87,12 +87,19 @@ export default function HomeScreen() {
   // feedback even on a fast network.
   const [refreshing, setRefreshing] = useState(false);
 
-  // Merge: concatenate all groups, attach matching per-account balance.
+  // Merge: concatenate all groups, attach every per-currency balance row for
+  // that group. We keep the full list (not just one row) so the card can
+  // detect mixed-sign positions across currencies — e.g. you're owed €100
+  // but still owe $30 in the same group. Collapsing to a single row would
+  // hide that and the "+€100" hero reads as "I'm owed", which is false.
   const mergedGroups: MergedGroup[] = useMemo(() => {
-    const balanceByKey = new Map<string, MyBalance>();
+    const balancesByKey = new Map<string, MyBalance[]>();
     for (const br of balanceReads) {
       for (const b of br.data ?? []) {
-        balanceByKey.set(`${br.serverUrl}::${b.group_id}`, b);
+        const key = `${br.serverUrl}::${b.group_id}`;
+        const list = balancesByKey.get(key);
+        if (list) list.push(b);
+        else balancesByKey.set(key, [b]);
       }
     }
     const rows: MergedGroup[] = [];
@@ -101,7 +108,7 @@ export default function HomeScreen() {
         rows.push({
           group: g,
           serverUrl: gr.serverUrl,
-          balance: balanceByKey.get(`${gr.serverUrl}::${g.id}`) ?? null,
+          balances: balancesByKey.get(`${gr.serverUrl}::${g.id}`) ?? [],
         });
       }
     }
@@ -335,10 +342,28 @@ export default function HomeScreen() {
               </Text>
             </View>
             <View style={styles.cardWrap}>
-              {mergedGroups.map(({ group: g, serverUrl, balance: bal }) => {
-                const hasActivity = bal !== null;
-                const n = bal ? decimalToMinor(bal.net_balance) : 0;
-                const settled = hasActivity && n === 0;
+              {mergedGroups.map(({ group: g, serverUrl, balances }) => {
+                const hasActivity = balances.length > 0;
+                // Display the dominant currency: largest absolute net wins.
+                // Ties break by the row order from the server (deterministic
+                // since the backend returns by currency).
+                const dominant = hasActivity
+                  ? [...balances].sort(
+                      (a, b) =>
+                        Math.abs(decimalToMinor(b.net_balance)) -
+                        Math.abs(decimalToMinor(a.net_balance)),
+                    )[0]
+                  : null;
+                const n = dominant ? decimalToMinor(dominant.net_balance) : 0;
+                const displayCurrency = dominant?.currency ?? g.currency;
+                const settled =
+                  hasActivity && balances.every((b) => decimalToMinor(b.net_balance) === 0);
+                // Mixed signs across currencies in the same group: the
+                // dominant row hides debt (or credit) in another currency.
+                // Headline reads "+€100" while you actually still owe $30.
+                const hasPositive = balances.some((b) => decimalToMinor(b.net_balance) > 0);
+                const hasNegative = balances.some((b) => decimalToMinor(b.net_balance) < 0);
+                const mixedSigns = hasPositive && hasNegative;
                 return (
                   <TouchableOpacity
                     key={`${serverUrl}::${g.id}`}
@@ -366,7 +391,7 @@ export default function HomeScreen() {
                       </Text>
                       {showHostChip && (
                         <Text style={styles.hostChip} numberOfLines={1}>
-                          {t('home.hostChip', { host: hostOf(serverUrl) })}
+                          {t('home.hostChip', { host: displayHostFor(serverUrl, t('common.mainServerLabel')) })}
                         </Text>
                       )}
                     </View>
@@ -377,9 +402,33 @@ export default function HomeScreen() {
                         <Stamp />
                       ) : (
                         <>
-                          <Text style={styles.groupAmtEyebrow}>
-                            {n > 0 ? t('home.youreOwedStamp') : t('home.youOweStamp')}
-                          </Text>
+                          <View style={styles.groupEyebrowRow}>
+                            {mixedSigns && (
+                              <TouchableOpacity
+                                onPress={(e) => {
+                                  e.stopPropagation();
+                                  showAlert({
+                                    title: t('home.mixedSignsTitle'),
+                                    message: t('home.mixedSignsBody'),
+                                    buttons: [{ key: 'ok', label: t('common.ok') }],
+                                  });
+                                }}
+                                hitSlop={8}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('home.mixedSignsLabel')}
+                              >
+                                <Feather
+                                  name="alert-triangle"
+                                  size={12}
+                                  color={colors.vermillion}
+                                  strokeWidth={1.8}
+                                />
+                              </TouchableOpacity>
+                            )}
+                            <Text style={styles.groupAmtEyebrow}>
+                              {n > 0 ? t('home.youreOwedStamp') : t('home.youOweStamp')}
+                            </Text>
+                          </View>
                           <Text
                             style={[
                               styles.groupAmt,
@@ -387,7 +436,7 @@ export default function HomeScreen() {
                             ]}
                             numberOfLines={1}
                           >
-                            {fmtAmount(String(Math.abs(n)), g.currency)}
+                            {fmtAmount(String(Math.abs(n)), displayCurrency)}
                           </Text>
                         </>
                       )}
@@ -407,7 +456,7 @@ export default function HomeScreen() {
             {failingGroupAccounts.map((r) => (
               <ErrorStrip
                 key={`g-${r.serverUrl}`}
-                label={t('home.errorStrip', { host: hostOf(r.serverUrl) })}
+                label={t('home.errorStrip', { host: displayHostFor(r.serverUrl, t('common.mainServerLabel')) })}
                 cta={t('home.retry')}
               />
             ))}
@@ -416,7 +465,7 @@ export default function HomeScreen() {
               .map((r) => (
                 <ErrorStrip
                   key={`b-${r.serverUrl}`}
-                  label={t('home.errorStrip', { host: hostOf(r.serverUrl) })}
+                  label={t('home.errorStrip', { host: displayHostFor(r.serverUrl, t('common.mainServerLabel')) })}
                   cta={t('home.retry')}
                 />
               ))}
@@ -436,7 +485,7 @@ export default function HomeScreen() {
                 activeOpacity={0.7}
               >
                 <Text style={styles.errorStripText} numberOfLines={1}>
-                  {hostOf(a.serverUrl)} ·{' '}
+                  {displayHostFor(a.serverUrl, t('common.mainServerLabel'))} ·{' '}
                   {a.status === 'reauth_required'
                     ? t('home.statusReauthShort')
                     : t('home.statusIncompatibleShort')}
@@ -724,13 +773,18 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     minWidth: 104,
   },
+  groupEyebrowRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 3,
+  },
   groupAmtEyebrow: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
     color: colors.lead,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
-    marginBottom: 3,
   },
   groupAmt: {
     fontFamily: fontMonoMedium,

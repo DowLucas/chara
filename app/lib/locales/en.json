@@ -216,7 +216,8 @@
     "done": "Done",
     "error": "Error",
     "loading": "Loading…",
-    "mainServerLabel": "Chara Server",
+    "mainServerLabel": "Chara Cloud",
+    "mainServerInfoLabel": "About Chara Cloud",
     "ok": "OK",
     "save": "Save",
     "saving": "Saving…"
@@ -542,7 +543,10 @@
     "statusReauthShort": "re-auth needed",
     "statusSettled": "settled",
     "youOweStamp": "you owe",
-    "youreOwedStamp": "you're owed"
+    "youreOwedStamp": "you're owed",
+    "mixedSignsBody": "You're owed in some currencies and still owe in others — the headline only shows one. Open the group to see the full picture.",
+    "mixedSignsLabel": "Mixed balances across currencies",
+    "mixedSignsTitle": "Mixed balances"
   },
   "impactSheet": {
     "affectedSettlements": {
@@ -694,7 +698,13 @@
     "resultEyebrow": "we found",
     "resultTitle": "Receipt breakdown",
     "retake": "Retake",
-    "useThis": "Use this"
+    "useThis": "Use this",
+    "analyzingKeepOpen": "This can take a moment — please keep the app open.",
+    "analyzingStep1": "Reading the merchant and date…",
+    "analyzingStep2": "Detecting line items…",
+    "analyzingStep3": "Extracting prices and quantities…",
+    "analyzingStep4": "Finding tax and tip…",
+    "analyzingStep5": "Adding it all up…"
   },
   "recurring": {
     "currencyLockedHelp": "{{currency}} · group currency · can't be changed later.",
@@ -780,7 +790,16 @@
     "unassignedWarning": "{{count}} item is unassigned — its amount will split equally.",
     "unassignedWarning_one": "1 item is unassigned — its amount will split equally.",
     "unassignedWarning_other": "{{count}} items are unassigned — their amounts will split equally.",
-    "unassignedWarning_plural": "{{count}} items are unassigned — their amounts will split equally."
+    "unassignedWarning_plural": "{{count}} items are unassigned — their amounts will split equally.",
+    "computedTotal": "Items + tax + tip",
+    "diff": "Off by",
+    "editItemAmount": "Edit item amount",
+    "editTax": "Edit tax",
+    "editTip": "Edit tip",
+    "editTotal": "Edit receipt total",
+    "matchItems": "Use items total",
+    "matchItemsHint": "Replace the receipt total with items + tax + tip.",
+    "receiptTotal": "Receipt total"
   },
   "scanJoin": {
     "addAccountPrompt": "This invite is on {{host}}. Add an account?",

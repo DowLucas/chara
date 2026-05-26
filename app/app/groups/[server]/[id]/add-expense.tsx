@@ -145,10 +145,23 @@ export default function AddExpenseScreen() {
 
     const items = receipt.items ?? [];
     if (items.length > 0 && applied.currency === receipt.currency) {
+      // Tax-inclusivity heuristic. On European-style receipts (and most of the
+      // rest of the world outside the US/CA), line-item prices already include
+      // VAT/sales tax — and Gemini *also* returns the tax amount as a separate
+      // field. Naively adding `items + tax + tip` then double-counts tax and
+      // produces a ~10–25% overshoot. We compare both candidate sums against
+      // the printed receipt total and pick whichever reconciles better;
+      // ties go to "tax exclusive" (the safer assumption when both fit).
+      const tax = receipt.tax_minor ?? 0;
+      const tip = receipt.tip_minor ?? 0;
+      const itemsSum = items.reduce((s, it) => s + it.total_minor, 0);
+      const inclusiveErr = Math.abs(itemsSum + tip - receipt.total_minor);
+      const exclusiveErr = Math.abs(itemsSum + tax + tip - receipt.total_minor);
+      const taxAlreadyInItems = tax > 0 && inclusiveErr < exclusiveErr;
       setScanItemsState({
         items,
-        taxMinor: receipt.tax_minor ?? 0,
-        tipMinor: receipt.tip_minor ?? 0,
+        taxMinor: taxAlreadyInItems ? 0 : tax,
+        tipMinor: tip,
         totalMinor: receipt.total_minor,
         currency: receipt.currency,
       });

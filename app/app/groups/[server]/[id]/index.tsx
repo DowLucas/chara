@@ -39,6 +39,7 @@ import { initialsOf, makeNameShortener } from '@/lib/name';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import { subscribeGroupChanged } from '@/lib/group-refresh';
 import { computeStandings, expensesInvolvingMember } from '@/lib/standings';
+import { displayHostFor, isMainHostedServer } from '@/lib/server-url';
 import { colors, fontDisplay, fontBody, fontBodyMedium, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
 
 const fmtAmount = (minor: string, currency: string, relative?: boolean) =>
@@ -682,11 +683,41 @@ export default function GroupDetailScreen() {
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>{t('groupDetail.infoServerLabel')}</Text>
-              <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="middle">
-                {(() => {
-                  try { return new URL(serverUrl).host; } catch { return serverUrl; }
-                })()}
-              </Text>
+              <View style={styles.infoValueRow}>
+                <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="middle">
+                  {displayHostFor(serverUrl, t('common.mainServerLabel'))}
+                </Text>
+                {isMainHostedServer(serverUrl) && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      // AppAlert renders inside its own <Modal>, and we're
+                      // already inside the info-card <Modal>. Nesting two
+                      // makes the alert render behind (and on iOS can wedge
+                      // touch handling). Dismiss this card first, then queue
+                      // the alert on the next frame so its open animation
+                      // doesn't collide with our close animation.
+                      setInfoOpen(false);
+                      requestAnimationFrame(() => {
+                        showAlert({
+                          title: t('common.mainServerLabel'),
+                          message: t('signIn.hosting.charaCloudInfo'),
+                          buttons: [{ key: 'ok', label: t('common.ok') }],
+                        });
+                      });
+                    }}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('common.mainServerInfoLabel')}
+                  >
+                    <Feather
+                      name="info"
+                      size={14}
+                      color={colors.lead}
+                      strokeWidth={1.5}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>{t('groupDetail.infoCurrencyLabel')}</Text>
@@ -805,6 +836,12 @@ const styles = StyleSheet.create({
     fontFamily: fontBodyMedium,
     fontSize: fontSize.bodyS,
     color: colors.graphite,
+  },
+  infoValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexShrink: 1,
   },
   hero: {
     paddingHorizontal: spacing.s5,
