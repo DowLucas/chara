@@ -9,6 +9,41 @@
     "version": "versione",
     "website": "Sito"
   },
+  "account": {
+    "deleteAll": {
+      "balanceCheckFailedBody": "Prima di eliminare dobbiamo controllare i tuoi saldi su {{servers}}. Riprova quando sei online.",
+      "balanceCheckFailedTitle": "Impossibile controllare i saldi",
+      "blockedOpenBalanceBody": "Hai ancora conti aperti su {{servers}}. Saldali in ogni gruppo prima di eliminare l'account.",
+      "blockedOpenBalanceTitle": "Impossibile eliminare l'account",
+      "body": "Questo rimuove definitivamente il tuo account e i tuoi dati da ogni server Chara collegato. Prima devi saldare i conti aperti.",
+      "confirmBody": "Il tuo account su tutti i {{count}} server collegati verrà eliminato definitivamente. Non puoi annullare l'operazione.",
+      "confirmBody_one": "Il tuo account sul {{count}} server collegato verrà eliminato definitivamente. Non puoi annullare l'operazione.",
+      "confirmBody_other": "Il tuo account su tutti i {{count}} server collegati verrà eliminato definitivamente. Non puoi annullare l'operazione.",
+      "confirmCta": "Elimina account",
+      "confirmTitle": "Eliminare l'account?",
+      "eyebrow": "zona di pericolo",
+      "summaryBlocked": "Bloccati (saldo aperto): {{count}}",
+      "summaryBlocked_one": "Bloccato (saldo aperto): {{count}}",
+      "summaryBlocked_other": "Bloccati (saldo aperto): {{count}}",
+      "summaryDeleted": "Eliminati: {{count}}",
+      "summaryDeleted_one": "Eliminato: {{count}}",
+      "summaryDeleted_other": "Eliminati: {{count}}",
+      "summaryFailed": "Errore di rete: {{count}}",
+      "summaryFailed_one": "Errore di rete: {{count}}",
+      "summaryFailed_other": "Errori di rete: {{count}}",
+      "summaryTitle": "Eliminazione completata",
+      "title": "Elimina account"
+    },
+    "deleteFromServer": {
+      "blockedBody": "Non puoi eliminare il tuo account su {{server}} finché hai conti aperti: {{balances}}.\n\nSalda i conti con gli altri membri del gruppo, poi riprova.",
+      "blockedTitle": "Prima salda i conti",
+      "body": "Elimina definitivamente il tuo account su {{server}}. Non puoi annullare l'operazione. Gli altri membri vedranno comunque le spese passate (in forma anonima).",
+      "confirmBody": "Il tuo account su {{server}} verrà eliminato definitivamente. Non puoi annullare l'operazione.",
+      "confirmCta": "Elimina account",
+      "confirmTitle": "Eliminare l'account?",
+      "title": "Elimina account su questo server"
+    }
+  },
   "accounts": {
     "add": "Aggiungi account",
     "addAnother": "Aggiungine un altro",
@@ -31,6 +66,10 @@
     "signOutAllBlockedBody": "Hai ancora conti aperti su {{hosts}}. Saldali prima di uscire da tutti gli account.",
     "signOutAllConfirmBody": "Tornerai alla schermata di accesso. I tuoi dati restano su ogni server.",
     "signOutAllConfirmTitle": "Uscire da tutti gli account?",
+    "signOutAllWarnOpenBalanceBody": "Hai ancora conti aperti su {{hosts}}. I tuoi dati restano su ogni server, ma dovrai accedere di nuovo per saldare.",
+    "signOutAllWarnOpenBalanceTitle": "Uscire con conti aperti?",
+    "signOutConfirmBody": "Tornerai alla schermata di accesso. I tuoi dati restano sul server.",
+    "signOutConfirmTitle": "Uscire da questo account?",
     "statusIncompatible": "versione non compatibile",
     "statusReauth": "accedi di nuovo",
     "title": "Account"
@@ -109,6 +148,11 @@
     "saveErrorTitle": "Errore",
     "saving": "Salvataggio…",
     "scanReceipt": "Scansiona scontrino",
+    "split": {
+      "equal": "dividi in parti uguali",
+      "exact": "dividi per importo",
+      "percentage": "dividi per percentuale"
+    },
     "splitLabel": "diviso tra",
     "splitMeta": "in parti uguali · tra {{count}}",
     "splitMethodLabel": "come dividere",
@@ -173,12 +217,14 @@
     "done": "Fatto",
     "error": "Errore",
     "loading": "Caricamento…",
+    "mainServerLabel": "Chara Server",
     "ok": "OK",
     "save": "Salva",
     "saving": "Salvataggio…"
   },
   "createGroup": {
     "body": "Qualcosa che i tuoi amici riconoscano al volo.",
+    "colorLabel": "Colore",
     "creating": "Creazione…",
     "currencyLabel": "Valuta",
     "errorTitle": "Non sono riuscito a creare il gruppo",
@@ -196,14 +242,20 @@
     "suggested": "suggerite",
     "title": "Valuta"
   },
+  "deepLink": {
+    "unknownServer": {
+      "body": "Questo link punta a un server in cui non hai effettuato l'accesso.",
+      "title": "Account sconosciuto per questo link"
+    }
+  },
   "editGroup": {
     "currencyLabel": "Valuta",
     "currencyLockedHint": "Bloccata — il gruppo ha già delle spese.",
+    "errorTitle": "Non sono riuscito a salvare",
     "errors": {
       "currencyLockedBody": "La valuta si blocca appena un gruppo ha delle spese. Crea un nuovo gruppo se ti serve un'altra valuta.",
       "currencyLockedTitle": "La valuta è bloccata"
     },
-    "errorTitle": "Non sono riuscito a salvare",
     "eyebrow": "modifica gruppo",
     "languageHint": "I titoli degli scontrini generati dall'AI saranno scritti in questa lingua per tutti i membri del gruppo.",
     "languageLabel": "Lingua",
@@ -211,6 +263,9 @@
     "namePlaceholder": "Nome del gruppo",
     "saving": "Salvataggio…",
     "submit": "Salva"
+  },
+  "expense": {
+    "paidByName": "pagato da {{name}}"
   },
   "expenseDetail": {
     "actions": {
@@ -227,9 +282,14 @@
     "eachOwes": "{{amount}} a testa",
     "editTitle": "Modifica spesa",
     "fx": {
+      "asOf": "al {{date}}",
+      "card": "tasso di cambio",
       "originalLine": "{{amount}} · {{converted}} · {{source}} {{asOf}}",
+      "paidLine": "{{original}} pagati · {{converted}} a questo tasso",
       "rateLabel": "tasso",
-      "sourceECB": "BCE"
+      "rateLine": "1 {{from}} = {{rate}} {{to}}",
+      "sourceECB": "BCE",
+      "sourceManual": "Tasso personalizzato"
     },
     "loadError": "Non riesco a caricare questa spesa.",
     "menuLabel": "Menu spesa",
@@ -259,6 +319,22 @@
     "loading": "Recupero tasso {{from}} → {{to}}…",
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
+  },
+  "groupColor": {
+    "custom": "Colore personalizzato",
+    "reset": "Ripristina predefinito",
+    "row": "Colore del gruppo",
+    "swatch": {
+      "black": "Nero inchiostro",
+      "blue": "Blu",
+      "brown": "Marrone tè",
+      "gold": "Ocra dorata",
+      "indigo": "Indaco",
+      "pink": "Rosa",
+      "purple": "Viola",
+      "teal": "Verde acqua chiaro"
+    },
+    "title": "Colore del gruppo"
   },
   "groupCreated": {
     "body": "Passa il telefono a un amico e fagli scansionare il codice.",
@@ -305,9 +381,9 @@
     "owesYou": "{{name}} ti deve",
     "paymentRevert": "Annulla",
     "paymentRevertBody": "{{from}} ha pagato {{amount}} a {{to}}. Annullando, i conti tornano come prima.",
-    "paymentReverted": "annullato",
     "paymentRevertError": "Non sono riuscito ad annullare",
     "paymentRevertTitle": "Annullare questo pagamento?",
+    "paymentReverted": "annullato",
     "paymentRow": "{{from}} → {{to}}",
     "paymentsAllSettled": "Siete tutti in pari.",
     "paymentsEmptyBody": "Qui compariranno i pagamenti tra i membri.",
@@ -323,6 +399,8 @@
     "settle": "Salda",
     "settledUp": "saldato",
     "someonePaid": "Qualcuno ha pagato",
+    "sortByAmountAsc": "Dal più basso",
+    "sortByAmountDesc": "Dal più alto",
     "sortByCreatedAt": "Data di inserimento",
     "sortByExpenseDate": "Data della spesa",
     "sortTitle": "Ordina le spese",
@@ -332,9 +410,9 @@
     "standingsEmptyBody": "Aggiungi una spesa per vedere chi deve cosa.",
     "standingsEmptyTitle": "Nessun conto aperto",
     "suggestionRow": "{{from}} → {{to}}",
+    "suggestionSettleCta": "Paga",
     "suggestionsEmpty": "Tutto saldato",
     "suggestionsEmptyBody": "Nessun pagamento da fare — siete tutti in pari.",
-    "suggestionSettleCta": "Paga",
     "suggestionsHeading": "da saldare",
     "tabOverview": "spese",
     "tabPayments": "pagamenti",
@@ -440,6 +518,14 @@
     "groupsCount": "i tuoi gruppi · {{count}}",
     "groupsCount_one": "i tuoi gruppi · {{count}}",
     "groupsCount_other": "i tuoi gruppi · {{count}}",
+    "homeNetInfoLabel": "Info su questo totale",
+    "homeNetSheetEstimated": "{{count}} voci non sono state incluse.",
+    "homeNetSheetEstimated_one": "{{count}} voce non è stata inclusa.",
+    "homeNetSheetEstimated_other": "{{count}} voci non sono state incluse.",
+    "homeNetSheetHealthy": "Tutto incluso.",
+    "homeNetSheetIntro": "Il tuo totale in tutti i gruppi, nella tua valuta principale. Cambia solo quando aggiungi o saldi spese — non quando si muovono i cambi.",
+    "homeNetSheetPartial": "{{ok}} di {{total}} account inclusi.",
+    "homeNetSheetTitle": "Info su questo totale",
     "hostChip": "su {{host}}",
     "netBalance": "saldo netto",
     "noActivity": "Nessuna attività.",
@@ -506,8 +592,8 @@
     "equals": "uguale — calcola",
     "op": {
       "+": "più",
-      "÷": "diviso",
       "×": "per",
+      "÷": "diviso",
       "−": "meno"
     },
     "placeholder": "0"
@@ -526,6 +612,15 @@
     "error": "Non sono riuscito a rimuoverlo",
     "remove": "Rimuovi"
   },
+  "languagePicker": {
+    "empty": "Nessuna lingua corrisponde.",
+    "searchPlaceholder": "Cerca per nome o codice…"
+  },
+  "legal": {
+    "eyebrow": "legale",
+    "privacyPolicy": "Informativa sulla privacy",
+    "termsOfService": "Termini di servizio"
+  },
   "members": {
     "count": "membri · {{count}}",
     "count_one": "membri · {{count}}",
@@ -535,9 +630,12 @@
     "eyebrow": "membri di",
     "ghost": "aggiunto per nome",
     "inviteCta": "Invita con QR",
+    "joined": "entrato il {{date}}",
+    "joinedWithRole": "entrato il {{date}} · {{role}}",
     "role": "ruolo",
     "roleMember": "membro",
     "roleOwner": "proprietario",
+    "roleUnknownJoin": "entrato di recente",
     "shareCta": "Condividi link",
     "shareMessage": "Vieni nel gruppo \"{{name}}\" su Chara: {{link}}",
     "you": "tu"
@@ -598,6 +696,67 @@
     "resultTitle": "Dettaglio scontrino",
     "retake": "Rifai",
     "useThis": "Usa questo"
+  },
+  "recurring": {
+    "currencyLockedHelp": "{{currency}} · valuta del gruppo · non puoi cambiarla in seguito.",
+    "deleteButton": "Elimina",
+    "editFutureOnlyNotice": "Le modifiche si applicano solo alle bollette future. Le spese passate restano invariate.",
+    "emptyBody": "Imposta affitto, internet o qualsiasi cosa si ripeta — Chara le aggiungerà per te secondo il calendario.",
+    "emptyTitle": "Ancora nessuna bolletta ricorrente",
+    "endDateLabel": "data di fine",
+    "endDateOff": "no",
+    "endDateOn": "sì",
+    "endsLabel": "finisce",
+    "eyebrow": "automazione",
+    "intervalPrefix": "ogni",
+    "listHeader": "Bollette ricorrenti",
+    "newButton": "+ Nuova bolletta ricorrente",
+    "pauseButton": "Metti in pausa",
+    "paused": {
+      "catchup_overflow": "Recupero in pausa — controlla e riprendi",
+      "group_locked": "Il gruppo è bloccato",
+      "manual": "In pausa",
+      "member_left": "{{name}} è uscito — aggiorna le divisioni per riprendere"
+    },
+    "previewEyebrow": "anteprima",
+    "previewNext": "Creerà la prossima bolletta il {{date}} alle {{time}} ({{tz}}).",
+    "previewThen": "Poi {{dates}}.",
+    "push": {
+      "expenseAutoPosted": "{{title}} · {{amount}} aggiunti in automatico · devi {{share}}",
+      "expenseAutoPostedCatchup": "{{title}} · {{amount}} aggiunti in automatico · devi {{share}} (recupero dopo periodo offline)",
+      "pausedCatchupOverflow": "{{title}} messo in pausa — siamo stati offline troppo a lungo per recuperare in sicurezza. Tocca per controllare.",
+      "pausedGroupLocked_one": "Gruppo bloccato — {{title}} non verrà aggiunto in automatico finché il gruppo non viene sbloccato. Tocca per controllare.",
+      "pausedGroupLocked_other": "Gruppo bloccato — {{title}} e altre {{extra}} bollette non verranno aggiunte in automatico finché il gruppo non viene sbloccato. Tocca per controllare.",
+      "pausedMemberLeft": "Attenzione: {{name}} ha lasciato il gruppo, quindi {{title}} non verrà aggiunto in automatico finché non aggiorni chi lo divide. Tocca per sistemare."
+    },
+    "resumeAllAfterUnlock": "Riprendi tutto",
+    "resumeAllBanner_one": "{{count}} bolletta è in pausa da quando il gruppo è stato bloccato.",
+    "resumeAllBanner_other": "{{count}} bollette sono in pausa da quando il gruppo è stato bloccato.",
+    "resumeButton": "Riprendi",
+    "saveButton": "Salva",
+    "schedule": {
+      "every_day_one": "ogni giorno",
+      "every_day_other": "ogni {{count}} giorni",
+      "every_month_one": "ogni mese",
+      "every_month_other": "ogni {{count}} mesi",
+      "every_week_one": "ogni settimana",
+      "every_week_other": "ogni {{count}} settimane",
+      "every_year_one": "ogni anno",
+      "every_year_other": "ogni {{count}} anni"
+    },
+    "scheduleEyebrow": "calendario",
+    "settingsRow": "Bollette ricorrenti",
+    "startLabel": "inizio",
+    "timeLabel": "ora",
+    "timezoneLabel": "fuso orario",
+    "unitDay_one": "giorno",
+    "unitDay_other": "giorni",
+    "unitMonth_one": "mese",
+    "unitMonth_other": "mesi",
+    "unitWeek_one": "settimana",
+    "unitWeek_other": "settimane",
+    "unitYear_one": "anno",
+    "unitYear_other": "anni"
   },
   "scanItems": {
     "assignSheetHint": "Seleziona una o più persone. Tocca di nuovo per togliere.",
@@ -688,11 +847,26 @@
     "errorBody": "Riprova.",
     "errorTitle": "Non sono riuscito a registrare il pagamento",
     "from": "da {{name}}",
+    "fxConfirm": "Salda",
+    "fxErrorAmount": "Inserisci l'importo che hai pagato davvero.",
+    "fxErrorCurrency": "Scegli una valuta valida.",
+    "fxErrorDate": "La data del tasso non è valida.",
+    "fxErrorRate": "Inserisci un tasso di cambio positivo.",
+    "fxErrorSameCurrency": "Usa i normali metodi di pagamento quando paghi nella stessa valuta.",
+    "fxErrorTitle": "Impossibile saldare ora",
+    "fxIntro": "Salda un debito di {{amount}} di {{name}} pagando in un'altra valuta. Il debito originale resta invariato; registriamo quello che hai davvero spostato.",
+    "fxLink": "Salda in un'altra valuta",
+    "fxPayLabel": "Hai pagato",
+    "fxRateAsOf": "tasso al {{date}}",
+    "fxRateError": "Impossibile recuperare un tasso. Inseriscilo manualmente.",
+    "fxRateLabel": "1 {{from}} =",
+    "fxRateLoading": "caricamento tasso…",
+    "fxTitle": "Salda in un'altra valuta",
     "instantBadge": "istantaneo",
     "manual": "Segna come pagato",
     "manualSub": "Pagato fuori dall'app",
-    "markedTitle": "Segnato come pagato",
     "markPaid": "Segna come pagato",
+    "markedTitle": "Segnato come pagato",
     "paypal": "PayPal",
     "paypalUnlinked": "Non collegato",
     "requestTitle": "Richiedi {{amount}}",
@@ -705,7 +879,9 @@
     "swishMissingPhoneBody": "{{name}} non ha ancora aggiunto un numero di cellulare svedese. Chiedigli di metterlo in Profilo → Modifica profilo, oppure usa un altro metodo.",
     "swishMissingPhoneTitle": "Non posso aprire Swish",
     "swishNote": "Swish si apre con importo e messaggio già pronti. Lo segniamo come saldato quando torni.",
+    "swishRoundingNote": "Swish accetta solo corone intere, quindi arrotondiamo {{original}} per eccesso a {{rounded}}.",
     "swishSub": "{{name}} · {{phone}}",
+    "swishTipNote": "Swish può trasferire solo corone intere, quindi invierai {{swish}}. Questo salda il tuo debito di {{debt}}; gli {{tip}} in più sono una mancia per {{name}} — non un nuovo saldo.",
     "swishUnavailableBody": "Sembra che Swish non sia installato su questo dispositivo. Usa un altro metodo, oppure installa Swish e riprova.",
     "swishUnavailableTitle": "Swish non disponibile",
     "swishUnlinked": "Non collegato",
@@ -720,6 +896,11 @@
     "vippsUnlinked": "Non collegato"
   },
   "signIn": {
+    "apple": {
+      "errorBody": "Non siamo riusciti a completare l'accesso con Apple. Riprova o usa l'email.",
+      "errorTitle": "Accesso non riuscito",
+      "noToken": "Apple non ha restituito un token di identità. Riprova."
+    },
     "checkEmail": "Controlla la mail",
     "checkEmailBody": "Ti abbiamo mandato un link magico a {{email}}. Toccalo per entrare.",
     "continueEmail": "Continua con la mail",
@@ -727,8 +908,14 @@
     "couldNotSend": "Non sono riuscito a inviare il link magico",
     "emailPlaceholder": "tua@email.com",
     "eyebrow": "accedi",
+    "google": {
+      "errorBody": "Non siamo riusciti a completare l'accesso con Google. Riprova o usa l'email.",
+      "errorTitle": "Accesso non riuscito",
+      "noToken": "Google non ha restituito un token di identità. Riprova."
+    },
     "headline": "Dividi.\nSalda.\nFinita lì.",
     "hostedBy": "ospitato da chara.app",
+    "legalFooter": "Continuando accetti i nostri <terms>Termini di servizio</terms> e la <privacy>Informativa sulla privacy</privacy>.",
     "sending": "Invio…",
     "useMyServer": "usa il mio server →"
   },
@@ -738,6 +925,20 @@
     "chooseGroup": "Scegli un gruppo",
     "home": "Home",
     "you": "Profilo"
+  },
+  "waitlist": {
+    "beta": "Chara è in beta pubblica",
+    "body": "Stiamo limitando le scansioni delle ricevute mentre definiamo i piani di hosting. Lasciaci la tua email e ti avviseremo quando arriverà più capacità.",
+    "dismiss": "Non ora",
+    "emailLabel": "Indirizzo email",
+    "emailPlaceholder": "tu@esempio.com",
+    "errorBadEmail": "Inserisci un indirizzo email valido.",
+    "errorGeneric": "Impossibile registrarti. Riprova.",
+    "resetsAt": "Le scansioni gratuite si azzerano il {{date}}.",
+    "selfHostHint": "Oppure auto-ospita Chara per avere tutto senza limiti",
+    "submit": "Avvisami",
+    "success": "Grazie — ti faremo sapere.",
+    "title": "Hai usato le tue {{cap}} scansioni gratuite di questo mese"
   },
   "you": {
     "about": "Info sull'app",
@@ -767,6 +968,15 @@
     "faceIdUnavailableBody": "Il tuo dispositivo non supporta la biometria, oppure non ne hai registrata nessuna.",
     "faceIdUnavailableShort": "Non disponibile su questo dispositivo",
     "faceIdUnavailableTitle": "Face ID non disponibile",
+    "homeCurrency": "Valuta principale",
+    "language": "Lingua",
+    "languageAuto": "Automatica",
+    "openSource": {
+      "body": "Stai usando chara.app — la nostra beta ospitata. L'app è gratuita e open source. Puoi auto-ospitarla sulla tua macchina, senza limiti.",
+      "eyebrow": "chara è open source",
+      "githubLabel": "Codice sorgente su GitHub",
+      "selfHostLabel": "Documentazione auto-hosting"
+    },
     "phoneLabel": "telefono",
     "phoneMissing": "non impostato",
     "rateAppStore": "Valutaci sull'App Store",
@@ -774,7 +984,6 @@
     "rateStore": "Valutaci",
     "rateUnavailableBody": "Chara non è ancora sugli store.",
     "rateUnavailableTitle": "Non ancora disponibile",
-    "language": "Lingua",
     "replayOnboarding": "Rivedi l'onboarding",
     "settingsEyebrow": "impostazioni",
     "shareMessage": "Divido le spese con Chara — provala anche tu: https://chara.app",

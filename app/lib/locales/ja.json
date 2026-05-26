@@ -9,6 +9,41 @@
     "version": "バージョン",
     "website": "ウェブサイト"
   },
+  "account": {
+    "deleteAll": {
+      "balanceCheckFailedBody": "削除する前に{{servers}}の残高を確認する必要があります。オンライン状態で再度お試しください。",
+      "balanceCheckFailedTitle": "残高を確認できません",
+      "blockedOpenBalanceBody": "{{servers}}に未精算の残高があります。アカウントを削除する前に、各グループで精算してください。",
+      "blockedOpenBalanceTitle": "アカウントを削除できません",
+      "body": "リンクされたすべてのCharaサーバーから、アカウントとデータが完全に削除されます。未精算の残高は先に精算する必要があります。",
+      "confirmBody": "リンクされた{{count}}件すべてのサーバーのアカウントが完全に削除されます。この操作は取り消せません。",
+      "confirmBody_one": "リンクされた{{count}}件すべてのサーバーのアカウントが完全に削除されます。この操作は取り消せません。",
+      "confirmBody_other": "リンクされた{{count}}件すべてのサーバーのアカウントが完全に削除されます。この操作は取り消せません。",
+      "confirmCta": "アカウントを削除",
+      "confirmTitle": "アカウントを削除しますか？",
+      "eyebrow": "危険な操作",
+      "summaryBlocked": "ブロック中（未精算の残高）: {{count}}",
+      "summaryBlocked_one": "ブロック中（未精算の残高）: {{count}}",
+      "summaryBlocked_other": "ブロック中（未精算の残高）: {{count}}",
+      "summaryDeleted": "削除済み: {{count}}",
+      "summaryDeleted_one": "削除済み: {{count}}",
+      "summaryDeleted_other": "削除済み: {{count}}",
+      "summaryFailed": "ネットワークエラー: {{count}}",
+      "summaryFailed_one": "ネットワークエラー: {{count}}",
+      "summaryFailed_other": "ネットワークエラー: {{count}}",
+      "summaryTitle": "削除完了",
+      "title": "アカウントを削除"
+    },
+    "deleteFromServer": {
+      "blockedBody": "{{server}}に未精算の残高があるため、アカウントを削除できません: {{balances}}。\n\n他のメンバーと精算してから、もう一度お試しください。",
+      "blockedTitle": "先に残高を精算してください",
+      "body": "{{server}}のアカウントを完全に削除します。この操作は取り消せません。他のメンバーには過去の支出が匿名で表示され続けます。",
+      "confirmBody": "{{server}}のアカウントが完全に削除されます。この操作は取り消せません。",
+      "confirmCta": "アカウントを削除",
+      "confirmTitle": "アカウントを削除しますか？",
+      "title": "このサーバーのアカウントを削除"
+    }
+  },
   "accounts": {
     "add": "アカウントを追加",
     "addAnother": "別のアカウントを追加",
@@ -31,6 +66,10 @@
     "signOutAllBlockedBody": "{{hosts}}に未精算の残高があります。精算してからサインアウトしてください。",
     "signOutAllConfirmBody": "サインイン画面に戻ります。データは各サーバーに残ります。",
     "signOutAllConfirmTitle": "すべてのアカウントからサインアウトしますか？",
+    "signOutAllWarnOpenBalanceBody": "{{hosts}}に未精算の残高があります。データは各サーバーに残りますが、精算するには再度サインインする必要があります。",
+    "signOutAllWarnOpenBalanceTitle": "未精算のままサインアウトしますか？",
+    "signOutConfirmBody": "サインイン画面に戻ります。データはサーバーに残ります。",
+    "signOutConfirmTitle": "このアカウントからサインアウトしますか？",
     "statusIncompatible": "バージョン不一致",
     "statusReauth": "再認証が必要",
     "title": "アカウント"
@@ -109,6 +148,11 @@
     "saveErrorTitle": "エラー",
     "saving": "保存中…",
     "scanReceipt": "レシートをスキャン",
+    "split": {
+      "equal": "均等に分割",
+      "exact": "金額で分割",
+      "percentage": "パーセントで分割"
+    },
     "splitLabel": "分割対象",
     "splitMeta": "均等・{{count}}人で分割",
     "splitMethodLabel": "分割方法",
@@ -173,12 +217,14 @@
     "done": "完了",
     "error": "エラー",
     "loading": "読み込み中…",
+    "mainServerLabel": "Charaサーバー",
     "ok": "OK",
     "save": "保存",
     "saving": "保存中…"
   },
   "createGroup": {
     "body": "メンバーがすぐに分かる名前にしましょう。",
+    "colorLabel": "カラー",
     "creating": "作成中…",
     "currencyLabel": "通貨",
     "errorTitle": "グループを作成できませんでした",
@@ -196,14 +242,20 @@
     "suggested": "おすすめ",
     "title": "通貨"
   },
+  "deepLink": {
+    "unknownServer": {
+      "body": "このリンクはサインインしていないサーバーを指しています。",
+      "title": "このリンクのアカウントが不明です"
+    }
+  },
   "editGroup": {
     "currencyLabel": "通貨",
     "currencyLockedHint": "ロック中 — このグループには既に支出があります。",
+    "errorTitle": "変更を保存できませんでした",
     "errors": {
       "currencyLockedBody": "支出が登録されると通貨はロックされます。別の通貨が必要な場合は新しいグループを作成してください。",
       "currencyLockedTitle": "通貨がロックされています"
     },
-    "errorTitle": "変更を保存できませんでした",
     "eyebrow": "グループを編集",
     "languageHint": "AIが生成するレシートのタイトルは、グループ全員に対してこの言語で記載されます。",
     "languageLabel": "言語",
@@ -211,6 +263,9 @@
     "namePlaceholder": "グループ名",
     "saving": "保存中…",
     "submit": "変更を保存"
+  },
+  "expense": {
+    "paidByName": "{{name}}が支払い"
   },
   "expenseDetail": {
     "actions": {
@@ -227,9 +282,14 @@
     "eachOwes": "1人あたり{{amount}}",
     "editTitle": "支出を編集",
     "fx": {
+      "asOf": "{{date}}時点",
+      "card": "為替レート",
       "originalLine": "{{amount}}・{{converted}}・{{source}} {{asOf}}",
+      "paidLine": "{{original}}支払い・このレートで{{converted}}",
       "rateLabel": "レート",
-      "sourceECB": "ECB"
+      "rateLine": "1 {{from}} = {{rate}} {{to}}",
+      "sourceECB": "ECB",
+      "sourceManual": "カスタムレート"
     },
     "loadError": "この支出を読み込めませんでした。",
     "menuLabel": "支出メニュー",
@@ -259,6 +319,22 @@
     "loading": "{{from}}→{{to}}のレートを取得中…",
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
+  },
+  "groupColor": {
+    "custom": "カスタムカラー",
+    "reset": "デフォルトに戻す",
+    "row": "グループカラー",
+    "swatch": {
+      "black": "インクブラック",
+      "blue": "ブルー",
+      "brown": "茶色",
+      "gold": "黄土色",
+      "indigo": "藍色",
+      "pink": "ピンク",
+      "purple": "パープル",
+      "teal": "ペールティール"
+    },
+    "title": "グループカラー"
   },
   "groupCreated": {
     "body": "スマホをメンバーに渡してスキャンしてもらいましょう。",
@@ -305,9 +381,9 @@
     "owesYou": "{{name}}から受取",
     "paymentRevert": "取り消す",
     "paymentRevertBody": "{{from}}が{{to}}に{{amount}}を支払いました。取り消すと残高が元に戻ります。",
-    "paymentReverted": "取り消し済み",
     "paymentRevertError": "取り消せませんでした",
     "paymentRevertTitle": "この支払いを取り消しますか？",
+    "paymentReverted": "取り消し済み",
     "paymentRow": "{{from}} → {{to}}",
     "paymentsAllSettled": "全員精算済みです。",
     "paymentsEmptyBody": "メンバー間の精算はここに表示されます。",
@@ -323,6 +399,8 @@
     "settle": "精算",
     "settledUp": "精算済み",
     "someonePaid": "誰かが立て替え",
+    "sortByAmountAsc": "安い順",
+    "sortByAmountDesc": "高い順",
     "sortByCreatedAt": "追加日",
     "sortByExpenseDate": "支出日",
     "sortTitle": "支出の並び替え",
@@ -332,9 +410,9 @@
     "standingsEmptyBody": "支出を追加すると、誰が誰にいくら払うかが表示されます。",
     "standingsEmptyTitle": "残高なし",
     "suggestionRow": "{{from}} → {{to}}",
+    "suggestionSettleCta": "支払う",
     "suggestionsEmpty": "すべて精算済み",
     "suggestionsEmptyBody": "支払いは不要。全員チャラです。",
-    "suggestionSettleCta": "支払う",
     "suggestionsHeading": "精算予定",
     "tabOverview": "支出",
     "tabPayments": "支払い",
@@ -440,6 +518,14 @@
     "groupsCount": "グループ・{{count}}件",
     "groupsCount_one": "グループ・{{count}}件",
     "groupsCount_other": "グループ・{{count}}件",
+    "homeNetInfoLabel": "この合計について",
+    "homeNetSheetEstimated": "{{count}}件は含められませんでした。",
+    "homeNetSheetEstimated_one": "{{count}}件は含められませんでした。",
+    "homeNetSheetEstimated_other": "{{count}}件は含められませんでした。",
+    "homeNetSheetHealthy": "すべて含まれています。",
+    "homeNetSheetIntro": "すべてのグループにわたる合計を、ホーム通貨で表示します。支出を追加または精算したときのみ変動し、為替レートの変動では変わりません。",
+    "homeNetSheetPartial": "{{total}}件中{{ok}}件のアカウントが含まれています。",
+    "homeNetSheetTitle": "この合計について",
     "hostChip": "{{host}}",
     "netBalance": "純残高",
     "noActivity": "まだ活動はありません",
@@ -506,8 +592,8 @@
     "equals": "イコール — 計算",
     "op": {
       "+": "プラス",
-      "÷": "割る",
       "×": "掛ける",
+      "÷": "割る",
       "−": "マイナス"
     },
     "placeholder": "0"
@@ -526,6 +612,15 @@
     "error": "メンバーを削除できませんでした",
     "remove": "削除"
   },
+  "languagePicker": {
+    "empty": "一致する言語はありません。",
+    "searchPlaceholder": "名前またはコードで検索…"
+  },
+  "legal": {
+    "eyebrow": "法的情報",
+    "privacyPolicy": "プライバシーポリシー",
+    "termsOfService": "利用規約"
+  },
   "members": {
     "count": "メンバー · {{count}}",
     "count_one": "メンバー・{{count}}人",
@@ -535,9 +630,12 @@
     "eyebrow": "メンバー",
     "ghost": "名前で追加",
     "inviteCta": "QRコードで招待する",
+    "joined": "{{date}}に参加",
+    "joinedWithRole": "{{date}}に参加・{{role}}",
     "role": "役割",
     "roleMember": "メンバー",
     "roleOwner": "オーナー",
+    "roleUnknownJoin": "最近参加",
     "shareCta": "リンクを共有",
     "shareMessage": "Charaで「{{name}}」に参加しよう：{{link}}",
     "you": "自分"
@@ -598,6 +696,67 @@
     "resultTitle": "レシートの内訳",
     "retake": "撮り直す",
     "useThis": "これを使う"
+  },
+  "recurring": {
+    "currencyLockedHelp": "{{currency}}・グループ通貨・後から変更できません。",
+    "deleteButton": "削除",
+    "editFutureOnlyNotice": "変更は今後の請求にのみ適用されます。過去の支出はそのまま残ります。",
+    "emptyBody": "家賃やインターネット料金など、繰り返し発生するものを設定すれば、Charaが予定どおりに自動で追加します。",
+    "emptyTitle": "繰り返し請求はまだありません",
+    "endDateLabel": "終了日",
+    "endDateOff": "オフ",
+    "endDateOn": "オン",
+    "endsLabel": "終了",
+    "eyebrow": "自動化",
+    "intervalPrefix": "毎",
+    "listHeader": "繰り返し請求",
+    "newButton": "+ 新しい繰り返し請求",
+    "pauseButton": "一時停止",
+    "paused": {
+      "catchup_overflow": "キャッチアップを一時停止中 — 確認して再開してください",
+      "group_locked": "グループがロックされています",
+      "manual": "一時停止中",
+      "member_left": "{{name}}が退出しました — 分割を更新して再開してください"
+    },
+    "previewEyebrow": "プレビュー",
+    "previewNext": "次の請求を{{date}} {{time}}（{{tz}}）に作成します。",
+    "previewThen": "その後 {{dates}}。",
+    "push": {
+      "expenseAutoPosted": "{{title}}・{{amount}}を自動追加・あなたの負担額は{{share}}",
+      "expenseAutoPostedCatchup": "{{title}}・{{amount}}を自動追加・あなたの負担額は{{share}}（オフライン後のキャッチアップ）",
+      "pausedCatchupOverflow": "{{title}}を自動的に一時停止しました — オフライン期間が長すぎて、安全にキャッチアップできません。タップして確認してください。",
+      "pausedGroupLocked_one": "グループがロックされています — グループのロックが解除されるまで、{{title}}は自動追加されません。タップして確認してください。",
+      "pausedGroupLocked_other": "グループがロックされています — グループのロックが解除されるまで、{{title}}と他{{extra}}件の請求は自動追加されません。タップして確認してください。",
+      "pausedMemberLeft": "お知らせ: {{name}}がグループから退出したため、分割対象を更新するまで{{title}}は自動追加されません。タップして修正してください。"
+    },
+    "resumeAllAfterUnlock": "すべて再開",
+    "resumeAllBanner_one": "グループがロックされてから{{count}}件の請求が一時停止中です。",
+    "resumeAllBanner_other": "グループがロックされてから{{count}}件の請求が一時停止中です。",
+    "resumeButton": "再開",
+    "saveButton": "保存",
+    "schedule": {
+      "every_day_one": "毎日",
+      "every_day_other": "{{count}}日ごと",
+      "every_month_one": "毎月",
+      "every_month_other": "{{count}}か月ごと",
+      "every_week_one": "毎週",
+      "every_week_other": "{{count}}週間ごと",
+      "every_year_one": "毎年",
+      "every_year_other": "{{count}}年ごと"
+    },
+    "scheduleEyebrow": "スケジュール",
+    "settingsRow": "繰り返し請求",
+    "startLabel": "開始",
+    "timeLabel": "時刻",
+    "timezoneLabel": "タイムゾーン",
+    "unitDay_one": "日",
+    "unitDay_other": "日",
+    "unitMonth_one": "か月",
+    "unitMonth_other": "か月",
+    "unitWeek_one": "週間",
+    "unitWeek_other": "週間",
+    "unitYear_one": "年",
+    "unitYear_other": "年"
   },
   "scanItems": {
     "assignSheetHint": "1人以上を選択。もう一度タップで解除。",
@@ -688,11 +847,26 @@
     "errorBody": "もう一度お試しください。",
     "errorTitle": "精算を記録できませんでした",
     "from": "{{name}}から",
+    "fxConfirm": "精算",
+    "fxErrorAmount": "実際に支払った金額を入力してください。",
+    "fxErrorCurrency": "有効な通貨を選択してください。",
+    "fxErrorDate": "レートの日付が無効です。",
+    "fxErrorRate": "正の為替レートを入力してください。",
+    "fxErrorSameCurrency": "同じ通貨で支払う場合は、通常の支払い方法を使用してください。",
+    "fxErrorTitle": "まだ精算できません",
+    "fxIntro": "{{name}}への{{amount}}の負債を、別の通貨で支払って精算します。元の負債はそのまま残り、実際に動かした金額を記録します。",
+    "fxLink": "別の通貨で精算",
+    "fxPayLabel": "支払った金額",
+    "fxRateAsOf": "{{date}}時点のレート",
+    "fxRateError": "レートを取得できませんでした。手動で入力してください。",
+    "fxRateLabel": "1 {{from}} =",
+    "fxRateLoading": "レートを読み込み中…",
+    "fxTitle": "別の通貨で精算",
     "instantBadge": "即時",
     "manual": "支払い済みにする",
     "manualSub": "アプリ外で精算済み",
-    "markedTitle": "支払い済みに設定",
     "markPaid": "支払い済みにする",
+    "markedTitle": "支払い済みに設定",
     "paypal": "PayPal",
     "paypalUnlinked": "未連携",
     "requestTitle": "{{amount}}を請求",
@@ -705,7 +879,9 @@
     "swishMissingPhoneBody": "{{name}}はスウェーデンの携帯番号を登録していません。プロフィールで設定するよう依頼するか、別の方法を使ってください。",
     "swishMissingPhoneTitle": "Swishを開けません",
     "swishNote": "Swishが金額とメッセージを入力した状態で開きます。戻ってきた時点で精算済みになります。",
+    "swishRoundingNote": "Swishはクローナ単位でしか送金できないため、{{original}}を{{rounded}}に切り上げます。",
     "swishSub": "{{name}}・{{phone}}",
+    "swishTipNote": "Swishはクローナ単位でしか送金できないため、{{swish}}を送金します。これで{{debt}}の負債は精算され、余分な{{tip}}は{{name}}へのチップとなります — 新しい残高にはなりません。",
     "swishUnavailableBody": "このデバイスにはSwishアプリがインストールされていないようです。別の方法を使うか、Swishをインストールしてからもう一度お試しください。",
     "swishUnavailableTitle": "Swishを利用できません",
     "swishUnlinked": "未連携",
@@ -720,6 +896,11 @@
     "vippsUnlinked": "未連携"
   },
   "signIn": {
+    "apple": {
+      "errorBody": "Appleでのサインインを完了できませんでした。もう一度お試しいただくか、メールをご利用ください。",
+      "errorTitle": "サインインに失敗しました",
+      "noToken": "Appleからアイデンティティトークンが返されませんでした。もう一度お試しください。"
+    },
     "checkEmail": "メールを確認",
     "checkEmailBody": "{{email}}にマジックリンクを送信しました。タップでサインインできます。",
     "continueEmail": "メールで続ける",
@@ -727,8 +908,14 @@
     "couldNotSend": "マジックリンクを送信できませんでした",
     "emailPlaceholder": "your@email.com",
     "eyebrow": "サインイン",
+    "google": {
+      "errorBody": "Googleでのサインインを完了できませんでした。もう一度お試しいただくか、メールをご利用ください。",
+      "errorTitle": "サインインに失敗しました",
+      "noToken": "Googleからアイデンティティトークンが返されませんでした。もう一度お試しください。"
+    },
     "headline": "決着をつけよう。終わりにしよう。",
     "hostedBy": "chara.appがホスト",
+    "legalFooter": "続行することで、<terms>利用規約</terms>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます。",
     "sending": "送信中…",
     "useMyServer": "自分のサーバーを使う →"
   },
@@ -738,6 +925,20 @@
     "chooseGroup": "グループを選択",
     "home": "ホーム",
     "you": "あなた"
+  },
+  "waitlist": {
+    "beta": "Charaはパブリックベータ版です",
+    "body": "ホスティングプランを検討中のため、レシートスキャンの利用は当面制限しています。メールアドレスを登録いただければ、容量が増えた際にお知らせします。",
+    "dismiss": "今はしない",
+    "emailLabel": "メールアドレス",
+    "emailPlaceholder": "you@example.com",
+    "errorBadEmail": "有効なメールアドレスを入力してください。",
+    "errorGeneric": "登録できませんでした。もう一度お試しください。",
+    "resetsAt": "無料スキャンは{{date}}にリセットされます。",
+    "selfHostHint": "またはCharaをセルフホストすれば、すべて無制限",
+    "submit": "通知を受け取る",
+    "success": "ありがとうございます — ご連絡いたします。",
+    "title": "今月の無料レシートスキャン{{cap}}回をすべて使い切りました"
   },
   "you": {
     "about": "アプリについて",
@@ -767,6 +968,15 @@
     "faceIdUnavailableBody": "このデバイスは生体認証に対応していないか、登録されていません。",
     "faceIdUnavailableShort": "このデバイスでは利用できません",
     "faceIdUnavailableTitle": "Face IDを利用できません",
+    "homeCurrency": "ホーム通貨",
+    "language": "言語",
+    "languageAuto": "自動",
+    "openSource": {
+      "body": "現在ご利用中のchara.appは、私たちが運営するホスト型ベータ版です。アプリ自体は無料かつオープンソースで、ご自身のマシンで上限なしにセルフホストできます。",
+      "eyebrow": "charaはオープンソースです",
+      "githubLabel": "GitHubでソースを見る",
+      "selfHostLabel": "セルフホストのドキュメント"
+    },
     "phoneLabel": "電話番号",
     "phoneMissing": "未設定",
     "rateAppStore": "App Storeで評価する",
@@ -774,7 +984,6 @@
     "rateStore": "評価する",
     "rateUnavailableBody": "Charaはまだストアで公開されていません。",
     "rateUnavailableTitle": "まだ利用できません",
-    "language": "言語",
     "replayOnboarding": "オンボーディングを再生",
     "settingsEyebrow": "設定",
     "shareMessage": "Charaで割り勘してみたよ。チェックしてみて: https://chara.app",
