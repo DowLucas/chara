@@ -107,6 +107,44 @@ func TestPushToken_Delete_IsIdempotent(t *testing.T) {
 	assert.Equal(t, http.StatusNoContent, rr.Code, "deleting non-existent token must be 204, not 404")
 }
 
+// TestPushToken_Register_DoesNotHijackAcrossUsers verifies that user B
+// registering the same raw token as user A does NOT silently reassign that
+// token to B. The old behavior — ON CONFLICT (token) DO UPDATE SET user_id —
+// let an attacker who learned a victim's Expo token redirect all of the
+// victim's pushes to the attacker's device by simply submitting the token.
+// The fix scopes the conflict target to (user_id, token), so each user owns
+// their own row.
+func TestPushToken_Register_DoesNotHijackAcrossUsers(t *testing.T) {
+	env := newPushEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_hijack"), "Alice")
+	bob := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "bob_hijack"), "Bob")
+	aliceJWT := env.MintToken(t, alice.ID, alice.Email)
+	bobJWT := env.MintToken(t, bob.ID, bob.Email)
+
+	sharedTok := "ExponentPushToken[shared-victim-token]"
+	body := fmt.Sprintf(`{"token":%q,"platform":"ios"}`, sharedTok)
+
+	// Alice registers first.
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/me/push-token", body, aliceJWT))
+	require.Equal(t, http.StatusNoContent, rr.Code, rr.Body.String())
+
+	// Bob submits the same token (attacker scenario).
+	rr = env.Do(t, env.AuthRequest(t, "POST", "/api/me/push-token", body, bobJWT))
+	require.Equal(t, http.StatusNoContent, rr.Code, rr.Body.String())
+
+	// Both users must still own their own row — Alice's must NOT have been
+	// reassigned to Bob.
+	aliceTokens, err := env.Queries.ListPushTokensByUser(context.Background(), alice.ID)
+	require.NoError(t, err)
+	require.Len(t, aliceTokens, 1, "Alice's push token must not be hijacked by Bob")
+	assert.Equal(t, sharedTok, aliceTokens[0].Token)
+
+	bobTokens, err := env.Queries.ListPushTokensByUser(context.Background(), bob.ID)
+	require.NoError(t, err)
+	require.Len(t, bobTokens, 1, "Bob's own registration must persist independently")
+	assert.Equal(t, sharedTok, bobTokens[0].Token)
+}
+
 func TestPushToken_Delete_DoesNotTouchOtherUsersTokens(t *testing.T) {
 	env := newPushEnv(t)
 	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice"), "Alice")

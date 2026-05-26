@@ -131,6 +131,70 @@ func TestAvatar_Upload_RejectsMimeMismatch(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 }
 
+// TestAvatar_Upload_RejectsDecompressionBomb feeds the handler a tiny PNG
+// that declares a 60000x60000 image in its IHDR. A real Go image.Decode call
+// would allocate ~14 GB for the pixel buffer (60000*60000*4) and OOM the
+// server. The handler must call image.DecodeConfig first and reject when
+// width*height exceeds the maxAvatarPixels budget BEFORE image.Decode runs.
+func TestAvatar_Upload_RejectsDecompressionBomb(t *testing.T) {
+	e := setupAvatarEnv(t)
+	bomb := makeBombPNG(60000, 60000)
+	resp := uploadAvatar(t, e.env, e.alice.Token, bomb, "image/png")
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode,
+		"giant-dimension PNG must be rejected before image.Decode allocates the pixel buffer")
+}
+
+// makeBombPNG returns a syntactically valid PNG header (signature + IHDR +
+// IEND) that declares the given dimensions. There is no IDAT, so image.Decode
+// would fail eventually — but image.DecodeConfig only needs the IHDR and
+// will happily return the declared width/height. That's exactly the bomb
+// scenario we're defending against: a 1 KB file that, if naively decoded,
+// allocates gigabytes.
+func makeBombPNG(width, height uint32) []byte {
+	put32 := func(b []byte, v uint32) {
+		b[0] = byte(v >> 24)
+		b[1] = byte(v >> 16)
+		b[2] = byte(v >> 8)
+		b[3] = byte(v)
+	}
+	out := []byte{0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A}
+	// IHDR chunk: length=13, type="IHDR", data=W(4)+H(4)+bitdepth(1)+colortype(1)+compress(1)+filter(1)+interlace(1)
+	ihdr := make([]byte, 4+4+13+4)
+	put32(ihdr[0:4], 13)
+	copy(ihdr[4:8], []byte("IHDR"))
+	put32(ihdr[8:12], width)
+	put32(ihdr[12:16], height)
+	ihdr[16] = 8 // bit depth
+	ihdr[17] = 2 // color type (RGB)
+	ihdr[18] = 0 // compression
+	ihdr[19] = 0 // filter
+	ihdr[20] = 0 // interlace
+	// CRC: real CRC32 of "IHDR"+data. Use the standard table-based crc.
+	ihdr[21], ihdr[22], ihdr[23], ihdr[24] = pngCRC(ihdr[4:21])
+	out = append(out, ihdr...)
+	// IEND
+	iend := []byte{0, 0, 0, 0, 'I', 'E', 'N', 'D', 0xAE, 0x42, 0x60, 0x82}
+	out = append(out, iend...)
+	return out
+}
+
+func pngCRC(b []byte) (byte, byte, byte, byte) {
+	// IEEE 802.3 CRC32, polynomial 0xEDB88320.
+	crc := uint32(0xFFFFFFFF)
+	for _, x := range b {
+		crc ^= uint32(x)
+		for i := 0; i < 8; i++ {
+			if crc&1 != 0 {
+				crc = (crc >> 1) ^ 0xEDB88320
+			} else {
+				crc >>= 1
+			}
+		}
+	}
+	crc ^= 0xFFFFFFFF
+	return byte(crc >> 24), byte(crc >> 16), byte(crc >> 8), byte(crc)
+}
+
 func TestAvatar_Upload_RejectsCorruptImage(t *testing.T) {
 	e := setupAvatarEnv(t)
 	// JPEG SOI marker so the content sniff says "image/jpeg" — but the

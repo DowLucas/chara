@@ -142,6 +142,32 @@ func TestReceiptScan_RejectsTooLarge(t *testing.T) {
 	require.Equal(t, http.StatusRequestEntityTooLarge, rr.Code)
 }
 
+// TestReceiptScan_RejectsHugeRawBody verifies that an outsized HTTP body is
+// rejected by MaxBytesReader BEFORE json.Decode buffers the whole payload in
+// memory. Without the MaxBytesReader wrap, a 100 MB JSON body would be fully
+// read into a string field — a trivial OOM vector. We test the boundary by
+// crafting a raw body well past MaxReceiptImageBytes*2 (the base64 cap).
+func TestReceiptScan_RejectsHugeRawBody(t *testing.T) {
+	// Build a JSON body whose `image_base64` string field is 4x the decoded
+	// cap — well past the MaxBytesReader limit of MaxReceiptImageBytes*2.
+	huge := strings.Repeat("A", MaxReceiptImageBytes*4)
+	body := `{"image_base64":"` + huge + `","mime_type":"image/jpeg"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/receipts/scan", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.ContentLength = int64(len(body))
+	rr := httptest.NewRecorder()
+	newReceiptsRouter(&fakeScanner{}).ServeHTTP(rr, req)
+	// MaxBytesReader-induced decode errors today land on the 400 "invalid
+	// JSON body" path (json.Decoder surfaces them as a generic error). A
+	// stricter 413 would be nicer but matches no existing handler shape;
+	// what we care about is that we never read past the cap. Either 400
+	// or 413 is acceptable as long as it's NOT 200 / OOM.
+	require.True(t,
+		rr.Code == http.StatusRequestEntityTooLarge || rr.Code == http.StatusBadRequest,
+		"got %d: %s", rr.Code, rr.Body.String(),
+	)
+}
+
 func TestReceiptScan_UnreadableMaps422(t *testing.T) {
 	rr := postScan(t, newReceiptsRouter(&fakeScanner{err: receipt.ErrUnreadable}), map[string]string{
 		"image_base64": base64.StdEncoding.EncodeToString([]byte{1}),
