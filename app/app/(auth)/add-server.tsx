@@ -18,7 +18,6 @@ import { IconButton } from '@/components/IconButton';
 import { publicApi } from '@/lib/api';
 import { checkProtocolCompat } from '@/lib/protocol';
 import { normalizeServerUrl } from '@/lib/server-url';
-import { legacyHostedUrl } from '@/lib/legacy-hosted-url';
 import { runDiscoveryHandshake } from '@/lib/discovery';
 import type { AccountInstanceInfo } from '@/lib/accounts-store';
 import {
@@ -49,13 +48,13 @@ export default function AddServerScreen() {
 
   const mode: Mode = (params.mode as Mode) ?? 'settings';
 
-  // Initial URL: explicit prefill always wins; otherwise, first-launch mode
-  // uses the legacy hosted URL so the existing flow is preserved.
+  // Initial URL: only an explicit prefill (e.g. from an invite link) populates
+  // the field. Self-hosted is a user-driven choice — never seed it with our
+  // hosted backend URL.
   const initialUrl = useMemo(() => {
     if (params.prefillUrl) return String(params.prefillUrl);
-    if (mode === 'first-launch') return legacyHostedUrl();
     return '';
-  }, [params.prefillUrl, mode]);
+  }, [params.prefillUrl]);
 
   const [stage, setStage] = useState<Stage>('url');
   const [urlInput, setUrlInput] = useState<string>(initialUrl);

@@ -453,10 +453,24 @@ export default function SignInScreen() {
         />
       </View>
 
-      {/* Tagline */}
+      {/* Tagline — dictionary entry hero */}
       <View style={styles.tagline}>
         <Text style={styles.eyebrow}>{eyebrow}</Text>
-        <Text style={styles.headline}>{t('signIn.headline')}</Text>
+        <Text style={styles.dictHeadword}>{t('signIn.dict.headword')}</Text>
+        <Text style={styles.dictPron}>{t('signIn.dict.pronunciation')}</Text>
+        <Text style={styles.dictPos}>{t('signIn.dict.partOfSpeech')}</Text>
+        <View style={styles.dictSense}>
+          <Text style={styles.dictSenseNum}>1</Text>
+          <Text style={styles.dictSenseText}>{t('signIn.dict.def1')}</Text>
+        </View>
+        <View style={styles.dictSense}>
+          <Text style={styles.dictSenseNum}>2</Text>
+          <Text style={styles.dictSenseText}>{t('signIn.dict.def2')}</Text>
+        </View>
+        <View style={styles.dictSense}>
+          <Text style={styles.dictSenseNum}>3</Text>
+          <Text style={styles.dictSenseText}>{t('signIn.dict.def3')}</Text>
+        </View>
       </View>
 
       {/* Server host (visible whenever a non-default server is in play). */}
@@ -467,7 +481,7 @@ export default function SignInScreen() {
         </View>
       )}
 
-      <View style={{ flex: 1 }} />
+      <View style={styles.authSpacerTop} />
 
       {/* Auth section */}
       {sent ? (
@@ -478,31 +492,6 @@ export default function SignInScreen() {
         </View>
       ) : (
         <View style={styles.authButtons}>
-          <View style={styles.emailField}>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder={t('signIn.emailPlaceholder')}
-              placeholderTextColor={colors.lead}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              style={styles.emailInput}
-            />
-          </View>
-
-          <TouchableOpacity
-            style={[styles.authBtn, styles.authBtnPrimary]}
-            onPress={handleMagicLink}
-            disabled={loading || !email.trim()}
-            activeOpacity={0.85}
-          >
-            <Feather name="mail" size={18} color={colors.fgOnAccent} />
-            <Text style={[styles.authBtnLabel, styles.authBtnLabelPrimary]}>
-              {loading ? t('signIn.sending') : t('signIn.continueEmail')}
-            </Text>
-          </TouchableOpacity>
-
           {showApple && (
             <AppleAuthentication.AppleAuthenticationButton
               buttonType={
@@ -530,29 +519,79 @@ export default function SignInScreen() {
               </Text>
             </TouchableOpacity>
           )}
-        </View>
-      )}
 
-      {/* Self-host footer — only on the first-launch path with no explicit server. */}
-      {mode === 'first-launch' && !params.server && (
-        <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
-          <View style={styles.footerRule} />
-          <View style={styles.footerRow}>
-            <Text style={styles.footerLeft}>{t('signIn.hostedBy')}</Text>
-            <TouchableOpacity
-              onPress={() => router.push('/(auth)/add-server?mode=first-launch')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.footerRight}>{t('signIn.useMyServer')}</Text>
-            </TouchableOpacity>
+          {(showApple || showGoogle) && (
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerLabel}>{t('signIn.or')}</Text>
+              <View style={styles.dividerLine} />
+            </View>
+          )}
+
+          <View style={styles.emailField}>
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              placeholder={t('signIn.emailPlaceholder')}
+              placeholderTextColor={colors.lead}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={styles.emailInput}
+            />
           </View>
+
+          <TouchableOpacity
+            style={[styles.authBtn, styles.authBtnPrimary]}
+            onPress={handleMagicLink}
+            disabled={loading || !email.trim()}
+            activeOpacity={0.85}
+          >
+            <Feather name="mail" size={18} color={colors.fgOnAccent} />
+            <Text style={[styles.authBtnLabel, styles.authBtnLabelPrimary]}>
+              {loading ? t('signIn.sending') : t('signIn.continueEmail')}
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
-      {(mode !== 'first-launch' || params.server) && (
-        <View style={{ paddingBottom: insets.bottom + spacing.s4 }} />
+
+      <View style={{ flex: 1 }} />
+
+      {/* Hosting strip — first-launch only. One-line, caption-sized. */}
+      {mode === 'first-launch' && !params.server && (
+        <View style={styles.hostingStrip}>
+          <Text style={styles.hostingStripCurrent}>
+            {t('signIn.hosting.charaCloud')}
+          </Text>
+          <TouchableOpacity
+            onPress={() =>
+              showAlert({
+                title: t('signIn.hosting.charaCloud'),
+                message: t('signIn.hosting.charaCloudInfo'),
+                buttons: [{ key: 'ok', label: t('common.ok') }],
+              })
+            }
+            activeOpacity={0.7}
+            hitSlop={8}
+          >
+            <Feather name="info" size={12} color={colors.lead} />
+          </TouchableOpacity>
+          <Text style={styles.hostingStripDot}>·</Text>
+          <TouchableOpacity
+            onPress={() => router.push('/(auth)/add-server?mode=first-launch')}
+            activeOpacity={0.7}
+            hitSlop={8}
+            style={styles.hostingStripLinkRow}
+          >
+            <Text style={styles.hostingStripLink}>
+              {t('signIn.hosting.selfHost')}
+            </Text>
+            <Feather name="chevron-right" size={12} color={colors.vermillion} />
+          </TouchableOpacity>
+        </View>
       )}
 
-      <View style={styles.legalFooter}>
+      <View style={[styles.legalFooter, { paddingBottom: insets.bottom + spacing.s3 }]}>
         <Text style={styles.legalFooterText}>
           <Trans
             i18nKey="signIn.legalFooter"
@@ -596,7 +635,7 @@ const styles = StyleSheet.create({
     height: 110,
   },
   tagline: {
-    marginTop: 56,
+    marginTop: spacing.s6,
   },
   eyebrow: {
     fontFamily: fontMono,
@@ -605,12 +644,47 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     marginBottom: 12,
   },
-  headline: {
+  dictHeadword: {
     fontFamily: fontDisplay,
     fontSize: fontSize.displayL,
     letterSpacing: -1,
     lineHeight: 44,
     color: colors.graphite,
+  },
+  dictPron: {
+    fontFamily: fontMono,
+    fontSize: fontSize.bodyS,
+    color: colors.lead,
+    letterSpacing: 0.3,
+    marginTop: 6,
+  },
+  dictPos: {
+    fontFamily: fontMono,
+    fontSize: fontSize.bodyS,
+    color: colors.lead,
+    letterSpacing: 0.3,
+    fontStyle: 'italic',
+    marginTop: 2,
+    marginBottom: spacing.s2,
+  },
+  dictSense: {
+    flexDirection: 'row',
+    gap: spacing.s2,
+    marginTop: spacing.s2,
+  },
+  dictSenseNum: {
+    fontFamily: fontMono,
+    fontSize: fontSize.body,
+    color: colors.lead,
+    lineHeight: 22,
+    width: 12,
+  },
+  dictSenseText: {
+    flex: 1,
+    fontFamily: fontBody,
+    fontSize: fontSize.body,
+    color: colors.graphite,
+    lineHeight: 22,
   },
   serverRow: {
     flexDirection: 'row',
@@ -690,28 +764,62 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 52,
   },
-  footer: {
-    paddingTop: spacing.s3,
+  authSpacerTop: {
+    height: spacing.s6,
   },
-  footerRule: {
-    height: 0.5,
-    backgroundColor: colors.ruleSoft,
-    marginBottom: spacing.s3,
-  },
-  footerRow: {
+  hostingStrip: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingTop: spacing.s4,
+    paddingHorizontal: spacing.s5,
   },
-  footerLeft: {
+  hostingStripLabel: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    letterSpacing: 0.3,
+  },
+  hostingStripCurrent: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.graphite,
+    letterSpacing: 0.3,
+  },
+  hostingStripDot: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
     color: colors.lead,
   },
-  footerRight: {
+  hostingStripLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  hostingStripLink: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
     color: colors.vermillion,
+    letterSpacing: 0.3,
+    textDecorationLine: 'underline',
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.s2,
+    marginVertical: spacing.s2,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 0.5,
+    backgroundColor: colors.ruleSoft,
+  },
+  dividerLabel: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    letterSpacing: 0.3,
   },
   legalFooter: {
     paddingHorizontal: spacing.s5,
