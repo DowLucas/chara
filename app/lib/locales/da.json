@@ -9,6 +9,41 @@
     "version": "version",
     "website": "Hjemmeside"
   },
+  "account": {
+    "deleteAll": {
+      "balanceCheckFailedBody": "Vi skal tjekke dine saldi på {{servers}}, før vi kan slette. Prøv igen, når du er online.",
+      "balanceCheckFailedTitle": "Kunne ikke tjekke saldi",
+      "blockedOpenBalanceBody": "Du har stadig udestående saldi på {{servers}}. Gør op i hver gruppe, før du sletter din konto.",
+      "blockedOpenBalanceTitle": "Kan ikke slette konto",
+      "body": "Det fjerner permanent din konto og dine data fra hver tilknyttet Chara-server. Udestående saldi skal gøres op først.",
+      "confirmBody": "Din konto på alle {{count}} tilknyttede servere slettes permanent. Det kan ikke fortrydes.",
+      "confirmBody_one": "Din konto på {{count}} tilknyttet server slettes permanent. Det kan ikke fortrydes.",
+      "confirmBody_other": "Din konto på alle {{count}} tilknyttede servere slettes permanent. Det kan ikke fortrydes.",
+      "confirmCta": "Slet konto",
+      "confirmTitle": "Slet konto?",
+      "eyebrow": "farezone",
+      "summaryBlocked": "Blokeret (udestående saldo): {{count}}",
+      "summaryBlocked_one": "Blokeret (udestående saldo): {{count}}",
+      "summaryBlocked_other": "Blokeret (udestående saldo): {{count}}",
+      "summaryDeleted": "Slettet: {{count}}",
+      "summaryDeleted_one": "Slettet: {{count}}",
+      "summaryDeleted_other": "Slettet: {{count}}",
+      "summaryFailed": "Netværksfejl: {{count}}",
+      "summaryFailed_one": "Netværksfejl: {{count}}",
+      "summaryFailed_other": "Netværksfejl: {{count}}",
+      "summaryTitle": "Sletning fuldført",
+      "title": "Slet konto"
+    },
+    "deleteFromServer": {
+      "blockedBody": "Du kan ikke slette din konto på {{server}}, mens du har udestående saldi: {{balances}}.\n\nGør op med de øvrige gruppemedlemmer, og prøv igen.",
+      "blockedTitle": "Gør op først",
+      "body": "Slet din konto på {{server}} permanent. Det kan ikke fortrydes. Andre medlemmer kan stadig se tidligere udgifter (anonymiseret).",
+      "confirmBody": "Din konto på {{server}} slettes permanent. Det kan ikke fortrydes.",
+      "confirmCta": "Slet konto",
+      "confirmTitle": "Slet konto?",
+      "title": "Slet konto på denne server"
+    }
+  },
   "accounts": {
     "add": "Tilføj konto",
     "addAnother": "Tilføj endnu en",
@@ -31,6 +66,10 @@
     "signOutAllBlockedBody": "Du har stadig udestående saldi på {{hosts}}. Gør op først, før du logger ud af alt.",
     "signOutAllConfirmBody": "Du kommer tilbage til log ind-skærmen. Dine data bliver liggende på hver server.",
     "signOutAllConfirmTitle": "Log ud af alle konti?",
+    "signOutAllWarnOpenBalanceBody": "Du har stadig udestående saldi på {{hosts}}. Dine data bliver på hver server, men du skal logge ind igen for at gøre op.",
+    "signOutAllWarnOpenBalanceTitle": "Log ud med udestående saldi?",
+    "signOutConfirmBody": "Du kommer tilbage til log ind-skærmen. Dine data bliver liggende på serveren.",
+    "signOutConfirmTitle": "Log ud af denne konto?",
     "statusIncompatible": "versionskonflikt",
     "statusReauth": "log ind igen",
     "title": "Konti"
@@ -109,6 +148,11 @@
     "saveErrorTitle": "Fejl",
     "saving": "Gemmer…",
     "scanReceipt": "Scan kvittering",
+    "split": {
+      "equal": "delt ligeligt",
+      "exact": "delt efter beløb",
+      "percentage": "delt efter procent"
+    },
     "splitLabel": "delt mellem",
     "splitMeta": "ligeligt · {{count}} dele",
     "splitMethodLabel": "delingsmåde",
@@ -173,12 +217,14 @@
     "done": "Færdig",
     "error": "Fejl",
     "loading": "Henter…",
+    "mainServerLabel": "Chara-server",
     "ok": "OK",
     "save": "Gem",
     "saving": "Gemmer…"
   },
   "createGroup": {
     "body": "Noget, dine venner vil genkende.",
+    "colorLabel": "Farve",
     "creating": "Opretter…",
     "currencyLabel": "Valuta",
     "errorTitle": "Kunne ikke oprette gruppen",
@@ -196,14 +242,20 @@
     "suggested": "foreslået",
     "title": "Valuta"
   },
+  "deepLink": {
+    "unknownServer": {
+      "body": "Linket peger på en server, du ikke er logget ind på.",
+      "title": "Ukendt konto for dette link"
+    }
+  },
   "editGroup": {
     "currencyLabel": "Valuta",
     "currencyLockedHint": "Låst — gruppen har allerede udgifter.",
+    "errorTitle": "Kunne ikke gemme ændringerne",
     "errors": {
       "currencyLockedBody": "Valutaen låses, så snart en gruppe har udgifter. Opret en ny gruppe, hvis du skal bruge en anden valuta.",
       "currencyLockedTitle": "Valutaen er låst"
     },
-    "errorTitle": "Kunne ikke gemme ændringerne",
     "eyebrow": "rediger gruppe",
     "languageHint": "AI-genererede kvitteringstitler skrives på dette sprog for alle i gruppen.",
     "languageLabel": "Sprog",
@@ -211,6 +263,9 @@
     "namePlaceholder": "Gruppenavn",
     "saving": "Gemmer…",
     "submit": "Gem ændringer"
+  },
+  "expense": {
+    "paidByName": "betalt af {{name}}"
   },
   "expenseDetail": {
     "actions": {
@@ -227,9 +282,14 @@
     "eachOwes": "{{amount}} pr. person",
     "editTitle": "Rediger udgift",
     "fx": {
+      "asOf": "pr. {{date}}",
+      "card": "vekselkurs",
       "originalLine": "{{amount}} · {{converted}} · {{source}} {{asOf}}",
+      "paidLine": "{{original}} betalt · {{converted}} til denne kurs",
       "rateLabel": "kurs",
-      "sourceECB": "ECB"
+      "rateLine": "1 {{from}} = {{rate}} {{to}}",
+      "sourceECB": "ECB",
+      "sourceManual": "Egen kurs"
     },
     "loadError": "Kunne ikke hente denne udgift.",
     "menuLabel": "Udgiftsmenu",
@@ -259,6 +319,22 @@
     "loading": "Henter kurs {{from}} → {{to}}…",
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
+  },
+  "groupColor": {
+    "custom": "Brugerdefineret farve",
+    "reset": "Nulstil til standard",
+    "row": "Gruppefarve",
+    "swatch": {
+      "black": "Blæksort",
+      "blue": "Blå",
+      "brown": "Tebrun",
+      "gold": "Guldokker",
+      "indigo": "Indigo",
+      "pink": "Pink",
+      "purple": "Lilla",
+      "teal": "Bleg petrol"
+    },
+    "title": "Gruppefarve"
   },
   "groupCreated": {
     "body": "Ræk telefonen frem, og lad en ven scanne.",
@@ -305,9 +381,9 @@
     "owesYou": "{{name}} skylder dig",
     "paymentRevert": "Fortryd",
     "paymentRevertBody": "{{from}} betalte {{to}} {{amount}}. Fortryder du, ruller saldoen tilbage.",
-    "paymentReverted": "fortrudt",
     "paymentRevertError": "Kunne ikke fortryde",
     "paymentRevertTitle": "Fortryd denne betaling?",
+    "paymentReverted": "fortrudt",
     "paymentRow": "{{from}} → {{to}}",
     "paymentsAllSettled": "Alle har gjort op.",
     "paymentsEmptyBody": "Afregninger mellem jer dukker op her.",
@@ -323,6 +399,8 @@
     "settle": "Gør op",
     "settledUp": "gjort op",
     "someonePaid": "Nogen betalte",
+    "sortByAmountAsc": "Laveste først",
+    "sortByAmountDesc": "Højeste først",
     "sortByCreatedAt": "Tilføjet",
     "sortByExpenseDate": "Udgiftsdato",
     "sortTitle": "Sortér udgifter",
@@ -332,9 +410,9 @@
     "standingsEmptyBody": "Tilføj en udgift for at se, hvem der skylder hvad.",
     "standingsEmptyTitle": "Ingen saldi endnu",
     "suggestionRow": "{{from}} → {{to}}",
+    "suggestionSettleCta": "Betal",
     "suggestionsEmpty": "Alt er gjort op",
     "suggestionsEmptyBody": "Ingen betalinger nødvendige — I er kvit.",
-    "suggestionSettleCta": "Betal",
     "suggestionsHeading": "skal gøres op",
     "tabOverview": "udgifter",
     "tabPayments": "betalinger",
@@ -440,6 +518,14 @@
     "groupsCount": "dine grupper · {{count}}",
     "groupsCount_one": "dine grupper · {{count}}",
     "groupsCount_other": "dine grupper · {{count}}",
+    "homeNetInfoLabel": "Om dette beløb",
+    "homeNetSheetEstimated": "{{count}} poster kunne ikke medregnes.",
+    "homeNetSheetEstimated_one": "{{count}} post kunne ikke medregnes.",
+    "homeNetSheetEstimated_other": "{{count}} poster kunne ikke medregnes.",
+    "homeNetSheetHealthy": "Alt er medregnet.",
+    "homeNetSheetIntro": "Dit samlede beløb på tværs af alle grupper, i din hjemmevaluta. Det ændrer sig kun, når du tilføjer eller gør udgifter op — ikke når valutaer bevæger sig.",
+    "homeNetSheetPartial": "{{ok}} af {{total}} konti medregnet.",
+    "homeNetSheetTitle": "Om dette beløb",
     "hostChip": "på {{host}}",
     "netBalance": "nettosaldo",
     "noActivity": "Ingen aktivitet endnu.",
@@ -506,8 +592,8 @@
     "equals": "lig med — udregn",
     "op": {
       "+": "plus",
-      "÷": "divideret med",
       "×": "gange",
+      "÷": "divideret med",
       "−": "minus"
     },
     "placeholder": "0"
@@ -526,6 +612,15 @@
     "error": "Kunne ikke fjerne medlemmet",
     "remove": "Fjern"
   },
+  "languagePicker": {
+    "empty": "Ingen sprog matcher.",
+    "searchPlaceholder": "Søg på navn eller kode…"
+  },
+  "legal": {
+    "eyebrow": "juridisk",
+    "privacyPolicy": "Privatlivspolitik",
+    "termsOfService": "Servicevilkår"
+  },
   "members": {
     "count": "medlemmer · {{count}}",
     "count_one": "medlemmer · {{count}}",
@@ -535,9 +630,12 @@
     "eyebrow": "medlemmer af",
     "ghost": "tilføjet på navn",
     "inviteCta": "Invitér med QR",
+    "joined": "kom med {{date}}",
+    "joinedWithRole": "kom med {{date}} · {{role}}",
     "role": "rolle",
     "roleMember": "medlem",
     "roleOwner": "ejer",
+    "roleUnknownJoin": "kom med for nylig",
     "shareCta": "Del link",
     "shareMessage": "Kom med i \"{{name}}\" på Chara: {{link}}",
     "you": "dig"
@@ -598,6 +696,67 @@
     "resultTitle": "Kvitteringsoversigt",
     "retake": "Tag om",
     "useThis": "Brug den"
+  },
+  "recurring": {
+    "currencyLockedHelp": "{{currency}} · gruppevaluta · kan ikke ændres senere.",
+    "deleteButton": "Slet",
+    "editFutureOnlyNotice": "Ændringer gælder kun fremtidige regninger. Tidligere udgifter forbliver som de er.",
+    "emptyBody": "Opret husleje, internet eller noget andet, der gentages — Chara tilføjer det for dig efter planen.",
+    "emptyTitle": "Ingen tilbagevendende regninger endnu",
+    "endDateLabel": "slutdato",
+    "endDateOff": "fra",
+    "endDateOn": "til",
+    "endsLabel": "slutter",
+    "eyebrow": "automatik",
+    "intervalPrefix": "hver",
+    "listHeader": "Tilbagevendende regninger",
+    "newButton": "+ Ny tilbagevendende regning",
+    "pauseButton": "Pause",
+    "paused": {
+      "catchup_overflow": "Indhentning sat på pause — gennemgå og genoptag",
+      "group_locked": "Gruppen er låst",
+      "manual": "På pause",
+      "member_left": "{{name}} forlod gruppen — opdater fordelingen for at genoptage"
+    },
+    "previewEyebrow": "forhåndsvisning",
+    "previewNext": "Næste regning oprettes {{date}} kl. {{time}} ({{tz}}).",
+    "previewThen": "Derefter {{dates}}.",
+    "push": {
+      "expenseAutoPosted": "{{title}} · {{amount}} tilføjet automatisk · du skylder {{share}}",
+      "expenseAutoPostedCatchup": "{{title}} · {{amount}} tilføjet automatisk · du skylder {{share}} (indhentning efter offline)",
+      "pausedCatchupOverflow": "{{title}} er sat på pause automatisk — vi har været offline for længe til at indhente sikkert. Tryk for at gennemgå.",
+      "pausedGroupLocked_one": "Gruppen er låst — {{title}} tilføjes ikke automatisk, før gruppen låses op. Tryk for at gennemgå.",
+      "pausedGroupLocked_other": "Gruppen er låst — {{title}} og {{extra}} andre regninger tilføjes ikke automatisk, før gruppen låses op. Tryk for at gennemgå.",
+      "pausedMemberLeft": "Bemærk: {{name}} forlod gruppen, så {{title}} tilføjes ikke automatisk, før du opdaterer, hvem der deler den. Tryk for at rette."
+    },
+    "resumeAllAfterUnlock": "Genoptag alle",
+    "resumeAllBanner_one": "{{count}} regning er sat på pause, fra dengang gruppen blev låst.",
+    "resumeAllBanner_other": "{{count}} regninger er sat på pause, fra dengang gruppen blev låst.",
+    "resumeButton": "Genoptag",
+    "saveButton": "Gem",
+    "schedule": {
+      "every_day_one": "hver dag",
+      "every_day_other": "hver {{count}}. dag",
+      "every_month_one": "hver måned",
+      "every_month_other": "hver {{count}}. måned",
+      "every_week_one": "hver uge",
+      "every_week_other": "hver {{count}}. uge",
+      "every_year_one": "hvert år",
+      "every_year_other": "hvert {{count}}. år"
+    },
+    "scheduleEyebrow": "tidsplan",
+    "settingsRow": "Tilbagevendende regninger",
+    "startLabel": "start",
+    "timeLabel": "tidspunkt",
+    "timezoneLabel": "tidszone",
+    "unitDay_one": "dag",
+    "unitDay_other": "dage",
+    "unitMonth_one": "måned",
+    "unitMonth_other": "måneder",
+    "unitWeek_one": "uge",
+    "unitWeek_other": "uger",
+    "unitYear_one": "år",
+    "unitYear_other": "år"
   },
   "scanItems": {
     "assignSheetHint": "Vælg en eller flere. Tryk igen for at fjerne.",
@@ -688,11 +847,26 @@
     "errorBody": "Prøv igen.",
     "errorTitle": "Kunne ikke registrere afregningen",
     "from": "fra {{name}}",
+    "fxConfirm": "Gør op",
+    "fxErrorAmount": "Indtast det beløb, du faktisk betalte.",
+    "fxErrorCurrency": "Vælg en gyldig valuta.",
+    "fxErrorDate": "Kursdatoen er ikke gyldig.",
+    "fxErrorRate": "Indtast en positiv vekselkurs.",
+    "fxErrorSameCurrency": "Brug de almindelige betalingsmetoder, når du betaler i samme valuta.",
+    "fxErrorTitle": "Kan ikke gøre op endnu",
+    "fxIntro": "Indfri en gæld på {{amount}} fra {{name}} ved at betale i en anden valuta. Den oprindelige gæld forbliver uændret; vi noterer, hvad du faktisk overførte.",
+    "fxLink": "Gør op i en anden valuta",
+    "fxPayLabel": "Du betalte",
+    "fxRateAsOf": "kurs pr. {{date}}",
+    "fxRateError": "Kunne ikke hente en kurs. Indtast den manuelt.",
+    "fxRateLabel": "1 {{from}} =",
+    "fxRateLoading": "henter kurs…",
+    "fxTitle": "Gør op i en anden valuta",
     "instantBadge": "med det samme",
     "manual": "Markér som betalt",
     "manualSub": "Afregnet uden om appen",
-    "markedTitle": "Markeret som betalt",
     "markPaid": "Markér som betalt",
+    "markedTitle": "Markeret som betalt",
     "paypal": "PayPal",
     "paypalUnlinked": "Ikke tilknyttet",
     "requestTitle": "Bed om {{amount}}",
@@ -705,7 +879,9 @@
     "swishMissingPhoneBody": "{{name}} har endnu ikke tilføjet et svensk mobilnummer. Bed dem om at angive et under Profil, eller brug en anden metode.",
     "swishMissingPhoneTitle": "Kan ikke åbne Swish",
     "swishNote": "Swish åbner med beløb og besked klar. Vi markerer det som gjort op, når du kommer tilbage.",
+    "swishRoundingNote": "Swish tager kun hele kroner, så vi runder {{original}} op til {{rounded}}.",
     "swishSub": "{{name}} · {{phone}}",
+    "swishTipNote": "Swish kan kun overføre hele kroner, så du sender {{swish}}. Det indfrier din gæld på {{debt}}; de ekstra {{tip}} er drikkepenge til {{name}} — ikke en ny saldo.",
     "swishUnavailableBody": "Swish-appen ser ikke ud til at være installeret på din enhed. Brug en anden metode, eller installér Swish, og prøv igen.",
     "swishUnavailableTitle": "Swish er ikke tilgængelig",
     "swishUnlinked": "Ikke tilknyttet",
@@ -720,6 +896,11 @@
     "vippsUnlinked": "Ikke tilknyttet"
   },
   "signIn": {
+    "apple": {
+      "errorBody": "Vi kunne ikke gennemføre Log ind med Apple. Prøv igen, eller brug e-mail.",
+      "errorTitle": "Login mislykkedes",
+      "noToken": "Apple returnerede ikke et identitets-token. Prøv igen."
+    },
     "checkEmail": "Tjek din mail",
     "checkEmailBody": "Vi har sendt et magisk link til {{email}}. Tryk på det for at logge ind.",
     "continueEmail": "Fortsæt med mail",
@@ -727,8 +908,14 @@
     "couldNotSend": "Kunne ikke sende magisk link",
     "emailPlaceholder": "din@mail.dk",
     "eyebrow": "log ind",
+    "google": {
+      "errorBody": "Vi kunne ikke gennemføre Log ind med Google. Prøv igen, eller brug e-mail.",
+      "errorTitle": "Login mislykkedes",
+      "noToken": "Google returnerede ikke et identitets-token. Prøv igen."
+    },
     "headline": "Del.\nGør op.\nBliv kvit.",
     "hostedBy": "hostet af chara.app",
+    "legalFooter": "Når du fortsætter, accepterer du vores <terms>Servicevilkår</terms> og <privacy>Privatlivspolitik</privacy>.",
     "sending": "Sender…",
     "useMyServer": "brug min server →"
   },
@@ -738,6 +925,20 @@
     "chooseGroup": "Vælg en gruppe",
     "home": "Forside",
     "you": "Profil"
+  },
+  "waitlist": {
+    "beta": "Chara er i offentlig beta",
+    "body": "Vi holder kvitteringsscanninger begrænsede, mens vi finder ud af hostingplaner. Skriv din e-mail, så giver vi besked, når der kommer mere kapacitet.",
+    "dismiss": "Ikke nu",
+    "emailLabel": "E-mailadresse",
+    "emailPlaceholder": "dig@eksempel.dk",
+    "errorBadEmail": "Indtast en gyldig e-mailadresse.",
+    "errorGeneric": "Kunne ikke tilmelde dig. Prøv igen.",
+    "resetsAt": "Gratis scanninger nulstilles {{date}}.",
+    "selfHostHint": "Eller selv-host Chara for ubegrænset alt",
+    "submit": "Giv mig besked",
+    "success": "Tak — vi vender tilbage.",
+    "title": "Du har brugt dine {{cap}} gratis kvitteringsscanninger denne måned"
   },
   "you": {
     "about": "Om appen",
@@ -767,6 +968,15 @@
     "faceIdUnavailableBody": "Din enhed understøtter ikke biometrisk login, eller du har ikke sat det op.",
     "faceIdUnavailableShort": "Ikke tilgængelig på denne enhed",
     "faceIdUnavailableTitle": "Face ID er ikke tilgængelig",
+    "homeCurrency": "Hjemmevaluta",
+    "language": "Sprog",
+    "languageAuto": "Automatisk",
+    "openSource": {
+      "body": "Du bruger chara.app — vores hostede beta. Selve appen er gratis og open source. Du kan selv-hoste den på din egen maskine, uden begrænsninger.",
+      "eyebrow": "chara er open source",
+      "githubLabel": "Se kildekoden på GitHub",
+      "selfHostLabel": "Dokumentation for selv-hosting"
+    },
     "phoneLabel": "telefon",
     "phoneMissing": "ikke angivet",
     "rateAppStore": "Bedøm os i App Store",
@@ -774,7 +984,6 @@
     "rateStore": "Bedøm os",
     "rateUnavailableBody": "Chara er ikke udgivet i en butik endnu.",
     "rateUnavailableTitle": "Ikke tilgængelig endnu",
-    "language": "Sprog",
     "replayOnboarding": "Tag introen igen",
     "settingsEyebrow": "indstillinger",
     "shareMessage": "Jeg deler regninger med Chara — prøv det: https://chara.app",
