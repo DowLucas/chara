@@ -265,13 +265,16 @@ func TestGoogleNative_EmailNotVerified_Returns401(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 }
 
-func TestGoogleNative_MissingNonce_Returns400(t *testing.T) {
+// Google nonce binding is best-effort because the v16 RN SDK does not
+// surface nonce through its typed API; a missing nonce on either side is
+// logged but not fatal. Apple's stricter contract is enforced separately.
+func TestGoogleNative_MissingNonce_Allowed(t *testing.T) {
 	env, rig := newGoogleEnv(t, testGoogleClientID)
 	email := uniqueEmail(t, "googlenononce")
 	token := rig.signToken(t, validGoogleClaims(testGoogleClientID, email, "google-sub-nonce-missing"))
 	body := fmt.Sprintf(`{"identity_token":%q}`, token)
 	resp := postGoogle(t, env, body)
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
 func TestGoogleNative_MismatchedNonce_Returns401(t *testing.T) {

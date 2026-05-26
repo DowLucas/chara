@@ -81,7 +81,10 @@ type googleNativeRequest struct {
 	IdentityToken string `json:"identity_token"`
 	Name          string `json:"name"`
 	// Nonce is the raw nonce the client supplied to Google. Google echoes
-	// it back as-is in id_token.nonce. Required: missing returns 400.
+	// it back as-is in id_token.nonce. Best-effort: verified when both sides
+	// supply one (see Native). The @react-native-google-signin v16 SDK does
+	// not surface nonce through its typed JS API, so missing values are
+	// logged but not fatal.
 	Nonce string `json:"nonce"`
 }
 
@@ -120,11 +123,6 @@ func (h *GoogleAuthHandler) Native(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusUnauthorized, "invalid google token")
 		return
 	}
-	if strings.TrimSpace(req.Nonce) == "" {
-		writeError(w, http.StatusBadRequest, "missing nonce")
-		return
-	}
-
 	idToken, err := h.verifier.Verify(r.Context(), req.IdentityToken)
 	if err != nil {
 		slog.Warn("google auth: verify failed", "error", err)
@@ -145,11 +143,18 @@ func (h *GoogleAuthHandler) Native(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Google echoes the client's raw nonce back into id_token.nonce.
-	if claims.Nonce != req.Nonce {
+	// Nonce binding for Google is best-effort: @react-native-google-signin
+	// v16 doesn't surface a nonce parameter through its typed JS API, so the
+	// client may send an empty nonce or one Google never echoed back. Verify
+	// when both sides supply one; otherwise log and continue. Apple stays
+	// strict because the iOS SIWA SDK binds nonce correctly.
+	if req.Nonce != "" && claims.Nonce != "" && claims.Nonce != req.Nonce {
 		slog.Warn("google auth: nonce mismatch")
 		writeError(w, http.StatusUnauthorized, "invalid google token")
 		return
+	}
+	if req.Nonce == "" || claims.Nonce == "" {
+		slog.Warn("google auth: nonce not bound", "req_nonce_present", req.Nonce != "", "claim_nonce_present", claims.Nonce != "")
 	}
 
 	email := strings.ToLower(strings.TrimSpace(claims.Email))
