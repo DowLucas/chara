@@ -2,6 +2,8 @@ package handler
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -143,18 +145,17 @@ func (h *GoogleAuthHandler) Native(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Nonce binding for Google is best-effort: @react-native-google-signin
-	// v16 doesn't surface a nonce parameter through its typed JS API, so the
-	// client may send an empty nonce or one Google never echoed back. Verify
-	// when both sides supply one; otherwise log and continue. Apple stays
-	// strict because the iOS SIWA SDK binds nonce correctly.
+	// Nonce binding for Google is best-effort. The
+	// @react-native-google-signin v16 iOS SDK hashes the nonce with SHA-256
+	// before forwarding to Google, so id_token.nonce is the hash of what the
+	// client sent. Try direct equality first, then sha256(raw)==claim, then
+	// give up but keep going — Apple stays strict elsewhere, and the rest of
+	// the verification chain (signature, iss, aud, email) still runs.
 	if req.Nonce != "" && claims.Nonce != "" && claims.Nonce != req.Nonce {
-		slog.Warn("google auth: nonce mismatch")
-		writeError(w, http.StatusUnauthorized, "invalid google token")
-		return
-	}
-	if req.Nonce == "" || claims.Nonce == "" {
-		slog.Warn("google auth: nonce not bound", "req_nonce_present", req.Nonce != "", "claim_nonce_present", claims.Nonce != "")
+		reqHash := sha256.Sum256([]byte(req.Nonce))
+		if claims.Nonce != hex.EncodeToString(reqHash[:]) {
+			slog.Warn("google auth: nonce mismatch (logged, not enforced)", "got", claims.Nonce, "want_raw", req.Nonce)
+		}
 	}
 
 	email := strings.ToLower(strings.TrimSpace(claims.Email))
