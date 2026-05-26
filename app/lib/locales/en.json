@@ -22,6 +22,10 @@
       "confirmCta": "Delete Account",
       "confirmTitle": "Delete Account?",
       "eyebrow": "Danger zone",
+      "openBalanceWarnBody": "You still have open balances on {{servers}}. Deleting your account will forfeit these balances and you will appear as a deleted user to other group members. This cannot be undone.",
+      "openBalanceWarnCancel": "Keep account",
+      "openBalanceWarnConfirm": "Delete anyway",
+      "openBalanceWarnTitle": "You still have open balances",
       "summaryBlocked": "Blocked (outstanding balance): {{count}}",
       "summaryBlocked_one": "Blocked (outstanding balance): {{count}}",
       "summaryBlocked_other": "Blocked (outstanding balance): {{count}}",
@@ -216,8 +220,8 @@
     "done": "Done",
     "error": "Error",
     "loading": "Loading…",
-    "mainServerLabel": "Chara Cloud",
     "mainServerInfoLabel": "About Chara Cloud",
+    "mainServerLabel": "Chara Cloud",
     "ok": "OK",
     "save": "Save",
     "saving": "Saving…"
@@ -251,11 +255,11 @@
   "editGroup": {
     "currencyLabel": "Currency",
     "currencyLockedHint": "Locked — this group already has expenses.",
-    "errorTitle": "Could not save changes",
     "errors": {
       "currencyLockedBody": "Currency is locked once a group has expenses. Create a new group if you need a different currency.",
       "currencyLockedTitle": "Currency is locked"
     },
+    "errorTitle": "Could not save changes",
     "eyebrow": "edit group",
     "languageHint": "AI-generated receipt titles will be written in this language for everyone in the group.",
     "languageLabel": "Language",
@@ -381,9 +385,9 @@
     "owesYou": "{{name}} owes you",
     "paymentRevert": "Revert",
     "paymentRevertBody": "{{from}} paid {{to}} {{amount}}. Reverting puts this balance back.",
+    "paymentReverted": "reverted",
     "paymentRevertError": "Could not revert",
     "paymentRevertTitle": "Revert this payment?",
-    "paymentReverted": "reverted",
     "paymentRow": "{{from}} → {{to}}",
     "paymentsAllSettled": "Everyone's settled up.",
     "paymentsEmptyBody": "Settlements between members will show up here.",
@@ -410,9 +414,9 @@
     "standingsEmptyBody": "Add an expense to see who owes what.",
     "standingsEmptyTitle": "No standings yet",
     "suggestionRow": "{{from}} → {{to}}",
-    "suggestionSettleCta": "Pay",
     "suggestionsEmpty": "All settled up",
     "suggestionsEmptyBody": "No payments needed — everyone is square.",
+    "suggestionSettleCta": "Pay",
     "suggestionsHeading": "to settle",
     "tabOverview": "expenses",
     "tabPayments": "payments",
@@ -527,6 +531,9 @@
     "homeNetSheetPartial": "{{ok}} of {{total}} accounts included.",
     "homeNetSheetTitle": "About this total",
     "hostChip": "on {{host}}",
+    "mixedSignsBody": "You're owed in some currencies and still owe in others — the headline only shows one. Open the group to see the full picture.",
+    "mixedSignsLabel": "Mixed balances across currencies",
+    "mixedSignsTitle": "Mixed balances",
     "netBalance": "net balance",
     "noActivity": "No activity yet.",
     "noGroupsBody": "Create a group to start splitting expenses.",
@@ -543,10 +550,7 @@
     "statusReauthShort": "re-auth needed",
     "statusSettled": "settled",
     "youOweStamp": "you owe",
-    "youreOwedStamp": "you're owed",
-    "mixedSignsBody": "You're owed in some currencies and still owe in others — the headline only shows one. Open the group to see the full picture.",
-    "mixedSignsLabel": "Mixed balances across currencies",
-    "mixedSignsTitle": "Mixed balances"
+    "youreOwedStamp": "you're owed"
   },
   "impactSheet": {
     "affectedSettlements": {
@@ -595,8 +599,8 @@
     "equals": "equals — evaluate",
     "op": {
       "+": "plus",
-      "×": "times",
       "÷": "divided by",
+      "×": "times",
       "−": "minus"
     },
     "placeholder": "0"
@@ -680,6 +684,12 @@
   "receiptScanner": {
     "analyzing": "Analyzing receipt…",
     "analyzingHint": "Reading the merchant, date, and totals.",
+    "analyzingKeepOpen": "This can take a moment — please keep the app open.",
+    "analyzingStep1": "Reading the merchant and date…",
+    "analyzingStep2": "Detecting line items…",
+    "analyzingStep3": "Extracting prices and quantities…",
+    "analyzingStep4": "Finding tax and tip…",
+    "analyzingStep5": "Adding it all up…",
     "capture": "Capture receipt",
     "errorCapture": "Something went wrong taking the photo. Please try again.",
     "errorTitle": "Couldn't scan that",
@@ -698,13 +708,7 @@
     "resultEyebrow": "we found",
     "resultTitle": "Receipt breakdown",
     "retake": "Retake",
-    "useThis": "Use this",
-    "analyzingKeepOpen": "This can take a moment — please keep the app open.",
-    "analyzingStep1": "Reading the merchant and date…",
-    "analyzingStep2": "Detecting line items…",
-    "analyzingStep3": "Extracting prices and quantities…",
-    "analyzingStep4": "Finding tax and tip…",
-    "analyzingStep5": "Adding it all up…"
+    "useThis": "Use this"
   },
   "recurring": {
     "currencyLockedHelp": "{{currency}} · group currency · can't be changed later.",
@@ -772,13 +776,22 @@
     "assignSheetTitle": "Who shared this item?",
     "assignTo": "Assigned to",
     "cancel": "Cancel",
+    "computedTotal": "Items + tax + tip",
     "continue": "Use these splits",
+    "diff": "Off by",
     "done": "Done",
+    "editItemAmount": "Edit item amount",
+    "editTax": "Edit tax",
+    "editTip": "Edit tip",
+    "editTotal": "Edit receipt total",
     "everyone": "Everyone",
+    "matchItems": "Use items total",
+    "matchItemsHint": "Replace the receipt total with items + tax + tip.",
     "perPerson": "Per person",
     "qty": "× {{count}}",
     "qty_one": "× {{count}}",
     "qty_other": "× {{count}}",
+    "receiptTotal": "Receipt total",
     "shareEqually": "Share everything equally",
     "skip": "Skip — split equally",
     "subtitle": "Tap an item to assign it to people.",
@@ -790,16 +803,7 @@
     "unassignedWarning": "{{count}} item is unassigned — its amount will split equally.",
     "unassignedWarning_one": "1 item is unassigned — its amount will split equally.",
     "unassignedWarning_other": "{{count}} items are unassigned — their amounts will split equally.",
-    "unassignedWarning_plural": "{{count}} items are unassigned — their amounts will split equally.",
-    "computedTotal": "Items + tax + tip",
-    "diff": "Off by",
-    "editItemAmount": "Edit item amount",
-    "editTax": "Edit tax",
-    "editTip": "Edit tip",
-    "editTotal": "Edit receipt total",
-    "matchItems": "Use items total",
-    "matchItemsHint": "Replace the receipt total with items + tax + tip.",
-    "receiptTotal": "Receipt total"
+    "unassignedWarning_plural": "{{count}} items are unassigned — their amounts will split equally."
   },
   "scanJoin": {
     "addAccountPrompt": "This invite is on {{host}}. Add an account?",
@@ -883,8 +887,8 @@
     "instantBadge": "instant",
     "manual": "Mark as paid",
     "manualSub": "Settled outside the app",
-    "markPaid": "Mark as paid",
     "markedTitle": "Marked as paid",
+    "markPaid": "Mark as paid",
     "paypal": "PayPal",
     "paypalUnlinked": "Not linked",
     "requestTitle": "Request {{amount}}",
@@ -924,6 +928,14 @@
     "continueEmail": "Continue with email",
     "continueGoogle": "Continue with Google",
     "couldNotSend": "Could not send magic link",
+    "dict": {
+      "def1": ": even; squared up between friends",
+      "def2": ": the wiping of a small debt",
+      "def3": ": \"let's call it chara\" — let's call it even",
+      "headword": "cha·ra",
+      "partOfSpeech": "noun, from Japanese チャラ",
+      "pronunciation": "| \\ ˈtʃa-rə \\"
+    },
     "emailPlaceholder": "your@email.com",
     "eyebrow": "sign in",
     "google": {
@@ -933,17 +945,6 @@
     },
     "headline": "Split it.\nSettle it.\nCall it quits.",
     "hostedBy": "hosted by chara.app",
-    "legalFooter": "By continuing you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
-    "sending": "Sending…",
-    "useMyServer": "use my server →",
-    "dict": {
-      "def1": ": even; squared up between friends",
-      "def2": ": the wiping of a small debt",
-      "def3": ": \"let's call it chara\" — let's call it even",
-      "headword": "cha·ra",
-      "partOfSpeech": "noun, from Japanese チャラ",
-      "pronunciation": "| \\ ˈtʃa-rə \\"
-    },
     "hosting": {
       "charaCloud": "Chara Cloud",
       "charaCloudHint": "Hosted by us. Free to use.",
@@ -954,7 +955,10 @@
       "signingInOn": "Signing in on",
       "switchToSelfHost": "Use self-hosted"
     },
-    "or": "or"
+    "legalFooter": "By continuing you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
+    "or": "or",
+    "sending": "Sending…",
+    "useMyServer": "use my server →"
   },
   "tabs": {
     "activity": "Activity",
@@ -964,18 +968,18 @@
     "you": "Profile"
   },
   "waitlist": {
-    "beta": "Chara is in public beta",
-    "body": "We're keeping receipt scans limited while we figure out hosting plans. Drop your email and we'll let you know when more capacity ships.",
+    "body": "Receipt scans are rate-limited to keep service costs sustainable. Leave your email and we'll let you know when scans increase.",
     "dismiss": "Not now",
     "emailLabel": "Email address",
     "emailPlaceholder": "you@example.com",
     "errorBadEmail": "Please enter a valid email address.",
     "errorGeneric": "Couldn't sign you up. Please try again.",
-    "resetsAt": "Free scans reset {{date}}.",
+    "eyebrow": "Receipt scans",
+    "resetsAt": "Scans reset {{date}}.",
     "selfHostHint": "Or self-host Chara for unlimited everything",
     "submit": "Notify me",
     "success": "Thanks — we'll be in touch.",
-    "title": "You've used your {{cap}} free receipt scans this month"
+    "title": "You've reached this month's receipt scan limit"
   },
   "you": {
     "about": "About the app",
@@ -1009,7 +1013,7 @@
     "language": "Language",
     "languageAuto": "Automatic",
     "openSource": {
-      "body": "You're using chara.app — our hosted beta. The app itself is free and open-source. You can self-host it on your own machine, with no caps.",
+      "body": "You're using chara.app — our hosted instance. The app itself is free and open-source. You can self-host it on your own machine, with no caps.",
       "eyebrow": "chara is open source",
       "githubLabel": "View source on GitHub",
       "selfHostLabel": "Self-hosting docs"

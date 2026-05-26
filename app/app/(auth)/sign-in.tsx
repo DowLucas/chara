@@ -108,7 +108,7 @@ export default function SignInScreen() {
   // Note: we call the store's addAccount directly (not the context shim) so we
   // can pass the optional `method` analytics arg. updateAccount still comes
   // from the context to stay consistent with the rest of the file.
-  const { updateAccount } = useAccounts();
+  const { accounts, updateAccount } = useAccounts();
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -561,8 +561,12 @@ export default function SignInScreen() {
 
       <View style={{ flex: 1 }} />
 
-      {/* Hosting trigger — first-launch only. Opens a bottom-sheet selector. */}
-      {mode === 'first-launch' && !params.server && (
+      {/* Hosting trigger — only shown once the user already has at least one
+          linked account. On a truly fresh install (Apple-review path) we
+          default silently to Chara Cloud and hide the self-host option to
+          avoid guideline 4.0 confusion. Self-host stays reachable from
+          Settings → add account. */}
+      {mode === 'first-launch' && !params.server && accounts.length > 0 && (
         <TouchableOpacity
           style={styles.hostingStrip}
           activeOpacity={0.7}

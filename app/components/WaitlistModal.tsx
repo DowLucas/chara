@@ -41,7 +41,8 @@ interface Props {
   periodResetsAt?: string;
   /** Pre-fill email from the signed-in user, when known. */
   defaultEmail?: string;
-  /** The free-tier cap, used in the title copy. Spec value is 3. */
+  /** The free-tier cap. No longer rendered in title copy, but kept on the
+   *  prop for backward-compat with callers and for analytics. */
   cap: number;
   /** Called when user taps "Notify me" with a valid email. The parent runs
    *  the POST and resolves with success/failure. The modal stays visible
@@ -58,7 +59,7 @@ export function WaitlistModal({
   visible,
   periodResetsAt,
   defaultEmail,
-  cap,
+  cap: _cap,
   onSubmit,
   onDismiss,
   onSelfHostPressed,
@@ -120,8 +121,8 @@ export function WaitlistModal({
             </View>
           ) : (
             <>
-              <Text style={styles.eyebrow}>{t('waitlist.beta')}</Text>
-              <Text style={styles.title}>{t('waitlist.title', { cap })}</Text>
+              <Text style={styles.eyebrow}>{t('waitlist.eyebrow')}</Text>
+              <Text style={styles.title}>{t('waitlist.title')}</Text>
               <Text style={styles.body}>{t('waitlist.body')}</Text>
               {periodResetsAt ? (
                 <Text style={styles.resets}>
