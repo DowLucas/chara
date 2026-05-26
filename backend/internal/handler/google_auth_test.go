@@ -277,13 +277,17 @@ func TestGoogleNative_MissingNonce_Allowed(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
-func TestGoogleNative_MismatchedNonce_Returns401(t *testing.T) {
+// The @react-native-google-signin v16 SDK's nonce binding is opaque
+// (sometimes raw, sometimes SHA-256 hashed, sometimes neither depending on
+// fallback path). We log the discrepancy but accept the sign-in if the
+// rest of the token verifies. Apple stays strict.
+func TestGoogleNative_MismatchedNonce_Allowed(t *testing.T) {
 	env, rig := newGoogleEnv(t, testGoogleClientID)
 	email := uniqueEmail(t, "googlewrongnonce")
 	token := rig.signToken(t, validGoogleClaims(testGoogleClientID, email, "google-sub-nonce-bad"))
 	body := googleBodyWithNonce(token, "a-different-nonce-than-baked-in")
 	resp := postGoogle(t, env, body)
-	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
 func TestGoogleNative_NotMountedOnSelfhost(t *testing.T) {
