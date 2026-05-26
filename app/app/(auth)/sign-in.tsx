@@ -9,8 +9,11 @@ import {
   Platform,
   Image,
   Linking,
+  Modal,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
+import { markPopupClosed } from '@/lib/popup-guard';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -110,6 +113,7 @@ export default function SignInScreen() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [hostingSheetOpen, setHostingSheetOpen] = useState(false);
   const [authMethods, setAuthMethods] = useState<string[] | null>(
     account?.instance?.auth_methods ?? null,
   );
@@ -557,38 +561,23 @@ export default function SignInScreen() {
 
       <View style={{ flex: 1 }} />
 
-      {/* Hosting strip — first-launch only. One-line, caption-sized. */}
+      {/* Hosting trigger — first-launch only. Opens a bottom-sheet selector. */}
       {mode === 'first-launch' && !params.server && (
-        <View style={styles.hostingStrip}>
+        <TouchableOpacity
+          style={styles.hostingStrip}
+          activeOpacity={0.7}
+          onPress={() => setHostingSheetOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel={t('signIn.hosting.label')}
+        >
+          <Text style={styles.hostingStripLabel}>
+            {t('signIn.hosting.signingInOn')}
+          </Text>
           <Text style={styles.hostingStripCurrent}>
             {t('signIn.hosting.charaCloud')}
           </Text>
-          <TouchableOpacity
-            onPress={() =>
-              showAlert({
-                title: t('signIn.hosting.charaCloud'),
-                message: t('signIn.hosting.charaCloudInfo'),
-                buttons: [{ key: 'ok', label: t('common.ok') }],
-              })
-            }
-            activeOpacity={0.7}
-            hitSlop={8}
-          >
-            <Feather name="info" size={12} color={colors.lead} />
-          </TouchableOpacity>
-          <Text style={styles.hostingStripDot}>·</Text>
-          <TouchableOpacity
-            onPress={() => router.push('/(auth)/add-server?mode=first-launch')}
-            activeOpacity={0.7}
-            hitSlop={8}
-            style={styles.hostingStripLinkRow}
-          >
-            <Text style={styles.hostingStripLink}>
-              {t('signIn.hosting.selfHost')}
-            </Text>
-            <Feather name="chevron-right" size={12} color={colors.vermillion} />
-          </TouchableOpacity>
-        </View>
+          <Feather name="chevron-down" size={14} color={colors.lead} />
+        </TouchableOpacity>
       )}
 
       <View style={[styles.legalFooter, { paddingBottom: insets.bottom + spacing.s3 }]}>
@@ -616,7 +605,102 @@ export default function SignInScreen() {
           />
         </Text>
       </View>
+
+      <HostingSheet
+        visible={hostingSheetOpen}
+        onClose={() => setHostingSheetOpen(false)}
+        onSelectSelfHost={() => {
+          setHostingSheetOpen(false);
+          router.push('/(auth)/add-server?mode=first-launch');
+        }}
+      />
     </KeyboardAvoidingView>
+  );
+}
+
+function HostingSheet({
+  visible,
+  onClose,
+  onSelectSelfHost,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSelectSelfHost: () => void;
+}) {
+  const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
+
+  // Stamp the popup-guard on close so the trigger underneath the backdrop
+  // can't re-fire `onPress` in the same gesture that dismissed us.
+  const closeWithGuard = () => {
+    markPopupClosed();
+    onClose();
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={closeWithGuard}
+      statusBarTranslucent
+    >
+      <TouchableWithoutFeedback onPress={closeWithGuard}>
+        <View style={styles.sheetBackdrop} />
+      </TouchableWithoutFeedback>
+      <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.s3 }]}>
+        <View style={styles.sheetHeader}>
+          <Text style={styles.sheetTitle}>{t('signIn.hosting.label')}</Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.sheetOption}
+          activeOpacity={0.7}
+          onPress={closeWithGuard}
+        >
+          <View style={styles.sheetOptionIcon}>
+            <View style={styles.sheetRadioOuterSelected}>
+              <View style={styles.sheetRadioInner} />
+            </View>
+          </View>
+          <View style={styles.sheetOptionText}>
+            <Text style={styles.sheetOptionTitle}>
+              {t('signIn.hosting.charaCloud')}
+            </Text>
+            <Text style={styles.sheetOptionDesc}>
+              {t('signIn.hosting.charaCloudInfo')}
+            </Text>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.sheetOption}
+          activeOpacity={0.7}
+          onPress={onSelectSelfHost}
+        >
+          <View style={styles.sheetOptionIcon}>
+            <View style={styles.sheetRadioOuter} />
+          </View>
+          <View style={styles.sheetOptionText}>
+            <Text style={styles.sheetOptionTitle}>
+              {t('signIn.hosting.selfHost')}
+            </Text>
+            <Text style={styles.sheetOptionDesc}>
+              {t('signIn.hosting.selfHostHint')}
+            </Text>
+          </View>
+          <Feather name="chevron-right" size={16} color={colors.lead} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.sheetCancel}
+          activeOpacity={0.7}
+          onPress={closeWithGuard}
+        >
+          <Text style={styles.sheetCancelLabel}>{t('common.cancel')}</Text>
+        </TouchableOpacity>
+      </View>
+    </Modal>
   );
 }
 
@@ -787,22 +871,99 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     letterSpacing: 0.3,
   },
-  hostingStripDot: {
+  // Bottom sheet
+  sheetBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  sheet: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: colors.paper,
+    borderTopLeftRadius: 14,
+    borderTopRightRadius: 14,
+    borderTopWidth: 0.5,
+    borderColor: colors.graphite,
+    paddingTop: spacing.s2,
+    paddingHorizontal: spacing.s2,
+  },
+  sheetHeader: {
+    paddingHorizontal: spacing.s4,
+    paddingVertical: spacing.s3,
+    borderBottomWidth: 0.5,
+    borderColor: colors.ruleSoft,
+  },
+  sheetTitle: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
     color: colors.lead,
+    letterSpacing: 0.3,
   },
-  hostingStripLinkRow: {
+  sheetOption: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.s3,
+    paddingHorizontal: spacing.s4,
+    paddingVertical: spacing.s4,
+    borderBottomWidth: 0.5,
+    borderColor: colors.ruleSoft,
+  },
+  sheetOptionIcon: {
+    width: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sheetRadioOuter: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: colors.lead,
+  },
+  sheetRadioOuterSelected: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    borderColor: colors.vermillion,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sheetRadioInner: {
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    backgroundColor: colors.vermillion,
+  },
+  sheetOptionText: {
+    flex: 1,
     gap: 2,
   },
-  hostingStripLink: {
-    fontFamily: fontMono,
+  sheetOptionTitle: {
+    fontFamily: fontDisplay,
+    fontSize: fontSize.body,
+    color: colors.graphite,
+    letterSpacing: -0.2,
+  },
+  sheetOptionDesc: {
+    fontFamily: fontBody,
     fontSize: fontSize.caption,
-    color: colors.vermillion,
-    letterSpacing: 0.3,
-    textDecorationLine: 'underline',
+    color: colors.lead,
+    lineHeight: 18,
+  },
+  sheetCancel: {
+    marginTop: spacing.s2,
+    paddingVertical: spacing.s4,
+    borderRadius: 8,
+    backgroundColor: colors.bone,
+    alignItems: 'center',
+  },
+  sheetCancelLabel: {
+    fontFamily: fontBody,
+    fontSize: fontSize.body,
+    color: colors.lead,
   },
   dividerRow: {
     flexDirection: 'row',
