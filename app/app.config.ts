@@ -147,7 +147,12 @@ const config: ExpoConfig = {
     [
       'expo-camera',
       {
-        cameraPermission: 'Allow Chara to use the camera to scan group QR codes.',
+        // Must match the top-level NSCameraUsageDescription above — the
+        // expo-camera plugin overrides Info.plist at prebuild time, so a
+        // narrower string here drops the receipt-photo justification and
+        // makes the merged plist inconsistent at App Review time.
+        cameraPermission:
+          'Allow Chara to use the camera to scan group QR codes and capture receipt photos.',
       },
     ],
     [

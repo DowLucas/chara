@@ -81,7 +81,12 @@ export async function setToken(token: string): Promise<void> {
     localStorage.setItem(TOKEN_KEY, token);
     return;
   }
-  return SecureStore.setItemAsync(TOKEN_KEY, token);
+  // Scope the legacy auth-token keychain item to this device — no iCloud
+  // backup, not restorable to a different device. iOS-only option; ignored
+  // on Android and unreachable on web (handled above).
+  return SecureStore.setItemAsync(TOKEN_KEY, token, {
+    keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+  });
 }
 
 export async function clearToken(): Promise<void> {
