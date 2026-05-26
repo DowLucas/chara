@@ -9,6 +9,41 @@
     "version": "version",
     "website": "Webbplats"
   },
+  "account": {
+    "deleteAll": {
+      "balanceCheckFailedBody": "Vi behöver kolla dina saldon på {{servers}} innan kontot tas bort. Försök igen när du är uppkopplad.",
+      "balanceCheckFailedTitle": "Kunde inte hämta saldon",
+      "blockedOpenBalanceBody": "Du har fortfarande öppna saldon på {{servers}}. Gör upp dem i varje grupp innan du raderar kontot.",
+      "blockedOpenBalanceTitle": "Kan inte radera kontot",
+      "body": "Detta raderar permanent ditt konto och dina uppgifter från alla länkade Chara-servrar. Öppna saldon måste göras upp först.",
+      "confirmBody": "Ditt konto på samtliga {{count}} länkade servrar raderas permanent. Detta går inte att ångra.",
+      "confirmBody_one": "Ditt konto på den länkade servern raderas permanent. Det går inte att ångra.",
+      "confirmBody_other": "Ditt konto på alla {{count}} länkade servrar raderas permanent. Det går inte att ångra.",
+      "confirmCta": "Radera konto",
+      "confirmTitle": "Radera konto?",
+      "eyebrow": "riskzon",
+      "summaryBlocked": "Blockerade (öppet saldo): {{count}}",
+      "summaryBlocked_one": "Blockerad (öppen saldo): {{count}}",
+      "summaryBlocked_other": "Blockerade (öppen saldo): {{count}}",
+      "summaryDeleted": "Raderade: {{count}}",
+      "summaryDeleted_one": "Raderad: {{count}}",
+      "summaryDeleted_other": "Raderade: {{count}}",
+      "summaryFailed": "Nätverksfel: {{count}}",
+      "summaryFailed_one": "Nätverksfel: {{count}}",
+      "summaryFailed_other": "Nätverksfel: {{count}}",
+      "summaryTitle": "Radering klar",
+      "title": "Radera konto"
+    },
+    "deleteFromServer": {
+      "blockedBody": "Du kan inte radera ditt konto på {{server}} så länge du har öppna saldon: {{balances}}.\n\nGör upp med övriga gruppmedlemmar och försök sedan igen.",
+      "blockedTitle": "Gör upp saldon först",
+      "body": "Radera permanent ditt konto på {{server}}. Detta går inte att ångra. Andra medlemmar ser fortfarande tidigare utgifter (anonymiserade).",
+      "confirmBody": "Ditt konto på {{server}} raderas permanent. Detta går inte att ångra.",
+      "confirmCta": "Radera konto",
+      "confirmTitle": "Radera konto?",
+      "title": "Radera konto på den här servern"
+    }
+  },
   "accounts": {
     "add": "Lägg till konto",
     "addAnother": "Lägg till ett till",
@@ -31,6 +66,10 @@
     "signOutAllBlockedBody": "Du har fortfarande öppna saldon på {{hosts}}. Gör upp dem innan du loggar ut från allt.",
     "signOutAllConfirmBody": "Du kommer tillbaka till inloggningen. Dina uppgifter finns kvar på respektive server.",
     "signOutAllConfirmTitle": "Logga ut från alla konton?",
+    "signOutAllWarnOpenBalanceBody": "Du har fortfarande öppna saldon på {{hosts}}. Dina uppgifter finns kvar på respektive server, men du behöver logga in igen för att göra upp.",
+    "signOutAllWarnOpenBalanceTitle": "Logga ut med öppna saldon?",
+    "signOutConfirmBody": "Du kommer tillbaka till inloggningen. Dina uppgifter finns kvar på servern.",
+    "signOutConfirmTitle": "Logga ut från det här kontot?",
     "statusIncompatible": "versionsfel",
     "statusReauth": "logga in igen",
     "title": "Konton"
@@ -109,6 +148,11 @@
     "saveErrorTitle": "Något gick fel",
     "saving": "Sparar…",
     "scanReceipt": "Skanna kvitto",
+    "split": {
+      "equal": "delad lika",
+      "exact": "delad med belopp",
+      "percentage": "delad i procent"
+    },
     "splitLabel": "dela mellan",
     "splitMeta": "lika · {{count}} delar",
     "splitMethodLabel": "delningssätt",
@@ -173,12 +217,14 @@
     "done": "Klart",
     "error": "Något gick fel",
     "loading": "Laddar…",
+    "mainServerLabel": "Chara Server",
     "ok": "OK",
     "save": "Spara",
     "saving": "Sparar…"
   },
   "createGroup": {
     "body": "Något som dina vänner känner igen.",
+    "colorLabel": "Färg",
     "creating": "Skapar…",
     "currencyLabel": "Valuta",
     "errorTitle": "Kunde inte skapa gruppen",
@@ -188,10 +234,6 @@
     "namePlaceholder": "Lissabonresan, Lägenhet 4B, …",
     "submit": "Skapa grupp"
   },
-  "languagePicker": {
-    "searchPlaceholder": "Sök på namn eller kod…",
-    "empty": "Inga språk matchar."
-  },
   "currencyPicker": {
     "all": "alla",
     "empty": "Inga valutor matchar.",
@@ -200,14 +242,20 @@
     "suggested": "förslag",
     "title": "Valuta"
   },
+  "deepLink": {
+    "unknownServer": {
+      "body": "Den här länken pekar på en server du inte är inloggad på.",
+      "title": "Okänt konto för länken"
+    }
+  },
   "editGroup": {
     "currencyLabel": "Valuta",
     "currencyLockedHint": "Låst — gruppen har redan utgifter.",
+    "errorTitle": "Kunde inte spara ändringarna",
     "errors": {
       "currencyLockedBody": "Valutan låses när gruppen har utgifter. Skapa en ny grupp om du behöver en annan valuta.",
       "currencyLockedTitle": "Valutan är låst"
     },
-    "errorTitle": "Kunde inte spara ändringarna",
     "eyebrow": "redigera grupp",
     "languageHint": "AI-genererade kvittotitlar skrivs på det här språket för alla i gruppen.",
     "languageLabel": "Språk",
@@ -215,6 +263,9 @@
     "namePlaceholder": "Gruppnamn",
     "saving": "Sparar…",
     "submit": "Spara ändringar"
+  },
+  "expense": {
+    "paidByName": "betalt av {{name}}"
   },
   "expenseDetail": {
     "actions": {
@@ -231,9 +282,14 @@
     "eachOwes": "{{amount}} per person",
     "editTitle": "Redigera utgift",
     "fx": {
+      "asOf": "per {{date}}",
+      "card": "växelkurs",
       "originalLine": "{{amount}} · {{converted}} · {{source}} {{asOf}}",
+      "paidLine": "{{original}} betalt · {{converted}} till denna kurs",
       "rateLabel": "kurs",
-      "sourceECB": "ECB"
+      "rateLine": "1 {{from}} = {{rate}} {{to}}",
+      "sourceECB": "ECB",
+      "sourceManual": "Egen kurs"
     },
     "loadError": "Kunde inte ladda utgiften.",
     "menuLabel": "Utgiftsmeny",
@@ -263,6 +319,22 @@
     "loading": "Hämtar kurs {{from}} → {{to}}…",
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
+  },
+  "groupColor": {
+    "custom": "Egen färg",
+    "reset": "Återställ standard",
+    "row": "Gruppfärg",
+    "swatch": {
+      "black": "Bläcksvart",
+      "blue": "Blå",
+      "brown": "Tebrun",
+      "gold": "Guldockra",
+      "indigo": "Indigo",
+      "pink": "Rosa",
+      "purple": "Lila",
+      "teal": "Blekt blågrön"
+    },
+    "title": "Gruppfärg"
   },
   "groupCreated": {
     "body": "Räck telefonen till en vän och låt dem skanna.",
@@ -309,9 +381,9 @@
     "owesYou": "{{name}} är skyldig dig",
     "paymentRevert": "Ångra",
     "paymentRevertBody": "{{from}} betalade {{to}} {{amount}}. Ångrar du återställs saldot.",
-    "paymentReverted": "ångrad",
     "paymentRevertError": "Kunde inte ångra",
     "paymentRevertTitle": "Ångra betalningen?",
+    "paymentReverted": "ångrad",
     "paymentRow": "{{from}} → {{to}}",
     "paymentsAllSettled": "Alla är kvitt.",
     "paymentsEmptyBody": "Betalningar mellan medlemmar dyker upp här.",
@@ -327,6 +399,8 @@
     "settle": "Gör upp",
     "settledUp": "kvitt",
     "someonePaid": "Någon betalade",
+    "sortByAmountAsc": "Lägst först",
+    "sortByAmountDesc": "Högst först",
     "sortByCreatedAt": "Tillagd",
     "sortByExpenseDate": "Utgiftsdatum",
     "sortTitle": "Sortera utgifter",
@@ -336,9 +410,9 @@
     "standingsEmptyBody": "Lägg till en utgift för att se vem som är skyldig vad.",
     "standingsEmptyTitle": "Inga saldon ännu",
     "suggestionRow": "{{from}} → {{to}}",
+    "suggestionSettleCta": "Betala",
     "suggestionsEmpty": "Alla är kvitt",
     "suggestionsEmptyBody": "Inga betalningar behövs – alla är kvitt.",
-    "suggestionSettleCta": "Betala",
     "suggestionsHeading": "att göra upp",
     "tabOverview": "utgifter",
     "tabPayments": "betalningar",
@@ -444,6 +518,14 @@
     "groupsCount": "dina grupper · {{count}}",
     "groupsCount_one": "dina grupper · {{count}}",
     "groupsCount_other": "dina grupper · {{count}}",
+    "homeNetInfoLabel": "Om summan",
+    "homeNetSheetEstimated": "{{count}} post(er) kunde inte räknas med.",
+    "homeNetSheetEstimated_one": "1 post kunde inte räknas med.",
+    "homeNetSheetEstimated_other": "{{count}} poster kunde inte räknas med.",
+    "homeNetSheetHealthy": "Allt är inräknat.",
+    "homeNetSheetIntro": "Din totala summa över alla grupper, i din hemvaluta. Den ändras bara när du lägger till eller gör upp utgifter — inte när valutakurserna rör sig.",
+    "homeNetSheetPartial": "{{ok}} av {{total}} konton inräknade.",
+    "homeNetSheetTitle": "Om summan",
     "hostChip": "på {{host}}",
     "netBalance": "nettosaldo",
     "noActivity": "Ingen aktivitet ännu.",
@@ -510,8 +592,8 @@
     "equals": "lika med — beräkna",
     "op": {
       "+": "plus",
-      "÷": "delat med",
       "×": "gånger",
+      "÷": "delat med",
       "−": "minus"
     },
     "placeholder": "0"
@@ -530,6 +612,15 @@
     "error": "Kunde inte ta bort medlemmen",
     "remove": "Ta bort"
   },
+  "languagePicker": {
+    "empty": "Inga språk matchar.",
+    "searchPlaceholder": "Sök på namn eller kod…"
+  },
+  "legal": {
+    "eyebrow": "juridik",
+    "privacyPolicy": "Integritetspolicy",
+    "termsOfService": "Användarvillkor"
+  },
   "members": {
     "count": "medlemmar · {{count}}",
     "count_one": "medlemmar · {{count}}",
@@ -539,9 +630,12 @@
     "eyebrow": "medlemmar i",
     "ghost": "tillagd med namn",
     "inviteCta": "Bjud in via QR",
+    "joined": "med sedan {{date}}",
+    "joinedWithRole": "med sedan {{date}} · {{role}}",
     "role": "roll",
     "roleMember": "medlem",
     "roleOwner": "ägare",
+    "roleUnknownJoin": "med sedan nyligen",
     "shareCta": "Dela länk",
     "shareMessage": "Gå med i ”{{name}}” på Chara: {{link}}",
     "you": "du"
@@ -602,6 +696,67 @@
     "resultTitle": "Kvittouppdelning",
     "retake": "Ta om",
     "useThis": "Använd det här"
+  },
+  "recurring": {
+    "currencyLockedHelp": "{{currency}} · gruppens valuta · går inte att ändra senare.",
+    "deleteButton": "Ta bort",
+    "editFutureOnlyNotice": "Ändringar gäller bara framtida räkningar. Tidigare utgifter förblir som de är.",
+    "emptyBody": "Lägg in hyra, internet eller annat som återkommer — Chara lägger till det åt dig enligt schemat.",
+    "emptyTitle": "Inga återkommande räkningar ännu",
+    "endDateLabel": "slutdatum",
+    "endDateOff": "av",
+    "endDateOn": "på",
+    "endsLabel": "slutar",
+    "eyebrow": "automatik",
+    "intervalPrefix": "var",
+    "listHeader": "Återkommande räkningar",
+    "newButton": "+ Ny återkommande räkning",
+    "pauseButton": "Pausa",
+    "paused": {
+      "catchup_overflow": "Ikappkörning pausad — granska och återuppta",
+      "group_locked": "Gruppen är låst",
+      "manual": "Pausad",
+      "member_left": "{{name}} lämnade — uppdatera fördelningen för att återuppta"
+    },
+    "previewEyebrow": "förhandsvisning",
+    "previewNext": "Skapar nästa räkning den {{date}} kl {{time}} ({{tz}}).",
+    "previewThen": "Sedan {{dates}}.",
+    "push": {
+      "expenseAutoPosted": "{{title}} · {{amount}} tillagd automatiskt · din del är {{share}}",
+      "expenseAutoPostedCatchup": "{{title}} · {{amount}} tillagd automatiskt · din del är {{share}} (kör ikapp efter offline)",
+      "pausedCatchupOverflow": "{{title}} pausad automatiskt — vi har varit offline för länge för att säkert köra ikapp. Tryck för att granska.",
+      "pausedGroupLocked_one": "Gruppen är låst — {{title}} läggs inte till automatiskt förrän den låses upp. Tryck för att granska.",
+      "pausedGroupLocked_other": "Gruppen är låst — {{title}} och {{extra}} andra räkningar läggs inte till automatiskt förrän den låses upp. Tryck för att granska.",
+      "pausedMemberLeft": "Obs: {{name}} lämnade gruppen, så {{title}} läggs inte till automatiskt förrän du uppdaterar vem som delar den. Tryck för att fixa."
+    },
+    "resumeAllAfterUnlock": "Återuppta alla",
+    "resumeAllBanner_one": "{{count}} räkning är pausad sedan gruppen låstes.",
+    "resumeAllBanner_other": "{{count}} räkningar är pausade sedan gruppen låstes.",
+    "resumeButton": "Återuppta",
+    "saveButton": "Spara",
+    "schedule": {
+      "every_day_one": "varje dag",
+      "every_day_other": "var {{count}}:e dag",
+      "every_month_one": "varje månad",
+      "every_month_other": "var {{count}}:e månad",
+      "every_week_one": "varje vecka",
+      "every_week_other": "var {{count}}:e vecka",
+      "every_year_one": "varje år",
+      "every_year_other": "vart {{count}}:e år"
+    },
+    "scheduleEyebrow": "schema",
+    "settingsRow": "Återkommande räkningar",
+    "startLabel": "start",
+    "timeLabel": "tid",
+    "timezoneLabel": "tidszon",
+    "unitDay_one": "dag",
+    "unitDay_other": "dagar",
+    "unitMonth_one": "månad",
+    "unitMonth_other": "månader",
+    "unitWeek_one": "vecka",
+    "unitWeek_other": "veckor",
+    "unitYear_one": "år",
+    "unitYear_other": "år"
   },
   "scanItems": {
     "assignSheetHint": "Välj en eller flera personer. Tryck igen för att ta bort.",
@@ -692,11 +847,26 @@
     "errorBody": "Försök igen.",
     "errorTitle": "Kunde inte registrera betalningen",
     "from": "från {{name}}",
+    "fxConfirm": "Gör upp",
+    "fxErrorAmount": "Ange beloppet du faktiskt betalade.",
+    "fxErrorCurrency": "Välj en giltig valuta.",
+    "fxErrorDate": "Kursdatumet är inte giltigt.",
+    "fxErrorRate": "Ange en positiv växelkurs.",
+    "fxErrorSameCurrency": "Använd de vanliga betalmetoderna när du betalar i samma valuta.",
+    "fxErrorTitle": "Kan inte göra upp ännu",
+    "fxIntro": "Lös en skuld på {{amount}} från {{name}} genom att betala i en annan valuta. Den ursprungliga skulden förblir oförändrad; vi registrerar vad du faktiskt flyttade.",
+    "fxLink": "Gör upp i en annan valuta",
+    "fxPayLabel": "Du betalade",
+    "fxRateAsOf": "kurs per {{date}}",
+    "fxRateError": "Kunde inte hämta en kurs. Ange den manuellt.",
+    "fxRateLabel": "1 {{from}} =",
+    "fxRateLoading": "hämtar kurs…",
+    "fxTitle": "Gör upp i en annan valuta",
     "instantBadge": "direkt",
     "manual": "Markera som betald",
     "manualSub": "Uppgjort utanför appen",
-    "markedTitle": "Markerad som betald",
     "markPaid": "Markera som betald",
+    "markedTitle": "Markerad som betald",
     "paypal": "PayPal",
     "paypalUnlinked": "Inte kopplat",
     "requestTitle": "Begär {{amount}}",
@@ -709,7 +879,9 @@
     "swishMissingPhoneBody": "{{name}} har inte lagt till något mobilnummer än. Be dem fylla i ett under Profil, eller välj ett annat sätt.",
     "swishMissingPhoneTitle": "Kan inte öppna Swish",
     "swishNote": "Swish öppnas med belopp och meddelande ifyllt. Vi markerar det som uppgjort när du kommer tillbaka.",
+    "swishRoundingNote": "Swish accepterar bara hela kronor, så vi avrundar {{original}} upp till {{rounded}}.",
     "swishSub": "{{name}} · {{phone}}",
+    "swishTipNote": "Swish kan bara överföra hela kronor, så du skickar {{swish}}. Det löser din skuld på {{debt}}; överskottet {{tip}} är dricks till {{name}} — inte ett nytt saldo.",
     "swishUnavailableBody": "Swish verkar inte vara installerat på telefonen. Välj ett annat sätt, eller installera Swish och försök igen.",
     "swishUnavailableTitle": "Swish ej tillgängligt",
     "swishUnlinked": "Inte kopplat",
@@ -724,6 +896,11 @@
     "vippsUnlinked": "Inte kopplat"
   },
   "signIn": {
+    "apple": {
+      "errorBody": "Vi kunde inte slutföra Logga in med Apple. Försök igen eller använd e-post.",
+      "errorTitle": "Inloggning misslyckades",
+      "noToken": "Apple returnerade ingen identitetstoken. Försök igen."
+    },
     "checkEmail": "Kolla mejlen",
     "checkEmailBody": "Vi har skickat en länk till {{email}}. Tryck på den för att logga in.",
     "continueEmail": "Fortsätt med e-post",
@@ -731,8 +908,14 @@
     "couldNotSend": "Kunde inte skicka länken",
     "emailPlaceholder": "din@mejl.se",
     "eyebrow": "logga in",
+    "google": {
+      "errorBody": "Vi kunde inte slutföra Logga in med Google. Försök igen eller använd e-post.",
+      "errorTitle": "Inloggning misslyckades",
+      "noToken": "Google returnerade ingen identitetstoken. Försök igen."
+    },
     "headline": "Dela.\nGör upp.\nKlart.",
     "hostedBy": "drivs av chara.app",
+    "legalFooter": "Genom att fortsätta godkänner du våra <terms>Användarvillkor</terms> och vår <privacy>Integritetspolicy</privacy>.",
     "sending": "Skickar…",
     "useMyServer": "använd min server →"
   },
@@ -742,6 +925,20 @@
     "chooseGroup": "Välj en grupp",
     "home": "Hem",
     "you": "Profil"
+  },
+  "waitlist": {
+    "beta": "Chara är i öppen beta",
+    "body": "Vi håller kvittoskanningar begränsade medan vi funderar på hostingplaner. Lämna din e-post så hör vi av oss när mer kapacitet rullar ut.",
+    "dismiss": "Inte nu",
+    "emailLabel": "E-postadress",
+    "emailPlaceholder": "du@exempel.se",
+    "errorBadEmail": "Ange en giltig e-postadress.",
+    "errorGeneric": "Kunde inte registrera dig. Försök igen.",
+    "resetsAt": "Fria skanningar nollställs {{date}}.",
+    "selfHostHint": "Eller drifta Chara själv för obegränsat allt",
+    "submit": "Meddela mig",
+    "success": "Tack — vi hör av oss.",
+    "title": "Du har använt dina {{cap}} fria kvittoskanningar den här månaden"
   },
   "you": {
     "about": "Om appen",
@@ -761,8 +958,6 @@
       "uploading": "Laddar upp…"
     },
     "changeSecurityCode": "Byt säkerhetskod",
-    "language": "Språk",
-    "languageAuto": "Automatiskt",
     "codeOff": "Av",
     "codeOn": "På",
     "createSecurityCode": "Skapa säkerhetskod",
@@ -773,6 +968,15 @@
     "faceIdUnavailableBody": "Telefonen stöder inte biometri, eller så finns ingen registrerad.",
     "faceIdUnavailableShort": "Ej tillgängligt på den här telefonen",
     "faceIdUnavailableTitle": "Face ID ej tillgängligt",
+    "homeCurrency": "Hemvaluta",
+    "language": "Språk",
+    "languageAuto": "Automatiskt",
+    "openSource": {
+      "body": "Du använder chara.app — vår hostade beta. Själva appen är gratis och har öppen källkod. Du kan drifta den själv på din egen maskin, helt utan tak.",
+      "eyebrow": "chara har öppen källkod",
+      "githubLabel": "Visa källkod på GitHub",
+      "selfHostLabel": "Dokumentation för egen drift"
+    },
     "phoneLabel": "telefon",
     "phoneMissing": "ej angivet",
     "rateAppStore": "Betygsätt oss i App Store",
