@@ -7,6 +7,7 @@ import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
 import { Avatar } from '@/components/Avatar';
+import { MoneyText } from '@/components/MoneyText';
 import { Stamp } from '@/components/Stamp';
 import { useTranslation } from 'react-i18next';
 import {
@@ -229,14 +230,13 @@ export default function SettleMethodScreen() {
                 {t('settleMethod.subMeta', { group: group?.name ?? '' })}
               </Text>
             </View>
-            <Text
+            <MoneyText
               style={styles.counterAmount}
               numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.5}
-            >
-              {formattedSwishAmount}
-            </Text>
+              value={formattedSwishAmount}
+            />
           </View>
           <View style={styles.heroRule} />
           <View style={styles.awaitingBodyWrap}>
@@ -376,14 +376,13 @@ export default function SettleMethodScreen() {
               {t('settleMethod.subMeta', { group: group?.name ?? '' })}
             </Text>
           </View>
-          <Text
+          <MoneyText
             style={styles.counterAmount}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.5}
-          >
-            {formattedAmount}
-          </Text>
+            value={formattedAmount}
+          />
         </View>
         <View style={styles.heroRule} />
 

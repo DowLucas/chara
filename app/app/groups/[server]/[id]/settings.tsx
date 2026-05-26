@@ -31,6 +31,7 @@ import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
 import { GroupAvatar } from '@/components/GroupAvatar';
 import { GroupColorPicker } from '@/components/GroupColorPicker';
+import { MoneyText } from '@/components/MoneyText';
 import { Text } from '@/components/Text';
 import { DeleteGroupModal } from '@/components/DeleteGroupModal';
 import { lifecycleActionsForViewer } from '@/lib/group-settings';
@@ -414,10 +415,10 @@ export default function GroupSettingsScreen() {
                   label={t('groupSettings.stats.totalExpenses')}
                   value={String(stats.expense_count)}
                 />
-                <InfoRow
-                  label={t('groupSettings.stats.totalSpent')}
-                  value={formattedTotal}
-                />
+                <View style={styles.row}>
+                  <Text style={styles.rowLabel}>{t('groupSettings.stats.totalSpent')}</Text>
+                  <MoneyText style={styles.rowValue} numberOfLines={1} value={formattedTotal} />
+                </View>
                 {stats.top_spender && (
                   <TopSpenderRow
                     label={t('groupSettings.stats.topSpender')}
@@ -659,14 +660,13 @@ function TopSpenderRow({
         <Text style={styles.topSpenderName} numberOfLines={1}>
           {name}
         </Text>
-        <Text
+        <MoneyText
           style={styles.topSpenderAmount}
           numberOfLines={1}
           adjustsFontSizeToFit
           minimumFontScale={0.6}
-        >
-          {amount}
-        </Text>
+          value={amount}
+        />
       </View>
     </View>
   );
