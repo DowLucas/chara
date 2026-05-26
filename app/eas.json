@@ -24,7 +24,7 @@
   "submit": {
     "production": {
       "ios": {
-        "ascAppId": "TBD",
+        "ascAppId": "6773089720",
         "appleTeamId": "AV39AJYC85",
         "bundleIdentifier": "app.chara"
       }
