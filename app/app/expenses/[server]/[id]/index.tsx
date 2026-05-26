@@ -7,6 +7,7 @@ import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Avatar } from '@/components/Avatar';
 import { ActionSheet, ActionSheetOption, openNativeActionSheet } from '@/components/ActionSheet';
+import { MoneyText } from '@/components/MoneyText';
 import { SettlementImpactSheet } from '@/components/SettlementImpactSheet';
 import { useTranslation } from 'react-i18next';
 import {
@@ -204,7 +205,7 @@ export default function ExpenseDetailScreen() {
           </Text>
           <Text style={styles.title}>{expense.title}</Text>
           <View style={styles.amountRow}>
-            <Text style={styles.amount}>{amountDisplay}</Text>
+            <MoneyText style={styles.amount} value={amountDisplay} />
             <Text style={styles.currency}>{expense.currency}</Text>
           </View>
 
@@ -471,7 +472,7 @@ function SplitRow({ name, initials, share, currency, avatarSource }: SplitRowPro
           {name}
         </Text>
       </View>
-      <Text style={styles.splitAmount}>{display}</Text>
+      <MoneyText style={styles.splitAmount} value={display} />
     </View>
   );
 }

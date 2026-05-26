@@ -7,6 +7,7 @@ import { TopBar } from '@/components/TopBar';
 import { GroupAvatar } from '@/components/GroupAvatar';
 import { Stamp } from '@/components/Stamp';
 import { EmptyState } from '@/components/EmptyState';
+import { MoneyText } from '@/components/MoneyText';
 import { useTranslation } from 'react-i18next';
 import { Group, MyBalance } from '@/lib/api';
 import { useAccounts } from '@/lib/accounts';
@@ -247,7 +248,8 @@ export default function HomeScreen() {
           {showHomeNet ? (
             <>
               <View style={styles.heroRow}>
-                <Text
+                <MoneyText
+                  value={fmtHero(aggregatedHomeNet!.minor, homeCurrency)}
                   style={[
                     styles.heroBalance,
                     { color: aggregatedHomeNet!.minor >= 0 ? colors.moss : colors.brick },
@@ -256,9 +258,7 @@ export default function HomeScreen() {
                   numberOfLines={1}
                   adjustsFontSizeToFit
                   minimumFontScale={0.35}
-                >
-                  {fmtHero(aggregatedHomeNet!.minor, homeCurrency)}
-                </Text>
+                />
                 <TouchableOpacity
                   onPress={explainHomeNet}
                   hitSlop={12}
@@ -280,17 +280,17 @@ export default function HomeScreen() {
                   the chips used to carry. */}
             </>
           ) : netByCurrency.length === 0 ? (
-            <Text
+            <MoneyText
+              value={fmtHero('0', primaryCurrency)}
               style={[styles.heroBalance, { color: colors.lead }]}
               numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.35}
-            >
-              {fmtHero('0', primaryCurrency)}
-            </Text>
+            />
           ) : (
             <>
-              <Text
+              <MoneyText
+                value={fmtHero(primaryNet, primaryCurrency)}
                 style={[
                   styles.heroBalance,
                   { color: primaryNet >= 0 ? colors.moss : colors.brick },
@@ -298,21 +298,18 @@ export default function HomeScreen() {
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.35}
-              >
-                {fmtHero(primaryNet, primaryCurrency)}
-              </Text>
+              />
               {netByCurrency.length > 1 && (
                 <View style={styles.multiCurrencyRow}>
                   {netByCurrency.slice(1).map((c) => (
                     <View key={c.currency} style={styles.currencyChip}>
-                      <Text
+                      <MoneyText
+                        value={fmtBalance(String(c.minor), c.currency)}
                         style={[
                           styles.currencyChipAmt,
                           { color: c.minor >= 0 ? colors.moss : colors.brick },
                         ]}
-                      >
-                        {fmtBalance(String(c.minor), c.currency)}
-                      </Text>
+                      />
                     </View>
                   ))}
                 </View>
@@ -429,15 +426,14 @@ export default function HomeScreen() {
                               {n > 0 ? t('home.youreOwedStamp') : t('home.youOweStamp')}
                             </Text>
                           </View>
-                          <Text
+                          <MoneyText
+                            value={fmtAmount(String(Math.abs(n)), displayCurrency)}
                             style={[
                               styles.groupAmt,
                               { color: n > 0 ? colors.moss : colors.brick },
                             ]}
                             numberOfLines={1}
-                          >
-                            {fmtAmount(String(Math.abs(n)), displayCurrency)}
-                          </Text>
+                          />
                         </>
                       )}
                     </View>

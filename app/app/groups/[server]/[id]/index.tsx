@@ -18,6 +18,7 @@ import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
 import { Stamp } from '@/components/Stamp';
+import { MoneyText } from '@/components/MoneyText';
 import { Avatar, AvatarStack } from '@/components/Avatar';
 import { GroupAvatar } from '@/components/GroupAvatar';
 import { EmptyState } from '@/components/EmptyState';
@@ -262,15 +263,19 @@ export default function GroupDetailScreen() {
               // Settled state lives where the big number would. Sized to
               // match the balance line so the eye lands here, not on a
               // small caption.
-              <Text style={styles.heroSettled}>{t('groupDetail.settledUp')}</Text>
+              <Text style={styles.heroSettled} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>{t('groupDetail.settledUp')}</Text>
             ) : (
               <>
-                <Text style={styles.heroBalanceLabel}>
+                <Text style={styles.heroBalanceLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
                   {myNet > 0 ? t('groupDetail.youreOwed') : t('groupDetail.youOwe')}
                 </Text>
-                <Text style={[styles.heroBalance, { color: myNet > 0 ? colors.moss : colors.brick }]}>
-                  {fmtAmount(String(Math.abs(myNet)), group?.currency ?? 'SEK')}
-                </Text>
+                <MoneyText
+                  value={fmtAmount(String(Math.abs(myNet)), group?.currency ?? 'SEK')}
+                  style={[styles.heroBalance, { color: myNet > 0 ? colors.moss : colors.brick }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.5}
+                />
               </>
             )}
           </View>
@@ -355,9 +360,10 @@ export default function GroupDetailScreen() {
                         {t('groupDetail.paymentRow', { from: fromName, to: toName })}
                       </Text>
                     </View>
-                    <Text style={[styles.rowAmount, { color: colors.brick }]}>
-                      {fmtAmount(String(decimalToMinor(s.amount)), s.currency)}
-                    </Text>
+                    <MoneyText
+                      value={fmtAmount(String(decimalToMinor(s.amount)), s.currency)}
+                      style={[styles.rowAmount, { color: colors.brick }]}
+                    />
                   </View>
                 );
               })
@@ -433,15 +439,14 @@ export default function GroupDetailScreen() {
                         {reverted ? ` · ${t('groupDetail.paymentReverted')}` : ''}
                       </Text>
                     </View>
-                    <Text
+                    <MoneyText
+                      value={fmtAmount(String(decimalToMinor(s.amount)), s.currency)}
                       style={[
                         styles.rowAmount,
                         { color: reverted ? colors.lead : colors.moss },
                         reverted && { textDecorationLine: 'line-through' },
                       ]}
-                    >
-                      {fmtAmount(String(decimalToMinor(s.amount)), s.currency)}
-                    </Text>
+                    />
                   </TouchableOpacity>
                 );
               })
@@ -492,15 +497,14 @@ export default function GroupDetailScreen() {
                             <Text style={styles.rowMeta}>{t('groupDetail.settledUp')}</Text>
                           ) : (
                             row.entries.map(({ currency, netMinor }) => (
-                              <Text
+                              <MoneyText
                                 key={currency}
+                                value={formatMinorUnits(netMinor, currency, { relative: true })}
                                 style={[
                                   styles.memberCardTotal,
                                   { color: netMinor >= 0 ? colors.moss : colors.brick },
                                 ]}
-                              >
-                                {formatMinorUnits(netMinor, currency, { relative: true })}
-                              </Text>
+                              />
                             ))
                           )}
                         </View>
@@ -553,9 +557,10 @@ export default function GroupDetailScreen() {
                                     {e.expense_date ? formatDate(e.expense_date) : formatDate(e.created_at)}
                                   </Text>
                                 </View>
-                                <Text style={styles.memberExpenseAmount}>
-                                  {fmtAmount(String(decimalToMinor(e.amount)), e.currency)}
-                                </Text>
+                                <MoneyText
+                                  value={fmtAmount(String(decimalToMinor(e.amount)), e.currency)}
+                                  style={styles.memberExpenseAmount}
+                                />
                               </TouchableOpacity>
                             ))
                         )}
@@ -626,9 +631,10 @@ export default function GroupDetailScreen() {
                     {e.expense_date ? ` · ${formatDate(e.expense_date)}` : ''}
                   </Text>
                 </View>
-                <Text style={[styles.rowAmount, { color: amountColor }]}>
-                  {display}
-                </Text>
+                <MoneyText
+                  value={display}
+                  style={[styles.rowAmount, { color: amountColor }]}
+                />
               </TouchableOpacity>
             );
           })

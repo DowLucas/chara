@@ -6,6 +6,7 @@ import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Avatar } from '@/components/Avatar';
 import { EmptyState } from '@/components/EmptyState';
+import { MoneyText } from '@/components/MoneyText';
 import { useTranslation } from 'react-i18next';
 import {
   apiFor,
@@ -154,14 +155,13 @@ export default function SettleScreen() {
           <Text style={styles.eyebrow}>
             {t('settle.yourNet', { group: group?.name ?? '' })}
           </Text>
-          <Text
+          <MoneyText
             style={[styles.heroBalance, { color: myNet >= 0 ? colors.moss : colors.brick }]}
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.4}
-          >
-            {formatMinorUnits(myNet, heroCurrency, { relative: true })}
-          </Text>
+            value={formatMinorUnits(myNet, heroCurrency, { relative: true })}
+          />
           <View style={styles.rule} />
           {hasAnything && naive > suggestions.length && (
             <Text style={styles.caption}>
@@ -210,9 +210,10 @@ export default function SettleScreen() {
                     </View>
                   </View>
                   <View style={styles.rowRight}>
-                    <Text style={styles.rowAmount}>
-                      {formatMinorUnits(decimalToMinor(s.amount), s.currency)}
-                    </Text>
+                    <MoneyText
+                      style={styles.rowAmount}
+                      value={formatMinorUnits(decimalToMinor(s.amount), s.currency)}
+                    />
                     <Text style={styles.chevron}>›</Text>
                   </View>
                 </TouchableOpacity>
@@ -255,9 +256,10 @@ export default function SettleScreen() {
                       {to?.name?.split(' ')[0] ?? '?'}
                     </Text>
                   </View>
-                  <Text style={styles.otherAmount}>
-                    {formatMinorUnits(decimalToMinor(s.amount), s.currency)}
-                  </Text>
+                  <MoneyText
+                    style={styles.otherAmount}
+                    value={formatMinorUnits(decimalToMinor(s.amount), s.currency)}
+                  />
                 </View>
               );
             })}
