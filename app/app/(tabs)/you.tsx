@@ -357,32 +357,42 @@ export default function YouScreen() {
       checkResults,
     );
     const mainLabel = t('common.mainServerLabel');
+    // Apple 5.1.1(v): the user owns their account and must be able to delete
+    // it. Open balances are a warning, not a hard gate — proceed with a
+    // destructive-styled "Delete anyway" confirm.
     if (blockedUrls.length > 0) {
       const servers = blockedUrls.map((u) => displayHostFor(u, mainLabel)).join(', ');
-      await showAlert({
-        title: t('account.deleteAll.blockedOpenBalanceTitle'),
-        message: t('account.deleteAll.blockedOpenBalanceBody', { servers }),
+      const warn = await showAlert({
+        title: t('account.deleteAll.openBalanceWarnTitle'),
+        message: t('account.deleteAll.openBalanceWarnBody', { servers }),
+        buttons: [
+          { key: 'cancel', label: t('account.deleteAll.openBalanceWarnCancel'), style: 'cancel' },
+          { key: 'delete', label: t('account.deleteAll.openBalanceWarnConfirm'), style: 'destructive' },
+        ],
       });
-      return;
-    }
-    if (erroredUrls.length > 0) {
+      if (warn !== 'delete') return;
+    } else if (erroredUrls.length > 0) {
       const servers = erroredUrls.map((u) => displayHostFor(u, mainLabel)).join(', ');
-      await showAlert({
+      const warn = await showAlert({
         title: t('account.deleteAll.balanceCheckFailedTitle'),
         message: t('account.deleteAll.balanceCheckFailedBody', { servers }),
+        buttons: [
+          { key: 'cancel', label: t('account.deleteAll.openBalanceWarnCancel'), style: 'cancel' },
+          { key: 'delete', label: t('account.deleteAll.openBalanceWarnConfirm'), style: 'destructive' },
+        ],
       });
-      return;
+      if (warn !== 'delete') return;
+    } else {
+      const confirmed = await showAlert({
+        title: t('account.deleteAll.confirmTitle'),
+        message: t('account.deleteAll.confirmBody', { count: accounts.length }),
+        buttons: [
+          { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
+          { key: 'delete', label: t('account.deleteAll.confirmCta'), style: 'destructive' },
+        ],
+      });
+      if (confirmed !== 'delete') return;
     }
-
-    const confirmed = await showAlert({
-      title: t('account.deleteAll.confirmTitle'),
-      message: t('account.deleteAll.confirmBody', { count: accounts.length }),
-      buttons: [
-        { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
-        { key: 'delete', label: t('account.deleteAll.confirmCta'), style: 'destructive' },
-      ],
-    });
-    if (confirmed !== 'delete') return;
 
     // Fan out — Promise.allSettled so one slow / failing server doesn't
     // block the others (multi-server rules: never Promise.all across
