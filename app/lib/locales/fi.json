@@ -9,6 +9,41 @@
     "version": "versio",
     "website": "Verkkosivu"
   },
+  "account": {
+    "deleteAll": {
+      "balanceCheckFailedBody": "Saldot pitää tarkistaa palvelimilla {{servers}} ennen poistoa. Yritä uudelleen, kun olet verkossa.",
+      "balanceCheckFailedTitle": "Saldoja ei voitu tarkistaa",
+      "blockedOpenBalanceBody": "Palvelimilla {{servers}} on vielä avoimia saldoja. Tasaa ne jokaisessa ryhmässä ennen tilin poistoa.",
+      "blockedOpenBalanceTitle": "Tiliä ei voi poistaa",
+      "body": "Tämä poistaa tilisi ja tietosi pysyvästi kaikilta linkitetyiltä Chara-palvelimilta. Avoimet saldot pitää tasata ensin.",
+      "confirmBody": "Tilisi kaikilla {{count}} linkitetyllä palvelimella poistetaan pysyvästi. Tätä ei voi peruuttaa.",
+      "confirmBody_one": "account.deleteAll.confirmBody",
+      "confirmBody_other": "account.deleteAll.confirmBody",
+      "confirmCta": "Poista tili",
+      "confirmTitle": "Poistetaanko tili?",
+      "eyebrow": "vaaravyöhyke",
+      "summaryBlocked": "Estetty (avoin saldo): {{count}}",
+      "summaryBlocked_one": "account.deleteAll.summaryBlocked",
+      "summaryBlocked_other": "account.deleteAll.summaryBlocked",
+      "summaryDeleted": "Poistettu: {{count}}",
+      "summaryDeleted_one": "account.deleteAll.summaryDeleted",
+      "summaryDeleted_other": "account.deleteAll.summaryDeleted",
+      "summaryFailed": "Verkkovirhe: {{count}}",
+      "summaryFailed_one": "account.deleteAll.summaryFailed",
+      "summaryFailed_other": "account.deleteAll.summaryFailed",
+      "summaryTitle": "Poisto valmis",
+      "title": "Poista tili"
+    },
+    "deleteFromServer": {
+      "blockedBody": "Et voi poistaa tiliäsi palvelimelta {{server}}, kun sinulla on avoimia saldoja: {{balances}}.\n\nTasaa ne muiden ryhmäläisten kanssa ja yritä sitten uudelleen.",
+      "blockedTitle": "Tasaa saldot ensin",
+      "body": "Poista tilisi pysyvästi palvelimelta {{server}}. Tätä ei voi peruuttaa. Muut näkevät aiemmat kulut yhä (anonymisoituna).",
+      "confirmBody": "Tilisi palvelimella {{server}} poistetaan pysyvästi. Tätä ei voi peruuttaa.",
+      "confirmCta": "Poista tili",
+      "confirmTitle": "Poistetaanko tili?",
+      "title": "Poista tili tältä palvelimelta"
+    }
+  },
   "accounts": {
     "add": "Lisää tili",
     "addAnother": "Lisää toinen",
@@ -31,6 +66,10 @@
     "signOutAllBlockedBody": "Palvelimilla {{hosts}} on vielä avoimia saldoja. Tasaa ne ennen kuin kirjaudut ulos kaikilta.",
     "signOutAllConfirmBody": "Palaat kirjautumisnäkymään. Tiedot säilyvät jokaisella palvelimella.",
     "signOutAllConfirmTitle": "Kirjaudutaanko ulos kaikilta tileiltä?",
+    "signOutAllWarnOpenBalanceBody": "Palvelimilla {{hosts}} on vielä avoimia saldoja. Tietosi säilyvät jokaisella palvelimella, mutta sinun pitää kirjautua takaisin tasataksesi.",
+    "signOutAllWarnOpenBalanceTitle": "Kirjaudutaanko ulos avoimista saldoista huolimatta?",
+    "signOutConfirmBody": "Palaat kirjautumisnäkymään. Tietosi säilyvät palvelimella.",
+    "signOutConfirmTitle": "Kirjaudutaanko ulos tältä tililtä?",
     "statusIncompatible": "versio ei täsmää",
     "statusReauth": "kirjautuminen vaaditaan",
     "title": "Tilit"
@@ -109,6 +148,11 @@
     "saveErrorTitle": "Virhe",
     "saving": "Tallennetaan…",
     "scanReceipt": "Skannaa kuitti",
+    "split": {
+      "equal": "jaa tasan",
+      "exact": "jaa summittain",
+      "percentage": "jaa prosenteilla"
+    },
     "splitLabel": "jaetaan",
     "splitMeta": "tasan · {{count}} osaan",
     "splitMethodLabel": "jakotapa",
@@ -173,12 +217,14 @@
     "done": "Valmis",
     "error": "Virhe",
     "loading": "Ladataan…",
+    "mainServerLabel": "Chara-palvelin",
     "ok": "OK",
     "save": "Tallenna",
     "saving": "Tallennetaan…"
   },
   "createGroup": {
     "body": "Jotain, minkä kaverit tunnistavat.",
+    "colorLabel": "Väri",
     "creating": "Luodaan…",
     "currencyLabel": "Valuutta",
     "errorTitle": "Ryhmää ei voitu luoda",
@@ -188,10 +234,6 @@
     "namePlaceholder": "Lissabonin reissu, kämppä 4B, …",
     "submit": "Luo ryhmä"
   },
-  "languagePicker": {
-    "searchPlaceholder": "Hae nimellä tai koodilla…",
-    "empty": "Ei osumia."
-  },
   "currencyPicker": {
     "all": "kaikki",
     "empty": "Ei osumia.",
@@ -200,14 +242,20 @@
     "suggested": "ehdotetut",
     "title": "Valuutta"
   },
+  "deepLink": {
+    "unknownServer": {
+      "body": "Tämä linkki osoittaa palvelimelle, jolle et ole kirjautunut.",
+      "title": "Tuntematon tili tälle linkille"
+    }
+  },
   "editGroup": {
     "currencyLabel": "Valuutta",
     "currencyLockedHint": "Lukittu — ryhmässä on jo kuluja.",
+    "errorTitle": "Muutoksia ei voitu tallentaa",
     "errors": {
       "currencyLockedBody": "Valuutta lukittuu, kun ryhmään on kirjattu kuluja. Luo uusi ryhmä, jos tarvitset eri valuutan.",
       "currencyLockedTitle": "Valuutta on lukittu"
     },
-    "errorTitle": "Muutoksia ei voitu tallentaa",
     "eyebrow": "muokkaa ryhmää",
     "languageHint": "Tekoälyn luomat kuittien otsikot kirjoitetaan tällä kielellä kaikille ryhmäläisille.",
     "languageLabel": "Kieli",
@@ -215,6 +263,9 @@
     "namePlaceholder": "Ryhmän nimi",
     "saving": "Tallennetaan…",
     "submit": "Tallenna muutokset"
+  },
+  "expense": {
+    "paidByName": "maksaja {{name}}"
   },
   "expenseDetail": {
     "actions": {
@@ -231,9 +282,14 @@
     "eachOwes": "{{amount}} / hlö",
     "editTitle": "Muokkaa kulua",
     "fx": {
+      "asOf": "päivämäärältä {{date}}",
+      "card": "vaihtokurssi",
       "originalLine": "{{amount}} · {{converted}} · {{source}} {{asOf}}",
+      "paidLine": "{{original}} maksettu · {{converted}} tällä kurssilla",
       "rateLabel": "kurssi",
-      "sourceECB": "EKP"
+      "rateLine": "1 {{from}} = {{rate}} {{to}}",
+      "sourceECB": "EKP",
+      "sourceManual": "Mukautettu kurssi"
     },
     "loadError": "Kulua ei voitu ladata.",
     "menuLabel": "Kuluvalikko",
@@ -263,6 +319,22 @@
     "loading": "Haetaan kurssia {{from}} → {{to}}…",
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
+  },
+  "groupColor": {
+    "custom": "Mukautettu väri",
+    "reset": "Palauta oletus",
+    "row": "Ryhmän väri",
+    "swatch": {
+      "black": "Mustemusta",
+      "blue": "Sininen",
+      "brown": "Teenruskea",
+      "gold": "Kultaokra",
+      "indigo": "Indigo",
+      "pink": "Pinkki",
+      "purple": "Violetti",
+      "teal": "Vaalea petrooli"
+    },
+    "title": "Ryhmän väri"
   },
   "groupCreated": {
     "body": "Anna puhelin kaverille skannattavaksi.",
@@ -309,9 +381,9 @@
     "owesYou": "{{name}} on sinulle velkaa",
     "paymentRevert": "Peru",
     "paymentRevertBody": "{{from}} maksoi {{to}}:lle {{amount}}. Peruminen palauttaa saldon.",
-    "paymentReverted": "peruttu",
     "paymentRevertError": "Peruminen ei onnistunut",
     "paymentRevertTitle": "Perutaanko tämä maksu?",
+    "paymentReverted": "peruttu",
     "paymentRow": "{{from}} → {{to}}",
     "paymentsAllSettled": "Kaikki on tasattu.",
     "paymentsEmptyBody": "Jäsenten väliset tasaukset näkyvät täällä.",
@@ -327,6 +399,8 @@
     "settle": "Tasaa",
     "settledUp": "tasattu",
     "someonePaid": "Joku maksoi",
+    "sortByAmountAsc": "Pienin ensin",
+    "sortByAmountDesc": "Suurin ensin",
     "sortByCreatedAt": "Lisäyspäivä",
     "sortByExpenseDate": "Kulun päivä",
     "sortTitle": "Lajittele kulut",
@@ -336,9 +410,9 @@
     "standingsEmptyBody": "Lisää kulu, niin näet kuka on velkaa kenelle.",
     "standingsEmptyTitle": "Ei vielä saldoja",
     "suggestionRow": "{{from}} → {{to}}",
+    "suggestionSettleCta": "Maksa",
     "suggestionsEmpty": "Kaikki tasattu",
     "suggestionsEmptyBody": "Maksuja ei tarvita — kaikki tasoissa.",
-    "suggestionSettleCta": "Maksa",
     "suggestionsHeading": "tasattavaa",
     "tabOverview": "kulut",
     "tabPayments": "maksut",
@@ -444,6 +518,14 @@
     "groupsCount": "ryhmäsi · {{count}}",
     "groupsCount_one": "ryhmäsi · {{count}}",
     "groupsCount_other": "ryhmäsi · {{count}}",
+    "homeNetInfoLabel": "Tästä summasta",
+    "homeNetSheetEstimated": "{{count}} kohdetta ei voitu sisällyttää.",
+    "homeNetSheetEstimated_one": "home.homeNetSheetEstimated",
+    "homeNetSheetEstimated_other": "home.homeNetSheetEstimated",
+    "homeNetSheetHealthy": "Kaikki on mukana.",
+    "homeNetSheetIntro": "Yhteissummasi kaikista ryhmistä kotivaluutassasi. Muuttuu vain, kun lisäät tai tasaat kuluja — ei valuuttakurssien liikkuessa.",
+    "homeNetSheetPartial": "{{ok}} / {{total}} tiliä mukana.",
+    "homeNetSheetTitle": "Tästä summasta",
     "hostChip": "palvelimella {{host}}",
     "netBalance": "nettosaldo",
     "noActivity": "Ei vielä tapahtumia.",
@@ -510,8 +592,8 @@
     "equals": "yhtä kuin — laske",
     "op": {
       "+": "plus",
-      "÷": "jaettuna",
       "×": "kertaa",
+      "÷": "jaettuna",
       "−": "miinus"
     },
     "placeholder": "0"
@@ -530,6 +612,15 @@
     "error": "Jäsentä ei voitu poistaa",
     "remove": "Poista"
   },
+  "languagePicker": {
+    "empty": "Ei osumia.",
+    "searchPlaceholder": "Hae nimellä tai koodilla…"
+  },
+  "legal": {
+    "eyebrow": "juridiikka",
+    "privacyPolicy": "Tietosuojakäytäntö",
+    "termsOfService": "Käyttöehdot"
+  },
   "members": {
     "count": "jäseniä · {{count}}",
     "count_one": "jäseniä · {{count}}",
@@ -539,9 +630,12 @@
     "eyebrow": "jäsenet ryhmässä",
     "ghost": "lisätty nimellä",
     "inviteCta": "Kutsu QR-koodilla",
+    "joined": "liittyi {{date}}",
+    "joinedWithRole": "liittyi {{date}} · {{role}}",
     "role": "rooli",
     "roleMember": "jäsen",
     "roleOwner": "omistaja",
+    "roleUnknownJoin": "liittyi äskettäin",
     "shareCta": "Jaa linkki",
     "shareMessage": "Liity ryhmään ”{{name}}” Charassa: {{link}}",
     "you": "sinä"
@@ -602,6 +696,67 @@
     "resultTitle": "Kuitin erittely",
     "retake": "Ota uusi",
     "useThis": "Käytä tätä"
+  },
+  "recurring": {
+    "currencyLockedHelp": "{{currency}} · ryhmän valuutta · ei voi muuttaa myöhemmin.",
+    "deleteButton": "Poista",
+    "editFutureOnlyNotice": "Muutokset koskevat vain tulevia laskuja. Aiemmat kulut pysyvät ennallaan.",
+    "emptyBody": "Aseta vuokra, internet tai mikä tahansa toistuva — Chara lisää sen puolestasi aikataulun mukaan.",
+    "emptyTitle": "Ei vielä toistuvia laskuja",
+    "endDateLabel": "päättymispäivä",
+    "endDateOff": "pois",
+    "endDateOn": "päällä",
+    "endsLabel": "päättyy",
+    "eyebrow": "automaatio",
+    "intervalPrefix": "joka",
+    "listHeader": "Toistuvat laskut",
+    "newButton": "+ Uusi toistuva lasku",
+    "pauseButton": "Keskeytä",
+    "paused": {
+      "catchup_overflow": "Kiinniotto keskeytetty — tarkista ja jatka",
+      "group_locked": "Ryhmä on lukittu",
+      "manual": "Keskeytetty",
+      "member_left": "{{name}} lähti — päivitä jaot jatkaaksesi"
+    },
+    "previewEyebrow": "esikatselu",
+    "previewNext": "Luo seuraavan laskun {{date}} klo {{time}} ({{tz}}).",
+    "previewThen": "Sitten {{dates}}.",
+    "push": {
+      "expenseAutoPosted": "{{title}} · {{amount}} lisätty automaattisesti · olet velkaa {{share}}",
+      "expenseAutoPostedCatchup": "{{title}} · {{amount}} lisätty automaattisesti · olet velkaa {{share}} (kurotaan kiinni offline-ajan jälkeen)",
+      "pausedCatchupOverflow": "{{title}} keskeytetty automaattisesti — olemme olleet offline liian pitkään, jotta voisimme turvallisesti kuroa umpeen. Napauta tarkistaaksesi.",
+      "pausedGroupLocked_one": "Ryhmä lukittu — {{title}} ei lisäänny automaattisesti ennen ryhmän avaamista. Napauta tarkistaaksesi.",
+      "pausedGroupLocked_other": "Ryhmä lukittu — {{title}} ja {{extra}} muuta laskua eivät lisäänny automaattisesti ennen ryhmän avaamista. Napauta tarkistaaksesi.",
+      "pausedMemberLeft": "Huomio: {{name}} lähti ryhmästä, joten {{title}} ei lisäänny automaattisesti ennen kuin päivität sen jakajat. Napauta korjataksesi."
+    },
+    "resumeAllAfterUnlock": "Jatka kaikkia",
+    "resumeAllBanner_one": "{{count}} lasku on keskeytetty ryhmän lukituksen ajalta.",
+    "resumeAllBanner_other": "{{count}} laskua on keskeytetty ryhmän lukituksen ajalta.",
+    "resumeButton": "Jatka",
+    "saveButton": "Tallenna",
+    "schedule": {
+      "every_day_one": "joka päivä",
+      "every_day_other": "joka {{count}}. päivä",
+      "every_month_one": "joka kuukausi",
+      "every_month_other": "joka {{count}}. kuukausi",
+      "every_week_one": "joka viikko",
+      "every_week_other": "joka {{count}}. viikko",
+      "every_year_one": "joka vuosi",
+      "every_year_other": "joka {{count}}. vuosi"
+    },
+    "scheduleEyebrow": "aikataulu",
+    "settingsRow": "Toistuvat laskut",
+    "startLabel": "alkaa",
+    "timeLabel": "kellonaika",
+    "timezoneLabel": "aikavyöhyke",
+    "unitDay_one": "päivä",
+    "unitDay_other": "päivää",
+    "unitMonth_one": "kuukausi",
+    "unitMonth_other": "kuukautta",
+    "unitWeek_one": "viikko",
+    "unitWeek_other": "viikkoa",
+    "unitYear_one": "vuosi",
+    "unitYear_other": "vuotta"
   },
   "scanItems": {
     "assignSheetHint": "Valitse yksi tai useampi henkilö. Napauta uudelleen poistaaksesi.",
@@ -692,11 +847,26 @@
     "errorBody": "Yritä uudelleen.",
     "errorTitle": "Tasausta ei voitu kirjata",
     "from": "lähettäjältä {{name}}",
+    "fxConfirm": "Tasaa",
+    "fxErrorAmount": "Syötä todellinen maksamasi summa.",
+    "fxErrorCurrency": "Valitse kelvollinen valuutta.",
+    "fxErrorDate": "Kurssin päivämäärä ei ole kelvollinen.",
+    "fxErrorRate": "Syötä positiivinen vaihtokurssi.",
+    "fxErrorSameCurrency": "Käytä tavallisia maksutapoja, kun maksat samassa valuutassa.",
+    "fxErrorTitle": "Ei voi tasata vielä",
+    "fxIntro": "Selvitä {{amount}} velka käyttäjälle {{name}} maksamalla eri valuutassa. Alkuperäinen velka ei muutu; tallennamme mitä todellisuudessa siirsit.",
+    "fxLink": "Tasaa eri valuutassa",
+    "fxPayLabel": "Maksoit",
+    "fxRateAsOf": "kurssi päivämäärältä {{date}}",
+    "fxRateError": "Kurssia ei voitu hakea. Syötä se käsin.",
+    "fxRateLabel": "1 {{from}} =",
+    "fxRateLoading": "ladataan kurssia…",
+    "fxTitle": "Tasaa toisessa valuutassa",
     "instantBadge": "välitön",
     "manual": "Merkitse maksetuksi",
     "manualSub": "Tasattu sovelluksen ulkopuolella",
-    "markedTitle": "Merkitty maksetuksi",
     "markPaid": "Merkitse maksetuksi",
+    "markedTitle": "Merkitty maksetuksi",
     "paypal": "PayPal",
     "paypalUnlinked": "Ei linkitetty",
     "requestTitle": "Pyydä {{amount}}",
@@ -709,7 +879,9 @@
     "swishMissingPhoneBody": "{{name}} ei ole vielä lisännyt ruotsalaista matkapuhelinnumeroa. Pyydä lisäämään se kohdasta Profiili tai käytä muuta tapaa.",
     "swishMissingPhoneTitle": "Swishiä ei voi avata",
     "swishNote": "Swish avautuu summa ja viesti valmiiksi täytettynä. Merkitsemme tasatuksi, kun palaat takaisin.",
+    "swishRoundingNote": "Swish hyväksyy vain tasakruunut, joten pyöristämme {{original}} ylöspäin: {{rounded}}.",
     "swishSub": "{{name}} · {{phone}}",
+    "swishTipNote": "Swish voi siirtää vain tasakruunuja, joten lähetät {{swish}}. Se selvittää {{debt}} velan; ylimääräinen {{tip}} on tippi käyttäjälle {{name}} — ei uutta saldoa.",
     "swishUnavailableBody": "Swish-sovellusta ei näytä olevan asennettu tälle laitteelle. Käytä muuta tapaa tai asenna Swish ja yritä uudelleen.",
     "swishUnavailableTitle": "Swish ei käytettävissä",
     "swishUnlinked": "Ei linkitetty",
@@ -724,6 +896,11 @@
     "vippsUnlinked": "Ei linkitetty"
   },
   "signIn": {
+    "apple": {
+      "errorBody": "Apple-kirjautumista ei voitu suorittaa. Yritä uudelleen tai käytä sähköpostia.",
+      "errorTitle": "Kirjautuminen epäonnistui",
+      "noToken": "Apple ei palauttanut identiteettitokenia. Yritä uudelleen."
+    },
     "checkEmail": "Tarkista sähköposti",
     "checkEmailBody": "Lähetimme kirjautumislinkin osoitteeseen {{email}}. Napauta sitä kirjautuaksesi.",
     "continueEmail": "Jatka sähköpostilla",
@@ -731,8 +908,14 @@
     "couldNotSend": "Kirjautumislinkkiä ei voitu lähettää",
     "emailPlaceholder": "oma@sähköposti.fi",
     "eyebrow": "kirjaudu sisään",
+    "google": {
+      "errorBody": "Google-kirjautumista ei voitu suorittaa. Yritä uudelleen tai käytä sähköpostia.",
+      "errorTitle": "Kirjautuminen epäonnistui",
+      "noToken": "Google ei palauttanut identiteettitokenia. Yritä uudelleen."
+    },
     "headline": "Jaa.\nTasaa.\nAsia selvä.",
     "hostedBy": "isäntä chara.app",
+    "legalFooter": "Jatkamalla hyväksyt <terms>Käyttöehdot</terms> ja <privacy>Tietosuojakäytännön</privacy>.",
     "sending": "Lähetetään…",
     "useMyServer": "käytä omaa palvelinta →"
   },
@@ -742,6 +925,20 @@
     "chooseGroup": "Valitse ryhmä",
     "home": "Etusivu",
     "you": "Profiili"
+  },
+  "waitlist": {
+    "beta": "Chara on julkisessa beetavaiheessa",
+    "body": "Pidämme kuittiskannaukset rajattuina, kun mietimme hosting-suunnitelmia. Jätä sähköpostisi, niin kerromme kun lisäkapasiteettia tulee.",
+    "dismiss": "Ei nyt",
+    "emailLabel": "Sähköpostiosoite",
+    "emailPlaceholder": "sina@esimerkki.fi",
+    "errorBadEmail": "Syötä kelvollinen sähköpostiosoite.",
+    "errorGeneric": "Ilmoittautumista ei voitu tehdä. Yritä uudelleen.",
+    "resetsAt": "Ilmaiset skannaukset nollautuvat {{date}}.",
+    "selfHostHint": "Tai pystytä Chara itse rajattomilla skannauksilla",
+    "submit": "Ilmoita minulle",
+    "success": "Kiitos — olemme yhteydessä.",
+    "title": "Olet käyttänyt {{cap}} ilmaista kuittiskannausta tässä kuussa"
   },
   "you": {
     "about": "Tietoja sovelluksesta",
@@ -771,6 +968,15 @@
     "faceIdUnavailableBody": "Laite ei tue biometristä tunnistautumista tai sellaista ei ole määritetty.",
     "faceIdUnavailableShort": "Ei käytettävissä tällä laitteella",
     "faceIdUnavailableTitle": "Face ID ei käytettävissä",
+    "homeCurrency": "Kotivaluutta",
+    "language": "Kieli",
+    "languageAuto": "Automaattinen",
+    "openSource": {
+      "body": "Käytät chara.app-palvelua — hostattua beetaversiota. Itse sovellus on ilmainen ja avointa lähdekoodia. Voit pystyttää sen omalle koneellesi ilman rajoja.",
+      "eyebrow": "chara on avointa lähdekoodia",
+      "githubLabel": "Näytä lähdekoodi GitHubissa",
+      "selfHostLabel": "Itsehosting-dokumentaatio"
+    },
     "phoneLabel": "puhelin",
     "phoneMissing": "ei asetettu",
     "rateAppStore": "Arvostele App Storessa",
@@ -778,8 +984,6 @@
     "rateStore": "Arvostele",
     "rateUnavailableBody": "Charaa ei ole vielä julkaistu kauppaan.",
     "rateUnavailableTitle": "Ei vielä saatavilla",
-    "language": "Kieli",
-    "languageAuto": "Automaattinen",
     "replayOnboarding": "Käy perehdytys uudelleen",
     "settingsEyebrow": "asetukset",
     "shareMessage": "Olen jakanut laskuja Charalla — kokeile sinäkin: https://chara.app",
