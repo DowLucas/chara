@@ -69,6 +69,14 @@ type Config struct {
 	MinAppProtocol int
 	MaxAppProtocol int
 
+	// TrustedProxies is a comma-separated list of CIDRs (or bare IPs) of
+	// reverse proxies whose X-Forwarded-For / X-Real-IP headers we will
+	// honor. Empty (default) means "don't trust forwarded headers at all" —
+	// this is the safe default for direct-internet deployments and for
+	// dev. Set to e.g. "127.0.0.1/32" when fronted by a same-host Caddy,
+	// or to your proxy's private CIDR. See internal/middleware/real_ip.go.
+	TrustedProxies string
+
 	// RecurringEnabled gates the River-backed recurring-expense queue.
 	// Default off so the API still boots without the River tables present;
 	// flipped on in Phase 4 once the schema has rolled out everywhere.
@@ -115,6 +123,8 @@ func Load() (*Config, error) {
 		OIDCClientSecret: getEnv("OIDC_CLIENT_SECRET", ""),
 
 		GeminiAPIKey: getEnv("GEMINI_API_KEY", ""),
+
+		TrustedProxies: getEnv("TRUSTED_PROXIES", ""),
 
 		MinAppProtocol: getEnvInt("MIN_APP_PROTOCOL", 0),
 		MaxAppProtocol: getEnvInt("MAX_APP_PROTOCOL", 1),

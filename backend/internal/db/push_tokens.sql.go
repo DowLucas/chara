@@ -97,8 +97,8 @@ func (q *Queries) ListPushTokensByUser(ctx context.Context, userID string) ([]Pu
 const upsertPushToken = `-- name: UpsertPushToken :one
 INSERT INTO push_tokens (id, user_id, token, platform)
 VALUES ($1, $2, $3, $4)
-ON CONFLICT (token) DO UPDATE
-    SET user_id      = EXCLUDED.user_id,
+ON CONFLICT (user_id, token) DO UPDATE
+    SET platform     = EXCLUDED.platform,
         last_used_at = NOW()
 RETURNING id, user_id, token, platform, created_at, last_used_at
 `
@@ -110,6 +110,11 @@ type UpsertPushTokenParams struct {
 	Platform string `db:"platform" json:"platform"`
 }
 
+// Conflict target is (user_id, token), NOT token alone. This prevents the
+// push-token hijack where user B submits user A's token and silently steals
+// A's push delivery. Each user owns their own row; the same raw Expo token
+// may legitimately appear under multiple user_ids (e.g. a shared device or
+// a multi-server-accounts install) without one overwriting the other.
 func (q *Queries) UpsertPushToken(ctx context.Context, arg UpsertPushTokenParams) (PushToken, error) {
 	row := q.db.QueryRow(ctx, upsertPushToken,
 		arg.ID,

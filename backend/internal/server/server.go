@@ -34,9 +34,17 @@ const FreeOCRCap = 3
 func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *auth.JWTService, store *storage.Client) http.Handler {
 	r := chi.NewRouter()
 
-	r.Use(chimiddleware.RealIP)
+	// RealIP: only honor X-Forwarded-For / X-Real-IP when the immediate
+	// peer is in TRUSTED_PROXIES. Default (empty allowlist) ignores these
+	// headers — otherwise per-IP rate limits are trivial to bypass by
+	// spoofing XFF on a direct connection.
+	r.Use(middleware.TrustedProxyRealIP(middleware.ParseTrustedCIDRs(cfg.TrustedProxies)))
 	r.Use(chimiddleware.RequestID)
-	r.Use(chimiddleware.Logger)
+	// RequestLogger scrubs ?token=… / ?code=… / ?access_token=… from the
+	// logged URL. Chi's default Logger would log the magic-link verify URL
+	// verbatim (a GET click 404s, but the token is captured in the access
+	// log before the 404).
+	r.Use(middleware.RequestLogger)
 	r.Use(chimiddleware.Recoverer)
 	r.Use(middleware.SecurityHeaders())
 	r.Use(corsMiddleware)

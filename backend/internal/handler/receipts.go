@@ -101,6 +101,12 @@ var allowedReceiptMIME = map[string]struct{}{
 
 // Scan handles POST /api/receipts/scan.
 func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
+	// Cap the raw request body BEFORE json.Decode. Without this, a 100 MB
+	// JSON body would be fully buffered into the image_base64 string field
+	// — a trivial OOM vector. The factor of 2 accounts for base64 overhead
+	// (~33%) plus a small allowance for JSON envelope.
+	r.Body = http.MaxBytesReader(w, r.Body, int64(MaxReceiptImageBytes)*2)
+
 	var req scanRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid JSON body")

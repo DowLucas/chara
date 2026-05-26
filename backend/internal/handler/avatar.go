@@ -49,6 +49,11 @@ const (
 	maxAvatarBytes = 5 * 1024 * 1024
 	avatarMaxDim   = 512
 	avatarJPEGQ    = 85
+	// maxAvatarPixels caps the declared (W*H) of the source image to defeat
+	// PNG/WebP decompression bombs: a 1 KB file claiming 60000x60000 would
+	// otherwise allocate ~14 GB at image.Decode time. 4096*4096 = ~16 MP,
+	// well above any sane source image but ~875x smaller than the bomb.
+	maxAvatarPixels = 4096 * 4096
 )
 
 // avatarURL is the API-relative path used by the client to fetch a user's
@@ -125,6 +130,21 @@ func (h *AvatarHandler) Upload(w http.ResponseWriter, r *http.Request) {
 	sniffed := http.DetectContentType(data[:sniffLen])
 	if !mimeMatches(sniffed, mime) {
 		writeError(w, http.StatusBadRequest, "image content does not match mime_type")
+		return
+	}
+
+	// Decompression-bomb defense: peek at the declared dimensions BEFORE
+	// allocating a pixel buffer. A 1 KB PNG can claim 60000x60000 and a
+	// naive image.Decode would try to allocate ~14 GB. DecodeConfig only
+	// reads the header.
+	cfg, _, cfgErr := image.DecodeConfig(bytes.NewReader(data))
+	if cfgErr != nil {
+		writeError(w, http.StatusBadRequest, "could not read image header")
+		return
+	}
+	if cfg.Width <= 0 || cfg.Height <= 0 ||
+		int64(cfg.Width)*int64(cfg.Height) > int64(maxAvatarPixels) {
+		writeError(w, http.StatusBadRequest, "image dimensions exceed limit")
 		return
 	}
 
