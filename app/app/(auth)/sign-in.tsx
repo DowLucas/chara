@@ -409,19 +409,20 @@ export default function SignInScreen() {
       console.warn('[chara] addAccount failed', e);
     }
 
-    // Optional invite redemption.
+    // Optional invite handoff: bounce to the join-confirmation screen so
+    // the user sees what they're joining before the request fires. The
+    // screen handles the actual join via apiFor(server).joinGroupByToken.
     if (pendingInviteUrl) {
       try {
         const parsed = parseInviteUrl(pendingInviteUrl);
         if ('token' in parsed) {
-          const group = await apiFor(serverUrl).joinGroupByToken(parsed.token);
           router.replace(
-            `/groups/${encodeURIComponent(serverUrl)}/${group.id}`,
+            `/join/${encodeURIComponent(parsed.serverUrl)}/${encodeURIComponent(parsed.token)}`,
           );
           return;
         }
       } catch (e) {
-        console.warn('[chara] invite redemption failed', e);
+        console.warn('[chara] invite handoff failed', e);
         // Non-blocking: fall through to home; account stays added.
       }
     }
