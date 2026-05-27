@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
+import { useEnglishT } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 import { setFlag, FLAG_ONBOARDING_SKIPPED } from '@/lib/storage';
 import { colors, fontBody, fontBodyMedium, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
@@ -11,7 +11,7 @@ import * as analytics from '@/lib/analytics';
 
 export default function OnboardingHome() {
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const t = useEnglishT();
   const { user } = useAuth();
   const greeting = user?.name ? t('onboarding.greetingNamed', { name: user.name }) : t('onboarding.greetingAnon');
 

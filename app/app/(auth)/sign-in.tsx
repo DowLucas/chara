@@ -21,7 +21,7 @@ import { Feather } from '@expo/vector-icons';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
 import { getGoogleSignin } from '@/lib/google-signin';
-import { Trans, useTranslation } from 'react-i18next';
+import { useEnglishT } from '@/lib/i18n';
 import { useAccount, useAccounts } from '@/lib/accounts';
 import {
   addAccount as storeAddAccount,
@@ -90,7 +90,7 @@ async function generateNonce(): Promise<string> {
 
 export default function SignInScreen() {
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const t = useEnglishT();
   const params = useLocalSearchParams<{
     server?: string;
     mode?: Mode;
@@ -593,27 +593,25 @@ export default function SignInScreen() {
 
       <View style={[styles.legalFooter, { paddingBottom: insets.bottom + spacing.s3 }]}>
         <Text style={styles.legalFooterText}>
-          <Trans
-            i18nKey="signIn.legalFooter"
-            components={{
-              terms: (
-                <Text
-                  style={styles.legalFooterLink}
-                  onPress={() => {
-                    void Linking.openURL('https://getchara.lovable.app/terms').catch(() => {});
-                  }}
-                />
-              ),
-              privacy: (
-                <Text
-                  style={styles.legalFooterLink}
-                  onPress={() => {
-                    void Linking.openURL('https://getchara.lovable.app/privacy').catch(() => {});
-                  }}
-                />
-              ),
+          By continuing you agree to our{' '}
+          <Text
+            style={styles.legalFooterLink}
+            onPress={() => {
+              void Linking.openURL('https://getchara.lovable.app/terms').catch(() => {});
             }}
-          />
+          >
+            Terms of Service
+          </Text>
+          {' '}and{' '}
+          <Text
+            style={styles.legalFooterLink}
+            onPress={() => {
+              void Linking.openURL('https://getchara.lovable.app/privacy').catch(() => {});
+            }}
+          >
+            Privacy Policy
+          </Text>
+          .
         </Text>
       </View>
 
@@ -641,7 +639,7 @@ function HostingSheet({
   onSelectSelfHost: () => void;
 }) {
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const t = useEnglishT();
 
   // Stamp the popup-guard on close so the trigger underneath the backdrop
   // can't re-fire `onPress` in the same gesture that dismissed us.

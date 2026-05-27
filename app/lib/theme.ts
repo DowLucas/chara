@@ -14,11 +14,15 @@ export const colors = {
   graphite: '#2D1F1A',
   lead: '#6B5A4E',
   vermillion: '#B83D3D',
-  moss: '#8FA055',
+  // moss reads "you're owed / settled / positive". The pale brand olive
+  // (#8FA055) fails WCAG AA on the cream paper background when used as text,
+  // so the semantic token is a darker olive that hits ~4.6:1. The brand
+  // anchor `palmLeaf` keeps the pale shade for surfaces that aren't text.
+  moss: '#586D2A',
   brick: '#8A2A2A',
   citrine: '#E0A040',
 
-  ruleSoft: 'rgba(45, 31, 26, 0.14)',
+  ruleSoft: 'rgba(45, 31, 26, 0.07)',
   fgOnAccent: '#F4F1E6',
 } as const;
 

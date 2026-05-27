@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
-import { useTranslation } from 'react-i18next';
+import { useEnglishT } from '@/lib/i18n';
 import { apiFor, getGroup, Group } from '@/lib/api';
 import { useDefaultAccount } from '@/lib/accounts';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
@@ -12,7 +12,7 @@ import * as analytics from '@/lib/analytics';
 
 export default function GroupCreatedScreen() {
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const t = useEnglishT();
   // Wave 4: the home tab will know the per-row serverUrl. For now,
   // creation happens against the default account.
   const defaultServerUrl = useDefaultAccount()?.serverUrl ?? '';

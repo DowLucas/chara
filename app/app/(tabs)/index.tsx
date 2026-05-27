@@ -1,16 +1,19 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { TopBar } from '@/components/TopBar';
 import { GroupAvatar } from '@/components/GroupAvatar';
+import { AvatarStack } from '@/components/Avatar';
 import { Stamp } from '@/components/Stamp';
 import { EmptyState } from '@/components/EmptyState';
 import { MoneyText } from '@/components/MoneyText';
 import { useTranslation } from 'react-i18next';
-import { Group, MyBalance } from '@/lib/api';
+import { apiFor, Group, GroupMember, MyBalance } from '@/lib/api';
 import { useAccounts } from '@/lib/accounts';
+import { readCache, writeCache } from '@/lib/cache';
+import { initialsOf } from '@/lib/name';
 import {
   useAggregatedGroups,
   useAggregatedBalances,
@@ -378,14 +381,31 @@ export default function HomeScreen() {
                       <Text style={styles.groupTitle} numberOfLines={1}>
                         {g.name}
                       </Text>
-                      <Text style={styles.groupMeta} numberOfLines={1}>
-                        {g.currency} ·{' '}
-                        {hasActivity
-                          ? settled
-                            ? t('home.statusSettled')
-                            : t('home.statusActive')
-                          : t('home.statusNew')}
-                      </Text>
+                      <View style={styles.groupMetaRow}>
+                        {/* No icon for the "active" state — that's the
+                            default and an icon there would just add noise.
+                            Show a marker only when the state is worth
+                            calling out: settled (positive) or new (no
+                            activity yet). */}
+                        {hasActivity && settled ? (
+                          <Feather
+                            name="check-circle"
+                            size={12}
+                            color={colors.moss}
+                            strokeWidth={1.8}
+                            accessibilityLabel={t('home.statusSettled')}
+                          />
+                        ) : !hasActivity ? (
+                          <Feather
+                            name="feather"
+                            size={12}
+                            color={colors.lead}
+                            strokeWidth={1.8}
+                            accessibilityLabel={t('home.statusNew')}
+                          />
+                        ) : null}
+                        <GroupMemberStrip serverUrl={serverUrl} groupId={g.id} />
+                      </View>
                       {showHostChip && (
                         <Text style={styles.hostChip} numberOfLines={1}>
                           {t('home.hostChip', { host: displayHostFor(serverUrl, t('common.mainServerLabel')) })}
@@ -619,6 +639,57 @@ function ErrorStrip({ label, cta }: { label: string; cta: string }) {
   );
 }
 
+const MEMBER_STRIP_MAX = 10;
+
+/**
+ * Per-card member preview. Hydrates from the on-disk cache for an instant
+ * render, then refreshes in the background. We avoid wiring this into
+ * `useAggregated*` because the fan-out is `accounts × groups`, not
+ * `accounts × 1` — a bespoke per-card hook keeps the home-screen
+ * aggregated machinery focused on the cold-start endpoints.
+ */
+function GroupMemberStrip({ serverUrl, groupId }: { serverUrl: string; groupId: string }) {
+  const [members, setMembers] = useState<GroupMember[] | null>(null);
+  const cacheEndpoint = `members:${groupId}`;
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      // SWR: paint from cache immediately so the avatar strip doesn't pop
+      // in on every home render. Cache is `(serverUrl, userId, endpoint)`-
+      // keyed; on the home screen we don't have userId handy, so the bare
+      // serverUrl + endpoint scope is enough for a per-device best-effort
+      // preview.
+      const cached = await readCache<GroupMember[]>({
+        serverUrl,
+        userId: '',
+        endpoint: cacheEndpoint,
+      });
+      if (!cancelled && cached?.value) setMembers(cached.value);
+      try {
+        // The backend has no bare `GET /api/groups/{id}/members` —
+        // members are bundled into `GET /api/groups/{id}` (GroupDetail).
+        // Slightly more payload than we need, but avoids a protocol
+        // change just for a home-screen avatar preview.
+        const detail = await apiFor(serverUrl).getGroup(groupId);
+        if (cancelled) return;
+        const fresh = detail.members ?? [];
+        setMembers(fresh);
+        await writeCache({ serverUrl, userId: '', endpoint: cacheEndpoint }, fresh);
+      } catch (e) {
+        if (__DEV__) console.warn('[home] getGroup for members failed', serverUrl, groupId, e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [serverUrl, groupId, cacheEndpoint]);
+
+  if (!members || members.length === 0) return null;
+  const people = members.map((m) => ({ initials: initialsOf(m.name) }));
+  return <AvatarStack people={people} max={MEMBER_STRIP_MAX} overflow="ellipsis" tone="paper" />;
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
@@ -757,6 +828,12 @@ const styles = StyleSheet.create({
     fontSize: fontSize.bodyS,
     color: colors.lead,
     marginTop: 3,
+  },
+  groupMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.s2,
+    marginTop: 6,
   },
   hostChip: {
     fontFamily: fontMono,

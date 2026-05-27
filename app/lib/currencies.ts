@@ -196,3 +196,60 @@ export function currencyDecimals(code: string): number {
 export function isKnownCurrency(code: string): boolean {
   return BY_CODE.has(code.toUpperCase());
 }
+
+// Currency → primary home BCP-47 locale. Used by `formatMinorUnits` so that
+// e.g. SEK always renders "375,00 kr" and USD always "$5.00", regardless of
+// the user's app language — the convention payment apps and exchanges use
+// (Wise, Revolut, Stripe Dashboard). For multi-country currencies (EUR, XAF,
+// XOF, XPF) we pick a representative locale that produces the canonical
+// continental-European or francophone-African style.
+//
+// If a currency is missing here, `currencyLocale()` falls back to the app's
+// current locale, preserving the pre-existing behaviour for any codes we
+// haven't catalogued.
+const CURRENCY_HOME_LOCALES: Record<string, string> = {
+  AED: 'ar-AE', AFN: 'fa-AF', ALL: 'sq-AL', AMD: 'hy-AM', AOA: 'pt-AO',
+  ARS: 'es-AR', AUD: 'en-AU', AWG: 'nl-AW', AZN: 'az-AZ', BAM: 'bs-BA',
+  BBD: 'en-BB', BDT: 'bn-BD', BHD: 'ar-BH', BIF: 'fr-BI', BMD: 'en-BM',
+  BND: 'ms-BN', BOB: 'es-BO', BRL: 'pt-BR', BSD: 'en-BS', BTN: 'dz-BT',
+  BWP: 'en-BW', BYN: 'be-BY', BZD: 'en-BZ', CAD: 'en-CA', CDF: 'fr-CD',
+  CHF: 'de-CH', CLP: 'es-CL', CNY: 'zh-CN', COP: 'es-CO', CRC: 'es-CR',
+  CUP: 'es-CU', CVE: 'pt-CV', CZK: 'cs-CZ', DJF: 'fr-DJ', DKK: 'da-DK',
+  DOP: 'es-DO', DZD: 'ar-DZ', EGP: 'ar-EG', ERN: 'ti-ER', ETB: 'am-ET',
+  // EUR has 20 issuing countries; de-DE produces the continental-European
+  // "5,00 €" style that all eurozone locales share, with German being the
+  // largest population.
+  EUR: 'de-DE',
+  FJD: 'en-FJ', FKP: 'en-FK', GBP: 'en-GB', GEL: 'ka-GE', GHS: 'en-GH',
+  GIP: 'en-GI', GMD: 'en-GM', GNF: 'fr-GN', GTQ: 'es-GT', GYD: 'en-GY',
+  HKD: 'zh-HK', HNL: 'es-HN', HTG: 'fr-HT', HUF: 'hu-HU', IDR: 'id-ID',
+  ILS: 'he-IL', INR: 'en-IN', IQD: 'ar-IQ', IRR: 'fa-IR', ISK: 'is-IS',
+  JMD: 'en-JM', JOD: 'ar-JO', JPY: 'ja-JP', KES: 'en-KE', KGS: 'ky-KG',
+  KHR: 'km-KH', KMF: 'fr-KM', KPW: 'ko-KP', KRW: 'ko-KR', KWD: 'ar-KW',
+  KYD: 'en-KY', KZT: 'kk-KZ', LAK: 'lo-LA', LBP: 'ar-LB', LKR: 'si-LK',
+  LRD: 'en-LR', LSL: 'en-LS', LYD: 'ar-LY', MAD: 'ar-MA', MDL: 'ro-MD',
+  MGA: 'mg-MG', MKD: 'mk-MK', MMK: 'my-MM', MNT: 'mn-MN', MOP: 'zh-MO',
+  MRU: 'ar-MR', MUR: 'en-MU', MVR: 'dv-MV', MWK: 'en-MW', MXN: 'es-MX',
+  MYR: 'ms-MY', MZN: 'pt-MZ', NAD: 'en-NA', NGN: 'en-NG', NIO: 'es-NI',
+  NOK: 'nb-NO', NPR: 'ne-NP', NZD: 'en-NZ', OMR: 'ar-OM', PAB: 'es-PA',
+  PEN: 'es-PE', PGK: 'en-PG', PHP: 'fil-PH', PKR: 'en-PK', PLN: 'pl-PL',
+  PYG: 'es-PY', QAR: 'ar-QA', RON: 'ro-RO', RSD: 'sr-RS', RUB: 'ru-RU',
+  RWF: 'fr-RW', SAR: 'ar-SA', SBD: 'en-SB', SCR: 'en-SC', SDG: 'ar-SD',
+  SEK: 'sv-SE', SGD: 'en-SG', SHP: 'en-SH', SLE: 'en-SL', SOS: 'so-SO',
+  SRD: 'nl-SR', SSP: 'en-SS', STN: 'pt-ST', SVC: 'es-SV', SYP: 'ar-SY',
+  SZL: 'en-SZ', THB: 'th-TH', TJS: 'tg-TJ', TMT: 'tk-TM', TND: 'ar-TN',
+  TOP: 'en-TO', TRY: 'tr-TR', TTD: 'en-TT', TWD: 'zh-TW', TZS: 'en-TZ',
+  UAH: 'uk-UA', UGX: 'en-UG', USD: 'en-US', UYU: 'es-UY', UZS: 'uz-UZ',
+  VES: 'es-VE', VND: 'vi-VN', VUV: 'en-VU', WST: 'en-WS',
+  // Multi-country CFA franc zones. fr-* picks the canonical "5 000 FCFA" /
+  // "5 000 CFA" / "5 000 ₣" rendering Intl produces for francophone locales.
+  XAF: 'fr-CM', XCD: 'en-AG', XCG: 'nl-CW', XOF: 'fr-SN', XPF: 'fr-PF',
+  YER: 'ar-YE', ZAR: 'en-ZA', ZMW: 'en-ZM', ZWG: 'en-ZW',
+};
+
+/** Primary home BCP-47 locale for a currency, or `undefined` if we have no
+ *  mapping. Callers use this to format amounts in the currency's native
+ *  style regardless of the app's UI language. */
+export function currencyLocale(code: string): string | undefined {
+  return CURRENCY_HOME_LOCALES[code.toUpperCase()];
+}

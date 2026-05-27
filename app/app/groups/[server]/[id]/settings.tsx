@@ -419,7 +419,11 @@ export default function GroupSettingsScreen() {
                   <Text style={styles.rowLabel}>{t('groupSettings.stats.totalSpent')}</Text>
                   <MoneyText style={styles.rowValue} numberOfLines={1} value={formattedTotal} />
                 </View>
-                {stats.top_spender && (
+                {/* Suppress top-spender on thin groups — with one or two
+                    expenses the "winner" is just the one person who paid
+                    and reads as silly. Surfaces once there's a real
+                    comparison to make. */}
+                {stats.top_spender && stats.expense_count >= 3 && (
                   <TopSpenderRow
                     label={t('groupSettings.stats.topSpender')}
                     name={topSpenderName}
