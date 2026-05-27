@@ -421,7 +421,7 @@
     "transferBetween": "överföring",
     "youOwe": "du är skyldig",
     "youPaid": "Du betalade",
-    "youreOwed": "du har att få"
+    "youreOwed": "du ska få"
   },
   "groupSettings": {
     "dangerZone": {
@@ -543,7 +543,7 @@
     "statusReauthShort": "logga in igen",
     "statusSettled": "kvitt",
     "youOweStamp": "du är skyldig",
-    "youreOwedStamp": "du har att få"
+    "youreOwedStamp": "du ska få"
   },
   "impactSheet": {
     "affectedSettlements": {
