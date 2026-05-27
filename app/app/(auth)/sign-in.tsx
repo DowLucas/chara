@@ -11,6 +11,7 @@ import {
   Linking,
   Modal,
   TouchableWithoutFeedback,
+  ScrollView,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
 import { markPopupClosed } from '@/lib/popup-guard';
@@ -444,9 +445,14 @@ export default function SignInScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { paddingTop: insets.top }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
       {/* Logo */}
       <View style={styles.logoRow}>
         <Image
@@ -610,6 +616,8 @@ export default function SignInScreen() {
         </Text>
       </View>
 
+      </ScrollView>
+
       <HostingSheet
         visible={hostingSheetOpen}
         onClose={() => setHostingSheetOpen(false)}
@@ -712,6 +720,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.paper,
+  },
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: spacing.s5,
   },
   logoRow: {
