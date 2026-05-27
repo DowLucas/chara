@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Start the chara backend stack: postgres + minio + backend.
+# Idempotent — safe to run repeatedly.
+set -euo pipefail
+
+cd "$(dirname "$0")/backend"
+
+if [[ -z "$(docker ps -aq -f name=^chara-postgres$)" ]]; then
+  echo "==> creating chara-postgres"
+  docker run -d --name chara-postgres \
+    -e POSTGRES_DB=chara -e POSTGRES_USER=chara -e POSTGRES_PASSWORD=chara \
+    -p 5433:5432 postgres:16-alpine >/dev/null
+elif [[ -z "$(docker ps -q -f name=^chara-postgres$)" ]]; then
+  echo "==> starting chara-postgres"
+  docker start chara-postgres >/dev/null
+fi
+
+# Wait for postgres to accept connections
+for i in {1..30}; do
+  if docker exec chara-postgres pg_isready -U chara >/dev/null 2>&1; then break; fi
+  sleep 0.5
+done
+
+echo "==> docker compose up (backend + minio)"
+docker compose up -d --build
+
+# Wait for liveness
+for i in {1..30}; do
+  if curl -fsS http://localhost:8080/api/health/liveness >/dev/null 2>&1; then
+    echo "==> backend healthy at http://localhost:8080"
+    exit 0
+  fi
+  sleep 1
+done
+
+echo "!! backend did not become healthy in time; recent logs:" >&2
+docker compose logs --tail=40 backend >&2
+exit 1
