@@ -12,7 +12,7 @@ import { showAlert } from '@/lib/app-alert';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
+import { useEnglishT } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 import { updateMe } from '@/lib/api';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
@@ -20,13 +20,33 @@ import * as analytics from '@/lib/analytics';
 
 export default function OnboardingNameScreen() {
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
-  const { user, setUser } = useAuth();
+  const t = useEnglishT();
+  const { user, setUser, signOut } = useAuth();
   const [name, setName] = useState(user?.name ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
   const [submitting, setSubmitting] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const canSubmit = name.trim().length > 0 && phone.trim().length > 0 && !submitting;
+
+  async function handleSignOut() {
+    const r = await showAlert({
+      title: t('accounts.signOutConfirmTitle'),
+      message: t('accounts.signOutConfirmBody'),
+      buttons: [
+        { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
+        { key: 'signout', label: t('you.signOut'), style: 'destructive' },
+      ],
+    });
+    if (r !== 'signout') return;
+    setSigningOut(true);
+    try {
+      await signOut();
+      // OnboardingLayout redirects to /(auth)/sign-in once user becomes null.
+    } finally {
+      setSigningOut(false);
+    }
+  }
 
   async function handleSubmit() {
     const trimmedName = name.trim();
@@ -58,17 +78,6 @@ export default function OnboardingNameScreen() {
       style={[styles.container, { paddingTop: insets.top + spacing.s2 }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <TouchableOpacity
-        style={styles.back}
-        onPress={() => {
-          if (router.canGoBack()) router.back();
-          else router.replace('/(tabs)/you');
-        }}
-        accessibilityLabel={t('common.back')}
-      >
-        <Feather name="chevron-left" size={22} color={colors.graphite} />
-      </TouchableOpacity>
-
       <View style={styles.header}>
         <Text style={styles.eyebrow}>{t('onboardingName.eyebrow')}</Text>
         <Text style={styles.headline}>{t('onboardingName.headline')}</Text>
@@ -126,6 +135,17 @@ export default function OnboardingNameScreen() {
           </Text>
           <Feather name="arrow-right" size={18} color={colors.fgOnAccent} />
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.signOutBtn}
+          onPress={handleSignOut}
+          disabled={signingOut}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+        >
+          <Text style={styles.signOutLabel}>
+            {signingOut ? t('onboardingName.saving') : t('you.signOut')}
+          </Text>
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
@@ -133,7 +153,6 @@ export default function OnboardingNameScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper, paddingHorizontal: spacing.s5 },
-  back: { paddingVertical: spacing.s2, marginLeft: -spacing.s2, alignSelf: 'flex-start' },
   header: { gap: spacing.s2, marginTop: spacing.s4, marginBottom: spacing.s5 },
   eyebrow: {
     fontFamily: fontMono,
@@ -178,4 +197,18 @@ const styles = StyleSheet.create({
   },
   ctaDisabled: { opacity: 0.45 },
   ctaLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.fgOnAccent },
+  signOutBtn: {
+    alignSelf: 'center',
+    paddingVertical: spacing.s3,
+    paddingHorizontal: spacing.s4,
+    marginTop: spacing.s2,
+  },
+  signOutLabel: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    letterSpacing: 0.3,
+    textDecorationLine: 'underline',
+    textDecorationColor: colors.ruleSoft,
+  },
 });

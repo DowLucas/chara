@@ -45,7 +45,7 @@ export function AmountField({
         style={styles.amountTouchable}
       >
         <Text
-          style={[styles.amountInput, !amount && { color: colors.lead }]}
+          style={[styles.amountInput, !amount && styles.amountPlaceholder]}
         >
           {amount || placeholder}
         </Text>
@@ -81,6 +81,13 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     padding: 0,
     fontVariant: ['tabular-nums'],
+  },
+  // Faded placeholder so the empty-state "0" reads as a hint, not a value
+  // already sitting in the field. `lead` alone was too dark and the giant
+  // mono 0 looked like a real entry with a caret cursor on top.
+  amountPlaceholder: {
+    color: colors.lead,
+    opacity: 0.45,
   },
   currencyTouchable: {
     flexDirection: 'row',

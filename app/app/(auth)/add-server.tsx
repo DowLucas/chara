@@ -12,7 +12,7 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
+import { useEnglishT } from '@/lib/i18n';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { publicApi } from '@/lib/api';
@@ -39,7 +39,7 @@ interface ConfirmState {
 
 export default function AddServerScreen() {
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const t = useEnglishT();
   const params = useLocalSearchParams<{
     prefillUrl?: string;
     mode?: Mode;
@@ -196,7 +196,7 @@ function UrlStage({
   error: string | null;
   onContinue: () => void;
 }) {
-  const { t } = useTranslation();
+  const t = useEnglishT();
   const canSubmit = urlInput.trim().length > 0;
   return (
     <View style={styles.stage}>
@@ -240,7 +240,7 @@ function UrlStage({
 }
 
 function ValidatingStage({ host }: { host: string }) {
-  const { t } = useTranslation();
+  const t = useEnglishT();
   return (
     <View style={[styles.stage, styles.centeredStage]}>
       <ActivityIndicator color={colors.graphite} />
@@ -262,7 +262,7 @@ function ConfirmStage({
   onCancel: () => void;
   onEdit: () => void;
 }) {
-  const { t } = useTranslation();
+  const t = useEnglishT();
   let host = serverUrl;
   try {
     host = new URL(serverUrl).host;

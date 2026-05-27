@@ -1,5 +1,14 @@
 import { useEffect, useRef } from 'react';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, LogBox } from 'react-native';
+
+// SecureStore can throw before the iOS keychain unlocks on cold launch.
+// The `getPreferredLanguage` / accounts-store paths already swallow the
+// error and fall back to defaults — see the explanatory comment in
+// `app/lib/i18n.ts`. The yellow-box warning leaks the implementation
+// detail into the UI (and into screenshots) for no actionable reason, so
+// silence that specific pattern. Released builds strip LogBox anyway;
+// this only affects dev/preview.
+LogBox.ignoreLogs([/ExpoSecureStore/i]);
 import * as Linking from 'expo-linking';
 import * as Notifications from 'expo-notifications';
 import { router, Stack } from 'expo-router';

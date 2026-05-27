@@ -284,8 +284,11 @@ export default function GroupDetailScreen() {
             accessibilityRole="button"
             accessibilityLabel={t('groupDetail.membersLabel', { count: members.length })}
             hitSlop={8}
+            activeOpacity={0.6}
+            style={styles.membersChip}
           >
-            <AvatarStack people={memberInitials} />
+            <AvatarStack people={memberInitials} tone="paper" />
+            <Feather name="chevron-right" size={16} color={colors.lead} />
           </TouchableOpacity>
         </View>
       </View>
@@ -653,7 +656,7 @@ export default function GroupDetailScreen() {
           {t('groupDetail.addExpense')}
         </Button>
         <Button
-          kind="primary"
+          kind="positive"
           onPress={() => router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/settle`)}
           style={styles.ctaBtn}
           disabled={balances.length === 0 || balances.every((b) => decimalToMinor(b.net_balance) === 0)}
@@ -773,6 +776,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     flexShrink: 1,
     minWidth: 0,
+  },
+  membersChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 4,
+    paddingLeft: 6,
+    paddingRight: 4,
+    borderRadius: 999,
+    backgroundColor: colors.bone,
   },
   titleChipText: {
     fontFamily: fontBodyMedium,

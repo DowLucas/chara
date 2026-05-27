@@ -10,7 +10,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { ActionSheet, openNativeActionSheet } from '@/components/ActionSheet';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/lib/auth';
+import { useAccount } from '@/lib/accounts';
 import { apiFor, GroupDetail, GroupMember } from '@/lib/api';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import { formatLeaveReasons } from '@/lib/group-settings';
@@ -32,7 +32,8 @@ export default function GroupMembersScreen() {
   const api = apiFor(serverUrl);
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const account = useAccount(serverUrl);
+  const user = account?.user ?? null;
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [kickSheetFor, setKickSheetFor] = useState<GroupMember | null>(null);
 

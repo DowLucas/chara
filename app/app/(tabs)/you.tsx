@@ -503,21 +503,17 @@ export default function YouScreen() {
             onPress={() => router.push('/onboarding/name')}
             activeOpacity={0.7}
           >
-            <Text style={styles.editBtnLabel}>{t('you.editProfile')}</Text>
+            <Text style={styles.editBtnLabel}>{t('you.editNameAndPhone')}</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.rule} />
-
-        <Text style={styles.sectionEyebrow}>{t('you.settingsEyebrow')}</Text>
+        <Text style={[styles.sectionEyebrow, styles.firstSectionEyebrow]}>
+          {t('you.settingsEyebrow')}
+        </Text>
         <View style={styles.list}>
           <NavRow
             label={t('accounts.title')}
-            value={
-              hasMultipleAccounts
-                ? t('you.accountsRowMany', { count: accountCount })
-                : t('accounts.addAnother')
-            }
+            value={t('you.accountsRowCount', { count: accountCount })}
             onPress={handleAccountsRowPress}
           />
           <NavRow
@@ -563,45 +559,40 @@ export default function YouScreen() {
           />
         </View>
 
-        <View style={styles.rule} />
-
         {__DEV__ && (
-          <View style={styles.devBlock}>
-            <Text style={styles.devEyebrow}>{t('you.devEyebrow')}</Text>
-            <TouchableOpacity
-              style={styles.devRow}
-              onPress={() => router.push('/onboarding')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.devRowLabel}>{t('you.replayOnboarding')}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOutPress} activeOpacity={0.7}>
-          <Text style={styles.signOutText}>
-            {hasMultipleAccounts ? t('you.signOutAll') : t('you.signOut')}
-          </Text>
-        </TouchableOpacity>
-
-        {accountCount > 0 && (
-          <View style={styles.dangerZone}>
-            <Text style={styles.dangerEyebrow}>{t('account.deleteAll.eyebrow')}</Text>
+          <>
+            <Text style={[styles.sectionEyebrow, { marginTop: spacing.s5 }]}>
+              {t('you.devEyebrow')}
+            </Text>
             <View style={styles.list}>
-              <TouchableOpacity
-                style={styles.row}
-                onPress={handleDeleteFromAll}
-                activeOpacity={0.7}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.dangerRowLabel}>{t('account.deleteAll.title')}</Text>
-                  <Text style={styles.rowHint}>{t('account.deleteAll.body')}</Text>
-                </View>
-                <Feather name="chevron-right" size={18} color={colors.brick} />
-              </TouchableOpacity>
+              <NavRow
+                label={t('you.replayOnboarding')}
+                onPress={() => router.push('/onboarding')}
+              />
             </View>
-          </View>
+          </>
         )}
+
+        <Text style={[styles.sectionEyebrow, { marginTop: spacing.s5 }]}>
+          {t('account.eyebrow')}
+        </Text>
+        <View style={styles.list}>
+          <NavRow
+            label={hasMultipleAccounts ? t('you.signOutAll') : t('you.signOut')}
+            onPress={handleSignOutPress}
+            destructive
+            showChevron={false}
+          />
+          {accountCount > 0 && (
+            <NavRow
+              label={t('account.deleteAll.title')}
+              value={t('account.deleteAll.rowValue')}
+              onPress={handleDeleteFromAll}
+              destructive
+              showChevron={false}
+            />
+          )}
+        </View>
       </ScrollView>
       <ActionSheet
         visible={avatarSheetVisible}
@@ -633,17 +624,28 @@ function NavRow({
   label,
   value,
   onPress,
+  destructive,
+  showChevron = true,
 }: {
   label: string;
   value?: string;
   onPress: () => void;
+  destructive?: boolean;
+  showChevron?: boolean;
 }) {
+  const labelColor = destructive ? colors.brick : colors.graphite;
   return (
     <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
-      <Text style={styles.rowLabel}>{label}</Text>
+      <Text style={[styles.rowLabel, { color: labelColor }]}>{label}</Text>
       <View style={styles.rowRight}>
         {value && <Text style={styles.rowValue}>{value}</Text>}
-        <Feather name="chevron-right" size={18} color={colors.lead} />
+        {showChevron && (
+          <Feather
+            name="chevron-right"
+            size={18}
+            color={destructive ? colors.brick : colors.lead}
+          />
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -727,18 +729,15 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     letterSpacing: 0.3,
   },
-  rule: {
-    width: '100%',
-    height: 1.5,
-    backgroundColor: colors.graphite,
-    marginVertical: spacing.s5,
-  },
   sectionEyebrow: {
     fontFamily: fontMono,
     fontSize: fontSize.bodyS,
     color: colors.lead,
     letterSpacing: 0.3,
     marginBottom: spacing.s2,
+  },
+  firstSectionEyebrow: {
+    marginTop: spacing.s6,
   },
   list: {
     borderTopWidth: 1,
@@ -767,45 +766,5 @@ const styles = StyleSheet.create({
     color: colors.lead,
     letterSpacing: 0.3,
     marginTop: 2,
-  },
-  signOutBtn: { paddingVertical: spacing.s3, paddingHorizontal: spacing.s5, alignSelf: 'center' },
-  signOutText: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.vermillion,
-    letterSpacing: 0.3,
-  },
-  devBlock: { width: '100%', marginBottom: spacing.s4 },
-  devEyebrow: {
-    fontFamily: fontMono,
-    fontSize: fontSize.bodyS,
-    color: colors.lead,
-    letterSpacing: 0.3,
-    marginBottom: spacing.s2,
-  },
-  devRow: {
-    paddingVertical: spacing.s3,
-    paddingHorizontal: spacing.s4,
-    borderWidth: 0.5,
-    borderColor: colors.graphite,
-    borderRadius: 6,
-    backgroundColor: colors.bone,
-  },
-  devRowLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite },
-  dangerZone: {
-    width: '100%',
-    marginTop: spacing.s5,
-  },
-  dangerEyebrow: {
-    fontFamily: fontMono,
-    fontSize: fontSize.bodyS,
-    color: colors.brick,
-    letterSpacing: 0.3,
-    marginBottom: spacing.s2,
-  },
-  dangerRowLabel: {
-    fontFamily: fontBody,
-    fontSize: fontSize.body,
-    color: colors.brick,
   },
 });

@@ -2,6 +2,8 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { getLocales } from 'expo-localization';
 import * as SecureStore from 'expo-secure-store';
+import { useCallback } from 'react';
+import { currencyLocale } from './currencies';
 
 import en from './locales/en.json';
 import sv from './locales/sv.json';
@@ -121,23 +123,39 @@ export function currentLocale(): string {
  *  pull it without dragging in expo-localization. */
 export { decimalToMinor } from './money-utils';
 
-/** Format a money value stored as minor units (öre/cents) using the device's
- *  locale and the currency's native presentation — "495,82 kr" for SEK in
- *  sv-SE, "$1,234.56" for USD in en-US, "1.234,56 €" for EUR in de-DE. Falls
- *  back to "amount CODE" if the runtime can't resolve the currency.
+/** Format a money value stored as minor units (öre/cents) in the currency's
+ *  native presentation — "495,82 kr" for SEK, "$1,234.56" for USD, "1.234,56 €"
+ *  for EUR — regardless of the app's UI language. This matches the convention
+ *  used by Wise, Revolut, and Stripe Dashboard: amounts read in the shape the
+ *  currency's home audience uses, not whatever the reader's UI happens to be
+ *  set to.
+ *
+ *  Currencies without a home-locale mapping (or whose locale the runtime
+ *  doesn't recognise) fall back to the app's current locale.
+ *
  *  `relative` adds a leading + / − sign. */
 export function formatMinorUnits(minor: number | string, currency: string, opts?: { relative?: boolean }): string {
   const n = typeof minor === 'string' ? parseInt(minor, 10) : minor;
   const safe = Number.isFinite(n) ? n : 0;
   const value = Math.abs(safe) / 100;
-  let formatted: string;
-  try {
-    formatted = new Intl.NumberFormat(currentLocale(), {
-      style: 'currency',
-      currency,
-      currencyDisplay: 'narrowSymbol',
-    }).format(value);
-  } catch {
+  const home = currencyLocale(currency);
+  // Try the currency's home locale first; if Intl on this runtime doesn't
+  // recognise that BCP-47 tag (older Hermes / JSC builds), retry with the
+  // app's current locale before giving up.
+  let formatted: string | null = null;
+  for (const locale of home ? [home, currentLocale()] : [currentLocale()]) {
+    try {
+      formatted = new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency,
+        currencyDisplay: 'narrowSymbol',
+      }).format(value);
+      break;
+    } catch {
+      /* try the next locale */
+    }
+  }
+  if (formatted == null) {
     // Unknown ISO code on this runtime — keep the old shape so the UI
     // doesn't crash.
     formatted = `${value.toLocaleString(currentLocale(), { minimumFractionDigits: 0 })} ${currency}`;
@@ -179,6 +197,19 @@ export function formatDate(d: Date | string): string {
 export function formatTime(d: Date | string): string {
   const date = typeof d === 'string' ? new Date(d) : d;
   return date.toLocaleTimeString(currentLocale(), { hour: '2-digit', minute: '2-digit' });
+}
+
+/** Returns a `t` function that always resolves keys in English, regardless of
+ *  the user's selected app language. Used by the login and onboarding screens
+ *  where the user hasn't yet confirmed they understand the UI language — the
+ *  detected device locale can be wrong (shared/borrowed device, multilingual
+ *  users) and getting stuck unable to read the sign-in screen is fatal. */
+export function useEnglishT(): (key: string, opts?: Record<string, unknown>) => string {
+  return useCallback(
+    (key: string, opts?: Record<string, unknown>) =>
+      i18n.t(key, { ...(opts ?? {}), lng: 'en' }) as string,
+    [],
+  );
 }
 
 export default i18n;

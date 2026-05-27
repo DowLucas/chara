@@ -3,13 +3,15 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, Modal, Lin
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Avatar } from '@/components/Avatar';
 import { ActionSheet, ActionSheetOption, openNativeActionSheet } from '@/components/ActionSheet';
 import { MoneyText } from '@/components/MoneyText';
 import { SettlementImpactSheet } from '@/components/SettlementImpactSheet';
-import { useTranslation } from 'react-i18next';
+import { showAlert } from '@/lib/app-alert';
+import { Trans, useTranslation } from 'react-i18next';
 import {
   apiFor,
   authToken,
@@ -48,6 +50,8 @@ export default function ExpenseDetailScreen() {
   );
   const [token, setToken] = useState<string | null>(null);
   const [actionSheetVisible, setActionSheetVisible] = useState(false);
+  const [receiptSheetVisible, setReceiptSheetVisible] = useState(false);
+  const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -91,6 +95,78 @@ export default function ExpenseDetailScreen() {
       };
     }, [id, groupId, serverUrl]),
   );
+
+  function inferReceiptMime(asset: ImagePicker.ImagePickerAsset): string {
+    const m = (asset as { mimeType?: string }).mimeType?.toLowerCase();
+    if (m === 'image/png') return 'image/png';
+    if (m === 'image/webp') return 'image/webp';
+    // ImagePicker re-encodes to JPEG on both platforms when allowsEditing,
+    // so JPEG is the safe default.
+    return 'image/jpeg';
+  }
+
+  async function uploadReceiptAsset(asset: ImagePicker.ImagePickerAsset | undefined) {
+    if (!asset?.base64 || !groupId || !id) return;
+    setUploadingReceipt(true);
+    try {
+      const mime = inferReceiptMime(asset);
+      await api.uploadExpenseAttachment(groupId, id, asset.base64, mime);
+      const refreshed = await api.listExpenseAttachments(groupId, id);
+      setAttachments(refreshed);
+    } catch (e) {
+      showAlert({
+        title: t('common.error'),
+        message: e instanceof Error ? e.message : String(e),
+      });
+    } finally {
+      setUploadingReceipt(false);
+    }
+  }
+
+  async function pickReceiptFromLibrary() {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      showAlert({ title: t('expenseDetail.receiptPermissionTitle'), message: t('expenseDetail.receiptPermissionBody') });
+      return;
+    }
+    const picked = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 0.9,
+      base64: true,
+      exif: false,
+    });
+    if (picked.canceled) return;
+    await uploadReceiptAsset(picked.assets?.[0]);
+  }
+
+  async function takeReceiptPhoto() {
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) {
+      showAlert({ title: t('expenseDetail.receiptPermissionTitle'), message: t('expenseDetail.receiptPermissionBody') });
+      return;
+    }
+    const picked = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: 0.9,
+      base64: true,
+      exif: false,
+    });
+    if (picked.canceled) return;
+    await uploadReceiptAsset(picked.assets?.[0]);
+  }
+
+  function openReceiptSheet() {
+    if (isPopupJustClosed()) return;
+    if (!isAuthor) return;
+    const options: ActionSheetOption[] = [
+      { label: t('expenseDetail.receiptChooseLibrary'), onPress: pickReceiptFromLibrary },
+      { label: t('expenseDetail.receiptTakePhoto'), onPress: takeReceiptPhoto },
+    ];
+    if (openNativeActionSheet(t('expenseDetail.receiptSheetTitle'), options)) return;
+    setReceiptSheetVisible(true);
+  }
 
   function openMenu() {
     // Don't reopen the action sheet if a popup was just dismissed by
@@ -175,10 +251,18 @@ export default function ExpenseDetailScreen() {
   }
 
   const amountMinor = Math.round(parseFloat(expense.amount) * 100);
-  const amountDisplay = (Math.abs(amountMinor) / 100).toLocaleString(currentLocale(), {
-    minimumFractionDigits: 0,
-  });
+  // Route the hero through the same formatter the rest of the app uses so
+  // the currency symbol position matches everywhere else (kr 125.00, $5.00).
+  // Locale-aware: in sv-SE the same call renders "375,00 kr" with the symbol
+  // trailing, which is the right thing in that locale.
+  const amountDisplay = formatMinorUnits(Math.abs(amountMinor), expense.currency);
   const payer = members.find((m) => m.id === expense.paid_by_id);
+  const payerIsYou = payer?.user_id === user?.id;
+  const payerLabel = payerIsYou
+    ? t('expenseDetail.you')
+    : payer
+      ? shortenMember(payer.name)
+      : t('common.dash');
   const splits = expense.splits ?? [];
   const splitCount = splits.length || members.length;
   const eachOwes = splitCount > 0 ? Math.round(amountMinor / splitCount) : 0;
@@ -201,13 +285,20 @@ export default function ExpenseDetailScreen() {
         {/* Title + amount hero */}
         <View style={styles.header}>
           <Text style={styles.context}>
-            {t('expenseDetail.context', { groupName: group?.name?.toLowerCase() ?? '—' })}
+            {t('expenseDetail.context', { groupName: group?.name ?? '—' })}
           </Text>
           <Text style={styles.title}>{expense.title}</Text>
-          <View style={styles.amountRow}>
-            <MoneyText style={styles.amount} value={amountDisplay} />
-            <Text style={styles.currency}>{expense.currency}</Text>
-          </View>
+          <MoneyText style={styles.amount} value={amountDisplay} />
+          {expense.expense_date ? (
+            <Text style={styles.paidBySentence}>
+              <Trans
+                i18nKey="expenseDetail.paidBySentence"
+                values={{ name: payerLabel, date: formatDate(expense.expense_date) }}
+                components={{ b: <Text style={styles.paidByEmphasis} /> }}
+              />
+            </Text>
+          ) : null}
+
 
           {/* FX card — promoted out of a one-liner so the rate (and whether
               it was a custom override vs ECB) is impossible to miss. Only
@@ -251,39 +342,13 @@ export default function ExpenseDetailScreen() {
             </View>
           ) : null}
 
-          {/* Compact meta — one tight row instead of three labeled columns.
-              Avatar + name pairs with date + category as inline meta. */}
-          <View style={styles.metaRow}>
-            <View style={styles.metaPaidBy}>
-              <Avatar
-                initials={payer ? initialsOf(payer.name) : '??'}
-                size="sm"
-                source={avatarImageSource(payer, token)}
-              />
-              <Text style={styles.metaName} numberOfLines={1}>
-                {payer ? shortenMember(payer.name) : t('common.dash')}
-              </Text>
-            </View>
-            <Text style={styles.metaDot}>·</Text>
-            <Text style={styles.metaDate}>{expense.expense_date ?? t('common.dash')}</Text>
-            <View style={styles.metaSpacer} />
-            <View style={styles.categoryTag}>
-              <Text style={styles.categoryText}>
-                {t(`categories.${expense.category}`, expense.category)}
-              </Text>
-            </View>
-          </View>
+          {/* Meta row removed — payer is communicated by the bordered
+              split-row card; date is shown once in the activity footer. */}
         </View>
 
-        {/* Split breakdown header */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>
-            {t('expenseDetail.splitMeta', { method: expense.split_method || 'equally', count: splitCount })}
-          </Text>
-          <Text style={styles.sectionLabel}>
-            {t('expenseDetail.eachOwes', { amount: formatMinorUnits(Math.abs(eachOwes), expense.currency) })}
-          </Text>
-        </View>
+        {/* Split breakdown header removed — the per-row share + the row
+            count carry the same information; the meta header was noise. */}
+        <View style={styles.sectionGap} />
 
         {/* Splits list */}
         {splits.length === 0
@@ -327,10 +392,23 @@ export default function ExpenseDetailScreen() {
             until the user actually has something to look at. */}
         <View style={styles.receiptWrap}>
           {attachments.length === 0 ? (
-            <View style={styles.receiptEmpty}>
-              <Feather name="image" size={14} color={colors.lead} />
-              <Text style={styles.receiptEmptyText}>{t('expenseDetail.noReceipt')}</Text>
-            </View>
+            <TouchableOpacity
+              style={styles.receiptEmpty}
+              activeOpacity={isAuthor ? 0.7 : 1}
+              onPress={isAuthor ? openReceiptSheet : undefined}
+              disabled={!isAuthor || uploadingReceipt}
+              accessibilityRole={isAuthor ? 'button' : undefined}
+              accessibilityLabel={isAuthor ? t('expenseDetail.receiptSheetTitle') : undefined}
+            >
+              <Feather name={isAuthor ? 'plus-circle' : 'image'} size={14} color={colors.lead} />
+              <Text style={styles.receiptEmptyText}>
+                {uploadingReceipt
+                  ? t('expenseDetail.receiptUploading')
+                  : isAuthor
+                    ? t('expenseDetail.addReceipt')
+                    : t('expenseDetail.noReceipt')}
+              </Text>
+            </TouchableOpacity>
           ) : (
             attachments.map((a) => (
               <TouchableOpacity
@@ -383,12 +461,12 @@ export default function ExpenseDetailScreen() {
           </View>
         </Modal>
 
-        {/* Activity — single muted mono line; no rule, no section header. */}
+        {/* Activity — single muted mono line; no rule, no section header.
+            Use the same `formatDate` the top meta row uses so both dates
+            render in one locale-correct shape. */}
         <Text style={styles.activityFooter}>
           {t('expenseDetail.activityHeader', {
-            created: expense.created_at
-              ? new Date(expense.created_at).toLocaleDateString(currentLocale(), { day: 'numeric', month: 'short' })
-              : '',
+            created: expense.created_at ? formatDate(expense.created_at) : '',
             time: expense.created_at
               ? new Date(expense.created_at).toLocaleTimeString(currentLocale(), { hour: '2-digit', minute: '2-digit' })
               : '',
@@ -415,6 +493,16 @@ export default function ExpenseDetailScreen() {
             destructive: true,
             onPress: () => setDeleteSheetVisible(true),
           },
+        ]}
+      />
+
+      <ActionSheet
+        visible={receiptSheetVisible}
+        onClose={() => setReceiptSheetVisible(false)}
+        title={t('expenseDetail.receiptSheetTitle')}
+        options={[
+          { label: t('expenseDetail.receiptChooseLibrary'), onPress: pickReceiptFromLibrary },
+          { label: t('expenseDetail.receiptTakePhoto'), onPress: takeReceiptPhoto },
         ]}
       />
 
@@ -463,7 +551,12 @@ interface SplitRowProps {
 
 function SplitRow({ name, initials, share, currency, avatarSource }: SplitRowProps) {
   const minor = parseInt(share, 10);
-  const display = `−${formatMinorUnits(Math.abs(minor), currency)}`;
+  // No sign — this is each person's share of the cost, not a balance delta.
+  // The header already says how the total split, so the row is reinforcement.
+  // Showing −kr next to the payer's name contradicts the standings screen
+  // (where their net for this expense is positive). Who paid is communicated
+  // separately by the "Paid by <name>" sentence under the hero amount.
+  const display = formatMinorUnits(Math.abs(minor), currency);
   return (
     <View style={styles.splitRow}>
       <View style={styles.splitLeft}>
@@ -498,7 +591,6 @@ const styles = StyleSheet.create({
     lineHeight: 46,
     marginBottom: spacing.s4,
   },
-  amountRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   amount: {
     fontFamily: fontMono,
     fontSize: fontSize.displayXl,
@@ -507,7 +599,6 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
     lineHeight: 66,
   },
-  currency: { fontFamily: fontMono, fontSize: fontSize.displayS, color: colors.lead },
   fxCard: {
     marginTop: spacing.s4,
     padding: spacing.s4,
@@ -557,34 +648,29 @@ const styles = StyleSheet.create({
     color: colors.lead,
     marginTop: 2,
   },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: spacing.s4,
+  sectionGap: {
+    height: spacing.s5,
   },
-  metaSpacer: { flex: 1 },
-  metaDot: { fontFamily: fontMono, fontSize: fontSize.body, color: colors.lead },
-  metaPaidBy: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  metaName: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite, flexShrink: 1 },
-  metaDate: { fontFamily: fontMono, fontSize: fontSize.body, color: colors.graphite },
-  categoryTag: {
-    borderWidth: 0.5,
-    borderColor: colors.ruleSoft,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+  paidBySentence: {
+    fontFamily: fontBody,
+    fontSize: fontSize.body,
+    color: colors.lead,
+    marginTop: spacing.s3,
+    // Hint extra line height so the inline chip backgrounds don't bump
+    // against the line above / below when the sentence wraps.
+    lineHeight: fontSize.body + 10,
   },
-  categoryText: { fontFamily: fontMono, fontSize: fontSize.bodyS, color: colors.lead },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-    paddingHorizontal: spacing.s5,
-    paddingTop: spacing.s6,
-    marginBottom: 8,
+  paidByEmphasis: {
+    fontFamily: fontDisplay,
+    color: colors.graphite,
+    // Inline chip: subtle bone fill with a touch of horizontal padding.
+    // Border radius on inline Text is best-effort on RN — falls back to a
+    // rectangle on Android, which still reads as a highlight.
+    backgroundColor: colors.bone,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
   },
-  sectionLabel: { fontFamily: fontMono, fontSize: fontSize.bodyS, color: colors.lead },
   splitRow: {
     flexDirection: 'row',
     alignItems: 'center',

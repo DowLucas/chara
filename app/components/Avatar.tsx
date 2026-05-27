@@ -50,23 +50,56 @@ export function Avatar({ initials, size = 'md', stack = false, style, source }: 
   );
 }
 
-interface AvatarStackProps {
-  people: string[];
-  /** Max avatars shown before collapsing the tail into a "+N" chip. */
-  max?: number;
+export interface StackPerson {
+  initials: string;
+  source?: ImageURISource | null;
 }
 
-export function AvatarStack({ people, max = 3 }: AvatarStackProps) {
-  const overflow = people.length - max;
-  const shown = overflow > 0 ? people.slice(0, max) : people;
+interface AvatarStackProps {
+  /** Either bare initials strings (legacy) or full person records. */
+  people: ReadonlyArray<string | StackPerson>;
+  /** Max avatars shown before collapsing the tail into an overflow chip. */
+  max?: number;
+  /** How to render the overflow chip: numeric "+N" (default) or a bare "…". */
+  overflow?: 'count' | 'ellipsis';
+  /** Background tone for the avatar fill. Default "bone" matches paper
+   *  surfaces; pass "paper" when stacking on top of a bone card (e.g. the
+   *  home groups list) so the circles don't blend into the card. */
+  tone?: 'bone' | 'paper';
+}
+
+export function AvatarStack({ people, max = 3, overflow = 'count', tone = 'bone' }: AvatarStackProps) {
+  const normalized: StackPerson[] = people.map((p) =>
+    typeof p === 'string' ? { initials: p } : p,
+  );
+  const overflowCount = normalized.length - max;
+  const shown = overflowCount > 0 ? normalized.slice(0, max) : normalized;
+  const fill = tone === 'paper' ? colors.paper : colors.bone;
+  const ring = tone === 'paper' ? colors.bone : colors.paper;
   return (
     <View style={styles.stackRow}>
       {shown.map((p, i) => (
-        <Avatar key={i} initials={p} size="sm" stack={i > 0} />
+        <Avatar
+          key={i}
+          initials={p.initials}
+          source={p.source ?? null}
+          size="sm"
+          stack={i > 0}
+          style={{ backgroundColor: fill, borderColor: i > 0 ? ring : colors.ruleSoft }}
+        />
       ))}
-      {overflow > 0 && (
-        <View style={[styles.base, styles.overflow, styles.stack]}>
-          <Text style={[styles.text, styles.textSm]}>+{overflow}</Text>
+      {overflowCount > 0 && (
+        <View
+          style={[
+            styles.base,
+            styles.overflowChip,
+            styles.stack,
+            { backgroundColor: fill, borderColor: ring },
+          ]}
+        >
+          <Text style={[styles.text, styles.textSm]}>
+            {overflow === 'ellipsis' ? '…' : `+${overflowCount}`}
+          </Text>
         </View>
       )}
     </View>
@@ -99,7 +132,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  overflow: {
+  overflowChip: {
     width: 26,
     height: 26,
     borderRadius: 13,

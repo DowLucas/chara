@@ -141,6 +141,16 @@ Non-English locales are managed in **Weblate**, self-hosted on Lurkhuset:
 All backend env vars (db config, JWT secret, `GEMINI_API_KEY` for OCR, etc.) live in `backend/.env.local` — gitignored.
 
 ```
+./run-backend
+```
+
+`./run-backend` (at the repo root) is idempotent: ensures the `chara-postgres` container exists and is running on `localhost:5433`, then `docker compose up -d --build` for backend + MinIO, then waits for `/api/health/liveness`. Postgres is **not** in `backend/docker-compose.yml` — it's a standalone container the script manages.
+
+Equivalent manual sequence:
+
+```
+docker run -d --name chara-postgres -e POSTGRES_DB=chara -e POSTGRES_USER=chara \
+  -e POSTGRES_PASSWORD=chara -p 5433:5432 postgres:16-alpine
 cd backend && docker compose up -d --build
 ```
 

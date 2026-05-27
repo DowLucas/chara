@@ -12,7 +12,7 @@ import { showAlert } from '@/lib/app-alert';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
+import { useEnglishT } from '@/lib/i18n';
 import { createGroup } from '@/lib/api';
 import { CurrencyPicker } from '@/components/CurrencyPicker';
 import { SUGGESTED_CURRENCY_CODES } from '@/lib/currencies';
@@ -32,7 +32,7 @@ import * as analytics from '@/lib/analytics';
 
 export default function CreateGroupScreen() {
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const t = useEnglishT();
   const defaultAccount = useDefaultAccount();
   const [name, setName] = useState('');
   const [currency, setCurrency] = useState<string>('SEK');

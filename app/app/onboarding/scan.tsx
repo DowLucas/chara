@@ -8,7 +8,7 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
-import { useTranslation } from 'react-i18next';
+import { useEnglishT } from '@/lib/i18n';
 import { QRScanner } from '@/components/QRScanner';
 import { useAccounts } from '@/lib/accounts';
 import * as analytics from '@/lib/analytics';
@@ -31,7 +31,7 @@ function mapInvalidReason(
 }
 
 export default function ScanToJoinScreen() {
-  const { t } = useTranslation();
+  const t = useEnglishT();
   const { accounts } = useAccounts();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
