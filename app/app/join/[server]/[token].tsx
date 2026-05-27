@@ -18,6 +18,8 @@ import { apiFor, ApiError, publicApi, type InvitePreview } from '@/lib/api';
 import { useAccount } from '@/lib/accounts';
 import * as analytics from '@/lib/analytics';
 import { showAlert } from '@/lib/app-alert';
+import { runDiscoveryHandshake } from '@/lib/discovery';
+import { checkProtocolCompat } from '@/lib/protocol';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 
 type State =
@@ -46,6 +48,15 @@ export default function JoinConfirmScreen() {
 
   const [state, setState] = useState<State>({ kind: 'loading' });
   const [joining, setJoining] = useState(false);
+
+  // Host for "on {host}" eyebrow and unreachable error.
+  const host = useMemo(() => {
+    try {
+      return new URL(serverUrl).host;
+    } catch {
+      return serverUrl;
+    }
+  }, [serverUrl]);
 
   const loadPreview = useCallback(async () => {
     if (!serverUrl || !token) {
@@ -78,8 +89,14 @@ export default function JoinConfirmScreen() {
     void loadPreview();
   }, [loadPreview]);
 
+  // Account is "usable" only when present *and* not in a degraded status.
+  // reauth_required and incompatible both block the join API call (401/426);
+  // surface them in the CTA instead of letting the user mash a button that
+  // will fail.
+  const accountUsable = !!account && !account.status;
+
   const onJoin = useCallback(async () => {
-    if (joining || !account || state.kind !== 'ok') return;
+    if (joining || !accountUsable || state.kind !== 'ok') return;
     setJoining(true);
     try {
       const group = await apiFor(serverUrl).joinGroupByToken(token);
@@ -102,29 +119,41 @@ export default function JoinConfirmScreen() {
     } finally {
       setJoining(false);
     }
-  }, [account, joining, serverUrl, state, t, token]);
+  }, [accountUsable, joining, serverUrl, state, t, token]);
 
-  const onSignInToJoin = useCallback(() => {
+  const onSignInToJoin = useCallback(async () => {
     if (state.kind !== 'ok') return;
+    // Reauth path: existing account on this server, just expired/locked-out.
+    // sign-in?mode=reauth router.back()s on success, returning to this
+    // screen with `account.status` cleared — at which point the CTA becomes
+    // "Join group" and the user taps once more.
+    if (account?.status === 'reauth_required') {
+      router.push(
+        `/(auth)/sign-in?server=${encodeURIComponent(serverUrl)}&mode=reauth`,
+      );
+      return;
+    }
+    // Net-new account path: discovery handshake first so an unreachable /
+    // protocol-incompatible server is caught here, not buried inside
+    // add-server. Failure surfaces inline via showAlert.
+    const result = await runDiscoveryHandshake({
+      fetchInstanceInfo: () => publicApi(serverUrl).instanceInfo(),
+      checkCompat: (args) => checkProtocolCompat(args),
+    });
+    if (!result.ok) {
+      void showAlert({ title: t('scanJoin.unreachable', { host }) });
+      return;
+    }
     const qs = new URLSearchParams();
     qs.set('prefillUrl', serverUrl);
     qs.set('mode', 'invite');
     qs.set('pendingInvite', `${serverUrl}/api/groups/join/${encodeURIComponent(token)}`);
     router.push(`/(auth)/add-server?${qs.toString()}`);
-  }, [serverUrl, state, token]);
+  }, [account, host, serverUrl, state, t, token]);
 
   const onCancel = useCallback(() => {
     router.replace('/(tabs)');
   }, []);
-
-  // Host for the eyebrow ("on chara-api.lurkhuset.com")
-  const host = useMemo(() => {
-    try {
-      return new URL(serverUrl).host;
-    } catch {
-      return serverUrl;
-    }
-  }, [serverUrl]);
 
   return (
     <ScrollView
@@ -156,8 +185,12 @@ export default function JoinConfirmScreen() {
               <Text style={styles.lockedNote}>{t('joinConfirm.lockedNote')}</Text>
             )}
 
+            {account?.status === 'incompatible' && (
+              <Text style={styles.lockedNote}>{t('joinConfirm.incompatibleNote')}</Text>
+            )}
+
             <View style={styles.actions}>
-              {account ? (
+              {accountUsable ? (
                 <TouchableOpacity
                   style={[styles.primary, joining && styles.primaryDisabled]}
                   onPress={onJoin}
@@ -168,13 +201,22 @@ export default function JoinConfirmScreen() {
                     {joining ? t('joinConfirm.joining') : t('joinConfirm.join')}
                   </Text>
                 </TouchableOpacity>
+              ) : account?.status === 'incompatible' ? (
+                // Nothing actionable: the server speaks a protocol this app
+                // can't. The cold-launch compat-recovery probe clears the
+                // status when the app updates; until then there's no CTA.
+                null
               ) : (
                 <TouchableOpacity
                   style={styles.primary}
                   onPress={onSignInToJoin}
                   accessibilityRole="button"
                 >
-                  <Text style={styles.primaryLabel}>{t('joinConfirm.signInToJoin')}</Text>
+                  <Text style={styles.primaryLabel}>
+                    {account?.status === 'reauth_required'
+                      ? t('joinConfirm.reauthToJoin')
+                      : t('joinConfirm.signInToJoin')}
+                  </Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity onPress={onCancel} accessibilityRole="button">
