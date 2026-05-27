@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Share } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -15,7 +15,7 @@ import { apiFor, GroupDetail, GroupMember } from '@/lib/api';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import { formatLeaveReasons } from '@/lib/group-settings';
 import { formatMinorUnits, formatDate } from '@/lib/i18n';
-import { initialsOf } from '@/lib/name';
+import { initialsOf, makeNameShortener } from '@/lib/name';
 import {
   colors,
   fontDisplay,
@@ -49,6 +49,10 @@ export default function GroupMembersScreen() {
   }, [reload]);
 
   const members: GroupMember[] = group?.members ?? [];
+  const shorten = useMemo(
+    () => makeNameShortener(members.map((m) => m.name)),
+    [members],
+  );
   const myMember = members.find((m) => m.user_id === user?.id) ?? null;
   const isOwner = myMember?.role === 'owner';
 
@@ -136,8 +140,14 @@ export default function GroupMembersScreen() {
       >
         <View style={styles.header}>
           <Text style={styles.eyebrow}>{t('members.eyebrow')}</Text>
-          <Text style={styles.title} numberOfLines={2}>
-            {group?.name ?? t('common.dash')}
+          <Text
+            style={styles.title}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
+            allowFontScaling
+          >
+            {(group?.name ?? t('common.dash')).replace(/\s+/g, ' ')}
           </Text>
         </View>
 
@@ -183,7 +193,7 @@ export default function GroupMembersScreen() {
                   </View>
                   <View style={styles.rowText}>
                     <Text style={styles.rowName} numberOfLines={1}>
-                      {m.name}
+                      {shorten(m.name)}
                       {isYou ? ` · ${t('members.you')}` : ''}
                     </Text>
                     <Text style={styles.rowMeta} numberOfLines={1}>
@@ -268,7 +278,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.displayL,
     letterSpacing: -1,
     color: colors.graphite,
-    lineHeight: 44,
+    lineHeight: 52,
   },
   listHeader: {
     flexDirection: 'row',
