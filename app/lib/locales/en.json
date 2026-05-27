@@ -592,6 +592,26 @@
     "share": "Share invite link",
     "shareMessage": "Join \"{{name}}\" on Chara: {{link}}"
   },
+  "joinConfirm": {
+    "cancel": "Not now",
+    "errorExpired": "This invite link is no longer valid. Ask for a fresh one.",
+    "errorGeneric": "Couldn't load this invite. Try again.",
+    "errorTitle": "Invite unavailable",
+    "errorUnreachable": "Couldn't reach {{host}}. Check your connection and try again.",
+    "eyebrow": "invite",
+    "invitedBy": "{{name}} invited you to",
+    "invitedByUnknown": "you've been invited to",
+    "join": "Join group",
+    "joining": "Joining…",
+    "loading": "Loading invite…",
+    "lockedNote": "This group is locked — joining will share read-only access until the owner unlocks it.",
+    "memberCount": "{{count}} members",
+    "memberCount_one": "1 member",
+    "memberCount_other": "{{count}} members",
+    "onServer": "on {{host}}",
+    "retry": "Retry",
+    "signInToJoin": "Sign in to join"
+  },
   "keypad": {
     "backspace": "backspace (long-press to clear)",
     "clear": "clear",
