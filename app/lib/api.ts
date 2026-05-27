@@ -1345,12 +1345,32 @@ export function apiFor(serverUrl: string) {
   };
 }
 
+// Shape returned by GET /api/invites/{token}/preview. Always HTTP 200; the
+// `state` discriminator carries the real result so the UI can branch without
+// a separate request to learn it.
+export type InvitePreview =
+  | {
+      state: 'ok' | 'locked';
+      groupName: string;
+      memberCount: number;
+      serverName: string;
+      serverHost: string;
+      inviterName: string | null;
+    }
+  | { state: 'expired' | 'not_found' | 'archived' | 'deleted' | 'rate_limited' | string };
+
 export function publicApi(serverUrl: string) {
   return {
     instanceInfo: () =>
       requestOn<InstanceInfo>(serverUrl, '/.well-known/chara-instance', {
         requireAuth: false,
       }),
+    previewInvite: (token: string) =>
+      requestOn<InvitePreview>(
+        serverUrl,
+        `/api/invites/${encodeURIComponent(token)}/preview`,
+        { requireAuth: false },
+      ),
     requestMagicLink: (email: string) =>
       requestOn<MagicLinkResponse>(serverUrl, '/api/auth/magic-link', {
         method: 'POST',

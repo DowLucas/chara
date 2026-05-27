@@ -11,6 +11,7 @@ import {
   Linking,
   Modal,
   TouchableWithoutFeedback,
+  ScrollView,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
 import { markPopupClosed } from '@/lib/popup-guard';
@@ -408,19 +409,20 @@ export default function SignInScreen() {
       console.warn('[chara] addAccount failed', e);
     }
 
-    // Optional invite redemption.
+    // Optional invite handoff: bounce to the join-confirmation screen so
+    // the user sees what they're joining before the request fires. The
+    // screen handles the actual join via apiFor(server).joinGroupByToken.
     if (pendingInviteUrl) {
       try {
         const parsed = parseInviteUrl(pendingInviteUrl);
         if ('token' in parsed) {
-          const group = await apiFor(serverUrl).joinGroupByToken(parsed.token);
           router.replace(
-            `/groups/${encodeURIComponent(serverUrl)}/${group.id}`,
+            `/join/${encodeURIComponent(parsed.serverUrl)}/${encodeURIComponent(parsed.token)}`,
           );
           return;
         }
       } catch (e) {
-        console.warn('[chara] invite redemption failed', e);
+        console.warn('[chara] invite handoff failed', e);
         // Non-blocking: fall through to home; account stays added.
       }
     }
@@ -444,9 +446,14 @@ export default function SignInScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { paddingTop: insets.top }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
       {/* Logo */}
       <View style={styles.logoRow}>
         <Image
@@ -610,6 +617,8 @@ export default function SignInScreen() {
         </Text>
       </View>
 
+      </ScrollView>
+
       <HostingSheet
         visible={hostingSheetOpen}
         onClose={() => setHostingSheetOpen(false)}
@@ -712,6 +721,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.paper,
+  },
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: spacing.s5,
   },
   logoRow: {
