@@ -6,6 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Chara is an open-source, self-hostable bill-splitting app (Splitwise alternative). See `docs/` for full product strategy, architecture, and UX diagrams.
 
+## Working in this codebase
+
+These bias toward caution; use judgment on trivial changes.
+
+- **Think first.** State your assumptions before implementing. If multiple interpretations exist, surface them — don't pick silently. If a simpler approach exists, say so and push back when warranted. When something's unclear, ask instead of guessing.
+- **Minimum diff.** Write the smallest change that solves the problem. No abstractions for single-use code, no unrequested "flexibility," no error handling for impossible scenarios. If you wrote 200 lines and 50 would do, rewrite. Gut-check: would a senior engineer call this overcomplicated? If yes, simplify.
+- **Surgical changes.** Touch only what the task requires. Don't refactor adjacent code or normalize style you'd do differently — match what's there. If your change leaves an import or function unused, remove it; if pre-existing dead code is nearby, mention it but don't delete unprompted. When reviewing a diff, judge only the `+` lines — pre-existing patterns in modified files aren't this changeset's regression. The test: every changed line should trace to the user's ask.
+- **Verifiable goals.** Translate fuzzy tasks into checkable ones with a verification per step. Strong success criteria let you finish without back-and-forth; weak ones produce rework. Examples:
+  - "Add validation" → write failing tests for invalid inputs, then make them pass.
+  - "Fix the bug" → write a failing test that reproduces it, then make it pass.
+  - "Refactor X" → confirm tests pass before, refactor, confirm they still pass.
+
 ## TDD
 
 This project uses Test-Driven Development. Write the failing test first, then the implementation. No implementation code without a corresponding test written beforehand.
