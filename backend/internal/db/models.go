@@ -95,6 +95,7 @@ type Expense struct {
 	FxSource         pgtype.Text        `db:"fx_source" json:"fx_source"`
 	SourceKind       pgtype.Text        `db:"source_kind" json:"source_kind"`
 	SourceID         pgtype.Text        `db:"source_id" json:"source_id"`
+	ImportSource     pgtype.Text        `db:"import_source" json:"import_source"`
 }
 
 type ExpenseAttachment struct {

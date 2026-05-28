@@ -65,6 +65,10 @@ type Input struct {
 	// patch.
 	SourceKind *string // nil for manual; "recurring" for materialized
 	SourceID   *string
+
+	// ImportSource attributes expenses migrated from another bill-splitting
+	// app (e.g. "splitwise", "steven"). nil for natively-created expenses.
+	ImportSource *string
 }
 
 // SplitInput is one row of expense_splits. Value is the resolved share in
@@ -106,6 +110,10 @@ func Create(ctx context.Context, tx pgx.Tx, q *db.Queries, in Input) (Created, e
 	if in.SourceID != nil {
 		sourceID = pgtype.Text{String: *in.SourceID, Valid: true}
 	}
+	importSource := pgtype.Text{}
+	if in.ImportSource != nil {
+		importSource = pgtype.Text{String: *in.ImportSource, Valid: true}
+	}
 
 	expense, err := qtx.CreateExpense(ctx, db.CreateExpenseParams{
 		ID:               ulid.New(),
@@ -127,6 +135,7 @@ func Create(ctx context.Context, tx pgx.Tx, q *db.Queries, in Input) (Created, e
 		FxSource:         in.FxSource,
 		SourceKind:       sourceKind,
 		SourceID:         sourceID,
+		ImportSource:     importSource,
 	})
 	if err != nil {
 		return Created{}, err
