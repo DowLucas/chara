@@ -35,3 +35,6 @@ yarn-error.*
 # Local env files
 .env*.local
 .env
+
+# Google Play submit credentials (referenced by eas.json submit.production.android)
+google-play-service-account.json
