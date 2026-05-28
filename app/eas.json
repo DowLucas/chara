@@ -27,6 +27,10 @@
         "ascAppId": "6773089720",
         "appleTeamId": "AV39AJYC85",
         "bundleIdentifier": "app.chara"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-play-service-account.json",
+        "track": "internal"
       }
     }
   }

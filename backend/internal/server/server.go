@@ -68,6 +68,12 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 	r.Get("/.well-known/apple-app-site-association", aasaHandler)
 	r.Head("/.well-known/apple-app-site-association", aasaHandler)
 
+	// Android counterpart: Digital Asset Links proving the app's App Links
+	// claim on chara-api.lurkhuset.com. See invite-deep-links spec Phase 2.
+	assetLinksHandler := handler.NewAssetLinksHandler(cfg)
+	r.Get("/.well-known/assetlinks.json", assetLinksHandler)
+	r.Head("/.well-known/assetlinks.json", assetLinksHandler)
+
 	// Public invite endpoints (see invite-deep-links spec Phase 1C).
 	// Both are outside the auth/protocol middleware group — the token is the
 	// bearer credential, and the preview / landing page must be reachable

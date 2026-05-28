@@ -20,10 +20,10 @@ type Config struct {
 	DevMode      bool   // when true, relaxes email requirement and returns magic-link tokens in the API response
 
 	// JWT
-	JWTSecret         string // HS256, required for selfhost
-	JWTPrivateKeyPEM  string // RS256, required for hosted
-	JWTPublicKeyPEM   string // RS256, required for hosted
-	MagicLinkTTL      time.Duration
+	JWTSecret        string // HS256, required for selfhost
+	JWTPrivateKeyPEM string // RS256, required for hosted
+	JWTPublicKeyPEM  string // RS256, required for hosted
+	MagicLinkTTL     time.Duration
 
 	// Email
 	ResendAPIKey string // hosted; takes precedence over SMTP
@@ -50,6 +50,10 @@ type Config struct {
 	AppleTeamID        string
 	AppleKeyID         string
 	ApplePrivateKeyPEM string
+
+	// Android App Links — Digital Asset Links (assetlinks.json).
+	AndroidPackageName     string
+	AndroidCertFingerprint string // SHA-256 signing cert, colon-separated hex
 
 	// OIDC — selfhost only
 	OIDCIssuerURL    string
@@ -118,6 +122,9 @@ func Load() (*Config, error) {
 		AppleKeyID:         getEnv("APPLE_KEY_ID", ""),
 		ApplePrivateKeyPEM: getEnv("APPLE_PRIVATE_KEY_PEM", ""),
 
+		AndroidPackageName:     getEnv("ANDROID_PACKAGE_NAME", ""),
+		AndroidCertFingerprint: getEnv("ANDROID_CERT_FINGERPRINT", ""),
+
 		OIDCIssuerURL:    getEnv("OIDC_ISSUER_URL", ""),
 		OIDCClientID:     getEnv("OIDC_CLIENT_ID", ""),
 		OIDCClientSecret: getEnv("OIDC_CLIENT_SECRET", ""),
@@ -173,16 +180,17 @@ func (c *Config) validate() error {
 	return nil
 }
 
-func (c *Config) IsHosted() bool    { return c.InstanceMode == "hosted" }
-func (c *Config) IsSelfHost() bool  { return c.InstanceMode == "selfhost" }
+func (c *Config) IsHosted() bool   { return c.InstanceMode == "hosted" }
+func (c *Config) IsSelfHost() bool { return c.InstanceMode == "selfhost" }
+
 // HasGoogle reports whether Google Sign In is configured. The native ID-token
 // flow only needs the client ID for audience verification; the secret is kept
 // in the config for the future server-side web OAuth code-exchange flow but
 // is not required to enable the native flow.
-func (c *Config) HasGoogle() bool   { return c.GoogleClientID != "" }
-func (c *Config) HasApple() bool    { return c.AppleBundleID != "" }
-func (c *Config) HasOIDC() bool     { return c.OIDCIssuerURL != "" && c.OIDCClientID != "" }
-func (c *Config) HasGemini() bool   { return c.GeminiAPIKey != "" }
+func (c *Config) HasGoogle() bool { return c.GoogleClientID != "" }
+func (c *Config) HasApple() bool  { return c.AppleBundleID != "" }
+func (c *Config) HasOIDC() bool   { return c.OIDCIssuerURL != "" && c.OIDCClientID != "" }
+func (c *Config) HasGemini() bool { return c.GeminiAPIKey != "" }
 
 func getEnv(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
