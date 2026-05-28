@@ -655,12 +655,19 @@
     "permissionBody": "Allow photo access to add screenshots of your balances.",
     "permissionTitle": "Photo access needed",
     "picker": {
+      "eyebrow": "IMPORT",
+      "heading": "Bring your balances over",
       "intro": "Pick the app you're coming from. Screenshot its balances screen and we'll set up matching opening balances here.",
       "title": "Import"
     },
     "progress": {
       "committing": "Setting up opening balances…",
       "extracting": "Reading balances…"
+    },
+    "step": {
+      "capture": "Step 1 of 3",
+      "reconcile": "Step 2 of 3",
+      "review": "Step 3 of 3"
     },
     "reconcile": {
       "body": "Match each name we found to a group member, or add it as a new member.",

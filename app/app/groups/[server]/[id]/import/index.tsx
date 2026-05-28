@@ -1,5 +1,5 @@
 /**
- * Import — app picker. Static grid of supported source apps; tapping a card
+ * Import — app picker. Vertical list of supported source apps; tapping a row
  * routes to the per-app capture screen. No AI here.
  *
  * Composite (server,id) identity: `server` is encoded in the URL and decoded
@@ -9,16 +9,18 @@
  */
 
 import React from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { Feather } from '@expo/vector-icons';
 
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
+import { ListRow } from '@/components/ListRow';
 import { Text } from '@/components/Text';
 import { IMPORT_APPS } from '@/lib/import-apps';
-import { colors, fontDisplay, fontBody, fontMono, fontSize, radii, spacing } from '@/lib/theme';
+import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 
 export default function ImportPickerScreen() {
   const { server, id } = useLocalSearchParams<{ server: string; id: string }>();
@@ -28,31 +30,28 @@ export default function ImportPickerScreen() {
 
   return (
     <View style={styles.screen}>
-      <TopBar
-        title={t('import.picker.title')}
-        left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
-      />
+      <TopBar left={<IconButton icon="arrow-left" onPress={() => router.back()} />} />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={{ paddingBottom: insets.bottom + spacing.s7 }}
       >
-        <Text style={styles.intro}>{t('import.picker.intro')}</Text>
-        <View style={styles.grid}>
+        <View style={styles.header}>
+          <Text style={styles.eyebrow}>{t('import.picker.eyebrow')}</Text>
+          <Text style={styles.headline}>{t('import.picker.heading')}</Text>
+          <Text style={styles.intro}>{t('import.picker.intro')}</Text>
+        </View>
+        <View style={styles.list}>
           {IMPORT_APPS.map((app) => (
-            <TouchableOpacity
+            <ListRow
               key={app.source}
-              style={styles.card}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel={t(app.labelKey)}
+              title={t(app.labelKey)}
               onPress={() =>
                 router.push(
                   `/groups/${encodeURIComponent(serverUrl)}/${id}/import/${app.source}`,
                 )
               }
-            >
-              <Text style={styles.cardLabel}>{t(app.labelKey)}</Text>
-            </TouchableOpacity>
+              right={<Feather name="chevron-right" size={20} color={colors.lead} />}
+            />
           ))}
         </View>
       </ScrollView>
@@ -63,32 +62,34 @@ export default function ImportPickerScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
+  header: {
+    paddingHorizontal: spacing.s5,
+    paddingTop: spacing.s6,
+    paddingBottom: spacing.s5,
+  },
+  eyebrow: {
+    fontFamily: fontMono,
+    fontSize: fontSize.bodyS,
+    color: colors.lead,
+    letterSpacing: 0.4,
+    marginBottom: 6,
+  },
+  headline: {
+    fontFamily: fontDisplay,
+    fontSize: fontSize.displayL,
+    letterSpacing: -1,
+    color: colors.graphite,
+    lineHeight: 48,
+    marginBottom: spacing.s2,
+  },
   intro: {
     fontFamily: fontBody,
     fontSize: fontSize.body,
     color: colors.lead,
-    paddingHorizontal: spacing.s4,
-    paddingTop: spacing.s4,
-    paddingBottom: spacing.s2,
+    lineHeight: 24,
   },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: spacing.s4 - spacing.s1,
-  },
-  card: {
-    width: '50%',
-    padding: spacing.s1,
-  },
-  cardLabel: {
-    fontFamily: fontDisplay,
-    fontSize: fontSize.bodyL,
-    color: colors.graphite,
-    backgroundColor: colors.bone,
-    borderRadius: radii.md,
-    paddingVertical: spacing.s5,
-    paddingHorizontal: spacing.s4,
-    textAlign: 'center',
-    overflow: 'hidden',
+  list: {
+    borderTopWidth: 0.5,
+    borderTopColor: colors.ruleSoft,
   },
 });
