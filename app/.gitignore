@@ -38,3 +38,7 @@ yarn-error.*
 
 # Google Play submit credentials (referenced by eas.json submit.production.android)
 google-play-service-account.json
+
+# Local Android signing credentials (eas build --local)
+credentials.json
+credentials/
