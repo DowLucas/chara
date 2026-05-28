@@ -609,6 +609,45 @@ export interface UpdateExpenseInput {
   fx_source?: 'ecb' | 'manual';
 }
 
+// --- Import from another app (spec 2026-05-28-import-from-another-app-design.md)
+/** A single screenshot sent to the extract endpoint. */
+export interface ImportImage {
+  image_base64: string;
+  mime_type: string;
+}
+
+/** Balance direction relative to the importing user. */
+export type ImportStandingDirection = 'owes_you' | 'you_owe';
+
+/** One extracted net standing for a counterparty (name not yet resolved). */
+export interface ImportStanding {
+  name: string;
+  direction: ImportStandingDirection;
+  /** Canonical 2-decimal string, group currency. */
+  amount: string;
+  /** 0–1 extraction confidence; low rows float to the top of review. */
+  confidence: number;
+}
+
+export interface ImportExtractResult {
+  currency: string;
+  standings: ImportStanding[];
+}
+
+/** A review-confirmed standing ready to become one opening-balance expense. */
+export interface ImportCommitStanding {
+  name: string;
+  direction: ImportStandingDirection;
+  /** Canonical 2-decimal string, group currency. */
+  amount: string;
+  title?: string;
+}
+
+export interface ImportCommitInput {
+  source: string;
+  standings: ImportCommitStanding[];
+}
+
 export function listExpenses(groupId: string) {
   return request<Expense[]>(`/api/groups/${groupId}/expenses`);
 }
@@ -1213,6 +1252,22 @@ export function apiFor(serverUrl: string) {
         serverUrl,
         `/api/groups/${groupId}/expenses/${expenseId}/attachments`,
       ),
+
+    // Import from another app (spec 2026-05-28-import-from-another-app-design.md).
+    // `extract` is stateless OCR; `commit` bulk-creates in one transaction.
+    importExtract: (
+      groupId: string,
+      input: { source: string; images: ImportImage[] },
+    ) =>
+      requestOn<ImportExtractResult>(serverUrl, `/api/groups/${groupId}/import/extract`, {
+        method: 'POST',
+        body: JSON.stringify({ source: input.source, images: input.images }),
+      }),
+    importCommit: (groupId: string, input: ImportCommitInput) =>
+      requestOn<{ imported: number }>(serverUrl, `/api/groups/${groupId}/import/commit`, {
+        method: 'POST',
+        body: JSON.stringify({ source: input.source, standings: input.standings }),
+      }),
 
     // Recurring (spec 2026-05-24-recurring-expenses-design.md)
     recurring: {

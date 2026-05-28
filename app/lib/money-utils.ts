@@ -9,3 +9,14 @@ export function decimalToMinor(decimal: string | number): number {
   const n = parseInt(intPart || '0', 10) * 100 + parseInt(frac || '0', 10);
   return neg ? -n : n;
 }
+
+/**
+ * Canonical 2-decimal string for a minor-unit value (e.g. 34000 → "340.00").
+ * The backend's `money.Amount` requires exactly two decimals, so this is the
+ * only acceptable on-the-wire form for amounts we mint client-side.
+ */
+export function minorToDecimal(minor: number): string {
+  const sign = minor < 0 ? '-' : '';
+  const abs = Math.abs(Math.trunc(minor));
+  return `${sign}${Math.floor(abs / 100)}.${String(abs % 100).padStart(2, '0')}`;
+}

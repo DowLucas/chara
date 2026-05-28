@@ -470,6 +470,14 @@ export default function GroupSettingsScreen() {
                 router.push(`/groups/${encodeURIComponent(serverUrl)}/${group.id}/invite`)
               }
             />
+            <NavRow
+              label={t('import.entry')}
+              icon="download"
+              onPress={() =>
+                group &&
+                router.push(`/groups/${encodeURIComponent(serverUrl)}/${group.id}/import`)
+              }
+            />
             {group && (
               <GroupColorRow
                 serverUrl={serverUrl}

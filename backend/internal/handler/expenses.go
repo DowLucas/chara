@@ -273,50 +273,14 @@ func parseClientFxSnapshot(
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 func (h *ExpenseHandler) requireGroupMember(w http.ResponseWriter, r *http.Request, groupID string) (db.GroupMember, bool) {
-	claims := middleware.ClaimsFromContext(r.Context())
-	member, err := h.queries.GetGroupMemberByUserAndGroup(r.Context(), db.GetGroupMemberByUserAndGroupParams{
-		GroupID: groupID,
-		UserID:  pgtype.Text{String: claims.UserID, Valid: true},
-	})
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			writeError(w, http.StatusForbidden, "not a member of this group")
-		} else {
-			writeError(w, http.StatusInternalServerError, "internal error")
-		}
-		return db.GroupMember{}, false
-	}
-	return member, true
+	return requireGroupMember(r.Context(), h.queries, w, groupID)
 }
 
 // validateSplitMembersInGroup ensures every supplied member ID belongs to the
-// URL group. Without this check, a member of group A could submit an expense
-// whose split or participant rows reference members of group B — the
-// expense_splits FK only points at group_members(id) and does not enforce
-// group consistency. Returns a generic error so we don't leak whether an ID
-// exists in some other group.
+// URL group. Thin wrapper over the shared validateMembersInGroup free
+// function (kept so existing call sites read unchanged).
 func (h *ExpenseHandler) validateSplitMembersInGroup(ctx context.Context, memberIDs []string, groupID string) error {
-	seen := make(map[string]struct{}, len(memberIDs))
-	for _, id := range memberIDs {
-		if id == "" {
-			return fmt.Errorf("invalid split member")
-		}
-		if _, ok := seen[id]; ok {
-			continue
-		}
-		seen[id] = struct{}{}
-		member, err := h.queries.GetGroupMember(ctx, id)
-		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
-				return fmt.Errorf("invalid split member")
-			}
-			return err
-		}
-		if member.GroupID != groupID {
-			return fmt.Errorf("invalid split member")
-		}
-	}
-	return nil
+	return validateMembersInGroup(ctx, h.queries, memberIDs, groupID)
 }
 
 // validatePaidByInGroup returns a deliberately generic error for both
