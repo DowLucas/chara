@@ -9,6 +9,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest",
+    "build:android": "eas build -p android --profile production",
+    "submit:android": "eas submit -p android --profile production",
     "i18n:extract": "i18next 'app/**/*.{ts,tsx}' 'components/**/*.{ts,tsx}' 'lib/**/*.{ts,tsx}' -c i18next-parser.config.js",
     "i18n:check": "i18next 'app/**/*.{ts,tsx}' 'components/**/*.{ts,tsx}' 'lib/**/*.{ts,tsx}' -c i18next-parser.config.js --fail-on-update"
   },

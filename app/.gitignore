@@ -36,6 +36,7 @@ yarn-error.*
 .env*.local
 .env
 
-# Service account credentials (inject at build time via EAS/CI secrets)
+# Service account credentials (referenced by eas.json submit.production.android;
+# inject at build time via EAS/CI secrets)
 google-play-service-account.json
 *-service-account.json
