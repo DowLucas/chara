@@ -115,7 +115,7 @@ const config: ExpoConfig = {
       foregroundImage: './assets/adaptive-icon.png',
       backgroundColor: '#F0E5CC',
     },
-    package: 'app.chara',
+    package: 'chara.app',
     // Android App Links — the system fetches
     // https://chara-api.lurkhuset.com/.well-known/assetlinks.json and, when it
     // verifies the app's signing cert, routes matching https /i/* URLs straight

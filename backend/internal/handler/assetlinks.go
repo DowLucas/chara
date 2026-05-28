@@ -25,8 +25,9 @@ import (
 
 const (
 	// Defaults match the hosted Chara Android build (Google Play app-signing
-	// key fingerprint for app.chara).
-	defaultAndroidPackageName     = "app.chara"
+	// key fingerprint for the chara.app package). Note the Android package is
+	// chara.app while the iOS bundle id is app.chara — they intentionally differ.
+	defaultAndroidPackageName     = "chara.app"
 	defaultAndroidCertFingerprint = "00:4C:D1:5B:03:A8:DA:22:CB:49:35:71:82:9B:A5:AE:04:B7:2D:0E:ED:94:F4:9A:1A:4C:09:9D:BA:13:1E:A5"
 )
 
