@@ -60,6 +60,10 @@ services:
       OIDC_ISSUER_URL: ${OIDC_ISSUER_URL:-}
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      # Android App Links: SHA-256 of the Play App Signing key (Play Console →
+      # App integrity). Empty falls back to the baked-in default in assetlinks.go.
+      ANDROID_PACKAGE_NAME: ${ANDROID_PACKAGE_NAME:-}
+      ANDROID_CERT_FINGERPRINT: ${ANDROID_CERT_FINGERPRINT:-}
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8080/api/health/liveness"]
       interval: 10s
