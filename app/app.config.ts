@@ -8,9 +8,6 @@ const config: ExpoConfig = {
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'automatic',
-  splash: {
-    backgroundColor: '#F0E5CC',
-  },
   ios: {
     supportsTablet: false,
     bundleIdentifier: 'app.chara',
@@ -146,6 +143,15 @@ const config: ExpoConfig = {
   },
   plugins: [
     'expo-router',
+    [
+      'expo-splash-screen',
+      {
+        backgroundColor: '#F0E5CC',
+        image: './assets/chara-logo.png',
+        imageWidth: 200,
+        resizeMode: 'contain',
+      },
+    ],
     [
       'expo-font',
       {
