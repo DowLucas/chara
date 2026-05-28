@@ -119,6 +119,25 @@ const config: ExpoConfig = {
       backgroundColor: '#F0E5CC',
     },
     package: 'app.chara',
+    // Android App Links — the system fetches
+    // https://chara-api.lurkhuset.com/.well-known/assetlinks.json and, when it
+    // verifies the app's signing cert, routes matching https /i/* URLs straight
+    // to the app (autoVerify). Counterpart to iOS associatedDomains above.
+    // See backend/internal/handler/assetlinks.go and the invite-deep-links spec.
+    intentFilters: [
+      {
+        action: 'VIEW',
+        autoVerify: true,
+        data: [
+          {
+            scheme: 'https',
+            host: 'chara-api.lurkhuset.com',
+            pathPrefix: '/i',
+          },
+        ],
+        category: ['BROWSABLE', 'DEFAULT'],
+      },
+    ],
   },
   web: {
     bundler: 'metro',
