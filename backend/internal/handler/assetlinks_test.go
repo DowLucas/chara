@@ -98,8 +98,8 @@ func TestAssetLinks_FallsBackToDefaultsWhenConfigEmpty(t *testing.T) {
 	if err := json.NewDecoder(rr.Body).Decode(&body); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if got := body[0].Target.PackageName; got != "app.chara" {
-		t.Errorf("default package: want app.chara, got %q", got)
+	if got := body[0].Target.PackageName; got != "chara.app" {
+		t.Errorf("default package: want chara.app, got %q", got)
 	}
 	want := "00:4C:D1:5B:03:A8:DA:22:CB:49:35:71:82:9B:A5:AE:04:B7:2D:0E:ED:94:F4:9A:1A:4C:09:9D:BA:13:1E:A5"
 	if got := body[0].Target.Fingerprints[0]; got != want {
