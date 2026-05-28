@@ -72,6 +72,17 @@ function inferMime(asset: ImagePicker.ImagePickerAsset): string {
   return 'image/jpeg';
 }
 
+/** Hero header shared by every step: mono step indicator + display headline + body. */
+function StepHeader({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) {
+  return (
+    <View style={styles.header}>
+      <Text style={styles.headerEyebrow}>{eyebrow}</Text>
+      <Text style={styles.headline}>{title}</Text>
+      <Text style={styles.headerBody}>{body}</Text>
+    </View>
+  );
+}
+
 export default function ImportSourceScreen() {
   const { server, id, source } = useLocalSearchParams<{
     server: string;
@@ -244,8 +255,11 @@ export default function ImportSourceScreen() {
       >
         {step === 'capture' && (
           <View>
-            <Text style={styles.guidanceTitle}>{t(app.guidanceTitleKey)}</Text>
-            <Text style={styles.guidanceBody}>{t(app.guidanceBodyKey)}</Text>
+            <StepHeader
+              eyebrow={t('import.step.capture')}
+              title={t(app.guidanceTitleKey)}
+              body={t(app.guidanceBodyKey)}
+            />
 
             <Text style={styles.eyebrow}>{t('import.tray.eyebrow')}</Text>
             <View style={styles.tray}>
@@ -283,8 +297,11 @@ export default function ImportSourceScreen() {
 
         {step === 'reconcile' && (
           <View>
-            <Text style={styles.guidanceTitle}>{t('import.reconcile.title')}</Text>
-            <Text style={styles.guidanceBody}>{t('import.reconcile.body')}</Text>
+            <StepHeader
+              eyebrow={t('import.step.reconcile')}
+              title={t('import.reconcile.title')}
+              body={t('import.reconcile.body')}
+            />
             {reconcileResult.entries.map((entry) => (
               <View key={entry.name} style={styles.reconcileRow}>
                 <Text style={styles.reconcileName}>{entry.name}</Text>
@@ -328,8 +345,11 @@ export default function ImportSourceScreen() {
 
         {step === 'review' && (
           <View>
-            <Text style={styles.guidanceTitle}>{t('import.review.title')}</Text>
-            <Text style={styles.guidanceBody}>{t('import.review.body')}</Text>
+            <StepHeader
+              eyebrow={t('import.step.review')}
+              title={t('import.review.title')}
+              body={t('import.review.body')}
+            />
             {review.currencyMismatch && (
               <Text style={styles.errorBanner}>
                 {t('import.review.currencyMismatch', {
@@ -426,12 +446,31 @@ const styles = StyleSheet.create({
     color: colors.lead,
     padding: spacing.s4,
   },
-  guidanceTitle: {
-    fontFamily: fontDisplay,
-    fontSize: fontSize.displayS,
-    color: colors.graphite,
+  header: {
     paddingHorizontal: spacing.s4,
-    paddingTop: spacing.s4,
+    paddingTop: spacing.s5,
+    paddingBottom: spacing.s2,
+  },
+  headerEyebrow: {
+    fontFamily: fontMono,
+    fontSize: fontSize.bodyS,
+    color: colors.lead,
+    letterSpacing: 0.4,
+    marginBottom: 6,
+  },
+  headline: {
+    fontFamily: fontDisplay,
+    fontSize: fontSize.displayM,
+    letterSpacing: -0.5,
+    color: colors.graphite,
+    lineHeight: 38,
+  },
+  headerBody: {
+    fontFamily: fontBody,
+    fontSize: fontSize.body,
+    color: colors.lead,
+    lineHeight: 24,
+    marginTop: spacing.s2,
   },
   guidanceBody: {
     fontFamily: fontBody,
