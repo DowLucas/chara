@@ -29,7 +29,7 @@ export default function ImportPickerScreen() {
   const { t } = useTranslation();
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
       <TopBar left={<IconButton icon="arrow-left" onPress={() => router.back()} />} />
       <ScrollView
         style={styles.scroll}
