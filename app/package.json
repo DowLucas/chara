@@ -44,7 +44,7 @@
     "expo-linking": "~8.0.12",
     "expo-local-authentication": "~17.0.8",
     "expo-localization": "~17.0.9",
-    "expo-notifications": "~0.32.17",
+    "expo-notifications": "~56.0.15",
     "expo-router": "~6.0.24",
     "expo-secure-store": "~15.0.8",
     "expo-splash-screen": "~31.0.13",
