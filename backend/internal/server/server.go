@@ -17,6 +17,7 @@ import (
 	"github.com/DowLucas/chara/internal/db"
 	"github.com/DowLucas/chara/internal/email"
 	"github.com/DowLucas/chara/internal/handler"
+	"github.com/DowLucas/chara/internal/importer"
 	"github.com/DowLucas/chara/internal/middleware"
 	"github.com/DowLucas/chara/internal/receipt"
 	"github.com/DowLucas/chara/internal/storage"
@@ -32,6 +33,24 @@ const version = "0.1.0"
 const FreeOCRCap = 3
 
 func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *auth.JWTService, store *storage.Client) http.Handler {
+	// The import extractor is only available when a vision provider is
+	// configured. Commit works regardless (it never calls the extractor).
+	var importExtractor importer.Extractor
+	if cfg.HasGemini() {
+		importExtractor = importer.NewGeminiExtractor(cfg.GeminiAPIKey)
+	}
+	importH := handler.NewImportHandler(pool, queries, importExtractor)
+	return newRouter(cfg, pool, queries, jwtSvc, store, importH)
+}
+
+// NewWithImport is a test seam: it lets integration tests inject a fake
+// importer.Extractor so the import handlers can be exercised without a real
+// vision provider.
+func NewWithImport(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *auth.JWTService, store *storage.Client, importH *handler.ImportHandler) http.Handler {
+	return newRouter(cfg, pool, queries, jwtSvc, store, importH)
+}
+
+func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *auth.JWTService, store *storage.Client, importH *handler.ImportHandler) http.Handler {
 	r := chi.NewRouter()
 
 	// RealIP: only honor X-Forwarded-For / X-Real-IP when the immediate
@@ -163,6 +182,9 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 		r.Delete("/api/groups/{groupID}/recurring/{recurringID}", recurringH.Delete)
 		r.Post("/api/groups/{groupID}/recurring/{recurringID}/pause", recurringH.Pause)
 		r.Post("/api/groups/{groupID}/recurring/{recurringID}/resume", recurringH.Resume)
+
+		r.Post("/api/groups/{groupID}/import/extract", importH.Extract)
+		r.Post("/api/groups/{groupID}/import/commit", importH.Commit)
 
 		r.Post("/api/groups/{groupID}/expenses", expenseH.Create)
 		r.Get("/api/groups/{groupID}/expenses", expenseH.List)

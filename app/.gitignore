@@ -36,8 +36,10 @@ yarn-error.*
 .env*.local
 .env
 
-# Google Play submit credentials (referenced by eas.json submit.production.android)
+# Service account credentials (referenced by eas.json submit.production.android;
+# inject at build time via EAS/CI secrets)
 google-play-service-account.json
+*-service-account.json
 
 # Local Android signing credentials (eas build --local)
 credentials.json

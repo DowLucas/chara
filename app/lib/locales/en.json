@@ -10,9 +10,7 @@
     "website": "Website"
   },
   "account": {
-    "eyebrow": "account",
     "deleteAll": {
-      "rowValue": "Permanent",
       "balanceCheckFailedBody": "We need to check your balances on {{servers}} before deleting. Try again when you're online.",
       "balanceCheckFailedTitle": "Couldn't check balances",
       "blockedOpenBalanceBody": "You still have open balances on {{servers}}. Settle them in each group before deleting your account.",
@@ -28,6 +26,7 @@
       "openBalanceWarnCancel": "Keep account",
       "openBalanceWarnConfirm": "Delete anyway",
       "openBalanceWarnTitle": "You still have open balances",
+      "rowValue": "Permanent",
       "summaryBlocked": "Blocked (outstanding balance): {{count}}",
       "summaryBlocked_one": "Blocked (outstanding balance): {{count}}",
       "summaryBlocked_other": "Blocked (outstanding balance): {{count}}",
@@ -48,7 +47,8 @@
       "confirmCta": "Delete Account",
       "confirmTitle": "Delete Account?",
       "title": "Delete Account on This Server"
-    }
+    },
+    "eyebrow": "account"
   },
   "accounts": {
     "add": "Add account",
@@ -280,6 +280,7 @@
       "menu": "More actions"
     },
     "activityHeader": "created {{created}}, {{time}}",
+    "addReceipt": "Add receipt",
     "category": "category",
     "commentsLabel": "Comments",
     "context": "expense · {{groupName}}",
@@ -299,18 +300,17 @@
     "loadError": "Couldn't load this expense.",
     "menuLabel": "Expense menu",
     "noChanges": "Nothing changed.",
-    "addReceipt": "Add receipt",
     "noReceipt": "No receipt attached.",
+    "notFoundToast": "This expense no longer exists.",
+    "paidBy": "paid by",
+    "paidBySentence": "Paid by <b>{{name}}</b> on <b>{{date}}</b>",
+    "receipt": "receipt",
     "receiptChooseLibrary": "Choose from library",
     "receiptPermissionBody": "Grant photo or camera access in Settings to attach a receipt.",
     "receiptPermissionTitle": "Permission needed",
     "receiptSheetTitle": "Add receipt",
     "receiptTakePhoto": "Take a photo",
     "receiptUploading": "Uploading…",
-    "notFoundToast": "This expense no longer exists.",
-    "paidBy": "paid by",
-    "paidBySentence": "Paid by <b>{{name}}</b> on <b>{{date}}</b>",
-    "receipt": "receipt",
     "reload": "Reload",
     "savedToast": "Changes saved.",
     "staleBanner": "This expense changed since you opened it. Reload to see the latest.",
@@ -590,6 +590,120 @@
     "unchanged": "unchanged",
     "wasOwed": "was owed",
     "wasOwes": "owed"
+  },
+  "import": {
+    "apps": {
+      "other": {
+        "label": "Other app"
+      },
+      "settleup": {
+        "label": "Settle Up"
+      },
+      "splid": {
+        "label": "Splid"
+      },
+      "splitwise": {
+        "label": "Splitwise"
+      },
+      "steven": {
+        "label": "Steven"
+      },
+      "tricount": {
+        "label": "Tricount"
+      }
+    },
+    "capture": {
+      "extract": "Read balances"
+    },
+    "commitError": {
+      "title": "Import failed"
+    },
+    "empty": {
+      "body": "We couldn't read any balances from those screenshots. Try a clearer, full-screen shot of your balances or standings screen.",
+      "title": "Nothing found"
+    },
+    "entry": "Import from another app",
+    "extractError": {
+      "title": "Couldn't read screenshots"
+    },
+    "guidance": {
+      "other": {
+        "body": "Open the balances or standings screen in your other app and screenshot it. We'll read who owes you and who you owe, then set up matching opening balances here.",
+        "title": "Screenshot your balances"
+      },
+      "settleup": {
+        "body": "Open the group in Settle Up, go to its balances screen and screenshot it. We'll read each person's net balance.",
+        "title": "Screenshot your Settle Up balances"
+      },
+      "splid": {
+        "body": "Open the group in Splid, switch to the balances tab and screenshot it. We'll read each person's net balance.",
+        "title": "Screenshot your Splid balances"
+      },
+      "splitwise": {
+        "body": "Open the group in Splitwise and screenshot the balances at the top — who owes you and who you owe. We'll recreate those as opening balances.",
+        "title": "Screenshot your Splitwise balances"
+      },
+      "steven": {
+        "body": "Open Steven and screenshot the balances screen showing who owes you and who you owe. We'll recreate those as opening balances.",
+        "title": "Screenshot your Steven balances"
+      },
+      "tricount": {
+        "body": "Open the Tricount, go to the balances screen and screenshot it. We'll read each person's net balance.",
+        "title": "Screenshot your Tricount balances"
+      }
+    },
+    "permissionBody": "Allow photo access to add screenshots of your balances.",
+    "permissionTitle": "Photo access needed",
+    "picker": {
+      "eyebrow": "IMPORT",
+      "heading": "Bring your balances over",
+      "intro": "Pick the app you're coming from. Screenshot its balances screen and we'll set up matching opening balances here.",
+      "title": "Import"
+    },
+    "progress": {
+      "committing": "Setting up opening balances…",
+      "extracting": "Reading balances…"
+    },
+    "step": {
+      "capture": "Step 1 of 3",
+      "reconcile": "Step 2 of 3",
+      "review": "Step 3 of 3"
+    },
+    "reconcile": {
+      "body": "Match each name we found to a group member, or add it as a new member.",
+      "continue": "Continue",
+      "newMember": "New member",
+      "title": "Match people"
+    },
+    "review": {
+      "badAmount": "We couldn't read a valid amount for this balance.",
+      "badDirection": "We couldn't tell which way this balance goes.",
+      "body": "Check each balance before importing. We'll create one opening balance per person; you can settle or edit them later.",
+      "currencyMismatch": "These balances are in {{extracted}}, but the group uses {{group}}. Importing across currencies isn't supported.",
+      "import": "Import {{count}} balances",
+      "import_one": "Import 1 balance",
+      "import_other": "Import {{count}} balances",
+      "owedToYouTotal": "Owed to you",
+      "owesYou": "{{name}} owes you",
+      "title": "Review balances",
+      "youOwe": "You owe {{name}}",
+      "youOweTotal": "You owe"
+    },
+    "success": {
+      "body": "Set up {{count}} opening balances in the group.",
+      "body_one": "Set up 1 opening balance in the group.",
+      "body_other": "Set up {{count}} opening balances in the group.",
+      "title": "Imported"
+    },
+    "tray": {
+      "add": "Add screenshots",
+      "count": "{{count}} of {{max}} screenshots",
+      "count_one": "{{count}} of {{max}} screenshot",
+      "count_other": "{{count}} of {{max}} screenshots",
+      "eyebrow": "SCREENSHOTS",
+      "remove": "Remove screenshot"
+    },
+    "unknownApp": "That app isn't supported yet."
   },
   "invite": {
     "body": "Friends scan this to join.",
