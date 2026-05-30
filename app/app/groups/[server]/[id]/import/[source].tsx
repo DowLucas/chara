@@ -233,7 +233,7 @@ export default function ImportSourceScreen() {
 
   if (!app) {
     return (
-      <View style={styles.screen}>
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
         <TopBar
           title={t('import.picker.title')}
           left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
@@ -244,7 +244,7 @@ export default function ImportSourceScreen() {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
       <TopBar
         title={t(app.labelKey)}
         left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
