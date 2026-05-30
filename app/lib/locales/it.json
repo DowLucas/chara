@@ -354,7 +354,10 @@
     "archivePromptBody": "Il gruppo sparisce dal tuo elenco. Puoi ritrovarlo tra gli archiviati quando vuoi.",
     "archivePromptTitle": "Archiviare {{name}}?",
     "edit": "Modifica gruppo",
+    "emptyAddFirst": "Aggiungi la prima spesa",
     "emptyBody": "Aggiungi la prima spesa a questo gruppo.",
+    "emptyBodyImport": "Aggiungi la tua prima spesa, oppure porta qui i tuoi saldi da un’altra app.",
+    "emptyImport": "Importa da un’altra app",
     "emptyTitle": "Nessuna spesa",
     "expensesCount": "spese · {{count}}",
     "expensesCount_one": "spese · {{count}}",
@@ -577,6 +580,123 @@
     "unchanged": "invariato",
     "wasOwed": "ti dovevano",
     "wasOwes": "doveva"
+  },
+  "import": {
+    "apps": {
+      "other": {
+        "label": "Altra app"
+      },
+      "settleup": {
+        "label": "Settle Up"
+      },
+      "splid": {
+        "label": "Splid"
+      },
+      "splitwise": {
+        "label": "Splitwise"
+      },
+      "steven": {
+        "label": "Steven"
+      },
+      "tricount": {
+        "label": "Tricount"
+      }
+    },
+    "capture": {
+      "extract": "Leggi i saldi"
+    },
+    "commitError": {
+      "title": "Importazione non riuscita"
+    },
+    "empty": {
+      "body": "Non siamo riusciti a leggere alcun saldo da quegli screenshot. Prova con uno screenshot più nitido e a schermo intero della schermata dei saldi o dei conti.",
+      "title": "Nessun saldo trovato"
+    },
+    "entry": "Importa da un’altra app",
+    "extractError": {
+      "title": "Non sono riuscito a leggere gli screenshot"
+    },
+    "guidance": {
+      "other": {
+        "body": "Apri la schermata dei saldi o dei conti nell’altra app e fanne uno screenshot. Leggeremo chi ti deve e a chi devi, poi imposteremo qui i saldi iniziali corrispondenti.",
+        "title": "Fai uno screenshot dei tuoi saldi"
+      },
+      "settleup": {
+        "body": "Apri il gruppo in Settle Up, vai alla schermata dei saldi e fanne uno screenshot. Leggeremo il saldo netto di ogni persona.",
+        "title": "Fai uno screenshot dei tuoi saldi Settle Up"
+      },
+      "splid": {
+        "body": "Apri il gruppo in Splid, passa alla scheda dei saldi e fanne uno screenshot. Leggeremo il saldo netto di ogni persona.",
+        "title": "Fai uno screenshot dei tuoi saldi Splid"
+      },
+      "splitwise": {
+        "body": "Apri il gruppo in Splitwise e fai uno screenshot dei saldi in alto — chi ti deve e a chi devi. Li ricreeremo come saldi iniziali.",
+        "title": "Fai uno screenshot dei tuoi saldi Splitwise"
+      },
+      "steven": {
+        "body": "Apri Steven e fai uno screenshot della schermata dei saldi che mostra chi ti deve e a chi devi. Li ricreeremo come saldi iniziali.",
+        "title": "Fai uno screenshot dei tuoi saldi Steven"
+      },
+      "tricount": {
+        "body": "Apri il Tricount, vai alla schermata dei saldi e fanne uno screenshot. Leggeremo il saldo netto di ogni persona.",
+        "title": "Fai uno screenshot dei tuoi saldi Tricount"
+      }
+    },
+    "permissionBody": "Consenti l’accesso alle foto per aggiungere screenshot dei tuoi saldi.",
+    "permissionTitle": "Serve l’accesso alle foto",
+    "picker": {
+      "eyebrow": "IMPORTA",
+      "heading": "Porta qui i tuoi saldi",
+      "intro": "Scegli l’app da cui arrivi. Fai uno screenshot della sua schermata dei saldi e imposteremo qui i saldi iniziali corrispondenti.",
+      "title": "Importa"
+    },
+    "progress": {
+      "committing": "Sto impostando i saldi iniziali…",
+      "extracting": "Sto leggendo i saldi…"
+    },
+    "reconcile": {
+      "body": "Abbina ogni nome che abbiamo trovato a un membro del gruppo, oppure aggiungilo come nuovo membro.",
+      "continue": "Avanti",
+      "newMember": "Nuovo membro",
+      "title": "Abbina le persone"
+    },
+    "review": {
+      "badAmount": "Non siamo riusciti a leggere un importo valido per questo saldo.",
+      "badDirection": "Non siamo riusciti a capire in che direzione va questo saldo.",
+      "body": "Controlla ogni saldo prima di importare. Creeremo un saldo iniziale per ogni persona; potrai saldarli o modificarli in seguito.",
+      "currencyMismatch": "Questi saldi sono in {{extracted}}, ma il gruppo usa {{group}}. L’importazione tra valute diverse non è supportata.",
+      "import": "Importa {{count}} saldi",
+      "import_many": "Importa {{count}} saldi",
+      "import_one": "Importa 1 saldo",
+      "import_other": "Importa {{count}} saldi",
+      "owedToYouTotal": "Ti devono",
+      "owesYou": "{{name}} ti deve",
+      "title": "Controlla i saldi",
+      "youOwe": "Devi a {{name}}",
+      "youOweTotal": "Devi"
+    },
+    "step": {
+      "capture": "Passo 1 di 3",
+      "reconcile": "Passo 2 di 3",
+      "review": "Passo 3 di 3"
+    },
+    "success": {
+      "body": "Impostati {{count}} saldi iniziali nel gruppo.",
+      "body_many": "Impostati {{count}} saldi iniziali nel gruppo.",
+      "body_one": "Impostato 1 saldo iniziale nel gruppo.",
+      "body_other": "Impostati {{count}} saldi iniziali nel gruppo.",
+      "title": "Importati"
+    },
+    "tray": {
+      "add": "Aggiungi screenshot",
+      "count": "{{count}} di {{max}} screenshot",
+      "count_many": "{{count}} di {{max}} screenshot",
+      "count_one": "{{count}} di {{max}} screenshot",
+      "count_other": "{{count}} di {{max}} screenshot",
+      "eyebrow": "SCREENSHOT",
+      "remove": "Rimuovi screenshot"
+    },
+    "unknownApp": "Quell’app non è ancora supportata."
   },
   "invite": {
     "body": "Gli amici scansionano questo per entrare.",

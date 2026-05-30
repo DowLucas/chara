@@ -354,7 +354,10 @@
     "archivePromptBody": "グループはリストから非表示になります。アーカイブ後も確認できます。",
     "archivePromptTitle": "{{name}}をアーカイブしますか？",
     "edit": "グループを編集",
+    "emptyAddFirst": "最初の支出を追加",
     "emptyBody": "最初の支出を追加しましょう。",
+    "emptyBodyImport": "最初の支出を追加するか、別のアプリから残高を引き継ぎましょう。",
+    "emptyImport": "別のアプリからインポート",
     "emptyTitle": "支出なし",
     "expensesCount": "支出・{{count}}件",
     "expensesCount_one": "支出・{{count}}件",
@@ -577,6 +580,117 @@
     "unchanged": "変更なし",
     "wasOwed": "以前の受取",
     "wasOwes": "以前の支払"
+  },
+  "import": {
+    "apps": {
+      "other": {
+        "label": "その他のアプリ"
+      },
+      "settleup": {
+        "label": "Settle Up"
+      },
+      "splid": {
+        "label": "Splid"
+      },
+      "splitwise": {
+        "label": "Splitwise"
+      },
+      "steven": {
+        "label": "Steven"
+      },
+      "tricount": {
+        "label": "Tricount"
+      }
+    },
+    "capture": {
+      "extract": "残高を読み取る"
+    },
+    "commitError": {
+      "title": "インポートに失敗しました"
+    },
+    "empty": {
+      "body": "そのスクリーンショットから残高を読み取れませんでした。残高または精算状況の画面を、画面全体がはっきり写るように撮り直してください。",
+      "title": "見つかりませんでした"
+    },
+    "entry": "別のアプリからインポート",
+    "extractError": {
+      "title": "スクリーンショットを読み取れませんでした"
+    },
+    "guidance": {
+      "other": {
+        "body": "別のアプリで残高または精算状況の画面を開いてスクリーンショットを撮ってください。誰にいくら貸し借りがあるかを読み取り、ここに同じ開始残高を設定します。",
+        "title": "残高のスクリーンショットを撮る"
+      },
+      "settleup": {
+        "body": "Settle Upでグループを開き、残高画面に移動してスクリーンショットを撮ってください。各メンバーの純残高を読み取ります。",
+        "title": "Settle Upの残高をスクリーンショット"
+      },
+      "splid": {
+        "body": "Splidでグループを開き、残高タブに切り替えてスクリーンショットを撮ってください。各メンバーの純残高を読み取ります。",
+        "title": "Splidの残高をスクリーンショット"
+      },
+      "splitwise": {
+        "body": "Splitwiseでグループを開き、画面上部の残高（誰にいくら貸し借りがあるか）をスクリーンショットしてください。それを開始残高として再現します。",
+        "title": "Splitwiseの残高をスクリーンショット"
+      },
+      "steven": {
+        "body": "Stevenを開き、誰にいくら貸し借りがあるかが分かる残高画面をスクリーンショットしてください。それを開始残高として再現します。",
+        "title": "Stevenの残高をスクリーンショット"
+      },
+      "tricount": {
+        "body": "Tricountを開き、残高画面に移動してスクリーンショットを撮ってください。各メンバーの純残高を読み取ります。",
+        "title": "Tricountの残高をスクリーンショット"
+      }
+    },
+    "permissionBody": "残高のスクリーンショットを追加するため、写真へのアクセスを許可してください。",
+    "permissionTitle": "写真へのアクセスが必要",
+    "picker": {
+      "eyebrow": "インポート",
+      "heading": "残高をそのまま引き継ぐ",
+      "intro": "今まで使っていたアプリを選んでください。その残高画面をスクリーンショットすれば、ここに同じ開始残高を設定します。",
+      "title": "インポート"
+    },
+    "progress": {
+      "committing": "開始残高を設定中…",
+      "extracting": "残高を読み取り中…"
+    },
+    "reconcile": {
+      "body": "読み取った各名前をグループのメンバーに対応づけるか、新しいメンバーとして追加してください。",
+      "continue": "次へ",
+      "newMember": "新しいメンバー",
+      "title": "メンバーを対応づける"
+    },
+    "review": {
+      "badAmount": "この残高の有効な金額を読み取れませんでした。",
+      "badDirection": "この残高の貸し借りの向きを判断できませんでした。",
+      "body": "インポートする前に各残高を確認してください。1人につき開始残高を1件作成します。あとから精算・編集できます。",
+      "currencyMismatch": "これらの残高は{{extracted}}ですが、グループの通貨は{{group}}です。異なる通貨間のインポートには対応していません。",
+      "import": "{{count}}件の残高をインポート",
+      "import_other": "{{count}}件の残高をインポート",
+      "owedToYouTotal": "受取",
+      "owesYou": "{{name}}から受取",
+      "title": "残高を確認",
+      "youOwe": "{{name}}に支払",
+      "youOweTotal": "支払"
+    },
+    "step": {
+      "capture": "ステップ 1 / 3",
+      "reconcile": "ステップ 2 / 3",
+      "review": "ステップ 3 / 3"
+    },
+    "success": {
+      "body": "グループに{{count}}件の開始残高を設定しました。",
+      "body_other": "グループに{{count}}件の開始残高を設定しました。",
+      "title": "インポート完了"
+    },
+    "tray": {
+      "add": "スクリーンショットを追加",
+      "count": "{{max}}件中{{count}}件のスクリーンショット",
+      "count_other": "{{max}}件中{{count}}件のスクリーンショット",
+      "eyebrow": "スクリーンショット",
+      "remove": "スクリーンショットを削除"
+    },
+    "unknownApp": "そのアプリにはまだ対応していません。"
   },
   "invite": {
     "body": "これをスキャンして参加してもらいます。",

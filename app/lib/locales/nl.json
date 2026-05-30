@@ -354,7 +354,10 @@
     "archivePromptBody": "De groep wordt verborgen uit je lijst. Je kunt gearchiveerde groepen later nog steeds bekijken.",
     "archivePromptTitle": "{{name}} archiveren?",
     "edit": "Groep bewerken",
+    "emptyAddFirst": "Eerste uitgave toevoegen",
     "emptyBody": "Voeg de eerste uitgave toe aan deze groep.",
+    "emptyBodyImport": "Voeg je eerste uitgave toe, of neem je saldi mee uit een andere app.",
+    "emptyImport": "Importeren uit een andere app",
     "emptyTitle": "Nog geen uitgaven",
     "expensesCount": "uitgaven · {{count}}",
     "expensesCount_one": "uitgaven · {{count}}",
@@ -577,6 +580,120 @@
     "unchanged": "ongewijzigd",
     "wasOwed": "kreeg",
     "wasOwes": "moest betalen"
+  },
+  "import": {
+    "apps": {
+      "other": {
+        "label": "Andere app"
+      },
+      "settleup": {
+        "label": "Settle Up"
+      },
+      "splid": {
+        "label": "Splid"
+      },
+      "splitwise": {
+        "label": "Splitwise"
+      },
+      "steven": {
+        "label": "Steven"
+      },
+      "tricount": {
+        "label": "Tricount"
+      }
+    },
+    "capture": {
+      "extract": "Saldi inlezen"
+    },
+    "commitError": {
+      "title": "Importeren mislukt"
+    },
+    "empty": {
+      "body": "We konden geen saldi uit die screenshots lezen. Probeer een duidelijkere schermvullende foto van je saldi- of standenscherm.",
+      "title": "Niets gevonden"
+    },
+    "entry": "Importeren uit een andere app",
+    "extractError": {
+      "title": "Screenshots konden niet worden gelezen"
+    },
+    "guidance": {
+      "other": {
+        "body": "Open het saldi- of standenscherm in je andere app en maak er een screenshot van. We lezen wie jou nog moet betalen en wie jij nog moet betalen, en stellen hier bijpassende beginsaldi in.",
+        "title": "Maak een screenshot van je saldi"
+      },
+      "settleup": {
+        "body": "Open de groep in Settle Up, ga naar het saldischerm en maak er een screenshot van. We lezen het nettosaldo van elke persoon.",
+        "title": "Maak een screenshot van je Settle Up-saldi"
+      },
+      "splid": {
+        "body": "Open de groep in Splid, ga naar het tabblad Saldi en maak er een screenshot van. We lezen het nettosaldo van elke persoon.",
+        "title": "Maak een screenshot van je Splid-saldi"
+      },
+      "splitwise": {
+        "body": "Open de groep in Splitwise en maak een screenshot van de saldi bovenaan — wie jou nog moet betalen en wie jij nog moet betalen. We maken die opnieuw aan als beginsaldi.",
+        "title": "Maak een screenshot van je Splitwise-saldi"
+      },
+      "steven": {
+        "body": "Open Steven en maak een screenshot van het saldischerm dat laat zien wie jou nog moet betalen en wie jij nog moet betalen. We maken die opnieuw aan als beginsaldi.",
+        "title": "Maak een screenshot van je Steven-saldi"
+      },
+      "tricount": {
+        "body": "Open de Tricount, ga naar het saldischerm en maak er een screenshot van. We lezen het nettosaldo van elke persoon.",
+        "title": "Maak een screenshot van je Tricount-saldi"
+      }
+    },
+    "permissionBody": "Geef toegang tot je foto's om screenshots van je saldi toe te voegen.",
+    "permissionTitle": "Toegang tot foto's nodig",
+    "picker": {
+      "eyebrow": "IMPORTEREN",
+      "heading": "Neem je saldi mee",
+      "intro": "Kies de app waar je vandaan komt. Maak een screenshot van het saldischerm en we stellen hier bijpassende beginsaldi in.",
+      "title": "Importeren"
+    },
+    "progress": {
+      "committing": "Beginsaldi instellen…",
+      "extracting": "Saldi inlezen…"
+    },
+    "reconcile": {
+      "body": "Koppel elke gevonden naam aan een groepslid, of voeg de naam toe als nieuw lid.",
+      "continue": "Doorgaan",
+      "newMember": "Nieuw lid",
+      "title": "Personen koppelen"
+    },
+    "review": {
+      "badAmount": "We konden geen geldig bedrag voor dit saldo lezen.",
+      "badDirection": "We konden niet bepalen welke kant dit saldo op gaat.",
+      "body": "Controleer elk saldo voordat je importeert. We maken per persoon één beginsaldo aan; je kunt ze later afrekenen of bewerken.",
+      "currencyMismatch": "Deze saldi staan in {{extracted}}, maar de groep gebruikt {{group}}. Importeren tussen valuta's wordt niet ondersteund.",
+      "import": "{{count}} saldi importeren",
+      "import_one": "1 saldo importeren",
+      "import_other": "{{count}} saldi importeren",
+      "owedToYouTotal": "Aan jou verschuldigd",
+      "owesYou": "{{name}} moet jou nog betalen",
+      "title": "Saldi controleren",
+      "youOwe": "Jij moet {{name}} nog betalen",
+      "youOweTotal": "Jij bent verschuldigd"
+    },
+    "step": {
+      "capture": "Stap 1 van 3",
+      "reconcile": "Stap 2 van 3",
+      "review": "Stap 3 van 3"
+    },
+    "success": {
+      "body": "{{count}} beginsaldi in de groep ingesteld.",
+      "body_one": "1 beginsaldo in de groep ingesteld.",
+      "body_other": "{{count}} beginsaldi in de groep ingesteld.",
+      "title": "Geïmporteerd"
+    },
+    "tray": {
+      "add": "Screenshots toevoegen",
+      "count": "{{count}} van {{max}} screenshots",
+      "count_one": "{{count}} van {{max}} screenshot",
+      "count_other": "{{count}} van {{max}} screenshots",
+      "eyebrow": "SCREENSHOTS",
+      "remove": "Screenshot verwijderen"
+    },
+    "unknownApp": "Die app wordt nog niet ondersteund."
   },
   "invite": {
     "body": "Vrienden scannen dit om lid te worden.",
