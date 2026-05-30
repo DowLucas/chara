@@ -32,13 +32,13 @@ INSERT INTO expenses (
     id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
     expense_date, is_reimbursement, created_by_id,
     original_amount, original_currency, fx_rate, fx_as_of, fx_source,
-    source_kind, source_id
+    source_kind, source_id, import_source
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
 RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
           expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
           original_amount, original_currency, fx_rate, fx_as_of, fx_source,
-          source_kind, source_id
+          source_kind, source_id, import_source
 `
 
 type CreateExpenseParams struct {
@@ -61,6 +61,7 @@ type CreateExpenseParams struct {
 	FxSource         pgtype.Text    `db:"fx_source" json:"fx_source"`
 	SourceKind       pgtype.Text    `db:"source_kind" json:"source_kind"`
 	SourceID         pgtype.Text    `db:"source_id" json:"source_id"`
+	ImportSource     pgtype.Text    `db:"import_source" json:"import_source"`
 }
 
 type CreateExpenseRow struct {
@@ -86,6 +87,7 @@ type CreateExpenseRow struct {
 	FxSource         pgtype.Text        `db:"fx_source" json:"fx_source"`
 	SourceKind       pgtype.Text        `db:"source_kind" json:"source_kind"`
 	SourceID         pgtype.Text        `db:"source_id" json:"source_id"`
+	ImportSource     pgtype.Text        `db:"import_source" json:"import_source"`
 }
 
 // Explicit column list everywhere to exclude the generated `search_vector` column,
@@ -111,6 +113,7 @@ func (q *Queries) CreateExpense(ctx context.Context, arg CreateExpenseParams) (C
 		arg.FxSource,
 		arg.SourceKind,
 		arg.SourceID,
+		arg.ImportSource,
 	)
 	var i CreateExpenseRow
 	err := row.Scan(
@@ -136,6 +139,7 @@ func (q *Queries) CreateExpense(ctx context.Context, arg CreateExpenseParams) (C
 		&i.FxSource,
 		&i.SourceKind,
 		&i.SourceID,
+		&i.ImportSource,
 	)
 	return i, err
 }

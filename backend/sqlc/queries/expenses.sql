@@ -6,13 +6,13 @@ INSERT INTO expenses (
     id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
     expense_date, is_reimbursement, created_by_id,
     original_amount, original_currency, fx_rate, fx_as_of, fx_source,
-    source_kind, source_id
+    source_kind, source_id, import_source
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
 RETURNING id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
           expense_date, is_reimbursement, is_deleted, created_by_id, created_at, updated_at,
           original_amount, original_currency, fx_rate, fx_as_of, fx_source,
-          source_kind, source_id;
+          source_kind, source_id, import_source;
 
 -- name: GetExpenseByID :one
 SELECT id, group_id, title, amount, currency, paid_by_id, split_method, category, notes,
