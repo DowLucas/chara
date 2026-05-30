@@ -40,3 +40,7 @@ yarn-error.*
 # inject at build time via EAS/CI secrets)
 google-play-service-account.json
 *-service-account.json
+
+# Local Android signing credentials (eas build --local)
+credentials.json
+credentials/
