@@ -354,7 +354,10 @@
     "archivePromptBody": "Ryhmä piilotetaan listalta. Pääset arkistoituihin ryhmiin myöhemmin.",
     "archivePromptTitle": "Arkistoidaanko {{name}}?",
     "edit": "Muokkaa ryhmää",
+    "emptyAddFirst": "Lisää ensimmäinen kulu",
     "emptyBody": "Lisää ryhmään ensimmäinen kulu.",
+    "emptyBodyImport": "Lisää ensimmäinen kulusi tai tuo saldosi toisesta sovelluksesta.",
+    "emptyImport": "Tuo toisesta sovelluksesta",
     "emptyTitle": "Ei vielä kuluja",
     "expensesCount": "kuluja · {{count}}",
     "expensesCount_one": "kuluja · {{count}}",
@@ -577,6 +580,120 @@
     "unchanged": "ennallaan",
     "wasOwed": "oli velkaa",
     "wasOwes": "velkaa"
+  },
+  "import": {
+    "apps": {
+      "other": {
+        "label": "Muu sovellus"
+      },
+      "settleup": {
+        "label": "Settle Up"
+      },
+      "splid": {
+        "label": "Splid"
+      },
+      "splitwise": {
+        "label": "Splitwise"
+      },
+      "steven": {
+        "label": "Steven"
+      },
+      "tricount": {
+        "label": "Tricount"
+      }
+    },
+    "capture": {
+      "extract": "Lue saldot"
+    },
+    "commitError": {
+      "title": "Tuonti epäonnistui"
+    },
+    "empty": {
+      "body": "Emme saaneet luettua saldoja noista kuvakaappauksista. Kokeile selkeämpää, koko ruudun kuvakaappausta saldo- tai tilannenäkymästäsi.",
+      "title": "Mitään ei löytynyt"
+    },
+    "entry": "Tuo toisesta sovelluksesta",
+    "extractError": {
+      "title": "Kuvakaappauksia ei voitu lukea"
+    },
+    "guidance": {
+      "other": {
+        "body": "Avaa toisessa sovelluksessasi saldo- tai tilannenäkymä ja ota siitä kuvakaappaus. Luemme, kuka on sinulle velkaa ja kenelle sinä olet velkaa, ja luomme vastaavat aloitussaldot tänne.",
+        "title": "Ota kuvakaappaus saldoistasi"
+      },
+      "settleup": {
+        "body": "Avaa ryhmä Settle Upissa, siirry sen saldonäkymään ja ota siitä kuvakaappaus. Luemme kunkin henkilön nettosaldon.",
+        "title": "Ota kuvakaappaus Settle Up -saldoistasi"
+      },
+      "splid": {
+        "body": "Avaa ryhmä Splidissä, siirry saldovälilehdelle ja ota siitä kuvakaappaus. Luemme kunkin henkilön nettosaldon.",
+        "title": "Ota kuvakaappaus Splid-saldoistasi"
+      },
+      "splitwise": {
+        "body": "Avaa ryhmä Splitwisessä ja ota kuvakaappaus yläosan saldoista — kuka on sinulle velkaa ja kenelle sinä olet velkaa. Luomme ne uudelleen aloitussaldoiksi.",
+        "title": "Ota kuvakaappaus Splitwise-saldoistasi"
+      },
+      "steven": {
+        "body": "Avaa Steven ja ota kuvakaappaus saldonäkymästä, jossa näkyy kuka on sinulle velkaa ja kenelle sinä olet velkaa. Luomme ne uudelleen aloitussaldoiksi.",
+        "title": "Ota kuvakaappaus Steven-saldoistasi"
+      },
+      "tricount": {
+        "body": "Avaa Tricount, siirry saldonäkymään ja ota siitä kuvakaappaus. Luemme kunkin henkilön nettosaldon.",
+        "title": "Ota kuvakaappaus Tricount-saldoistasi"
+      }
+    },
+    "permissionBody": "Salli kuvien käyttö lisätäksesi kuvakaappauksia saldoistasi.",
+    "permissionTitle": "Kuvien käyttöoikeus tarvitaan",
+    "picker": {
+      "eyebrow": "TUONTI",
+      "heading": "Tuo saldosi mukaasi",
+      "intro": "Valitse sovellus, josta olet siirtymässä. Ota kuvakaappaus sen saldonäkymästä, niin luomme vastaavat aloitussaldot tänne.",
+      "title": "Tuonti"
+    },
+    "progress": {
+      "committing": "Luodaan aloitussaldoja…",
+      "extracting": "Luetaan saldoja…"
+    },
+    "reconcile": {
+      "body": "Yhdistä jokainen löytämämme nimi ryhmän jäseneen tai lisää se uutena jäsenenä.",
+      "continue": "Jatka",
+      "newMember": "Uusi jäsen",
+      "title": "Yhdistä henkilöt"
+    },
+    "review": {
+      "badAmount": "Emme saaneet luettua kelvollista summaa tälle saldolle.",
+      "badDirection": "Emme saaneet selvitettyä, kummin päin tämä saldo menee.",
+      "body": "Tarkista jokainen saldo ennen tuontia. Luomme yhden aloitussaldon henkilöä kohden; voit tasata tai muokata niitä myöhemmin.",
+      "currencyMismatch": "Nämä saldot ovat valuutassa {{extracted}}, mutta ryhmä käyttää valuuttaa {{group}}. Tuontia eri valuuttojen välillä ei tueta.",
+      "import": "Tuo {{count}} saldoa",
+      "import_one": "Tuo 1 saldo",
+      "import_other": "Tuo {{count}} saldoa",
+      "owedToYouTotal": "Sinulle velkaa",
+      "owesYou": "{{name}} on sinulle velkaa",
+      "title": "Tarkista saldot",
+      "youOwe": "Olet velkaa käyttäjälle {{name}}",
+      "youOweTotal": "Olet velkaa"
+    },
+    "step": {
+      "capture": "Vaihe 1/3",
+      "reconcile": "Vaihe 2/3",
+      "review": "Vaihe 3/3"
+    },
+    "success": {
+      "body": "Ryhmään luotiin {{count}} aloitussaldoa.",
+      "body_one": "Ryhmään luotiin 1 aloitussaldo.",
+      "body_other": "Ryhmään luotiin {{count}} aloitussaldoa.",
+      "title": "Tuotu"
+    },
+    "tray": {
+      "add": "Lisää kuvakaappauksia",
+      "count": "{{count}}/{{max}} kuvakaappausta",
+      "count_one": "{{count}}/{{max}} kuvakaappaus",
+      "count_other": "{{count}}/{{max}} kuvakaappausta",
+      "eyebrow": "KUVAKAAPPAUKSET",
+      "remove": "Poista kuvakaappaus"
+    },
+    "unknownApp": "Tätä sovellusta ei vielä tueta."
   },
   "invite": {
     "body": "Kaverit liittyvät skannaamalla tämän.",
