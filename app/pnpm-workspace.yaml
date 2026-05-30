@@ -1,2 +1,6 @@
+# pnpm 11 settings. `allowBuilds` replaces the removed onlyBuiltDependencies /
+# ignoredBuiltDependencies settings. Without an explicit decision here, pnpm
+# fails `install` with ERR_PNPM_IGNORED_BUILDS (non-zero exit), which breaks
+# EAS builds. esbuild ships a postinstall to set up its platform binary; allow it.
 allowBuilds:
-  esbuild: set this to true or false
+  esbuild: true
