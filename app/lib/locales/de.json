@@ -354,7 +354,10 @@
     "archivePromptBody": "Die Gruppe verschwindet aus deiner Liste. Archivierte Gruppen kannst du später weiter ansehen.",
     "archivePromptTitle": "{{name}} archivieren?",
     "edit": "Gruppe bearbeiten",
+    "emptyAddFirst": "Erste Ausgabe eintragen",
     "emptyBody": "Trag die erste Ausgabe ein.",
+    "emptyBodyImport": "Trag deine erste Ausgabe ein oder bring deine Salden aus einer anderen App mit.",
+    "emptyImport": "Aus anderer App importieren",
     "emptyTitle": "Noch keine Ausgaben",
     "expensesCount": "Ausgaben · {{count}}",
     "expensesCount_one": "Ausgaben · {{count}}",
@@ -577,6 +580,120 @@
     "unchanged": "unverändert",
     "wasOwed": "vorher zu erhalten",
     "wasOwes": "schuldete"
+  },
+  "import": {
+    "apps": {
+      "other": {
+        "label": "Andere App"
+      },
+      "settleup": {
+        "label": "Settle Up"
+      },
+      "splid": {
+        "label": "Splid"
+      },
+      "splitwise": {
+        "label": "Splitwise"
+      },
+      "steven": {
+        "label": "Steven"
+      },
+      "tricount": {
+        "label": "Tricount"
+      }
+    },
+    "capture": {
+      "extract": "Salden auslesen"
+    },
+    "commitError": {
+      "title": "Import fehlgeschlagen"
+    },
+    "empty": {
+      "body": "Aus diesen Screenshots konnten wir keine Salden auslesen. Versuch einen schärferen Vollbild-Screenshot deiner Salden- oder Standübersicht.",
+      "title": "Nichts gefunden"
+    },
+    "entry": "Aus anderer App importieren",
+    "extractError": {
+      "title": "Screenshots nicht lesbar"
+    },
+    "guidance": {
+      "other": {
+        "body": "Öffne in deiner anderen App die Salden- oder Standübersicht und mach einen Screenshot. Wir lesen aus, wer dir was schuldet und wem du was schuldest, und legen hier passende Anfangssalden an.",
+        "title": "Mach einen Screenshot deiner Salden"
+      },
+      "settleup": {
+        "body": "Öffne die Gruppe in Settle Up, geh zur Saldenübersicht und mach einen Screenshot. Wir lesen den Nettosaldo jeder Person aus.",
+        "title": "Mach einen Screenshot deiner Settle-Up-Salden"
+      },
+      "splid": {
+        "body": "Öffne die Gruppe in Splid, wechsle zum Salden-Tab und mach einen Screenshot. Wir lesen den Nettosaldo jeder Person aus.",
+        "title": "Mach einen Screenshot deiner Splid-Salden"
+      },
+      "splitwise": {
+        "body": "Öffne die Gruppe in Splitwise und mach einen Screenshot der Salden oben – wer dir was schuldet und wem du was schuldest. Wir legen sie hier als Anfangssalden neu an.",
+        "title": "Mach einen Screenshot deiner Splitwise-Salden"
+      },
+      "steven": {
+        "body": "Öffne Steven und mach einen Screenshot der Saldenübersicht, die zeigt, wer dir was schuldet und wem du was schuldest. Wir legen sie hier als Anfangssalden neu an.",
+        "title": "Mach einen Screenshot deiner Steven-Salden"
+      },
+      "tricount": {
+        "body": "Öffne den Tricount, geh zur Saldenübersicht und mach einen Screenshot. Wir lesen den Nettosaldo jeder Person aus.",
+        "title": "Mach einen Screenshot deiner Tricount-Salden"
+      }
+    },
+    "permissionBody": "Erlaube den Fotozugriff, um Screenshots deiner Salden hinzuzufügen.",
+    "permissionTitle": "Fotozugriff erforderlich",
+    "picker": {
+      "eyebrow": "IMPORT",
+      "heading": "Bring deine Salden mit",
+      "intro": "Wähl die App, aus der du kommst. Mach einen Screenshot ihrer Saldenübersicht, und wir legen hier passende Anfangssalden an.",
+      "title": "Import"
+    },
+    "progress": {
+      "committing": "Anfangssalden werden angelegt …",
+      "extracting": "Salden werden gelesen …"
+    },
+    "reconcile": {
+      "body": "Ordne jeden gefundenen Namen einem Gruppenmitglied zu oder füge ihn als neues Mitglied hinzu.",
+      "continue": "Weiter",
+      "newMember": "Neues Mitglied",
+      "title": "Personen zuordnen"
+    },
+    "review": {
+      "badAmount": "Für diesen Saldo konnten wir keinen gültigen Betrag auslesen.",
+      "badDirection": "Wir konnten nicht erkennen, in welche Richtung dieser Saldo geht.",
+      "body": "Prüf jeden Saldo vor dem Import. Wir legen pro Person einen Anfangssaldo an; du kannst sie später ausgleichen oder bearbeiten.",
+      "currencyMismatch": "Diese Salden sind in {{extracted}}, aber die Gruppe nutzt {{group}}. Import über Währungen hinweg wird nicht unterstützt.",
+      "import": "{{count}} Salden importieren",
+      "import_one": "1 Saldo importieren",
+      "import_other": "{{count}} Salden importieren",
+      "owedToYouTotal": "Dir geschuldet",
+      "owesYou": "{{name}} schuldet dir",
+      "title": "Salden prüfen",
+      "youOwe": "Du schuldest {{name}}",
+      "youOweTotal": "Du schuldest"
+    },
+    "step": {
+      "capture": "Schritt 1 von 3",
+      "reconcile": "Schritt 2 von 3",
+      "review": "Schritt 3 von 3"
+    },
+    "success": {
+      "body": "{{count}} Anfangssalden in der Gruppe angelegt.",
+      "body_one": "1 Anfangssaldo in der Gruppe angelegt.",
+      "body_other": "{{count}} Anfangssalden in der Gruppe angelegt.",
+      "title": "Importiert"
+    },
+    "tray": {
+      "add": "Screenshots hinzufügen",
+      "count": "{{count}} von {{max}} Screenshots",
+      "count_one": "{{count}} von {{max}} Screenshot",
+      "count_other": "{{count}} von {{max}} Screenshots",
+      "eyebrow": "SCREENSHOTS",
+      "remove": "Screenshot entfernen"
+    },
+    "unknownApp": "Diese App wird noch nicht unterstützt."
   },
   "invite": {
     "body": "Freunde scannen den Code zum Beitreten.",

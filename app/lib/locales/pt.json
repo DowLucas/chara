@@ -353,7 +353,10 @@
     "archivePromptBody": "O grupo será ocultado da sua lista. Você ainda pode ver grupos arquivados depois.",
     "archivePromptTitle": "Arquivar {{name}}?",
     "edit": "Editar grupo",
+    "emptyAddFirst": "Adicionar primeira despesa",
     "emptyBody": "Adicione a primeira despesa a este grupo.",
+    "emptyBodyImport": "Adicione sua primeira despesa, ou traga seus saldos de outro app.",
+    "emptyImport": "Importar de outro app",
     "emptyTitle": "Nenhuma despesa ainda",
     "expensesCount": "despesas · {{count}}",
     "expensesCount_one": "despesas · {{count}}",
@@ -576,6 +579,123 @@
     "unchanged": "sem alteração",
     "wasOwed": "era devido",
     "wasOwes": "devia"
+  },
+  "import": {
+    "apps": {
+      "other": {
+        "label": "Outro app"
+      },
+      "settleup": {
+        "label": "Settle Up"
+      },
+      "splid": {
+        "label": "Splid"
+      },
+      "splitwise": {
+        "label": "Splitwise"
+      },
+      "steven": {
+        "label": "Steven"
+      },
+      "tricount": {
+        "label": "Tricount"
+      }
+    },
+    "capture": {
+      "extract": "Ler saldos"
+    },
+    "commitError": {
+      "title": "Falha na importação"
+    },
+    "empty": {
+      "body": "Não conseguimos ler nenhum saldo dessas capturas de tela. Tente uma captura mais nítida e em tela cheia da sua tela de saldos ou de quem deve o quê.",
+      "title": "Nada encontrado"
+    },
+    "entry": "Importar de outro app",
+    "extractError": {
+      "title": "Não foi possível ler as capturas de tela"
+    },
+    "guidance": {
+      "other": {
+        "body": "Abra a tela de saldos ou de quem deve o quê no seu outro app e tire uma captura de tela. Vamos ler quem deve a você e a quem você deve, e criar saldos iniciais correspondentes aqui.",
+        "title": "Tire uma captura dos seus saldos"
+      },
+      "settleup": {
+        "body": "Abra o grupo no Settle Up, vá até a tela de saldos e tire uma captura de tela. Vamos ler o saldo líquido de cada pessoa.",
+        "title": "Tire uma captura dos seus saldos no Settle Up"
+      },
+      "splid": {
+        "body": "Abra o grupo no Splid, mude para a aba de saldos e tire uma captura de tela. Vamos ler o saldo líquido de cada pessoa.",
+        "title": "Tire uma captura dos seus saldos no Splid"
+      },
+      "splitwise": {
+        "body": "Abra o grupo no Splitwise e tire uma captura dos saldos no topo — quem deve a você e a quem você deve. Vamos recriá-los como saldos iniciais.",
+        "title": "Tire uma captura dos seus saldos no Splitwise"
+      },
+      "steven": {
+        "body": "Abra o Steven e tire uma captura da tela de saldos mostrando quem deve a você e a quem você deve. Vamos recriá-los como saldos iniciais.",
+        "title": "Tire uma captura dos seus saldos no Steven"
+      },
+      "tricount": {
+        "body": "Abra o Tricount, vá até a tela de saldos e tire uma captura de tela. Vamos ler o saldo líquido de cada pessoa.",
+        "title": "Tire uma captura dos seus saldos no Tricount"
+      }
+    },
+    "permissionBody": "Permita o acesso às fotos para adicionar capturas de tela dos seus saldos.",
+    "permissionTitle": "Acesso às fotos necessário",
+    "picker": {
+      "eyebrow": "IMPORTAR",
+      "heading": "Traga seus saldos",
+      "intro": "Escolha o app de onde você está vindo. Tire uma captura da tela de saldos dele e vamos criar saldos iniciais correspondentes aqui.",
+      "title": "Importar"
+    },
+    "progress": {
+      "committing": "Criando saldos iniciais…",
+      "extracting": "Lendo saldos…"
+    },
+    "reconcile": {
+      "body": "Combine cada nome que encontramos com um membro do grupo, ou adicione-o como um novo membro.",
+      "continue": "Continuar",
+      "newMember": "Novo membro",
+      "title": "Combinar pessoas"
+    },
+    "review": {
+      "badAmount": "Não conseguimos ler um valor válido para este saldo.",
+      "badDirection": "Não conseguimos identificar em que direção vai este saldo.",
+      "body": "Confira cada saldo antes de importar. Vamos criar um saldo inicial por pessoa; você pode acertar ou editar depois.",
+      "currencyMismatch": "Estes saldos estão em {{extracted}}, mas o grupo usa {{group}}. Importar entre moedas diferentes não é suportado.",
+      "import": "Importar {{count}} saldos",
+      "import_many": "Importar {{count}} saldos",
+      "import_one": "Importar 1 saldo",
+      "import_other": "Importar {{count}} saldos",
+      "owedToYouTotal": "Devem a você",
+      "owesYou": "{{name}} deve a você",
+      "title": "Revisar saldos",
+      "youOwe": "Você deve a {{name}}",
+      "youOweTotal": "Você deve"
+    },
+    "step": {
+      "capture": "Passo 1 de 3",
+      "reconcile": "Passo 2 de 3",
+      "review": "Passo 3 de 3"
+    },
+    "success": {
+      "body": "Definimos {{count}} saldos iniciais no grupo.",
+      "body_many": "Definimos {{count}} saldos iniciais no grupo.",
+      "body_one": "Definimos 1 saldo inicial no grupo.",
+      "body_other": "Definimos {{count}} saldos iniciais no grupo.",
+      "title": "Importado"
+    },
+    "tray": {
+      "add": "Adicionar capturas de tela",
+      "count": "{{count}} de {{max}} capturas de tela",
+      "count_many": "{{count}} de {{max}} capturas de tela",
+      "count_one": "{{count}} de {{max}} captura de tela",
+      "count_other": "{{count}} de {{max}} capturas de tela",
+      "eyebrow": "CAPTURAS DE TELA",
+      "remove": "Remover captura de tela"
+    },
+    "unknownApp": "Esse app ainda não é suportado."
   },
   "invite": {
     "body": "Os amigos escaneiam isto para entrar.",
