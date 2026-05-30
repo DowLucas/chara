@@ -22,6 +22,8 @@ import { MoneyText } from '@/components/MoneyText';
 import { Avatar, AvatarStack } from '@/components/Avatar';
 import { GroupAvatar } from '@/components/GroupAvatar';
 import { EmptyState } from '@/components/EmptyState';
+import { GroupEmptyState } from '@/components/GroupEmptyState';
+import { addExpenseHref, importHref } from '@/components/GroupEmptyState.helpers';
 import {
   apiFor,
   authToken,
@@ -595,7 +597,10 @@ export default function GroupDetailScreen() {
         <View style={styles.listRule} />
 
         {expenses.length === 0 ? (
-          <EmptyState title={t('groupDetail.emptyTitle')} body={t('groupDetail.emptyBody')} />
+          <GroupEmptyState
+            onAddExpense={() => router.push(addExpenseHref(serverUrl, id))}
+            onImport={() => router.push(importHref(serverUrl, id))}
+          />
         ) : (
           sortedExpenses.map((e) => {
             const payerMember = members.find((m) => m.id === e.paid_by_id);
