@@ -11,6 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import i18n from '@/lib/i18n';
 import { markPopupClosed } from '@/lib/popup-guard';
+import { useResponsive } from '@/lib/use-responsive';
 import { colors, fontBody, fontBodyMedium, fontMono, fontSize, spacing } from '@/lib/theme';
 
 export interface ActionSheetOption {
@@ -29,6 +30,7 @@ interface Props {
 /** Bottom sheet on Android / Web, native iOS sheet on iOS. */
 export function ActionSheet({ visible, onClose, title, options }: Props) {
   const insets = useSafeAreaInsets();
+  const { sheetMaxWidth } = useResponsive();
   const cancelLabel = i18n.t('common.cancel');
 
   // Pending option callback. We dismiss the Modal first, then fire the
@@ -68,7 +70,13 @@ export function ActionSheet({ visible, onClose, title, options }: Props) {
       <TouchableWithoutFeedback onPress={closeWithGuard}>
         <View style={styles.backdrop} />
       </TouchableWithoutFeedback>
-      <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.s3 }]}>
+      <View
+        style={[
+          styles.sheet,
+          { paddingBottom: insets.bottom + spacing.s3 },
+          sheetMaxWidth != null && { maxWidth: sheetMaxWidth, marginHorizontal: 'auto' },
+        ]}
+      >
         {title && (
           <View style={styles.titleRow}>
             <Text style={styles.title}>{title}</Text>

@@ -41,6 +41,7 @@ import { getCalendars } from 'expo-localization';
 import { Feather } from '@expo/vector-icons';
 
 import { TopBar } from '@/components/TopBar';
+import { ContentContainer } from '@/components/ContentContainer';
 import { IconButton } from '@/components/IconButton';
 import { Text } from '@/components/Text';
 import { Button } from '@/components/Button';
@@ -389,6 +390,7 @@ export function RecurringForm({
         contentContainerStyle={{ paddingBottom: insets.bottom + spacing.s7 }}
         keyboardShouldPersistTaps="handled"
       >
+        <ContentContainer>
         {loadError && (
           <Text style={styles.errorBanner}>{t('common.error')}</Text>
         )}
@@ -587,6 +589,7 @@ export function RecurringForm({
             </Text>
           )}
         </View>
+        </ContentContainer>
       </ScrollView>
 
       {/* Payer picker sheet */}

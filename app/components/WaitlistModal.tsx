@@ -19,6 +19,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useResponsive } from '@/lib/use-responsive';
 import { Button } from './Button';
 import { Text } from './Text';
 import { formatDate } from '../lib/i18n';
@@ -65,6 +66,7 @@ export function WaitlistModal({
   onSelfHostPressed,
 }: Props): React.JSX.Element {
   const { t } = useTranslation();
+  const { sheetMaxWidth } = useResponsive();
   const [email, setEmail] = useState(defaultEmail ?? '');
   const [submitting, setSubmitting] = useState(false);
   const [submittedAt, setSubmittedAt] = useState<Date | null>(null);
@@ -114,6 +116,16 @@ export function WaitlistModal({
       onRequestClose={handleDismiss}
     >
       <View style={styles.container}>
+        <View
+          style={[
+            styles.panel,
+            sheetMaxWidth != null && {
+              maxWidth: sheetMaxWidth,
+              alignSelf: 'center',
+              width: '100%',
+            },
+          ]}
+        >
         <ScrollView contentContainerStyle={styles.scrollBody}>
           {showSuccess ? (
             <View style={styles.successWrap}>
@@ -202,6 +214,7 @@ export function WaitlistModal({
             </Text>
           </TouchableOpacity>
         )}
+        </View>
       </View>
     </Modal>
   );
@@ -209,6 +222,7 @@ export function WaitlistModal({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper },
+  panel: { flex: 1 },
   scrollBody: { padding: spacing.s5, paddingBottom: spacing.s7 },
   eyebrow: {
     fontFamily: fontMono,

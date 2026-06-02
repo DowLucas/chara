@@ -19,6 +19,7 @@ import * as Application from 'expo-application';
 import * as ImagePicker from 'expo-image-picker';
 import { getLocales } from 'expo-localization';
 import { TopBar } from '@/components/TopBar';
+import { ContentContainer } from '@/components/ContentContainer';
 import { Avatar } from '@/components/Avatar';
 import { ActionSheet, openNativeActionSheet, ActionSheetOption } from '@/components/ActionSheet';
 import { LanguagePicker } from '@/components/LanguagePicker';
@@ -477,6 +478,7 @@ export default function YouScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <TopBar title={t('you.title')} />
       <ScrollView contentContainerStyle={styles.scroll}>
+        <ContentContainer>
         <View style={styles.profile}>
           <TouchableOpacity
             onPress={openAvatarSheet}
@@ -593,6 +595,7 @@ export default function YouScreen() {
             />
           )}
         </View>
+        </ContentContainer>
       </ScrollView>
       <ActionSheet
         visible={avatarSheetVisible}

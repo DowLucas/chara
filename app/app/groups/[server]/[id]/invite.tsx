@@ -6,6 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import { useTranslation } from 'react-i18next';
 import { apiFor, Group } from '@/lib/api';
+import { ContentContainer } from '@/components/ContentContainer';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 
 export default function GroupInviteScreen() {
@@ -45,43 +46,46 @@ export default function GroupInviteScreen() {
         </TouchableOpacity>
       </View>
 
-      {error ? (
-        <View style={styles.center}>
-          <Text style={styles.body}>{error}</Text>
-        </View>
-      ) : !group || !link ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.graphite} />
-        </View>
-      ) : (
-        <>
-          <View style={styles.header}>
-            <Text style={styles.eyebrow}>{t('invite.eyebrow')}</Text>
-            <Text style={styles.headline}>{group.name}</Text>
-            <Text style={styles.body}>{t('invite.body')}</Text>
+      <ContentContainer style={styles.fill}>
+        {error ? (
+          <View style={styles.center}>
+            <Text style={styles.body}>{error}</Text>
           </View>
-
-          <View style={styles.qrWrap}>
-            <View style={styles.qrCard}>
-              <QRCode value={link} size={240} backgroundColor={colors.paper} color={colors.graphite} />
+        ) : !group || !link ? (
+          <View style={styles.center}>
+            <ActivityIndicator color={colors.graphite} />
+          </View>
+        ) : (
+          <>
+            <View style={styles.header}>
+              <Text style={styles.eyebrow}>{t('invite.eyebrow')}</Text>
+              <Text style={styles.headline}>{group.name}</Text>
+              <Text style={styles.body}>{t('invite.body')}</Text>
             </View>
-            <Text style={styles.token} selectable>{group.invite_token}</Text>
-          </View>
 
-          <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
-            <TouchableOpacity style={styles.cta} onPress={shareLink} activeOpacity={0.85}>
-              <Feather name="share-2" size={18} color={colors.fgOnAccent} />
-              <Text style={styles.ctaLabel}>{t('invite.share')}</Text>
-            </TouchableOpacity>
-          </View>
-        </>
-      )}
+            <View style={styles.qrWrap}>
+              <View style={styles.qrCard}>
+                <QRCode value={link} size={240} backgroundColor={colors.paper} color={colors.graphite} />
+              </View>
+              <Text style={styles.token} selectable>{group.invite_token}</Text>
+            </View>
+
+            <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
+              <TouchableOpacity style={styles.cta} onPress={shareLink} activeOpacity={0.85}>
+                <Feather name="share-2" size={18} color={colors.fgOnAccent} />
+                <Text style={styles.ctaLabel}>{t('invite.share')}</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </ContentContainer>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper, paddingHorizontal: spacing.s5 },
+  fill: { flex: 1 },
   topRow: { paddingVertical: spacing.s2 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: { gap: spacing.s2, marginTop: spacing.s2, marginBottom: spacing.s4 },

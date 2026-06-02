@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next';
 import { Feather } from '@expo/vector-icons';
 
 import { TopBar } from '@/components/TopBar';
+import { ContentContainer } from '@/components/ContentContainer';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
 import { GroupAvatar } from '@/components/GroupAvatar';
@@ -345,6 +346,7 @@ export default function GroupSettingsScreen() {
         style={styles.scroll}
         contentContainerStyle={{ paddingBottom: insets.bottom + spacing.s7 }}
       >
+        <ContentContainer>
         {/* Header */}
         <TouchableOpacity
           activeOpacity={0.7}
@@ -530,6 +532,7 @@ export default function GroupSettingsScreen() {
             </View>
           </View>
         )}
+        </ContentContainer>
       </ScrollView>
 
       <DeleteGroupModal

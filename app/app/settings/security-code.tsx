@@ -15,6 +15,7 @@ import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
+import { ContentContainer } from '@/components/ContentContainer';
 import {
   clearSecurityCode,
   hasSecurityCode,
@@ -138,45 +139,47 @@ export default function SecurityCodeScreen() {
         style={styles.body}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.header}>
-          <Text style={styles.eyebrow}>{t('securityCode.eyebrow')}</Text>
-          <Text style={styles.headline}>{headline}</Text>
-          <Text style={styles.bodyText}>{body}</Text>
-        </View>
+        <ContentContainer style={{ flex: 1 }}>
+          <View style={styles.header}>
+            <Text style={styles.eyebrow}>{t('securityCode.eyebrow')}</Text>
+            <Text style={styles.headline}>{headline}</Text>
+            <Text style={styles.bodyText}>{body}</Text>
+          </View>
 
-        <TextInput
-          ref={inputRef}
-          value={code}
-          onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
-          keyboardType="number-pad"
-          maxLength={6}
-          secureTextEntry
-          style={styles.input}
-          placeholder="••••"
-          placeholderTextColor={colors.lead}
-          returnKeyType="done"
-          onSubmitEditing={handleSubmit}
-        />
+          <TextInput
+            ref={inputRef}
+            value={code}
+            onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
+            keyboardType="number-pad"
+            maxLength={6}
+            secureTextEntry
+            style={styles.input}
+            placeholder="••••"
+            placeholderTextColor={colors.lead}
+            returnKeyType="done"
+            onSubmitEditing={handleSubmit}
+          />
 
-        <View style={{ flex: 1 }} />
+          <View style={{ flex: 1 }} />
 
-        <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
-          <TouchableOpacity
-            style={[styles.cta, !isValidSecurityCode(code) && styles.ctaDisabled]}
-            disabled={!isValidSecurityCode(code) || submitting}
-            onPress={handleSubmit}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.ctaLabel}>{t('securityCode.continue')}</Text>
-            <Feather name="arrow-right" size={18} color={colors.fgOnAccent} />
-          </TouchableOpacity>
-
-          {exists && stage === 'current' && (
-            <TouchableOpacity style={styles.disableBtn} onPress={handleDisable} activeOpacity={0.7}>
-              <Text style={styles.disableLabel}>{t('securityCode.disable')}</Text>
+          <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
+            <TouchableOpacity
+              style={[styles.cta, !isValidSecurityCode(code) && styles.ctaDisabled]}
+              disabled={!isValidSecurityCode(code) || submitting}
+              onPress={handleSubmit}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.ctaLabel}>{t('securityCode.continue')}</Text>
+              <Feather name="arrow-right" size={18} color={colors.fgOnAccent} />
             </TouchableOpacity>
-          )}
-        </View>
+
+            {exists && stage === 'current' && (
+              <TouchableOpacity style={styles.disableBtn} onPress={handleDisable} activeOpacity={0.7}>
+                <Text style={styles.disableLabel}>{t('securityCode.disable')}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </ContentContainer>
       </KeyboardAvoidingView>
     </View>
   );

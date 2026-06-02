@@ -4,6 +4,7 @@ import { showAlert } from '@/lib/app-alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TopBar } from '@/components/TopBar';
+import { ContentContainer } from '@/components/ContentContainer';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
@@ -139,6 +140,7 @@ export default function GroupMembersScreen() {
         style={styles.scroll}
         contentContainerStyle={{ paddingBottom: insets.bottom + spacing.s5 }}
       >
+        <ContentContainer>
         <View style={styles.header}>
           <Text style={styles.eyebrow}>{t('members.eyebrow')}</Text>
           <Text
@@ -209,8 +211,10 @@ export default function GroupMembersScreen() {
             );
           })
         )}
+        </ContentContainer>
       </ScrollView>
       <View style={[styles.ctaBar, { paddingBottom: insets.bottom + 8 }]}>
+        <ContentContainer style={styles.ctaInner}>
         <Button
           kind="secondary"
           onPress={() => router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/invite`)}
@@ -234,6 +238,7 @@ export default function GroupMembersScreen() {
         >
           {t('members.shareCta')}
         </Button>
+        </ContentContainer>
       </View>
       <ActionSheet
         visible={!!kickSheetFor}
@@ -333,12 +338,14 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   ctaBar: {
-    flexDirection: 'row',
-    gap: spacing.s2,
     paddingHorizontal: spacing.s5,
     paddingTop: spacing.s3,
     borderTopWidth: 1.5,
     borderTopColor: colors.graphite,
     backgroundColor: colors.paper,
+  },
+  ctaInner: {
+    flexDirection: 'row',
+    gap: spacing.s2,
   },
 });

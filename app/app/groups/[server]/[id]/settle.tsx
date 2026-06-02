@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } 
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TopBar } from '@/components/TopBar';
+import { ContentContainer } from '@/components/ContentContainer';
 import { IconButton } from '@/components/IconButton';
 import { Avatar } from '@/components/Avatar';
 import { EmptyState } from '@/components/EmptyState';
@@ -151,6 +152,7 @@ export default function SettleScreen() {
         style={styles.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
+        <ContentContainer>
         <View style={styles.hero}>
           <Text style={styles.eyebrow}>
             {t('settle.yourNet', { group: group?.name ?? '' })}
@@ -267,6 +269,7 @@ export default function SettleScreen() {
         )}
 
         <View style={{ height: insets.bottom + 24 }} />
+        </ContentContainer>
       </ScrollView>
     </View>
   );

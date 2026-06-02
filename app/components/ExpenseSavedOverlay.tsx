@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Stamp } from './Stamp';
+import { ContentContainer } from '@/components/ContentContainer';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 
 interface Props {
@@ -50,27 +51,29 @@ export function ExpenseSavedOverlay({ visible, subtitle, onContinue }: Props) {
   return (
     <Modal visible={visible} animationType="fade" transparent={false} onRequestClose={onContinue}>
       <View style={[styles.container, { paddingTop: insets.top + spacing.s7, paddingBottom: insets.bottom + spacing.s4 }]}>
-        <View style={styles.center}>
-          <View style={styles.disc}>
-            <Feather name="check" size={48} color={colors.paper} />
+        <ContentContainer style={styles.column}>
+          <View style={styles.center}>
+            <View style={styles.disc}>
+              <Feather name="check" size={48} color={colors.paper} />
+            </View>
+
+            <Animated.View
+              style={[
+                styles.body,
+                { opacity: bodyOpacity, transform: [{ translateY: bodyTranslate }] },
+              ]}
+            >
+              <Stamp size="lg" animateIn speed={2} />
+              <Text style={styles.headline}>{t('expenseSaved.headline')}</Text>
+              {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+            </Animated.View>
           </View>
 
-          <Animated.View
-            style={[
-              styles.body,
-              { opacity: bodyOpacity, transform: [{ translateY: bodyTranslate }] },
-            ]}
-          >
-            <Stamp size="lg" animateIn speed={2} />
-            <Text style={styles.headline}>{t('expenseSaved.headline')}</Text>
-            {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-          </Animated.View>
-        </View>
-
-        <TouchableOpacity style={styles.cta} onPress={onContinue} activeOpacity={0.85}>
-          <Text style={styles.ctaLabel}>{t('expenseSaved.continue')}</Text>
-          <Feather name="arrow-right" size={18} color={colors.fgOnAccent} />
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.cta} onPress={onContinue} activeOpacity={0.85}>
+            <Text style={styles.ctaLabel}>{t('expenseSaved.continue')}</Text>
+            <Feather name="arrow-right" size={18} color={colors.fgOnAccent} />
+          </TouchableOpacity>
+        </ContentContainer>
       </View>
     </Modal>
   );
@@ -83,6 +86,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.s5,
     justifyContent: 'space-between',
   },
+  column: { flex: 1, justifyContent: 'space-between' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.s5 },
   disc: {
     width: 96,

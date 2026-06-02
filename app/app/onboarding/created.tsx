@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import { useEnglishT } from '@/lib/i18n';
+import { ContentContainer } from '@/components/ContentContainer';
 import { apiFor, getGroup, Group } from '@/lib/api';
 import { useDefaultAccount } from '@/lib/accounts';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
@@ -35,11 +36,13 @@ export default function GroupCreatedScreen() {
   if (error) {
     return (
       <View style={[styles.container, styles.center, { paddingTop: insets.top }]}>
-        <Text style={styles.errorTitle}>{t('groupCreated.errorTitle')}</Text>
-        <Text style={styles.body}>{error}</Text>
-        <TouchableOpacity onPress={() => router.replace('/(tabs)')} style={styles.secondary}>
-          <Text style={styles.secondaryLabel}>{t('groupCreated.goToGroups')}</Text>
-        </TouchableOpacity>
+        <ContentContainer>
+          <Text style={styles.errorTitle}>{t('groupCreated.errorTitle')}</Text>
+          <Text style={styles.body}>{error}</Text>
+          <TouchableOpacity onPress={() => router.replace('/(tabs)')} style={styles.secondary}>
+            <Text style={styles.secondaryLabel}>{t('groupCreated.goToGroups')}</Text>
+          </TouchableOpacity>
+        </ContentContainer>
       </View>
     );
   }
@@ -62,47 +65,50 @@ export default function GroupCreatedScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.s4 }]}>
-      <View style={styles.header}>
-        <Text style={styles.eyebrow}>{t('groupCreated.eyebrow')}</Text>
-        <Text style={styles.headline}>{group.name}</Text>
-        <Text style={styles.body}>{t('groupCreated.body')}</Text>
-      </View>
-
-      <View style={styles.qrWrap}>
-        <View style={styles.qrCard}>
-          <QRCode value={link} size={220} backgroundColor={colors.paper} color={colors.graphite} />
+      <ContentContainer style={styles.column}>
+        <View style={styles.header}>
+          <Text style={styles.eyebrow}>{t('groupCreated.eyebrow')}</Text>
+          <Text style={styles.headline}>{group.name}</Text>
+          <Text style={styles.body}>{t('groupCreated.body')}</Text>
         </View>
-        <Text style={styles.token} selectable>
-          {group.invite_token}
-        </Text>
-      </View>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
-        <TouchableOpacity style={styles.cta} onPress={shareLink} activeOpacity={0.85}>
-          <Feather name="share-2" size={18} color={colors.fgOnAccent} />
-          <Text style={styles.ctaLabel}>{t('groupCreated.share')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.secondary}
-          onPress={() => {
-            analytics.track('onboarding_finished', { path: 'create' });
-            if (!defaultServerUrl) {
-              router.replace('/(tabs)');
-              return;
-            }
-            router.replace(`/groups/${encodeURIComponent(defaultServerUrl)}/${group.id}`);
-          }}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.secondaryLabel}>{t('groupCreated.open')}</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.qrWrap}>
+          <View style={styles.qrCard}>
+            <QRCode value={link} size={220} backgroundColor={colors.paper} color={colors.graphite} />
+          </View>
+          <Text style={styles.token} selectable>
+            {group.invite_token}
+          </Text>
+        </View>
+
+        <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
+          <TouchableOpacity style={styles.cta} onPress={shareLink} activeOpacity={0.85}>
+            <Feather name="share-2" size={18} color={colors.fgOnAccent} />
+            <Text style={styles.ctaLabel}>{t('groupCreated.share')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.secondary}
+            onPress={() => {
+              analytics.track('onboarding_finished', { path: 'create' });
+              if (!defaultServerUrl) {
+                router.replace('/(tabs)');
+                return;
+              }
+              router.replace(`/groups/${encodeURIComponent(defaultServerUrl)}/${group.id}`);
+            }}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.secondaryLabel}>{t('groupCreated.open')}</Text>
+          </TouchableOpacity>
+        </View>
+      </ContentContainer>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper, paddingHorizontal: spacing.s5 },
+  column: { flex: 1 },
   center: { alignItems: 'center', justifyContent: 'center', gap: spacing.s3 },
   header: { gap: spacing.s2, marginBottom: spacing.s5 },
   eyebrow: {
