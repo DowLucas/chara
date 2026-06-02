@@ -18,6 +18,8 @@ import {
   Currency,
 } from '@/lib/currencies';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { ContentContainer } from '@/components/ContentContainer';
+import { useResponsive } from '@/lib/use-responsive';
 
 interface Props {
   visible: boolean;
@@ -35,6 +37,7 @@ type Row =
 export function CurrencyPicker({ visible, selected, onClose, onSelect }: Props) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const { contentMaxWidth } = useResponsive();
   const [query, setQuery] = useState('');
 
   // Rebuild the section list every keystroke. ~150 entries; cheap enough.
@@ -78,33 +81,35 @@ export function CurrencyPicker({ visible, selected, onClose, onSelect }: Props) 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={[styles.container, { paddingTop: insets.top + spacing.s2 }]}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => {
-              setQuery('');
-              onClose();
-            }}
-            hitSlop={10}
-            accessibilityLabel={t('common.close')}
-          >
-            <Feather name="x" size={22} color={colors.graphite} />
-          </TouchableOpacity>
-          <Text style={styles.title}>{t('currencyPicker.title')}</Text>
-          <View style={{ width: 22 }} />
-        </View>
+        <ContentContainer>
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => {
+                setQuery('');
+                onClose();
+              }}
+              hitSlop={10}
+              accessibilityLabel={t('common.close')}
+            >
+              <Feather name="x" size={22} color={colors.graphite} />
+            </TouchableOpacity>
+            <Text style={styles.title}>{t('currencyPicker.title')}</Text>
+            <View style={{ width: 22 }} />
+          </View>
 
-        <View style={styles.searchWrap}>
-          <Feather name="search" size={16} color={colors.lead} style={styles.searchIcon} />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder={t('currencyPicker.searchPlaceholder')}
-            placeholderTextColor={colors.lead}
-            autoCapitalize="characters"
-            autoCorrect={false}
-            style={styles.searchInput}
-          />
-        </View>
+          <View style={styles.searchWrap}>
+            <Feather name="search" size={16} color={colors.lead} style={styles.searchIcon} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder={t('currencyPicker.searchPlaceholder')}
+              placeholderTextColor={colors.lead}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              style={styles.searchInput}
+            />
+          </View>
+        </ContentContainer>
 
         <FlatList
           data={rows}
@@ -147,7 +152,14 @@ export function CurrencyPicker({ visible, selected, onClose, onSelect }: Props) 
               <Text style={styles.emptyText}>{t('currencyPicker.empty')}</Text>
             </View>
           }
-          contentContainerStyle={{ paddingBottom: insets.bottom + spacing.s5 }}
+          contentContainerStyle={[
+            { paddingBottom: insets.bottom + spacing.s5 },
+            contentMaxWidth != null && {
+              maxWidth: contentMaxWidth,
+              alignSelf: 'center',
+              width: '100%',
+            },
+          ]}
         />
       </View>
     </Modal>

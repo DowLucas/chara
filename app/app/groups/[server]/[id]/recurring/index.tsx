@@ -22,6 +22,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { TopBar } from '@/components/TopBar';
+import { ContentContainer } from '@/components/ContentContainer';
 import { IconButton } from '@/components/IconButton';
 import { Text } from '@/components/Text';
 import { RecurringListCard } from '@/components/recurring/RecurringListCard';
@@ -97,6 +98,7 @@ export default function RecurringListScreen() {
         style={styles.scroll}
         contentContainerStyle={{ paddingBottom: insets.bottom + spacing.s7 }}
       >
+        <ContentContainer>
         {lockedPausedCount > 0 && (
           <View style={styles.banner}>
             <Text style={styles.bannerText}>
@@ -141,6 +143,7 @@ export default function RecurringListScreen() {
         >
           <Text style={styles.newButtonLabel}>{t('recurring.newButton')}</Text>
         </Pressable>
+        </ContentContainer>
       </ScrollView>
     </View>
   );

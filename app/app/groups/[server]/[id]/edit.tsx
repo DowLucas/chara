@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { apiFor, ApiError, Group } from '@/lib/api';
+import { ContentContainer } from '@/components/ContentContainer';
 import { CurrencyPicker } from '@/components/CurrencyPicker';
 import { SUGGESTED_CURRENCY_CODES } from '@/lib/currencies';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
@@ -103,6 +104,7 @@ export default function EditGroupScreen() {
       style={[styles.container, { paddingTop: insets.top + spacing.s2 }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <ContentContainer style={{ flex: 1 }}>
       <TouchableOpacity style={styles.back} onPress={() => router.back()} accessibilityLabel={t('common.back')}>
         <Feather name="chevron-left" size={22} color={colors.graphite} />
       </TouchableOpacity>
@@ -200,6 +202,7 @@ export default function EditGroupScreen() {
           <Text style={styles.ctaLabel}>{submitting ? t('editGroup.saving') : t('editGroup.submit')}</Text>
         </TouchableOpacity>
       </View>
+      </ContentContainer>
     </KeyboardAvoidingView>
   );
 }

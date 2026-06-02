@@ -15,6 +15,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { apiFor, ApiError, publicApi, type InvitePreview } from '@/lib/api';
+import { ContentContainer } from '@/components/ContentContainer';
 import { useAccount } from '@/lib/accounts';
 import * as analytics from '@/lib/analytics';
 import { showAlert } from '@/lib/app-alert';
@@ -160,6 +161,7 @@ export default function JoinConfirmScreen() {
       contentContainerStyle={styles.scroll}
       keyboardShouldPersistTaps="handled"
     >
+      <ContentContainer>
       <View style={styles.card}>
         {state.kind === 'loading' && (
           <View style={styles.center}>
@@ -259,6 +261,7 @@ export default function JoinConfirmScreen() {
           </View>
         )}
       </View>
+      </ContentContainer>
     </ScrollView>
   );
 }

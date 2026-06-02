@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { TopBar } from '@/components/TopBar';
+import { ContentContainer } from '@/components/ContentContainer';
 import { GroupAvatar } from '@/components/GroupAvatar';
 import { AvatarStack } from '@/components/Avatar';
 import { Stamp } from '@/components/Stamp';
@@ -240,6 +241,7 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: spacing.s5 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
+        <ContentContainer>
         {/* Net balance hero
             When the user has any non-home-currency exposure (showHomeNet),
             the home-currency aggregate IS the hero. The per-currency
@@ -544,6 +546,7 @@ export default function HomeScreen() {
           ))
         )}
         */}
+        </ContentContainer>
       </ScrollView>
     </View>
   );

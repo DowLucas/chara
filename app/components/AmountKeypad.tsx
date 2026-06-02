@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useResponsive } from '@/lib/use-responsive';
 import {
   colors,
   fontBodyMedium,
@@ -148,6 +149,7 @@ export function AmountKeypad({
   const [mounted, setMounted] = useState(visible);
   const scrimOpacity = useRef(new Animated.Value(0)).current;
   const sheetTranslate = useRef(new Animated.Value(SHEET_OFFSCREEN)).current;
+  const { sheetMaxWidth } = useResponsive();
 
   useEffect(() => {
     if (visible) {
@@ -203,7 +205,15 @@ export function AmountKeypad({
         />
       </Pressable>
       <Animated.View
-        style={[styles.sheet, { transform: [{ translateY: sheetTranslate }] }]}
+        style={[
+          styles.sheet,
+          { transform: [{ translateY: sheetTranslate }] },
+          sheetMaxWidth != null && {
+            alignSelf: 'center',
+            width: '100%',
+            maxWidth: sheetMaxWidth,
+          },
+        ]}
       >
         <DisplayField
           value={value}

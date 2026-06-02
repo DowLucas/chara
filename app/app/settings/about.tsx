@@ -7,6 +7,7 @@ import * as Application from 'expo-application';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
+import { ContentContainer } from '@/components/ContentContainer';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 
 const SOURCE_URL = 'https://github.com/lucasdow/chara';
@@ -29,29 +30,31 @@ export default function AboutScreen() {
         left={<IconButton icon="chevron-left" onPress={() => router.back()} label={t('common.back')} />}
       />
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.eyebrow}>{t('about.eyebrow')}</Text>
-        <Text style={styles.appName}>{t('app.name')}</Text>
-        <Text style={styles.tagline}>{t('about.tagline')}</Text>
+        <ContentContainer>
+          <Text style={styles.eyebrow}>{t('about.eyebrow')}</Text>
+          <Text style={styles.appName}>{t('app.name')}</Text>
+          <Text style={styles.tagline}>{t('about.tagline')}</Text>
 
-        <View style={styles.metaBlock}>
-          <Row label={t('about.version')} value={version} />
-          {build && <Row label={t('about.build')} value={build} />}
-        </View>
+          <View style={styles.metaBlock}>
+            <Row label={t('about.version')} value={version} />
+            {build && <Row label={t('about.build')} value={build} />}
+          </View>
 
-        <Text style={styles.body}>{t('about.body')}</Text>
+          <Text style={styles.body}>{t('about.body')}</Text>
 
-        <View style={styles.links}>
-          <LinkRow label={t('about.website')} onPress={() => Linking.openURL(WEBSITE_URL)} />
-          <LinkRow label={t('about.source')} onPress={() => Linking.openURL(SOURCE_URL)} />
-          <LinkRow
-            label={t('legal.privacyPolicy')}
-            onPress={() => Linking.openURL('https://getchara.lovable.app/privacy')}
-          />
-          <LinkRow
-            label={t('legal.termsOfService')}
-            onPress={() => Linking.openURL('https://getchara.lovable.app/terms')}
-          />
-        </View>
+          <View style={styles.links}>
+            <LinkRow label={t('about.website')} onPress={() => Linking.openURL(WEBSITE_URL)} />
+            <LinkRow label={t('about.source')} onPress={() => Linking.openURL(SOURCE_URL)} />
+            <LinkRow
+              label={t('legal.privacyPolicy')}
+              onPress={() => Linking.openURL('https://getchara.lovable.app/privacy')}
+            />
+            <LinkRow
+              label={t('legal.termsOfService')}
+              onPress={() => Linking.openURL('https://getchara.lovable.app/terms')}
+            />
+          </View>
+        </ContentContainer>
       </ScrollView>
     </View>
   );

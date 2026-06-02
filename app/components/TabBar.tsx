@@ -5,6 +5,7 @@ import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, typography } from '@/lib/theme';
+import { useResponsive } from '@/lib/use-responsive';
 import { Text } from './Text';
 
 const ROUTE_TO_TAB: Record<
@@ -19,10 +20,20 @@ const ROUTE_TO_TAB: Record<
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const { contentMaxWidth } = useResponsive();
 
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-      {state.routes.map((route, index) => {
+      <View
+        style={[
+          styles.row,
+          contentMaxWidth != null && {
+            maxWidth: contentMaxWidth,
+            alignSelf: 'center',
+          },
+        ]}
+      >
+        {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const isFocused = state.index === index;
         const tabInfo = ROUTE_TO_TAB[route.name];
@@ -58,19 +69,23 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             </Text>
           </TouchableOpacity>
         );
-      })}
+        })}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
     backgroundColor: colors.paper,
     borderTopWidth: 1.5,
     borderTopColor: colors.graphite,
     paddingTop: 8,
+  },
+  row: {
+    flexDirection: 'row',
     alignItems: 'flex-end',
+    width: '100%',
   },
   tab: {
     flex: 1,

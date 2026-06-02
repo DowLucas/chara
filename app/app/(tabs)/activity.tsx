@@ -29,6 +29,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { TopBar } from '@/components/TopBar';
+import { ContentContainer } from '@/components/ContentContainer';
 import { EmptyState } from '@/components/EmptyState';
 import { Text } from '@/components/Text';
 import { useAggregatedActivity } from '@/lib/aggregated-reads';
@@ -131,35 +132,37 @@ export default function ActivityScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {loading && rows.length === 0 ? (
-          <Text style={styles.loading}>{t('activity.loading')}</Text>
-        ) : null}
+        <ContentContainer>
+          {loading && rows.length === 0 ? (
+            <Text style={styles.loading}>{t('activity.loading')}</Text>
+          ) : null}
 
-        {isEmpty ? (
-          <EmptyState
-            title={t('activity.emptyTitle')}
-            body={t('activity.emptyBody')}
-            icon="list"
-          />
-        ) : null}
+          {isEmpty ? (
+            <EmptyState
+              title={t('activity.emptyTitle')}
+              body={t('activity.emptyBody')}
+              icon="list"
+            />
+          ) : null}
 
-        {buckets.map((b) => (
-          <View key={b.label}>
-            <View style={styles.dayHeader}>
-              <Text style={styles.dayLabel}>{b.label}</Text>
-              <View style={styles.dayRule} />
+          {buckets.map((b) => (
+            <View key={b.label}>
+              <View style={styles.dayHeader}>
+                <Text style={styles.dayLabel}>{b.label}</Text>
+                <View style={styles.dayRule} />
+              </View>
+              {b.rows.map((r) => (
+                <ActivityRow
+                  key={r.event.id}
+                  row={r}
+                  youUserId={user?.id ?? ''}
+                />
+              ))}
             </View>
-            {b.rows.map((r) => (
-              <ActivityRow
-                key={r.event.id}
-                row={r}
-                youUserId={user?.id ?? ''}
-              />
-            ))}
-          </View>
-        ))}
+          ))}
 
-        <View style={{ height: insets.bottom + 24 }} />
+          <View style={{ height: insets.bottom + 24 }} />
+        </ContentContainer>
       </ScrollView>
     </View>
   );

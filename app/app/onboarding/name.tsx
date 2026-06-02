@@ -17,6 +17,7 @@ import { useAuth } from '@/lib/auth';
 import { updateMe } from '@/lib/api';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 import * as analytics from '@/lib/analytics';
+import { ContentContainer } from '@/components/ContentContainer';
 
 export default function OnboardingNameScreen() {
   const insets = useSafeAreaInsets();
@@ -78,6 +79,7 @@ export default function OnboardingNameScreen() {
       style={[styles.container, { paddingTop: insets.top + spacing.s2 }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <ContentContainer style={{ flex: 1 }}>
       <View style={styles.header}>
         <Text style={styles.eyebrow}>{t('onboardingName.eyebrow')}</Text>
         <Text style={styles.headline}>{t('onboardingName.headline')}</Text>
@@ -147,6 +149,7 @@ export default function OnboardingNameScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+      </ContentContainer>
     </KeyboardAvoidingView>
   );
 }
