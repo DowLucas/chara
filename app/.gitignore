@@ -21,6 +21,7 @@ web-build/
 # Native builds
 ios/
 android/
+*.aab
 *.jks
 *.p12
 *.key
