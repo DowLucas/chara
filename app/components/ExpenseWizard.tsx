@@ -35,6 +35,7 @@ import { showAlert } from '@/lib/app-alert';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
+import { ContentContainer } from '@/components/ContentContainer';
 import { AmountKeypad } from '@/components/AmountKeypad';
 import { AmountField } from '@/components/AmountField';
 import { CurrencyPicker } from '@/components/CurrencyPicker';
@@ -590,6 +591,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ paddingBottom: 100 }}
           >
+            <ContentContainer>
             {step === 1 && (
               <Step1
                 t={t}
@@ -627,11 +629,13 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
                 authToken={authToken}
               />
             )}
+            </ContentContainer>
           </ScrollView>
 
           {preCtaSlot}
 
           <View style={styles.ctaBar}>
+            <ContentContainer style={styles.ctaRow}>
             {step > 1 && (
               <Button kind="secondary" onPress={() => setStep((step - 1) as Step)} style={{ flex: 1 }}>
                 {t('addExpense.back')}
@@ -658,6 +662,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
                   : submitLabel ?? t('addExpense.submit')}
               </Button>
             )}
+            </ContentContainer>
           </View>
         </View>
 
@@ -944,6 +949,7 @@ function DateInput({
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
+  ctaRow: { flexDirection: 'row', gap: spacing.s2 },
 
   stepperWrap: {
     flexDirection: 'row',
@@ -1035,8 +1041,6 @@ const styles = StyleSheet.create({
   },
 
   ctaBar: {
-    flexDirection: 'row',
-    gap: spacing.s2,
     paddingHorizontal: spacing.s5,
     paddingTop: spacing.s3,
     paddingBottom: spacing.s3,

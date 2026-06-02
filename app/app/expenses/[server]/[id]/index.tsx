@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { TopBar } from '@/components/TopBar';
+import { ContentContainer } from '@/components/ContentContainer';
 import { IconButton } from '@/components/IconButton';
 import { Avatar } from '@/components/Avatar';
 import { ActionSheet, ActionSheetOption, openNativeActionSheet } from '@/components/ActionSheet';
@@ -282,6 +283,7 @@ export default function ExpenseDetailScreen() {
         }
       />
       <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
+        <ContentContainer>
         {/* Title + amount hero */}
         <View style={styles.header}>
           <Text style={styles.context}>
@@ -472,6 +474,7 @@ export default function ExpenseDetailScreen() {
               : '',
           })}
         </Text>
+        </ContentContainer>
       </ScrollView>
 
       <ActionSheet

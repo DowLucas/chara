@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useEnglishT } from '@/lib/i18n';
 import { TopBar } from '@/components/TopBar';
+import { ContentContainer } from '@/components/ContentContainer';
 import { IconButton } from '@/components/IconButton';
 import { publicApi } from '@/lib/api';
 import { checkProtocolCompat } from '@/lib/protocol';
@@ -162,24 +163,26 @@ export default function AddServerScreen() {
       </View>
 
       <View style={[styles.body, { paddingBottom: insets.bottom + spacing.s4 }]}>
-        {stage === 'url' ? (
-          <UrlStage
-            urlInput={urlInput}
-            setUrlInput={setUrlInput}
-            error={error}
-            onContinue={handleContinueFromUrl}
-          />
-        ) : stage === 'validating' ? (
-          <ValidatingStage host={validatingHost} />
-        ) : confirm ? (
-          <ConfirmStage
-            serverUrl={confirm.serverUrl}
-            instance={confirm.instance}
-            onContinue={handleConfirmContinue}
-            onCancel={handleCancel}
-            onEdit={handleEditUrl}
-          />
-        ) : null}
+        <ContentContainer style={{ flex: 1 }}>
+          {stage === 'url' ? (
+            <UrlStage
+              urlInput={urlInput}
+              setUrlInput={setUrlInput}
+              error={error}
+              onContinue={handleContinueFromUrl}
+            />
+          ) : stage === 'validating' ? (
+            <ValidatingStage host={validatingHost} />
+          ) : confirm ? (
+            <ConfirmStage
+              serverUrl={confirm.serverUrl}
+              instance={confirm.instance}
+              onContinue={handleConfirmContinue}
+              onCancel={handleCancel}
+              onEdit={handleEditUrl}
+            />
+          ) : null}
+        </ContentContainer>
       </View>
     </KeyboardAvoidingView>
   );

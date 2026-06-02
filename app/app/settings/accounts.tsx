@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { TopBar } from '@/components/TopBar';
+import { ContentContainer } from '@/components/ContentContainer';
 import { IconButton } from '@/components/IconButton';
 import { Avatar } from '@/components/Avatar';
 import { useTranslation } from 'react-i18next';
@@ -138,6 +139,7 @@ export default function AccountsScreen() {
         }
       />
       <ScrollView contentContainerStyle={styles.scroll}>
+        <ContentContainer style={styles.column}>
         {ordered.map((account) => {
           const isDefault = defaultAccount?.serverUrl === account.serverUrl;
           return (
@@ -162,6 +164,7 @@ export default function AccountsScreen() {
           <Feather name="plus" size={18} color={colors.graphite} />
           <Text style={styles.addRowLabel}>{t('accounts.add')}</Text>
         </TouchableOpacity>
+        </ContentContainer>
       </ScrollView>
     </View>
   );
@@ -277,6 +280,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.s5,
     paddingTop: spacing.s5,
     paddingBottom: spacing.s7,
+  },
+  column: {
     gap: spacing.s4,
   },
   card: {

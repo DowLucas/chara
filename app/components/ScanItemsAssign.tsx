@@ -15,6 +15,7 @@ import { Feather } from '@expo/vector-icons';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
+import { ContentContainer } from '@/components/ContentContainer';
 import { Avatar } from '@/components/Avatar';
 import { AmountKeypad } from '@/components/AmountKeypad';
 import { currentLocale } from '@/lib/i18n';
@@ -229,6 +230,7 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
           contentContainerStyle={{ paddingBottom: 120 }}
           keyboardShouldPersistTaps="handled"
         >
+          <ContentContainer>
           <Text style={styles.subtitle}>{t('scanItems.subtitle')}</Text>
 
           <View style={styles.shortcutRow}>
@@ -383,9 +385,11 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
               <Text style={styles.matchHint}>{t('scanItems.matchItemsHint')}</Text>
             </View>
           )}
+          </ContentContainer>
         </ScrollView>
 
         <View style={[styles.ctaBar, { paddingBottom: insets.bottom + 8 }]}>
+          <ContentContainer style={styles.ctaRow}>
           <Button
             kind="secondary"
             onPress={() => props.onApply({})}
@@ -401,6 +405,7 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
           >
             {t('scanItems.continue')}
           </Button>
+          </ContentContainer>
         </View>
       </View>
 
@@ -493,6 +498,7 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper },
+  ctaRow: { flexDirection: 'row', gap: spacing.s2 },
   subtitle: {
     fontFamily: fontBody,
     fontSize: fontSize.bodyS,
@@ -672,8 +678,6 @@ const styles = StyleSheet.create({
   },
 
   ctaBar: {
-    flexDirection: 'row',
-    gap: spacing.s2,
     paddingHorizontal: spacing.s5,
     paddingTop: spacing.s3,
     borderTopWidth: 1.5,
