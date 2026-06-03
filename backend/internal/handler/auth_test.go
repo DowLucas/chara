@@ -315,3 +315,47 @@ func TestMagicLink_SendFailureDoesNotBreakResponse(t *testing.T) {
 	assert.Contains(t, resp.Link, "/api/auth/verify?token=")
 	require.Len(t, fake.Messages, 1, "send was still attempted before erroring")
 }
+
+// TestMagicLink_DemoEmailReturnsTokenInline — addresses on the
+// DemoLoginEmails allowlist must receive the magic-link token inline in the
+// response even when DevMode is OFF (hosted mode), so App Store / Play Store
+// reviewers can sign in without inbox access. Non-allowlisted addresses must
+// never leak the token. Matching is case-insensitive.
+func TestMagicLink_DemoEmailReturnsTokenInline(t *testing.T) {
+	env := newAuthEnv(t)
+	env.Config.DevMode = false // hosted-mode behaviour: no blanket token leak
+	demo := "appstore-review@getchara.app"
+	env.Config.DemoLoginEmails = []string{demo}
+
+	fake := &email.FakeSender{}
+	router := magicLinkRouter(t, env, fake)
+
+	// Allowlisted demo email (mixed case) → token surfaced inline.
+	req := mustReq(t, "POST", "/api/auth/magic-link", `{"email":"AppStore-Review@GetChara.app"}`)
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+
+	var resp struct {
+		OK    bool   `json:"ok"`
+		Token string `json:"token"`
+		Link  string `json:"link"`
+	}
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	assert.True(t, resp.OK)
+	assert.NotEmpty(t, resp.Token, "demo email must surface token inline with DevMode off")
+	assert.Contains(t, resp.Link, "/api/auth/verify?token=")
+
+	// Ordinary address → token must stay server-side.
+	other := uniqueEmail(t, "notdemo")
+	req2 := mustReq(t, "POST", "/api/auth/magic-link", `{"email":"`+other+`"}`)
+	rr2 := httptest.NewRecorder()
+	router.ServeHTTP(rr2, req2)
+	require.Equal(t, http.StatusOK, rr2.Code, rr2.Body.String())
+
+	var resp2 struct {
+		Token string `json:"token"`
+	}
+	require.NoError(t, json.NewDecoder(rr2.Body).Decode(&resp2))
+	assert.Empty(t, resp2.Token, "non-demo email must NOT leak token when DevMode off")
+}
