@@ -172,8 +172,13 @@ func (h *AuthHandler) MagicLink(w http.ResponseWriter, r *http.Request) {
 		slog.Error("magic link send failed", "email_hash", redactEmail(addr), "error", err)
 	}
 
-	if h.cfg.DevMode {
-		slog.Info("magic link issued (dev mode)", "email_hash", redactEmail(addr))
+	// Surface the token inline for (a) dev mode, or (b) allowlisted demo
+	// accounts in any mode — the latter lets App Store / Play Store reviewers
+	// sign into a pre-seeded demo account without inbox access. Scoped to the
+	// exact configured addresses; all other addresses fall through to the
+	// email-only response below.
+	if h.cfg.DevMode || h.cfg.IsDemoLogin(addr) {
+		slog.Info("magic link issued (inline token)", "email_hash", redactEmail(addr), "dev_mode", h.cfg.DevMode)
 		writeJSON(w, http.StatusOK, magicLinkResponse{OK: true, Token: raw, Link: link})
 		return
 	}
