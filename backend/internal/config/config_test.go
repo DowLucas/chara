@@ -68,3 +68,21 @@ func TestHasGoogle_FalseWhenEmpty(t *testing.T) {
 	c := &Config{}
 	assert.False(t, c.HasGoogle())
 }
+
+func TestParseEmailList(t *testing.T) {
+	assert.Nil(t, parseEmailList(""))
+	assert.Nil(t, parseEmailList("   "))
+	assert.Equal(t,
+		[]string{"a@x.test", "b@x.test"},
+		parseEmailList(" A@X.test, b@x.test ,, A@X.test"),
+		"trims, lowercases, drops empties, dedupes",
+	)
+}
+
+func TestIsDemoLogin(t *testing.T) {
+	c := &Config{DemoLoginEmails: parseEmailList("appstore-review@getchara.app, playstore-review@getchara.app")}
+	assert.True(t, c.IsDemoLogin("appstore-review@getchara.app"))
+	assert.True(t, c.IsDemoLogin("  AppStore-Review@GetChara.app "), "case + whitespace insensitive")
+	assert.False(t, c.IsDemoLogin("someone@else.test"))
+	assert.False(t, (&Config{}).IsDemoLogin("appstore-review@getchara.app"), "empty allowlist matches nothing")
+}
