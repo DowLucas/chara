@@ -90,7 +90,7 @@ Each entry specifies:
 
 - **Eyebrow:** `CH.10 · THE OUTRO`
 - **Headline:** Split bills. Keep your peace.
-- **Subhead:** Open source. EU-hosted, or your own server. No ads, ever.
+- **Subhead:** Open source. EU-hosted, or your own server. Your data stays yours.
 - **Device shows:** Activity feed showing a settled timeline. Moss "settled" stamps on each row, mono dates, soft hairline dividers. A small `CHARA` mono stamp top-right of the card.
 - **Why:** Closes on the emotional outcome from the site's outro. "Keep your peace" is the line the user remembers.
 
