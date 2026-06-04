@@ -22,9 +22,14 @@ import {
   buildSwishLink,
   isSwishEligible,
   normalizeSwishNumber,
+  shouldPromptOwnPhoneForSwish,
   swishRoundedKronor,
   type Platform as SwishPlatform,
 } from '@/lib/swish';
+import {
+  getSwishPhonePromptDismissed,
+  setSwishPhonePromptDismissed,
+} from '@/lib/preferences';
 import {
   colors,
   fontDisplay,
@@ -75,6 +80,13 @@ export default function SettleMethodScreen() {
   // only foreground the "I've paid" confirm button after they've
   // actually been to Swish, so a stray tap can't record a false settle.
   const [swishOpened, setSwishOpened] = useState(false);
+  // One-time "add your own Swish number" nudge: only fires while the user
+  // has no number on file and hasn't dismissed it before.
+  const [phonePromptDismissed, setPhonePromptDismissed] = useState(true);
+
+  useEffect(() => {
+    getSwishPhonePromptDismissed().then(setPhonePromptDismissed).catch(() => {});
+  }, []);
 
   // Members come from the GroupDetail response — no separate /members route.
   const members: GroupMember[] = group?.members ?? [];
@@ -177,6 +189,25 @@ export default function SettleMethodScreen() {
           message: t('settleMethod.swishMissingPhoneBody', { name: counter?.name ?? '' }),
         });
         return;
+      }
+      // Nudge the user to add their own number so friends can pay them
+      // back via Swish too. Non-blocking: sending only needs the
+      // recipient's number, so "Not now" just continues.
+      if (shouldPromptOwnPhoneForSwish(user?.phone, phonePromptDismissed)) {
+        const choice = await showAlert({
+          title: t('settleMethod.addOwnPhoneTitle'),
+          message: t('settleMethod.addOwnPhoneBody'),
+          buttons: [
+            { key: 'later', label: t('settleMethod.addOwnPhoneLater'), style: 'cancel' },
+            { key: 'add', label: t('settleMethod.addOwnPhoneCta') },
+          ],
+        });
+        setPhonePromptDismissed(true);
+        setSwishPhonePromptDismissed().catch(() => {});
+        if (choice === 'add') {
+          router.push('/onboarding/name');
+          return;
+        }
       }
       let url: string;
       try {

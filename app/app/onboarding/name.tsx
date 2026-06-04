@@ -28,7 +28,10 @@ export default function OnboardingNameScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
-  const canSubmit = name.trim().length > 0 && phone.trim().length > 0 && !submitting;
+  // Phone is optional — it only powers Swish/Vipps settle deep-links, a
+  // non-essential feature. Apple 5.1.1(v): don't require info the core
+  // app doesn't need. Name is the only gate.
+  const canSubmit = name.trim().length > 0 && !submitting;
 
   async function handleSignOut() {
     const r = await showAlert({
@@ -56,13 +59,11 @@ export default function OnboardingNameScreen() {
       showAlert({ title: t('onboardingName.errorTitle'), message: t('onboardingName.errorEmpty') });
       return;
     }
-    if (!trimmedPhone) {
-      showAlert({ title: t('onboardingName.errorTitle'), message: t('onboardingName.errorPhone') });
-      return;
-    }
     setSubmitting(true);
     try {
-      const updated = await updateMe({ name: trimmedName, phone: trimmedPhone });
+      // Omit phone when blank — the backend rejects an empty string but
+      // treats an absent field as "leave unchanged".
+      const updated = await updateMe({ name: trimmedName, phone: trimmedPhone || undefined });
       setUser(updated);
       analytics.track('user_name_entered');
       if (router.canGoBack()) router.back();
@@ -111,6 +112,10 @@ export default function OnboardingNameScreen() {
           onChangeText={setPhone}
           placeholder={t('onboardingName.phonePlaceholder')}
           placeholderTextColor={colors.lead}
+          // Land the cursor here when the user already has a name and is
+          // coming back specifically to add a phone (You → Profile, or the
+          // Swish nudge). Fresh signups still focus the name field first.
+          autoFocus={!!user?.name && !user?.phone}
           autoCapitalize="none"
           autoCorrect={false}
           autoComplete="tel"
