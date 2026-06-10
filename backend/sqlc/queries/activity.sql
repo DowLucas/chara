@@ -42,7 +42,7 @@ SELECT a.id, a.group_id, a.actor_id, a.event_type, a.entity_id, a.entity_type, a
        g.name AS group_name,
        u.display_name AS actor_name
 FROM activity a
-JOIN group_members gm ON gm.group_id = a.group_id AND gm.user_id = $1
+JOIN group_members gm ON gm.group_id = a.group_id AND gm.user_id = $1 AND gm.removed_at IS NULL
 JOIN groups g ON g.id = a.group_id AND NOT g.is_archived
 JOIN users u ON u.id = a.actor_id
 ORDER BY a.created_at DESC
