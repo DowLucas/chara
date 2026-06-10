@@ -40,7 +40,7 @@ import {
   ImportStanding,
 } from '@/lib/api';
 import { importAppForSource } from '@/lib/import-apps';
-import { reconcile, ReconcileState } from '@/lib/import-reconcile';
+import { reconcile, resolvedMemberId, ReconcileState } from '@/lib/import-reconcile';
 import { reviewState, ReviewRow } from '@/lib/import-review';
 import { decimalToMinor, minorToDecimal } from '@/lib/money-utils';
 import { formatMinorUnits } from '@/lib/i18n';
@@ -212,6 +212,9 @@ export default function ImportSourceScreen() {
           direction: r.direction,
           // Canonicalize to a valid 2-decimal string via the shared helpers.
           amount: minorToDecimal(decimalToMinor(r.amount)),
+          // Carry the user's "Match People" choice so the backend attributes
+          // the balance to the matched member instead of minting a placeholder.
+          memberId: resolvedMemberId(reconcileResult, r.name),
         })),
       });
       notifyGroupChanged(serverUrl, groupId);

@@ -642,6 +642,12 @@ export interface ImportCommitStanding {
   /** Canonical 2-decimal string, group currency. */
   amount: string;
   title?: string;
+  /**
+   * Existing member this name was matched to on the reconcile screen. When
+   * set, the backend attributes the balance to this member instead of
+   * matching by name or minting a placeholder. Omitted for "new member".
+   */
+  memberId?: string | null;
 }
 
 export interface ImportCommitInput {
@@ -1267,7 +1273,16 @@ export function apiFor(serverUrl: string) {
     importCommit: (groupId: string, input: ImportCommitInput) =>
       requestOn<{ imported: number }>(serverUrl, `/api/groups/${groupId}/import/commit`, {
         method: 'POST',
-        body: JSON.stringify({ source: input.source, standings: input.standings }),
+        body: JSON.stringify({
+          source: input.source,
+          standings: input.standings.map((s) => ({
+            name: s.name,
+            direction: s.direction,
+            amount: s.amount,
+            title: s.title,
+            member_id: s.memberId ?? undefined,
+          })),
+        }),
       }),
 
     // Recurring (spec 2026-05-24-recurring-expenses-design.md)
