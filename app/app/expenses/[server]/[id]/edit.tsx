@@ -11,8 +11,8 @@
  *
  * Stale-banner: re-fetches on focus; if `updated_at` changes, prompts a reload.
  *
- * The wizard doesn't expose `category` or `notes` editing; we forward the
- * original expense's values verbatim so saving doesn't wipe them.
+ * Category and notes are edited in the wizard; the PATCH always carries the
+ * wizard's values for both (`notes: ''` clears them server-side).
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -26,7 +26,6 @@ import { IconButton } from '@/components/IconButton';
 import { Text } from '@/components/Text';
 import {
   ExpenseWizard,
-  ExpenseWizardInitialValue,
   ExpenseWizardSubmitPayload,
 } from '@/components/ExpenseWizard';
 import { SettlementImpactSheet } from '@/components/SettlementImpactSheet';
@@ -36,61 +35,26 @@ import {
   Expense,
   GroupDetail,
   Settlement,
-  UpdateExpenseInput,
 } from '@/lib/api';
 import { useAccount } from '@/lib/accounts';
 import { computeBalanceImpact, MemberDelta } from '@/lib/balance-impact';
+import { normalizeCategory } from '@/lib/categories';
 import {
   decideConfirmFlow,
   expenseInputCurrencyAmount,
+  expenseToInitialValue,
   nonShareFieldsDiffer,
   NonShareFieldsSnapshot,
+  payloadToUpdateInput,
   projectExpenseToInputCurrency,
-  splitShareInInputCurrency,
 } from '@/lib/edit-expense-flow';
 import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
 
-function expenseToInitialValue(expense: Expense): ExpenseWizardInitialValue {
-  const { amount, currency } = expenseInputCurrencyAmount(expense);
-  const splits = expense.splits ?? [];
-  const exactByMember: Record<string, string> = {};
-  // The wire only preserves `share`. For percentage-split expenses the
-  // backend re-derives shares on save; pre-filling exactByMember from the
-  // projected splits matches the old ExpenseForm behaviour.
-  for (const s of splits) {
-    exactByMember[s.member_id] = splitShareInInputCurrency(s.share, expense);
-  }
-  const included: Record<string, boolean> = {};
-  if (splits.length > 0) {
-    for (const s of splits) included[s.member_id] = true;
-  }
-
-  const date = expense.expense_date
-    ? new Date(expense.expense_date + 'T00:00:00')
-    : new Date();
-
-  return {
-    title: expense.title,
-    amount: parseFloat(amount).toFixed(2),
-    currency,
-    date: Number.isNaN(date.getTime()) ? new Date() : date,
-    paidByMemberId: expense.paid_by_id,
-    splitMethod:
-      (expense.split_method as 'equal' | 'exact' | 'percentage') || 'equal',
-    included: splits.length > 0 ? included : undefined,
-    exactByMember,
-    pctByMember: {},
-  };
-}
-
-function snapshotFromPayload(
-  p: ExpenseWizardSubmitPayload,
-  original: Expense,
-): NonShareFieldsSnapshot {
+function snapshotFromPayload(p: ExpenseWizardSubmitPayload): NonShareFieldsSnapshot {
   return {
     title: p.title,
-    category: original.category || 'other',
-    notes: original.notes ?? '',
+    category: p.category,
+    notes: p.notes,
     expense_date: p.expense_date,
     currency: p.fx?.original_currency ?? p.currency,
     amount: p.fx?.original_amount ?? p.amount,
@@ -101,32 +65,14 @@ function snapshotFromExpense(expense: Expense): NonShareFieldsSnapshot {
   const { amount, currency } = expenseInputCurrencyAmount(expense);
   return {
     title: expense.title,
-    category: expense.category || 'other',
+    // Normalized like the wizard prefill, so a legacy 'general' expense
+    // saved without touching the picker still counts as "no changes".
+    category: normalizeCategory(expense.category),
     notes: expense.notes ?? '',
     expense_date: expense.expense_date ?? new Date().toISOString().split('T')[0],
     currency,
     amount: parseFloat(amount).toFixed(2),
   };
-}
-
-function payloadToUpdateInput(
-  p: ExpenseWizardSubmitPayload,
-  original: Expense,
-): UpdateExpenseInput {
-  const base: UpdateExpenseInput = {
-    title: p.title,
-    amount: p.amount,
-    currency: p.currency,
-    paid_by_id: p.paid_by_id,
-    expense_date: p.expense_date,
-    split_method: p.split_method,
-    category: original.category || 'other',
-    notes: original.notes ?? '',
-    ...(p.fx ?? {}),
-  };
-  if (p.participants) base.participants = p.participants;
-  if (p.splits) base.splits = p.splits;
-  return base;
 }
 
 export default function EditExpenseScreen() {
@@ -258,7 +204,7 @@ export default function EditExpenseScreen() {
     const impact = buildImpact(payload);
     const flow = decideConfirmFlow({
       nonShareFieldsChanged: nonShareFieldsDiffer(
-        snapshotFromPayload(payload, expense),
+        snapshotFromPayload(payload),
         snapshotFromExpense(expense),
       ),
       deltas: impact.deltas,
@@ -301,7 +247,7 @@ export default function EditExpenseScreen() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await api.updateExpense(groupId, id, payloadToUpdateInput(payload, expense));
+      await api.updateExpense(groupId, id, payloadToUpdateInput(payload));
       setImpactSheetVisible(false);
       router.back();
     } catch (e: any) {

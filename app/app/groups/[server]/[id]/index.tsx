@@ -40,6 +40,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
 import { formatMinorUnits, decimalToMinor, formatDate } from '@/lib/i18n';
 import { initialsOf, makeNameShortener } from '@/lib/name';
+import { categoryIcon } from '@/lib/categories';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import { subscribeGroupChanged } from '@/lib/group-refresh';
 import { computeStandings, expensesInvolvingMember } from '@/lib/standings';
@@ -48,21 +49,6 @@ import { colors, fontDisplay, fontBody, fontBodyMedium, fontMono, fontMonoMedium
 
 const fmtAmount = (minor: string, currency: string, relative?: boolean) =>
   formatMinorUnits(minor, currency, { relative });
-
-// Map expense category → Feather icon name. Keep this in sync with the
-// category enum in en.json (categories.*). Unknown categories fall back to
-// the generic tag glyph so we never render a missing icon.
-const CATEGORY_ICONS: Record<string, keyof typeof Feather.glyphMap> = {
-  food: 'coffee',
-  rent: 'home',
-  transport: 'navigation',
-  groceries: 'shopping-cart',
-  drinks: 'droplet',
-  other: 'tag',
-};
-function categoryIcon(category?: string): keyof typeof Feather.glyphMap {
-  return CATEGORY_ICONS[category ?? 'other'] ?? 'tag';
-}
 
 export default function GroupDetailScreen() {
   const { server, id, tab: initialTab } = useLocalSearchParams<{

@@ -29,9 +29,11 @@ import {
   View,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { showAlert } from '@/lib/app-alert';
+import { categoryIcon, EXPENSE_CATEGORIES } from '@/lib/categories';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
@@ -74,6 +76,8 @@ export interface ExpenseWizardInitialValue {
   included?: Record<string, boolean>;
   exactByMember?: Record<string, string>;
   pctByMember?: Record<string, string>;
+  category?: string;
+  notes?: string;
 }
 
 export interface ExpenseWizardSubmitPayload {
@@ -83,6 +87,10 @@ export interface ExpenseWizardSubmitPayload {
   expense_date: string;
   paid_by_id: string;
   split_method: SplitMethod;
+  category: string;
+  /** Trimmed. '' means "no notes" — edit hosts forward it verbatim so the
+   *  backend's tri-state PATCH semantics ('' = clear) apply. */
+  notes: string;
   participants?: string[];
   splits?: Array<{ member_id: string; share?: string; basis_points?: number }>;
   fx?: {
@@ -186,6 +194,8 @@ function initialKeyOf(
     iv.date ? toDateStr(iv.date) : '',
     iv.paidByMemberId ?? '',
     iv.splitMethod ?? '',
+    iv.category ?? '',
+    iv.notes ?? '',
     members.map((m) => m.id).join(','),
   ].join('|');
 }
@@ -217,6 +227,10 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
 
     const [amount, setAmount] = useState(initialValue?.amount ?? '');
     const [title, setTitle] = useState(initialValue?.title ?? '');
+    const [category, setCategory] = useState<string>(
+      initialValue?.category ?? 'other',
+    );
+    const [notes, setNotes] = useState(initialValue?.notes ?? '');
     const [date, setDate] = useState<Date>(initialValue?.date ?? new Date());
     const [selectedCurrency, setSelectedCurrency] = useState<string>(
       initialValue?.currency ?? '',
@@ -256,6 +270,8 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       }
       setAmount(initialValue?.amount ?? '');
       setTitle(initialValue?.title ?? '');
+      setCategory(initialValue?.category ?? 'other');
+      setNotes(initialValue?.notes ?? '');
       setDate(initialValue?.date ?? new Date());
       setSelectedCurrency(initialValue?.currency ?? '');
       setPayerMemberId(
@@ -542,6 +558,8 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
         paid_by_id: payerMemberId,
         expense_date: toDateStr(date),
         split_method: method,
+        category,
+        notes: notes.trim(),
         ...(fx_payload ? { fx: fx_payload } : {}),
       };
 
@@ -600,6 +618,10 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
                 onOpenCurrencyPicker={() => setPickerOpen(true)}
                 title={title}
                 setTitle={setTitle}
+                category={category}
+                setCategory={setCategory}
+                notes={notes}
+                setNotes={setNotes}
                 date={date}
                 setDate={setDate}
                 onOpenDatePicker={() => setShowDatePicker(true)}
@@ -747,6 +769,10 @@ interface Step1Props {
   onOpenCurrencyPicker: () => void;
   title: string;
   setTitle: (v: string) => void;
+  category: string;
+  setCategory: (v: string) => void;
+  notes: string;
+  setNotes: (v: string) => void;
   date: Date;
   setDate: (d: Date) => void;
   onOpenDatePicker: () => void;
@@ -768,6 +794,10 @@ function Step1({
   onOpenCurrencyPicker,
   title,
   setTitle,
+  category,
+  setCategory,
+  notes,
+  setNotes,
   date,
   setDate,
   onOpenDatePicker,
@@ -824,6 +854,53 @@ function Step1({
       <View style={styles.fieldWrap}>
         <Text style={styles.fieldLabel}>{t('addExpense.whenLabel')}</Text>
         <DateInput date={date} setDate={setDate} onOpenPicker={onOpenDatePicker} />
+      </View>
+
+      <View style={styles.fieldWrap}>
+        <Text style={styles.fieldLabel}>{t('addExpense.categoryLabel')}</Text>
+        <View style={styles.categoryRow}>
+          {EXPENSE_CATEGORIES.map((c) => {
+            const active = category === c;
+            return (
+              <TouchableOpacity
+                key={c}
+                onPress={() => setCategory(c)}
+                activeOpacity={0.7}
+                style={[styles.categoryChip, active && styles.categoryChipActive]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={t(`categories.${c}`)}
+              >
+                <Feather
+                  name={categoryIcon(c)}
+                  size={13}
+                  color={active ? colors.paper : colors.graphite}
+                />
+                <Text
+                  style={[
+                    styles.categoryChipLabel,
+                    active && styles.categoryChipLabelActive,
+                  ]}
+                >
+                  {t(`categories.${c}`)}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.fieldWrap}>
+        <Text style={styles.fieldLabel}>{t('addExpense.notesLabel')}</Text>
+        <TextInput
+          value={notes}
+          onChangeText={setNotes}
+          placeholder={t('addExpense.notesPlaceholder')}
+          placeholderTextColor={colors.lead}
+          style={styles.notesInput}
+          multiline
+          maxLength={500}
+        />
       </View>
 
       <View style={[styles.fieldWrap, { borderBottomWidth: 0 }]}>
@@ -1006,6 +1083,36 @@ const styles = StyleSheet.create({
     fontSize: fontSize.bodyL,
     color: colors.graphite,
     padding: 0,
+  },
+  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.s2 },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.ruleSoft,
+    backgroundColor: 'transparent',
+  },
+  categoryChipActive: {
+    backgroundColor: colors.graphite,
+    borderColor: colors.graphite,
+  },
+  categoryChipLabel: {
+    fontFamily: fontBody,
+    fontSize: fontSize.bodyS,
+    color: colors.graphite,
+  },
+  categoryChipLabelActive: { color: colors.paper },
+  notesInput: {
+    fontFamily: fontBody,
+    fontSize: fontSize.body,
+    color: colors.graphite,
+    padding: 0,
+    minHeight: 44,
+    textAlignVertical: 'top',
   },
   groupRow: {
     flexDirection: 'row',

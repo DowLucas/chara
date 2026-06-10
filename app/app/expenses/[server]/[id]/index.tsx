@@ -24,6 +24,7 @@ import {
   Settlement,
 } from '@/lib/api';
 import { useAccount } from '@/lib/accounts';
+import { categoryIcon, normalizeCategory } from '@/lib/categories';
 import { currentLocale, formatDate, formatMinorUnits } from '@/lib/i18n';
 import { computeBalanceImpact } from '@/lib/balance-impact';
 import { isPopupJustClosed } from '@/lib/popup-guard';
@@ -299,6 +300,22 @@ export default function ExpenseDetailScreen() {
                 components={{ b: <Text style={styles.paidByEmphasis} /> }}
               />
             </Text>
+          ) : null}
+
+          {/* Category — icon + localized name. Legacy / unknown ids render
+              as "other" (normalizeCategory). */}
+          {expense.category ? (
+            <View style={styles.categoryRow}>
+              <Feather name={categoryIcon(expense.category)} size={13} color={colors.lead} />
+              <Text style={styles.categoryText}>
+                {t(`categories.${normalizeCategory(expense.category)}`)}
+              </Text>
+            </View>
+          ) : null}
+
+          {/* Notes — quiet prose under the hero. */}
+          {expense.notes?.trim() ? (
+            <Text style={styles.notes}>{expense.notes.trim()}</Text>
           ) : null}
 
 
@@ -662,6 +679,24 @@ const styles = StyleSheet.create({
     // Hint extra line height so the inline chip backgrounds don't bump
     // against the line above / below when the sentence wraps.
     lineHeight: fontSize.body + 10,
+  },
+  categoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: spacing.s3,
+  },
+  categoryText: {
+    fontFamily: fontBody,
+    fontSize: fontSize.bodyS,
+    color: colors.lead,
+  },
+  notes: {
+    fontFamily: fontBody,
+    fontSize: fontSize.body,
+    color: colors.graphite,
+    marginTop: spacing.s3,
+    lineHeight: fontSize.body + 8,
   },
   paidByEmphasis: {
     fontFamily: fontDisplay,
