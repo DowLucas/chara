@@ -443,7 +443,10 @@ SET title        = COALESCE($2, title),
     paid_by_id   = COALESCE($5, paid_by_id),
     split_method = COALESCE($6, split_method),
     category     = COALESCE($7, category),
-    notes        = COALESCE($8, notes),
+    -- notes is tri-state: NULL param = unchanged, '' = clear to NULL,
+    -- anything else = set.
+    notes        = CASE WHEN $8::text IS NULL THEN notes
+                        ELSE NULLIF($8::text, '') END,
     expense_date = COALESCE($9, expense_date),
     updated_at   = NOW()
 WHERE id = $1
