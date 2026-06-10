@@ -22,12 +22,12 @@ import (
 
 // settingsEnv is a small fixture: env, alice (owner), bob (member), group.
 type settingsEnv struct {
-	env       *testutil.Env
-	alice     testUserEnv
-	bob       testUserEnv
-	groupID   string
-	aliceMID  string
-	bobMID    string
+	env      *testutil.Env
+	alice    testUserEnv
+	bob      testUserEnv
+	groupID  string
+	aliceMID string
+	bobMID   string
 }
 
 func setupSettingsEnv(t *testing.T) settingsEnv {
@@ -444,6 +444,38 @@ func TestRemoveMember_KickByOwner_Succeeds(t *testing.T) {
 		"/api/groups/"+e.groupID+"/members/"+e.bobMID, "", e.alice.Token)
 	rr := e.env.Do(t, req)
 	require.Equal(t, http.StatusNoContent, rr.Code, rr.Body.String())
+}
+
+// TestRemoveMember_KickSettledMemberWithHistory_Succeeds reproduces the
+// production "internal error" when removing a member who is settled up (zero
+// net balance) but still has expense history. The old hard DELETE hit the
+// expenses.paid_by_id / expense_splits.member_id FKs (NOT NULL, no ON DELETE)
+// and 500'd. Soft-delete keeps the row so history resolves, and drops the
+// member from the active roster.
+func TestRemoveMember_KickSettledMemberWithHistory_Succeeds(t *testing.T) {
+	e := setupSettingsEnv(t)
+	// Bob pays for an expense that only he is split on → he paid the full
+	// amount and owes the full amount → net zero, but expense + split rows
+	// reference his member id.
+	testutil.CreateExpense(t, e.env.Pool, e.groupID, "Solo lunch", 5000, "SEK",
+		e.bobMID, e.bob.ID, []string{e.bobMID})
+
+	req := e.env.AuthRequest(t, "DELETE",
+		"/api/groups/"+e.groupID+"/members/"+e.bobMID, "", e.alice.Token)
+	rr := e.env.Do(t, req)
+	require.Equal(t, http.StatusNoContent, rr.Code, rr.Body.String())
+
+	// Bob is gone from the active roster.
+	members, err := e.env.Queries.ListGroupMembers(context.Background(), e.groupID)
+	require.NoError(t, err)
+	assert.Len(t, members, 1) // only the owner remains
+
+	// But his row is preserved (soft-deleted) so historical expenses still
+	// resolve his name.
+	bob, err := e.env.Queries.GetGroupMember(context.Background(), e.bobMID)
+	require.NoError(t, err)
+	assert.Equal(t, "Bob", bob.Name)
+	assert.True(t, bob.RemovedAt.Valid, "member should be soft-deleted, not hard-deleted")
 }
 
 func TestRemoveMember_KickByNonOwner_Returns403(t *testing.T) {

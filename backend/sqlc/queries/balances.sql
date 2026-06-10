@@ -40,6 +40,7 @@ JOIN expenses e
 LEFT JOIN expense_splits es
     ON es.expense_id = e.id AND es.member_id = gm.id
 WHERE gm.user_id = $1
+  AND gm.removed_at IS NULL
   AND (e.paid_by_id = gm.id OR es.share IS NOT NULL)
 
 UNION ALL
@@ -57,4 +58,4 @@ JOIN settlements s
     ON s.group_id = gm.group_id
     AND s.reverted_at IS NULL
     AND (s.from_member = gm.id OR s.to_member = gm.id)
-WHERE gm.user_id = $1;
+WHERE gm.user_id = $1 AND gm.removed_at IS NULL;
