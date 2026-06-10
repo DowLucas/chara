@@ -20,12 +20,13 @@ SELECT * FROM groups WHERE invite_token = $1;
 -- Member count for a group. Used by the public invite preview endpoint;
 -- factored as its own query (rather than reusing GroupStats) because preview
 -- is unauthenticated and should not leak the heavier aggregates.
-SELECT COUNT(*)::bigint AS member_count FROM group_members WHERE group_id = $1;
+SELECT COUNT(*)::bigint AS member_count FROM group_members
+WHERE group_id = $1 AND removed_at IS NULL;
 
 -- name: ListGroupsByUserID :many
 SELECT g.* FROM groups g
 JOIN group_members gm ON gm.group_id = g.id
-WHERE gm.user_id = $1 AND NOT g.is_archived
+WHERE gm.user_id = $1 AND gm.removed_at IS NULL AND NOT g.is_archived
 ORDER BY g.updated_at DESC;
 
 -- name: UpdateGroup :one
@@ -62,7 +63,7 @@ RETURNING *;
 -- the member_balances view's "what counts as a real expense" rule.
 SELECT
     g.created_at,
-    (SELECT COUNT(*) FROM group_members WHERE group_id = g.id)::bigint AS member_count,
+    (SELECT COUNT(*) FROM group_members WHERE group_id = g.id AND removed_at IS NULL)::bigint AS member_count,
     (SELECT COUNT(*) FROM expenses
         WHERE group_id = g.id AND NOT is_deleted AND NOT is_reimbursement)::bigint AS expense_count,
     (SELECT MIN(expense_date)::date FROM expenses
