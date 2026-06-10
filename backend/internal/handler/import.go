@@ -137,6 +137,11 @@ type importCommitStandingReq struct {
 	Direction string       `json:"direction"` // "owes_you" | "you_owe"
 	Amount    money.Amount `json:"amount"`
 	Title     string       `json:"title"`
+	// MemberID is the existing member the user matched this name to on the
+	// reconcile ("Match People") screen. When set it takes priority over
+	// name matching; when empty the counterparty is resolved by name (or a
+	// placeholder is minted). Validated as a group member below.
+	MemberID string `json:"member_id"`
 }
 
 type importCommitReq struct {
@@ -240,9 +245,17 @@ func (h *ImportHandler) Commit(w http.ResponseWriter, r *http.Request) {
 		name := strings.TrimSpace(s.Name)
 		key := strings.ToLower(name)
 
-		// Resolve counterparty → existing member or new placeholder.
-		counterpartyID, ok := byName[key]
-		if !ok {
+		// Resolve counterparty. An explicit member_id from the reconcile
+		// screen wins; otherwise fall back to name match, then a fresh
+		// placeholder. validateMembersInGroup below rejects a member_id that
+		// isn't part of this group, so a bad id fails the whole commit.
+		var counterpartyID string
+		switch {
+		case s.MemberID != "":
+			counterpartyID = s.MemberID
+		case byName[key] != "":
+			counterpartyID = byName[key]
+		default:
 			placeholder, err := qtx.CreateGroupMember(r.Context(), db.CreateGroupMemberParams{
 				ID:      ulid.New(),
 				GroupID: groupID,

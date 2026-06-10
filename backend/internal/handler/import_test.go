@@ -243,6 +243,43 @@ func TestImport_Commit_ResolvesExistingMemberByName(t *testing.T) {
 	assert.Equal(t, int64(5000), splits[bobMemberID])
 }
 
+func TestImport_Commit_HonorsExplicitMemberID(t *testing.T) {
+	// Repro for the Match People bug: the screenshot name is truncated/
+	// different ("Bobby B") but the user matched it to existing member Bob on
+	// the reconcile screen. The commit must attribute the balance to Bob via
+	// member_id, not mint a brand-new placeholder named "Bobby B".
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupImportEnv(t, &fakeExtractor{})
+
+	body := `{"standings":[{"name":"Bobby B","direction":"owes_you","amount":"50.00","member_id":"` + bobMemberID + `"}]}`
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/import/commit", body, alice.Token))
+	require.Equal(t, http.StatusCreated, rr.Code, rr.Body.String())
+
+	members, err := env.Queries.ListGroupMembers(context.Background(), groupID)
+	require.NoError(t, err)
+	assert.Len(t, members, 2, "explicit member_id must reuse the matched member, not mint a placeholder")
+
+	expenses, err := env.Queries.ListExpensesByGroup(context.Background(), db.ListExpensesByGroupParams{GroupID: groupID, Limit: 50, Offset: 0})
+	require.NoError(t, err)
+	require.Len(t, expenses, 1)
+	assert.Equal(t, aliceMemberID, expenses[0].PaidByID)
+
+	splits := loadSplits(t, env, expenses[0].ID)
+	assert.Equal(t, int64(5000), splits[bobMemberID], "balance must land on the matched member")
+}
+
+func TestImport_Commit_RejectsForeignMemberID(t *testing.T) {
+	// A member_id that isn't part of this group must be rejected, not used.
+	env, alice, _, groupID, _, _ := setupImportEnv(t, &fakeExtractor{})
+
+	body := `{"standings":[{"name":"Bobby B","direction":"owes_you","amount":"50.00","member_id":"01OUTSIDERMEMBERIDXXXXXXXXX"}]}`
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/import/commit", body, alice.Token))
+	assert.Equal(t, http.StatusBadRequest, rr.Code, rr.Body.String())
+
+	members, err := env.Queries.ListGroupMembers(context.Background(), groupID)
+	require.NoError(t, err)
+	assert.Len(t, members, 2, "a rejected commit must not mint any member")
+}
+
 func TestImport_Commit_RejectsBadDirection(t *testing.T) {
 	env, alice, _, groupID, _, _ := setupImportEnv(t, &fakeExtractor{})
 
