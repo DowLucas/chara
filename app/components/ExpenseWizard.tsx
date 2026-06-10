@@ -331,11 +331,17 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
         ? Math.round(effectiveAmountMinor / includedMembers.length)
         : 0;
 
+    // Clear custom split entries when the effective currency changes — amounts
+    // typed in the old currency are meaningless in the new one. Deliberately
+    // NOT keyed on `method`: a user-driven method switch already clears these
+    // in handleSplitChange, and keying on `method` here would also wipe the
+    // amounts that applyScanItemsAssignment() sets together with setMethod('exact'),
+    // collapsing itemized receipt splits back to an equal split.
     useEffect(() => {
       setExactByMember({});
       setPctByMember({});
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [method, effectiveCurrency]);
+    }, [effectiveCurrency]);
 
     function lockedExactMinor(memberId: string): number | null {
       const v = exactByMember[memberId];
