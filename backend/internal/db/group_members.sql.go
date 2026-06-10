@@ -16,7 +16,7 @@ UPDATE group_members
 SET user_id  = $2,
     is_ghost = FALSE
 WHERE id = $1 AND is_ghost = TRUE
-RETURNING id, group_id, user_id, name, role, is_ghost, joined_at
+RETURNING id, group_id, user_id, name, role, is_ghost, joined_at, removed_at
 `
 
 type ClaimGhostMemberParams struct {
@@ -35,6 +35,7 @@ func (q *Queries) ClaimGhostMember(ctx context.Context, arg ClaimGhostMemberPara
 		&i.Role,
 		&i.IsGhost,
 		&i.JoinedAt,
+		&i.RemovedAt,
 	)
 	return i, err
 }
@@ -42,7 +43,7 @@ func (q *Queries) ClaimGhostMember(ctx context.Context, arg ClaimGhostMemberPara
 const createGroupMember = `-- name: CreateGroupMember :one
 INSERT INTO group_members (id, group_id, user_id, name, role, is_ghost)
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, group_id, user_id, name, role, is_ghost, joined_at
+RETURNING id, group_id, user_id, name, role, is_ghost, joined_at, removed_at
 `
 
 type CreateGroupMemberParams struct {
@@ -72,21 +73,25 @@ func (q *Queries) CreateGroupMember(ctx context.Context, arg CreateGroupMemberPa
 		&i.Role,
 		&i.IsGhost,
 		&i.JoinedAt,
+		&i.RemovedAt,
 	)
 	return i, err
 }
 
 const deleteGroupMember = `-- name: DeleteGroupMember :exec
-DELETE FROM group_members WHERE id = $1
+UPDATE group_members SET removed_at = NOW() WHERE id = $1
 `
 
+// Soft delete: the row is preserved so historical expenses/settlements that
+// reference this member id still resolve (name, attribution). Active-roster
+// reads filter on removed_at IS NULL.
 func (q *Queries) DeleteGroupMember(ctx context.Context, id string) error {
 	_, err := q.db.Exec(ctx, deleteGroupMember, id)
 	return err
 }
 
 const getGroupMember = `-- name: GetGroupMember :one
-SELECT id, group_id, user_id, name, role, is_ghost, joined_at FROM group_members WHERE id = $1
+SELECT id, group_id, user_id, name, role, is_ghost, joined_at, removed_at FROM group_members WHERE id = $1
 `
 
 func (q *Queries) GetGroupMember(ctx context.Context, id string) (GroupMember, error) {
@@ -100,13 +105,14 @@ func (q *Queries) GetGroupMember(ctx context.Context, id string) (GroupMember, e
 		&i.Role,
 		&i.IsGhost,
 		&i.JoinedAt,
+		&i.RemovedAt,
 	)
 	return i, err
 }
 
 const getGroupMemberByUserAndGroup = `-- name: GetGroupMemberByUserAndGroup :one
-SELECT id, group_id, user_id, name, role, is_ghost, joined_at FROM group_members
-WHERE group_id = $1 AND user_id = $2
+SELECT id, group_id, user_id, name, role, is_ghost, joined_at, removed_at FROM group_members
+WHERE group_id = $1 AND user_id = $2 AND removed_at IS NULL
 `
 
 type GetGroupMemberByUserAndGroupParams struct {
@@ -114,6 +120,8 @@ type GetGroupMemberByUserAndGroupParams struct {
 	UserID  pgtype.Text `db:"user_id" json:"user_id"`
 }
 
+// Active membership only — a removed member is no longer "in" the group, so
+// access checks (requireMember) and re-join must treat them as absent.
 func (q *Queries) GetGroupMemberByUserAndGroup(ctx context.Context, arg GetGroupMemberByUserAndGroupParams) (GroupMember, error) {
 	row := q.db.QueryRow(ctx, getGroupMemberByUserAndGroup, arg.GroupID, arg.UserID)
 	var i GroupMember
@@ -125,12 +133,15 @@ func (q *Queries) GetGroupMemberByUserAndGroup(ctx context.Context, arg GetGroup
 		&i.Role,
 		&i.IsGhost,
 		&i.JoinedAt,
+		&i.RemovedAt,
 	)
 	return i, err
 }
 
 const listGroupMembers = `-- name: ListGroupMembers :many
-SELECT id, group_id, user_id, name, role, is_ghost, joined_at FROM group_members WHERE group_id = $1 ORDER BY joined_at ASC
+SELECT id, group_id, user_id, name, role, is_ghost, joined_at, removed_at FROM group_members
+WHERE group_id = $1 AND removed_at IS NULL
+ORDER BY joined_at ASC
 `
 
 func (q *Queries) ListGroupMembers(ctx context.Context, groupID string) ([]GroupMember, error) {
@@ -150,6 +161,7 @@ func (q *Queries) ListGroupMembers(ctx context.Context, groupID string) ([]Group
 			&i.Role,
 			&i.IsGhost,
 			&i.JoinedAt,
+			&i.RemovedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -162,10 +174,10 @@ func (q *Queries) ListGroupMembers(ctx context.Context, groupID string) ([]Group
 }
 
 const listGroupMembersWithUser = `-- name: ListGroupMembersWithUser :many
-SELECT gm.id, gm.group_id, gm.user_id, gm.name, gm.role, gm.is_ghost, gm.joined_at, u.phone AS user_phone
+SELECT gm.id, gm.group_id, gm.user_id, gm.name, gm.role, gm.is_ghost, gm.joined_at, gm.removed_at, u.phone AS user_phone
 FROM group_members gm
 LEFT JOIN users u ON u.id = gm.user_id
-WHERE gm.group_id = $1
+WHERE gm.group_id = $1 AND gm.removed_at IS NULL
 ORDER BY gm.joined_at ASC
 `
 
@@ -177,6 +189,7 @@ type ListGroupMembersWithUserRow struct {
 	Role      string             `db:"role" json:"role"`
 	IsGhost   bool               `db:"is_ghost" json:"is_ghost"`
 	JoinedAt  pgtype.Timestamptz `db:"joined_at" json:"joined_at"`
+	RemovedAt pgtype.Timestamptz `db:"removed_at" json:"removed_at"`
 	UserPhone pgtype.Text        `db:"user_phone" json:"user_phone"`
 }
 
@@ -200,6 +213,7 @@ func (q *Queries) ListGroupMembersWithUser(ctx context.Context, groupID string) 
 			&i.Role,
 			&i.IsGhost,
 			&i.JoinedAt,
+			&i.RemovedAt,
 			&i.UserPhone,
 		); err != nil {
 			return nil, err
@@ -213,7 +227,7 @@ func (q *Queries) ListGroupMembersWithUser(ctx context.Context, groupID string) 
 }
 
 const updateGroupMemberName = `-- name: UpdateGroupMemberName :one
-UPDATE group_members SET name = $2 WHERE id = $1 RETURNING id, group_id, user_id, name, role, is_ghost, joined_at
+UPDATE group_members SET name = $2 WHERE id = $1 RETURNING id, group_id, user_id, name, role, is_ghost, joined_at, removed_at
 `
 
 type UpdateGroupMemberNameParams struct {
@@ -232,6 +246,7 @@ func (q *Queries) UpdateGroupMemberName(ctx context.Context, arg UpdateGroupMemb
 		&i.Role,
 		&i.IsGhost,
 		&i.JoinedAt,
+		&i.RemovedAt,
 	)
 	return i, err
 }

@@ -138,13 +138,14 @@ type Group struct {
 }
 
 type GroupMember struct {
-	ID       string             `db:"id" json:"id"`
-	GroupID  string             `db:"group_id" json:"group_id"`
-	UserID   pgtype.Text        `db:"user_id" json:"user_id"`
-	Name     string             `db:"name" json:"name"`
-	Role     string             `db:"role" json:"role"`
-	IsGhost  bool               `db:"is_ghost" json:"is_ghost"`
-	JoinedAt pgtype.Timestamptz `db:"joined_at" json:"joined_at"`
+	ID        string             `db:"id" json:"id"`
+	GroupID   string             `db:"group_id" json:"group_id"`
+	UserID    pgtype.Text        `db:"user_id" json:"user_id"`
+	Name      string             `db:"name" json:"name"`
+	Role      string             `db:"role" json:"role"`
+	IsGhost   bool               `db:"is_ghost" json:"is_ghost"`
+	JoinedAt  pgtype.Timestamptz `db:"joined_at" json:"joined_at"`
+	RemovedAt pgtype.Timestamptz `db:"removed_at" json:"removed_at"`
 }
 
 type MagicLinkToken struct {
