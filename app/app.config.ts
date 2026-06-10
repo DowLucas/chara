@@ -13,7 +13,7 @@ const HOSTED_API_HOST = (
 const config: ExpoConfig = {
   name: 'Chara',
   slug: 'chara',
-  version: '1.0.0',
+  version: '1.0.3',
   scheme: 'chara',
   orientation: 'portrait',
   icon: './assets/icon.png',
