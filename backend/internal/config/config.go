@@ -94,6 +94,14 @@ type Config struct {
 	// Default off so the API still boots without the River tables present;
 	// flipped on in Phase 4 once the schema has rolled out everywhere.
 	RecurringEnabled bool
+
+	// NudgeEnabled gates the unsettled-balance nudge job: debtors whose
+	// balance has sat unchanged for NudgeAfterDays days get a push
+	// reminder, repeated at most every NudgeRepeatDays days per
+	// (user, group). Default off.
+	NudgeEnabled    bool
+	NudgeAfterDays  int
+	NudgeRepeatDays int
 }
 
 func Load() (*Config, error) {
@@ -151,6 +159,10 @@ func Load() (*Config, error) {
 		// React Native UI. Self-hosters can opt out with RECURRING_ENABLED=false
 		// (e.g. to skip the River background job system entirely).
 		RecurringEnabled: getEnv("RECURRING_ENABLED", "true") != "false" && getEnv("RECURRING_ENABLED", "true") != "0",
+
+		NudgeEnabled:    getEnv("NUDGE_ENABLED", "") == "true" || getEnv("NUDGE_ENABLED", "") == "1",
+		NudgeAfterDays:  getEnvInt("NUDGE_AFTER_DAYS", 7),
+		NudgeRepeatDays: getEnvInt("NUDGE_REPEAT_DAYS", 7),
 	}
 
 	if err := cfg.validate(); err != nil {

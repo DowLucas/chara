@@ -21,6 +21,7 @@ import (
 	"github.com/DowLucas/chara/internal/db"
 	"github.com/DowLucas/chara/internal/fx"
 	"github.com/DowLucas/chara/internal/jobs"
+	"github.com/DowLucas/chara/internal/push"
 	"github.com/DowLucas/chara/internal/server"
 	"github.com/DowLucas/chara/internal/storage"
 )
@@ -86,28 +87,38 @@ func main() {
 		slog.Warn("S3_ENDPOINT not set; receipt attachments will be unavailable")
 	}
 
-	// River-backed recurring-expense queue. Bootstrapped behind
-	// RECURRING_ENABLED (default off) so the API still starts cleanly on
-	// instances that haven't yet rolled out the queue tables.
-	if cfg.RecurringEnabled {
+	// River-backed background queue, shared by the recurring-expense and
+	// unsettled-balance-nudge features. Each is gated by its own flag
+	// (RECURRING_ENABLED / NUDGE_ENABLED, both default off) so the API still
+	// starts cleanly on instances that haven't rolled out the queue tables.
+	// The client only boots when at least one feature is on.
+	if cfg.RecurringEnabled || cfg.NudgeEnabled {
 		workers := jobs.RegisterWorkers(pool, queries)
-		rc, err := jobs.New(pool, workers)
+		if cfg.NudgeEnabled {
+			sender := push.NewExpo()
+			jobs.RegisterNudgeWorkers(workers, pool, queries, sender, jobs.NudgeConfig{
+				AfterDays:  cfg.NudgeAfterDays,
+				RepeatDays: cfg.NudgeRepeatDays,
+				ServerURL:  cfg.BaseURL,
+			})
+		}
+		rc, err := jobs.New(pool, workers, jobs.PeriodicJobs(cfg.RecurringEnabled, cfg.NudgeEnabled))
 		if err != nil {
-			slog.Error("recurring: river client init failed", "error", err)
+			slog.Error("jobs: river client init failed", "error", err)
 			os.Exit(1)
 		}
 		if err := rc.Start(context.Background()); err != nil {
-			slog.Error("recurring: river start failed", "error", err)
+			slog.Error("jobs: river start failed", "error", err)
 			os.Exit(1)
 		}
 		defer func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			if err := rc.Stop(ctx); err != nil {
-				slog.Warn("recurring: river stop returned error", "error", err)
+				slog.Warn("jobs: river stop returned error", "error", err)
 			}
 		}()
-		slog.Info("recurring: river queue started")
+		slog.Info("jobs: river queue started", "recurring", cfg.RecurringEnabled, "nudge", cfg.NudgeEnabled)
 	}
 
 	srv := &http.Server{

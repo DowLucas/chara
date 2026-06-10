@@ -71,6 +71,12 @@ type Activity struct {
 	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at"`
 }
 
+type BalanceNudge struct {
+	UserID       string             `db:"user_id" json:"user_id"`
+	GroupID      string             `db:"group_id" json:"group_id"`
+	LastNudgedAt pgtype.Timestamptz `db:"last_nudged_at" json:"last_nudged_at"`
+}
+
 type Expense struct {
 	ID               string             `db:"id" json:"id"`
 	GroupID          string             `db:"group_id" json:"group_id"`

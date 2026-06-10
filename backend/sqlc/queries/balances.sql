@@ -10,6 +10,58 @@ WHERE group_id = $1 AND currency IS NOT NULL;
 SELECT mb.* FROM member_balances mb
 WHERE mb.user_id = $1 AND mb.currency IS NOT NULL;
 
+-- name: ListUserBalancesWithLastChange :many
+-- Cross-group balances for one user, each row annotated with
+-- last_balance_change_at: the most recent event that could have changed that
+-- member's balance in that group. Events are expenses where the member is the
+-- payer or holds a split — GREATEST(created_at, updated_at), so edits and
+-- soft-deletes count — and settlements where the member is either side, with
+-- reverts counting via reverted_at. Reimbursements are skipped (balance-
+-- neutral, same as member_balances). NULL when no such events exist.
+--
+-- The balance_change_events CTE is the canonical "when did this member's
+-- balance last move" definition — reuse it (e.g. for a stale-debt nudge job)
+-- instead of re-deriving the rule.
+WITH balance_change_events AS (
+    SELECT
+        gm.group_id,
+        gm.id                                AS member_id,
+        GREATEST(e.created_at, e.updated_at) AS changed_at
+    FROM group_members gm
+    JOIN expenses e
+        ON e.group_id = gm.group_id AND NOT e.is_reimbursement
+    LEFT JOIN expense_splits es
+        ON es.expense_id = e.id AND es.member_id = gm.id
+    WHERE gm.user_id = $1
+      AND (e.paid_by_id = gm.id OR es.member_id IS NOT NULL)
+
+    UNION ALL
+
+    SELECT
+        gm.group_id,
+        gm.id,
+        GREATEST(s.created_at, COALESCE(s.reverted_at, s.created_at))
+    FROM group_members gm
+    JOIN settlements s
+        ON s.group_id = gm.group_id
+        AND (s.from_member = gm.id OR s.to_member = gm.id)
+    WHERE gm.user_id = $1
+)
+SELECT
+    mb.group_id,
+    mb.member_id,
+    mb.user_id,
+    mb.currency,
+    mb.net_balance,
+    lc.last_change_at::TIMESTAMPTZ AS last_balance_change_at
+FROM member_balances mb
+LEFT JOIN (
+    SELECT group_id, member_id, MAX(changed_at) AS last_change_at
+    FROM balance_change_events
+    GROUP BY group_id, member_id
+) lc ON lc.group_id = mb.group_id AND lc.member_id = mb.member_id
+WHERE mb.user_id = $1 AND mb.currency IS NOT NULL;
+
 -- name: ListUserLedgerLegs :many
 -- Per-leg ledger entries that contribute to a user's net across every group
 -- they're a member of. Each row is denominated in the row's canonical

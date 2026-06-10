@@ -20,7 +20,7 @@ import (
 func TestRecurringClientStarts(t *testing.T) {
 	env := testutil.NewEnv(t)
 	workers := jobs.RegisterWorkers(env.Pool, env.Queries)
-	rc, err := jobs.New(env.Pool, workers)
+	rc, err := jobs.New(env.Pool, workers, jobs.PeriodicJobs(true, false))
 	require.NoError(t, err)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -53,7 +53,7 @@ func TestRecurringTick_EnqueuesDueRules(t *testing.T) {
 
 	// Build a real River client + workers and drive the tick.
 	workers := jobs.RegisterWorkers(env.Pool, env.Queries)
-	rc, err := jobs.New(env.Pool, workers)
+	rc, err := jobs.New(env.Pool, workers, jobs.PeriodicJobs(true, false))
 	require.NoError(t, err)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

@@ -79,6 +79,33 @@ func TestParseEmailList(t *testing.T) {
 	)
 }
 
+func TestLoad_NudgeDefaults(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://test")
+	t.Setenv("JWT_SECRET", "this-secret-is-thirty-two-chars!!")
+	t.Setenv("DEV_MODE", "true")
+
+	cfg, err := Load()
+	require.NoError(t, err)
+	assert.False(t, cfg.NudgeEnabled, "nudges default off")
+	assert.Equal(t, 7, cfg.NudgeAfterDays)
+	assert.Equal(t, 7, cfg.NudgeRepeatDays)
+}
+
+func TestLoad_NudgeEnabled(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://test")
+	t.Setenv("JWT_SECRET", "this-secret-is-thirty-two-chars!!")
+	t.Setenv("DEV_MODE", "true")
+	t.Setenv("NUDGE_ENABLED", "true")
+	t.Setenv("NUDGE_AFTER_DAYS", "3")
+	t.Setenv("NUDGE_REPEAT_DAYS", "14")
+
+	cfg, err := Load()
+	require.NoError(t, err)
+	assert.True(t, cfg.NudgeEnabled)
+	assert.Equal(t, 3, cfg.NudgeAfterDays)
+	assert.Equal(t, 14, cfg.NudgeRepeatDays)
+}
+
 func TestIsDemoLogin(t *testing.T) {
 	c := &Config{DemoLoginEmails: parseEmailList("appstore-review@getchara.app, playstore-review@getchara.app")}
 	assert.True(t, c.IsDemoLogin("appstore-review@getchara.app"))

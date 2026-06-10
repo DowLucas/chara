@@ -96,6 +96,95 @@ func (q *Queries) ListUserBalancesAcrossGroups(ctx context.Context, userID pgtyp
 	return items, nil
 }
 
+const listUserBalancesWithLastChange = `-- name: ListUserBalancesWithLastChange :many
+WITH balance_change_events AS (
+    SELECT
+        gm.group_id,
+        gm.id                                AS member_id,
+        GREATEST(e.created_at, e.updated_at) AS changed_at
+    FROM group_members gm
+    JOIN expenses e
+        ON e.group_id = gm.group_id AND NOT e.is_reimbursement
+    LEFT JOIN expense_splits es
+        ON es.expense_id = e.id AND es.member_id = gm.id
+    WHERE gm.user_id = $1
+      AND (e.paid_by_id = gm.id OR es.member_id IS NOT NULL)
+
+    UNION ALL
+
+    SELECT
+        gm.group_id,
+        gm.id,
+        GREATEST(s.created_at, COALESCE(s.reverted_at, s.created_at))
+    FROM group_members gm
+    JOIN settlements s
+        ON s.group_id = gm.group_id
+        AND (s.from_member = gm.id OR s.to_member = gm.id)
+    WHERE gm.user_id = $1
+)
+SELECT
+    mb.group_id,
+    mb.member_id,
+    mb.user_id,
+    mb.currency,
+    mb.net_balance,
+    lc.last_change_at::TIMESTAMPTZ AS last_balance_change_at
+FROM member_balances mb
+LEFT JOIN (
+    SELECT group_id, member_id, MAX(changed_at) AS last_change_at
+    FROM balance_change_events
+    GROUP BY group_id, member_id
+) lc ON lc.group_id = mb.group_id AND lc.member_id = mb.member_id
+WHERE mb.user_id = $1 AND mb.currency IS NOT NULL
+`
+
+type ListUserBalancesWithLastChangeRow struct {
+	GroupID             string             `db:"group_id" json:"group_id"`
+	MemberID            string             `db:"member_id" json:"member_id"`
+	UserID              pgtype.Text        `db:"user_id" json:"user_id"`
+	Currency            pgtype.Text        `db:"currency" json:"currency"`
+	NetBalance          int64              `db:"net_balance" json:"net_balance"`
+	LastBalanceChangeAt pgtype.Timestamptz `db:"last_balance_change_at" json:"last_balance_change_at"`
+}
+
+// Cross-group balances for one user, each row annotated with
+// last_balance_change_at: the most recent event that could have changed that
+// member's balance in that group. Events are expenses where the member is the
+// payer or holds a split — GREATEST(created_at, updated_at), so edits and
+// soft-deletes count — and settlements where the member is either side, with
+// reverts counting via reverted_at. Reimbursements are skipped (balance-
+// neutral, same as member_balances). NULL when no such events exist.
+//
+// The balance_change_events CTE is the canonical "when did this member's
+// balance last move" definition — reuse it (e.g. for a stale-debt nudge job)
+// instead of re-deriving the rule.
+func (q *Queries) ListUserBalancesWithLastChange(ctx context.Context, userID pgtype.Text) ([]ListUserBalancesWithLastChangeRow, error) {
+	rows, err := q.db.Query(ctx, listUserBalancesWithLastChange, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListUserBalancesWithLastChangeRow{}
+	for rows.Next() {
+		var i ListUserBalancesWithLastChangeRow
+		if err := rows.Scan(
+			&i.GroupID,
+			&i.MemberID,
+			&i.UserID,
+			&i.Currency,
+			&i.NetBalance,
+			&i.LastBalanceChangeAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUserLedgerLegs = `-- name: ListUserLedgerLegs :many
 SELECT
     'expense'                                    AS source,
