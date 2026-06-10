@@ -3,7 +3,7 @@ import type { ExpoConfig } from 'expo/config';
 const config: ExpoConfig = {
   name: 'Chara',
   slug: 'chara',
-  version: '1.0.2',
+  version: '1.0.3',
   scheme: 'chara',
   orientation: 'portrait',
   icon: './assets/icon.png',
