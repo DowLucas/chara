@@ -353,7 +353,10 @@
     "archivePromptBody": "Gruppen vil bli skjult fra listen din. Du kan fortsatt se arkiverte grupper senere.",
     "archivePromptTitle": "Arkivere {{name}}?",
     "edit": "Rediger gruppe",
+    "emptyAddFirst": "Legg til første utgift",
     "emptyBody": "Legg til den første utgiften i denne gruppen.",
+    "emptyBodyImport": "Legg til din første utgift, eller ta med deg saldoene dine fra en annen app.",
+    "emptyImport": "Importer fra en annen app",
     "emptyTitle": "Ingen utgifter ennå",
     "expensesCount": "utgifter · {{count}}",
     "expensesCount_one": "utgifter · {{count}}",
@@ -576,6 +579,120 @@
     "unchanged": "uendret",
     "wasOwed": "hadde til gode",
     "wasOwes": "skyldte"
+  },
+  "import": {
+    "apps": {
+      "other": {
+        "label": "Annen app"
+      },
+      "settleup": {
+        "label": "Settle Up"
+      },
+      "splid": {
+        "label": "Splid"
+      },
+      "splitwise": {
+        "label": "Splitwise"
+      },
+      "steven": {
+        "label": "Steven"
+      },
+      "tricount": {
+        "label": "Tricount"
+      }
+    },
+    "capture": {
+      "extract": "Les av saldoer"
+    },
+    "commitError": {
+      "title": "Importen mislyktes"
+    },
+    "empty": {
+      "body": "Vi klarte ikke å lese noen saldoer fra de skjermbildene. Prøv et tydeligere skjermbilde i fullskjerm av saldo- eller statusskjermen din.",
+      "title": "Fant ingenting"
+    },
+    "entry": "Importer fra en annen app",
+    "extractError": {
+      "title": "Kunne ikke lese skjermbildene"
+    },
+    "guidance": {
+      "other": {
+        "body": "Åpne saldo- eller statusskjermen i den andre appen din og ta et skjermbilde. Vi leser av hvem som skylder deg og hvem du skylder, og setter opp tilsvarende inngangssaldoer her.",
+        "title": "Ta skjermbilde av saldoene dine"
+      },
+      "settleup": {
+        "body": "Åpne gruppen i Settle Up, gå til saldoskjermen og ta et skjermbilde. Vi leser av hver persons nettosaldo.",
+        "title": "Ta skjermbilde av Settle Up-saldoene dine"
+      },
+      "splid": {
+        "body": "Åpne gruppen i Splid, bytt til saldofanen og ta et skjermbilde. Vi leser av hver persons nettosaldo.",
+        "title": "Ta skjermbilde av Splid-saldoene dine"
+      },
+      "splitwise": {
+        "body": "Åpne gruppen i Splitwise og ta et skjermbilde av saldoene øverst — hvem som skylder deg og hvem du skylder. Vi gjenskaper dem som inngangssaldoer.",
+        "title": "Ta skjermbilde av Splitwise-saldoene dine"
+      },
+      "steven": {
+        "body": "Åpne Steven og ta et skjermbilde av saldoskjermen som viser hvem som skylder deg og hvem du skylder. Vi gjenskaper dem som inngangssaldoer.",
+        "title": "Ta skjermbilde av Steven-saldoene dine"
+      },
+      "tricount": {
+        "body": "Åpne Tricount-en, gå til saldoskjermen og ta et skjermbilde. Vi leser av hver persons nettosaldo.",
+        "title": "Ta skjermbilde av Tricount-saldoene dine"
+      }
+    },
+    "permissionBody": "Gi tilgang til bilder for å legge til skjermbilder av saldoene dine.",
+    "permissionTitle": "Trenger tilgang til bilder",
+    "picker": {
+      "eyebrow": "IMPORTER",
+      "heading": "Ta med deg saldoene dine",
+      "intro": "Velg appen du kommer fra. Ta et skjermbilde av saldoskjermen, så setter vi opp tilsvarende inngangssaldoer her.",
+      "title": "Importer"
+    },
+    "progress": {
+      "committing": "Setter opp inngangssaldoer …",
+      "extracting": "Leser av saldoer …"
+    },
+    "reconcile": {
+      "body": "Koble hvert navn vi fant til et gruppemedlem, eller legg det til som et nytt medlem.",
+      "continue": "Fortsett",
+      "newMember": "Nytt medlem",
+      "title": "Koble sammen personer"
+    },
+    "review": {
+      "badAmount": "Vi klarte ikke å lese et gyldig beløp for denne saldoen.",
+      "badDirection": "Vi klarte ikke å avgjøre hvilken vei denne saldoen går.",
+      "body": "Sjekk hver saldo før du importerer. Vi oppretter én inngangssaldo per person; du kan gjøre dem opp eller redigere dem senere.",
+      "currencyMismatch": "Disse saldoene er i {{extracted}}, men gruppen bruker {{group}}. Import på tvers av valutaer støttes ikke.",
+      "import": "Importer {{count}} saldoer",
+      "import_one": "Importer 1 saldo",
+      "import_other": "Importer {{count}} saldoer",
+      "owedToYouTotal": "Til gode hos deg",
+      "owesYou": "{{name}} skylder deg",
+      "title": "Gå gjennom saldoer",
+      "youOwe": "Du skylder {{name}}",
+      "youOweTotal": "Du skylder"
+    },
+    "step": {
+      "capture": "Steg 1 av 3",
+      "reconcile": "Steg 2 av 3",
+      "review": "Steg 3 av 3"
+    },
+    "success": {
+      "body": "Satte opp {{count}} inngangssaldoer i gruppen.",
+      "body_one": "Satte opp 1 inngangssaldo i gruppen.",
+      "body_other": "Satte opp {{count}} inngangssaldoer i gruppen.",
+      "title": "Importert"
+    },
+    "tray": {
+      "add": "Legg til skjermbilder",
+      "count": "{{count}} av {{max}} skjermbilder",
+      "count_one": "{{count}} av {{max}} skjermbilde",
+      "count_other": "{{count}} av {{max}} skjermbilder",
+      "eyebrow": "SKJERMBILDER",
+      "remove": "Fjern skjermbilde"
+    },
+    "unknownApp": "Den appen støttes ikke ennå."
   },
   "invite": {
     "body": "Venner skanner denne for å bli med.",

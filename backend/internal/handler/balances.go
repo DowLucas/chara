@@ -46,6 +46,10 @@ type MyBalanceResponse struct {
 	MemberID   string `json:"member_id"`
 	Currency   string `json:"currency"`
 	NetBalance string `json:"net_balance"`
+	// Most recent event that could have changed this member's balance in
+	// this group (expense create/edit/soft-delete the member pays or splits,
+	// settlement either side, including reverts). Absent when no such events.
+	LastBalanceChangeAt *time.Time `json:"last_balance_change_at,omitempty"`
 }
 
 type SettlementSuggestion struct {
@@ -455,7 +459,7 @@ func (h *BalancesHandler) SuggestSettlements(w http.ResponseWriter, r *http.Requ
 func (h *BalancesHandler) ListMyBalances(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.ClaimsFromContext(r.Context())
 
-	balances, err := h.queries.ListUserBalancesAcrossGroups(r.Context(),
+	balances, err := h.queries.ListUserBalancesWithLastChange(r.Context(),
 		pgtype.Text{String: claims.UserID, Valid: true},
 	)
 	if err != nil {
@@ -478,13 +482,18 @@ func (h *BalancesHandler) ListMyBalances(w http.ResponseWriter, r *http.Request)
 
 	resp := make([]MyBalanceResponse, 0, len(balances))
 	for _, b := range balances {
-		resp = append(resp, MyBalanceResponse{
+		item := MyBalanceResponse{
 			GroupID:    b.GroupID,
 			GroupName:  groupNameByID[b.GroupID],
 			MemberID:   b.MemberID,
 			Currency:   b.Currency.String,
 			NetBalance: money.Amount(b.NetBalance).String(),
-		})
+		}
+		if b.LastBalanceChangeAt.Valid {
+			ts := b.LastBalanceChangeAt.Time
+			item.LastBalanceChangeAt = &ts
+		}
+		resp = append(resp, item)
 	}
 
 	writeJSON(w, http.StatusOK, resp)

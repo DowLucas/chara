@@ -14,10 +14,14 @@ import {
   decideConfirmFlow,
   decideDeleteFlow,
   expenseInputCurrencyAmount,
+  expenseToInitialValue,
   nonShareFieldsDiffer,
+  payloadToUpdateInput,
   projectExpenseToInputCurrency,
   splitShareInInputCurrency,
 } from '../../lib/edit-expense-flow';
+
+import type { ExpenseWizardSubmitPayload } from '../../components/ExpenseWizard';
 
 import type { MemberDelta } from '../../lib/balance-impact';
 import type { Expense } from '../../lib/api';
@@ -141,6 +145,42 @@ describe('edit-expense — non-share field diff detection', () => {
 
   it('flags a date change', () => {
     expect(nonShareFieldsDiffer(base, { ...base, expense_date: '2026-05-23' })).toBe(true);
+  });
+
+  // Category and notes are wizard-editable now. Either alone is a metadata
+  // diff (→ simple confirm); neither produces balance deltas, so they must
+  // never route to the SettlementImpactSheet.
+
+  it('flags a category-only change', () => {
+    expect(nonShareFieldsDiffer({ ...base, category: 'transport' }, base)).toBe(true);
+  });
+
+  it('flags a notes-only change', () => {
+    expect(nonShareFieldsDiffer({ ...base, notes: 'Saturday brunch' }, base)).toBe(true);
+  });
+
+  it('flags clearing the notes', () => {
+    expect(nonShareFieldsDiffer({ ...base, notes: '' }, base)).toBe(true);
+  });
+
+  it('category-only edit → simple confirm, never the impact sheet', () => {
+    const changed = nonShareFieldsDiffer({ ...base, category: 'transport' }, base);
+    const flow = decideConfirmFlow({
+      nonShareFieldsChanged: changed,
+      deltas: [],
+      affectedSettlementsCount: 0,
+    });
+    expect(flow.kind).toBe('simple');
+  });
+
+  it('notes-only edit → simple confirm, never the impact sheet', () => {
+    const changed = nonShareFieldsDiffer({ ...base, notes: 'Saturday brunch' }, base);
+    const flow = decideConfirmFlow({
+      nonShareFieldsChanged: changed,
+      deltas: [],
+      affectedSettlementsCount: 0,
+    });
+    expect(flow.kind).toBe('simple');
   });
 
   it('flags a currency change', () => {
@@ -343,5 +383,129 @@ describe('edit-expense — FX prefill (regression: data corruption on FX-snapsho
       splits: [{ id: 's', member_id: 'm', share: '100.00' }],
     } as Expense;
     expect(projectExpenseToInputCurrency(exp)).toBe(exp);
+  });
+});
+
+// ─── Category + notes: PATCH payload and wizard prefill mapping ───────────
+
+function wizardPayload(
+  over: Partial<ExpenseWizardSubmitPayload> = {},
+): ExpenseWizardSubmitPayload {
+  return {
+    title: 'Pizza',
+    amount: '100.00',
+    currency: 'SEK',
+    expense_date: '2026-05-22',
+    paid_by_id: 'm1',
+    split_method: 'equal',
+    category: 'food',
+    notes: 'Friday night',
+    participants: ['m1', 'm2'],
+    ...over,
+  };
+}
+
+describe('edit-expense — payloadToUpdateInput (category + notes)', () => {
+  it("sends the wizard's category and notes, not the original expense's", () => {
+    const input = payloadToUpdateInput(
+      wizardPayload({ category: 'transport', notes: 'changed my mind' }),
+    );
+    expect(input.category).toBe('transport');
+    expect(input.notes).toBe('changed my mind');
+  });
+
+  it("clearing notes sends an explicit '' (backend tri-state: '' = clear)", () => {
+    const input = payloadToUpdateInput(wizardPayload({ notes: '' }));
+    expect(input).toHaveProperty('notes', '');
+  });
+
+  it('always includes both fields even when unchanged', () => {
+    const input = payloadToUpdateInput(wizardPayload());
+    expect(input.category).toBe('food');
+    expect(input.notes).toBe('Friday night');
+  });
+
+  it('threads the share-relevant fields through unchanged', () => {
+    const input = payloadToUpdateInput(wizardPayload());
+    expect(input.title).toBe('Pizza');
+    expect(input.amount).toBe('100.00');
+    expect(input.currency).toBe('SEK');
+    expect(input.paid_by_id).toBe('m1');
+    expect(input.expense_date).toBe('2026-05-22');
+    expect(input.split_method).toBe('equal');
+    expect(input.participants).toEqual(['m1', 'm2']);
+  });
+
+  it('spreads the FX snapshot when present', () => {
+    const input = payloadToUpdateInput(
+      wizardPayload({
+        fx: {
+          original_amount: '50.00',
+          original_currency: 'EUR',
+          fx_rate: '11.5',
+          fx_as_of: '2026-05-01',
+          fx_source: 'ecb',
+        },
+      }),
+    );
+    expect(input.original_amount).toBe('50.00');
+    expect(input.original_currency).toBe('EUR');
+    expect(input.fx_rate).toBe('11.5');
+  });
+});
+
+describe('edit-expense — expenseToInitialValue (category + notes prefill)', () => {
+  function expenseFixture(over: Partial<Expense> = {}): Expense {
+    return {
+      id: 'exp1',
+      group_id: 'grp1',
+      title: 'Pizza',
+      amount: '100.00',
+      currency: 'SEK',
+      paid_by_id: 'm1',
+      split_method: 'equal',
+      category: 'food',
+      notes: 'Friday night',
+      is_reimbursement: false,
+      created_by_id: 'u1',
+      created_at: '2026-05-22T00:00:00Z',
+      updated_at: '2026-05-22T00:00:00Z',
+      splits: [
+        { id: 's1', member_id: 'm1', share: '50.00' },
+        { id: 's2', member_id: 'm2', share: '50.00' },
+      ],
+      ...over,
+    };
+  }
+
+  it('seeds category and notes from the original expense', () => {
+    const iv = expenseToInitialValue(expenseFixture());
+    expect(iv.category).toBe('food');
+    expect(iv.notes).toBe('Friday night');
+  });
+
+  it("maps the legacy 'general' category to 'other'", () => {
+    const iv = expenseToInitialValue(expenseFixture({ category: 'general' }));
+    expect(iv.category).toBe('other');
+  });
+
+  it("maps a missing category to 'other'", () => {
+    const iv = expenseToInitialValue(expenseFixture({ category: undefined }));
+    expect(iv.category).toBe('other');
+  });
+
+  it("maps missing notes to ''", () => {
+    const iv = expenseToInitialValue(expenseFixture({ notes: undefined }));
+    expect(iv.notes).toBe('');
+  });
+
+  it('keeps the pre-existing prefill behaviour for the other fields', () => {
+    const iv = expenseToInitialValue(expenseFixture());
+    expect(iv.title).toBe('Pizza');
+    expect(iv.amount).toBe('100.00');
+    expect(iv.currency).toBe('SEK');
+    expect(iv.paidByMemberId).toBe('m1');
+    expect(iv.splitMethod).toBe('equal');
+    expect(iv.included).toEqual({ m1: true, m2: true });
   });
 });

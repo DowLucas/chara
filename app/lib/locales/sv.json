@@ -354,7 +354,10 @@
     "archivePromptBody": "Gruppen göms från din lista. Du kan ta fram den ur arkivet senare.",
     "archivePromptTitle": "Arkivera {{name}}?",
     "edit": "Redigera grupp",
+    "emptyAddFirst": "Lägg till första utgiften",
     "emptyBody": "Lägg till första utgiften i gruppen.",
+    "emptyBodyImport": "Lägg till din första utgift, eller ta med dig dina saldon från en annan app.",
+    "emptyImport": "Importera från en annan app",
     "emptyTitle": "Inga utgifter ännu",
     "expensesCount": "utgifter · {{count}}",
     "expensesCount_one": "utgifter · {{count}}",
@@ -577,6 +580,120 @@
     "unchanged": "oförändrad",
     "wasOwed": "hade att få",
     "wasOwes": "var skyldig"
+  },
+  "import": {
+    "apps": {
+      "other": {
+        "label": "Annan app"
+      },
+      "settleup": {
+        "label": "Settle Up"
+      },
+      "splid": {
+        "label": "Splid"
+      },
+      "splitwise": {
+        "label": "Splitwise"
+      },
+      "steven": {
+        "label": "Steven"
+      },
+      "tricount": {
+        "label": "Tricount"
+      }
+    },
+    "capture": {
+      "extract": "Läs saldon"
+    },
+    "commitError": {
+      "title": "Importen misslyckades"
+    },
+    "empty": {
+      "body": "Vi kunde inte läsa några saldon från de där skärmdumparna. Försök med en tydligare skärmdump i helskärm av din saldo- eller ställningsskärm.",
+      "title": "Inget hittat"
+    },
+    "entry": "Importera från en annan app",
+    "extractError": {
+      "title": "Kunde inte läsa skärmdumparna"
+    },
+    "guidance": {
+      "other": {
+        "body": "Öppna saldo- eller ställningsskärmen i din andra app och ta en skärmdump. Vi läser vem som är skyldig dig och vem du är skyldig, och skapar matchande öppningssaldon här.",
+        "title": "Ta en skärmdump av dina saldon"
+      },
+      "settleup": {
+        "body": "Öppna gruppen i Settle Up, gå till dess saldoskärm och ta en skärmdump. Vi läser varje persons nettosaldo.",
+        "title": "Ta en skärmdump av dina Settle Up-saldon"
+      },
+      "splid": {
+        "body": "Öppna gruppen i Splid, byt till saldofliken och ta en skärmdump. Vi läser varje persons nettosaldo.",
+        "title": "Ta en skärmdump av dina Splid-saldon"
+      },
+      "splitwise": {
+        "body": "Öppna gruppen i Splitwise och ta en skärmdump av saldona högst upp — vem som är skyldig dig och vem du är skyldig. Vi återskapar dem som öppningssaldon.",
+        "title": "Ta en skärmdump av dina Splitwise-saldon"
+      },
+      "steven": {
+        "body": "Öppna Steven och ta en skärmdump av saldoskärmen som visar vem som är skyldig dig och vem du är skyldig. Vi återskapar dem som öppningssaldon.",
+        "title": "Ta en skärmdump av dina Steven-saldon"
+      },
+      "tricount": {
+        "body": "Öppna Tricounten, gå till saldoskärmen och ta en skärmdump. Vi läser varje persons nettosaldo.",
+        "title": "Ta en skärmdump av dina Tricount-saldon"
+      }
+    },
+    "permissionBody": "Ge åtkomst till foton för att lägga till skärmdumpar av dina saldon.",
+    "permissionTitle": "Fotoåtkomst krävs",
+    "picker": {
+      "eyebrow": "IMPORTERA",
+      "heading": "Ta med dig dina saldon",
+      "intro": "Välj appen du kommer från. Ta en skärmdump av dess saldoskärm så skapar vi matchande öppningssaldon här.",
+      "title": "Importera"
+    },
+    "progress": {
+      "committing": "Skapar öppningssaldon…",
+      "extracting": "Läser saldon…"
+    },
+    "reconcile": {
+      "body": "Matcha varje namn vi hittade mot en gruppmedlem, eller lägg till det som en ny medlem.",
+      "continue": "Fortsätt",
+      "newMember": "Ny medlem",
+      "title": "Matcha personer"
+    },
+    "review": {
+      "badAmount": "Vi kunde inte läsa ett giltigt belopp för det här saldot.",
+      "badDirection": "Vi kunde inte avgöra åt vilket håll det här saldot går.",
+      "body": "Kontrollera varje saldo innan du importerar. Vi skapar ett öppningssaldo per person; du kan göra upp eller redigera dem senare.",
+      "currencyMismatch": "De här saldona är i {{extracted}}, men gruppen använder {{group}}. Det går inte att importera mellan valutor.",
+      "import": "Importera {{count}} saldon",
+      "import_one": "Importera 1 saldo",
+      "import_other": "Importera {{count}} saldon",
+      "owedToYouTotal": "Skyldiga dig",
+      "owesYou": "{{name}} är skyldig dig",
+      "title": "Granska saldon",
+      "youOwe": "Du är skyldig {{name}}",
+      "youOweTotal": "Du är skyldig"
+    },
+    "step": {
+      "capture": "Steg 1 av 3",
+      "reconcile": "Steg 2 av 3",
+      "review": "Steg 3 av 3"
+    },
+    "success": {
+      "body": "Skapade {{count}} öppningssaldon i gruppen.",
+      "body_one": "Skapade 1 öppningssaldo i gruppen.",
+      "body_other": "Skapade {{count}} öppningssaldon i gruppen.",
+      "title": "Importerat"
+    },
+    "tray": {
+      "add": "Lägg till skärmdumpar",
+      "count": "{{count}} av {{max}} skärmdumpar",
+      "count_one": "{{count}} av {{max}} skärmdump",
+      "count_other": "{{count}} av {{max}} skärmdumpar",
+      "eyebrow": "SKÄRMDUMPAR",
+      "remove": "Ta bort skärmdump"
+    },
+    "unknownApp": "Den appen stöds inte ännu."
   },
   "invite": {
     "body": "Vänner skannar den här för att gå med.",

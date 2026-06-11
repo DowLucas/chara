@@ -1,2 +1,15 @@
+# pnpm 11 settings.
+#
+# nodeLinker: hoisted — install a flat node_modules (like npm/yarn) instead of
+# pnpm's default symlinked layout. React Native's Metro bundler (esp. the EAS
+# eager bundle) fails with "Failed to get the SHA-1 for ..." on packages reached
+# through pnpm's .pnpm symlinks (e.g. qrcode via react-native-qrcode-svg).
+# A hoisted layout avoids the entire symlink-resolution class of problems.
+#
+# allowBuilds replaces the removed onlyBuiltDependencies/ignoredBuiltDependencies.
+# Without an explicit decision pnpm fails install with ERR_PNPM_IGNORED_BUILDS.
+# esbuild ships a postinstall to set up its platform binary; allow it.
+nodeLinker: hoisted
+
 allowBuilds:
-  esbuild: set this to true or false
+  esbuild: true

@@ -1,6 +1,7 @@
 # Private working directories (not part of the open-source project)
 .claude/
 .gstack/
+.superpowers/
 docs/superpowers/
 council/
 .worktrees/

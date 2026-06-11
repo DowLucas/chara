@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { TopBar } from '@/components/TopBar';
+import { ContentContainer } from '@/components/ContentContainer';
 import { GroupAvatar } from '@/components/GroupAvatar';
 import { AvatarStack } from '@/components/Avatar';
 import { Stamp } from '@/components/Stamp';
@@ -24,6 +25,7 @@ import {
 import { showAlert } from '@/lib/app-alert';
 import { useHomeCurrency } from '@/lib/use-home-currency';
 import { aggregateMyNetReads } from '@/lib/aggregate-mynet';
+import { debtAgeDays } from '@/lib/balance-age';
 import { formatMinorUnits, formatMinorUnitsCompact, decimalToMinor } from '@/lib/i18n';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import {
@@ -240,6 +242,7 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: spacing.s5 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
+        <ContentContainer>
         {/* Net balance hero
             When the user has any non-home-currency exposure (showHomeNet),
             the home-currency aggregate IS the hero. The per-currency
@@ -364,6 +367,9 @@ export default function HomeScreen() {
                 const hasPositive = balances.some((b) => decimalToMinor(b.net_balance) > 0);
                 const hasNegative = balances.some((b) => decimalToMinor(b.net_balance) < 0);
                 const mixedSigns = hasPositive && hasNegative;
+                // "owed for N days" — only when the user has been a debtor
+                // (in any currency) past the threshold. Null hides the chip.
+                const debtDays = debtAgeDays(balances, new Date());
                 return (
                   <TouchableOpacity
                     key={`${serverUrl}::${g.id}`}
@@ -454,6 +460,11 @@ export default function HomeScreen() {
                             ]}
                             numberOfLines={1}
                           />
+                          {debtDays != null && (
+                            <Text style={styles.debtAgeChip} numberOfLines={1}>
+                              {t('home.owedForDays', { count: debtDays })}
+                            </Text>
+                          )}
                         </>
                       )}
                     </View>
@@ -544,6 +555,7 @@ export default function HomeScreen() {
           ))
         )}
         */}
+        </ContentContainer>
       </ScrollView>
     </View>
   );
@@ -864,6 +876,13 @@ const styles = StyleSheet.create({
     fontSize: fontSize.displayS,
     letterSpacing: -0.3,
     fontVariant: ['tabular-nums'],
+  },
+  // Status phrase, not a number — humanist sans, never mono.
+  debtAgeChip: {
+    fontFamily: fontBody,
+    fontSize: fontSize.caption,
+    color: colors.brick,
+    marginTop: 2,
   },
 
   // Error strips

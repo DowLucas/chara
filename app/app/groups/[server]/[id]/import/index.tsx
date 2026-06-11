@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Feather } from '@expo/vector-icons';
 
+import { ContentContainer } from '@/components/ContentContainer';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { ListRow } from '@/components/ListRow';
@@ -29,31 +30,33 @@ export default function ImportPickerScreen() {
   const { t } = useTranslation();
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
       <TopBar left={<IconButton icon="arrow-left" onPress={() => router.back()} />} />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={{ paddingBottom: insets.bottom + spacing.s7 }}
       >
-        <View style={styles.header}>
-          <Text style={styles.eyebrow}>{t('import.picker.eyebrow')}</Text>
-          <Text style={styles.headline}>{t('import.picker.heading')}</Text>
-          <Text style={styles.intro}>{t('import.picker.intro')}</Text>
-        </View>
-        <View style={styles.list}>
-          {IMPORT_APPS.map((app) => (
-            <ListRow
-              key={app.source}
-              title={t(app.labelKey)}
-              onPress={() =>
-                router.push(
-                  `/groups/${encodeURIComponent(serverUrl)}/${id}/import/${app.source}`,
-                )
-              }
-              right={<Feather name="chevron-right" size={20} color={colors.lead} />}
-            />
-          ))}
-        </View>
+        <ContentContainer>
+          <View style={styles.header}>
+            <Text style={styles.eyebrow}>{t('import.picker.eyebrow')}</Text>
+            <Text style={styles.headline}>{t('import.picker.heading')}</Text>
+            <Text style={styles.intro}>{t('import.picker.intro')}</Text>
+          </View>
+          <View style={styles.list}>
+            {IMPORT_APPS.map((app) => (
+              <ListRow
+                key={app.source}
+                title={t(app.labelKey)}
+                onPress={() =>
+                  router.push(
+                    `/groups/${encodeURIComponent(serverUrl)}/${id}/import/${app.source}`,
+                  )
+                }
+                right={<Feather name="chevron-right" size={20} color={colors.lead} />}
+              />
+            ))}
+          </View>
+        </ContentContainer>
       </ScrollView>
     </View>
   );

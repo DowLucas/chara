@@ -29,6 +29,7 @@ import { setOverride as setGroupColorOverride } from '@/lib/group-color';
 import { GroupColorPicker } from '@/components/GroupColorPicker';
 import { useDefaultAccount } from '@/lib/accounts';
 import * as analytics from '@/lib/analytics';
+import { ContentContainer } from '@/components/ContentContainer';
 
 export default function CreateGroupScreen() {
   const insets = useSafeAreaInsets();
@@ -84,6 +85,7 @@ export default function CreateGroupScreen() {
       style={[styles.container, { paddingTop: insets.top + spacing.s2 }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <ContentContainer>
       <TouchableOpacity style={styles.back} onPress={() => router.back()} accessibilityLabel={t('common.back')}>
         <Feather name="chevron-left" size={22} color={colors.graphite} />
       </TouchableOpacity>
@@ -198,10 +200,12 @@ export default function CreateGroupScreen() {
         onClose={() => setPickerOpen(false)}
         onSelect={setCurrency}
       />
+      </ContentContainer>
 
       <View style={{ flex: 1 }} />
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
+        <ContentContainer>
         <TouchableOpacity
           style={[styles.cta, !canSubmit && styles.ctaDisabled]}
           disabled={!canSubmit}
@@ -211,6 +215,7 @@ export default function CreateGroupScreen() {
           <Text style={styles.ctaLabel}>{submitting ? t('createGroup.creating') : t('createGroup.submit')}</Text>
           <Feather name="arrow-right" size={18} color={colors.fgOnAccent} />
         </TouchableOpacity>
+        </ContentContainer>
       </View>
     </KeyboardAvoidingView>
   );

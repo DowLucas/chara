@@ -200,6 +200,10 @@ export default function AddExpenseScreen() {
         paid_by_id: payload.paid_by_id,
         expense_date: payload.expense_date,
         split_method: payload.split_method,
+        category: payload.category,
+        // payload.notes is already trimmed by the wizard; omit when empty
+        // (create has no "clear" semantics to express).
+        ...(payload.notes ? { notes: payload.notes } : {}),
         ...(payload.fx ?? {}),
       };
 

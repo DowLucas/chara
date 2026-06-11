@@ -14,6 +14,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
+import { ContentContainer } from '@/components/ContentContainer';
 import { markPopupClosed } from '@/lib/popup-guard';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -454,6 +455,7 @@ export default function SignInScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+      <ContentContainer style={{ flexGrow: 1 }}>
       {/* Logo */}
       <View style={styles.logoRow}>
         <Image
@@ -615,6 +617,7 @@ export default function SignInScreen() {
         </Text>
       </View>
 
+      </ContentContainer>
       </ScrollView>
 
       <HostingSheet

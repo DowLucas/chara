@@ -28,6 +28,7 @@ import { useTranslation } from 'react-i18next';
 import { Feather } from '@expo/vector-icons';
 
 import { showAlert } from '@/lib/app-alert';
+import { ContentContainer } from '@/components/ContentContainer';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
@@ -233,7 +234,7 @@ export default function ImportSourceScreen() {
 
   if (!app) {
     return (
-      <View style={styles.screen}>
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
         <TopBar
           title={t('import.picker.title')}
           left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
@@ -244,7 +245,7 @@ export default function ImportSourceScreen() {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
       <TopBar
         title={t(app.labelKey)}
         left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
@@ -253,6 +254,7 @@ export default function ImportSourceScreen() {
         style={styles.scroll}
         contentContainerStyle={{ paddingBottom: insets.bottom + spacing.s8 }}
       >
+        <ContentContainer>
         {step === 'capture' && (
           <View>
             <StepHeader
@@ -408,10 +410,12 @@ export default function ImportSourceScreen() {
             <Text style={styles.guidanceBody}>{t('import.progress.committing')}</Text>
           </View>
         )}
+        </ContentContainer>
       </ScrollView>
 
       {step !== 'importing' && (
         <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s3 }]}>
+          <ContentContainer>
           {step === 'capture' && (
             <Button
               onPress={runExtract}
@@ -430,6 +434,7 @@ export default function ImportSourceScreen() {
               {t('import.review.import', { count: review.sortedRows.length })}
             </Button>
           )}
+          </ContentContainer>
         </View>
       )}
     </View>

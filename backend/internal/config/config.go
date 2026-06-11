@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -18,6 +19,14 @@ type Config struct {
 	// Instance
 	InstanceMode string // "hosted" | "selfhost"
 	DevMode      bool   // when true, relaxes email requirement and returns magic-link tokens in the API response
+
+	// DemoLoginEmails is a small allowlist of addresses that receive their
+	// magic-link token inline in the API response (like DevMode) even in
+	// hosted mode — so App Store / Play Store reviewers can sign into a
+	// pre-seeded demo account without inbox access. Scoped to these exact
+	// addresses; every other address still goes through real email delivery.
+	// Stored lowercased for case-insensitive matching.
+	DemoLoginEmails []string
 
 	// JWT
 	JWTSecret        string // HS256, required for selfhost
@@ -85,6 +94,14 @@ type Config struct {
 	// Default off so the API still boots without the River tables present;
 	// flipped on in Phase 4 once the schema has rolled out everywhere.
 	RecurringEnabled bool
+
+	// NudgeEnabled gates the unsettled-balance nudge job: debtors whose
+	// balance has sat unchanged for NudgeAfterDays days get a push
+	// reminder, repeated at most every NudgeRepeatDays days per
+	// (user, group). Default off.
+	NudgeEnabled    bool
+	NudgeAfterDays  int
+	NudgeRepeatDays int
 }
 
 func Load() (*Config, error) {
@@ -94,6 +111,8 @@ func Load() (*Config, error) {
 		DatabaseURL:  mustGetEnv("DATABASE_URL"),
 		InstanceMode: getEnv("INSTANCE_MODE", "selfhost"),
 		DevMode:      getEnv("DEV_MODE", "") == "true" || getEnv("DEV_MODE", "") == "1",
+
+		DemoLoginEmails: parseEmailList(getEnv("DEMO_LOGIN_EMAILS", "")),
 
 		JWTSecret:        getEnv("JWT_SECRET", ""),
 		JWTPrivateKeyPEM: getEnv("JWT_PRIVATE_KEY_PEM", ""),
@@ -140,6 +159,10 @@ func Load() (*Config, error) {
 		// React Native UI. Self-hosters can opt out with RECURRING_ENABLED=false
 		// (e.g. to skip the River background job system entirely).
 		RecurringEnabled: getEnv("RECURRING_ENABLED", "true") != "false" && getEnv("RECURRING_ENABLED", "true") != "0",
+
+		NudgeEnabled:    getEnv("NUDGE_ENABLED", "") == "true" || getEnv("NUDGE_ENABLED", "") == "1",
+		NudgeAfterDays:  getEnvInt("NUDGE_AFTER_DAYS", 7),
+		NudgeRepeatDays: getEnvInt("NUDGE_REPEAT_DAYS", 7),
 	}
 
 	if err := cfg.validate(); err != nil {
@@ -191,6 +214,41 @@ func (c *Config) HasGoogle() bool { return c.GoogleClientID != "" }
 func (c *Config) HasApple() bool  { return c.AppleBundleID != "" }
 func (c *Config) HasOIDC() bool   { return c.OIDCIssuerURL != "" && c.OIDCClientID != "" }
 func (c *Config) HasGemini() bool { return c.GeminiAPIKey != "" }
+
+// IsDemoLogin reports whether addr is on the demo-login allowlist (case
+// insensitive). addr is expected already trimmed; comparison lowercases both
+// sides so callers don't have to.
+func (c *Config) IsDemoLogin(addr string) bool {
+	addr = strings.ToLower(strings.TrimSpace(addr))
+	for _, e := range c.DemoLoginEmails {
+		if e == addr {
+			return true
+		}
+	}
+	return false
+}
+
+// parseEmailList splits a comma-separated env value into a deduplicated,
+// lowercased, trimmed slice. Empty entries are dropped.
+func parseEmailList(raw string) []string {
+	if strings.TrimSpace(raw) == "" {
+		return nil
+	}
+	var out []string
+	seen := map[string]struct{}{}
+	for _, part := range strings.Split(raw, ",") {
+		e := strings.ToLower(strings.TrimSpace(part))
+		if e == "" {
+			continue
+		}
+		if _, dup := seen[e]; dup {
+			continue
+		}
+		seen[e] = struct{}{}
+		out = append(out, e)
+	}
+	return out
+}
 
 func getEnv(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {

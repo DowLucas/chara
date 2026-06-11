@@ -586,6 +586,102 @@ func TestExpenses_Update_RecalculatesSplits(t *testing.T) {
 	assert.Equal(t, int64(12000), sum)
 }
 
+func TestExpenses_Update_Notes_SetValue(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	fix := testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+groupID+"/expenses/"+fix.Expense.ID, `{"notes":"bring cash"}`, alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code, "body: %s", rr.Body.String())
+
+	var resp map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	assert.Equal(t, "bring cash", resp["notes"])
+
+	// Follow-up GET must show the persisted notes.
+	rr = env.Do(t, env.AuthRequest(t, "GET", "/api/groups/"+groupID+"/expenses/"+fix.Expense.ID, "", alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code)
+	var got map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&got))
+	assert.Equal(t, "bring cash", got["notes"])
+
+	// Activity: the edit must land in changed_fields.
+	_, payloadBytes, _, ok := latestExpenseUpdatedActivity(t, env, fix.Expense.ID)
+	require.True(t, ok, "expected an expense_edited activity row")
+	var payload map[string]any
+	require.NoError(t, json.Unmarshal(payloadBytes, &payload))
+	cf, _ := payload["changed_fields"].([]any)
+	assert.Contains(t, cf, "notes")
+}
+
+func TestExpenses_Update_Notes_EmptyStringClears(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	fix := testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+	_, err := env.Pool.Exec(context.Background(),
+		"UPDATE expenses SET notes = 'bring cash' WHERE id = $1", fix.Expense.ID)
+	require.NoError(t, err)
+
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+groupID+"/expenses/"+fix.Expense.ID, `{"notes":""}`, alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code, "body: %s", rr.Body.String())
+
+	var resp map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	assert.Nil(t, resp["notes"], "cleared notes must be null/omitted in the response")
+
+	// Follow-up GET also shows cleared.
+	rr = env.Do(t, env.AuthRequest(t, "GET", "/api/groups/"+groupID+"/expenses/"+fix.Expense.ID, "", alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code)
+	var got map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&got))
+	assert.Nil(t, got["notes"], "cleared notes must be null/omitted on GET")
+
+	// DB: the nullable column is cleared to NULL, not ''.
+	var notes *string
+	require.NoError(t, env.Pool.QueryRow(context.Background(),
+		"SELECT notes FROM expenses WHERE id = $1", fix.Expense.ID).Scan(&notes))
+	assert.Nil(t, notes, "notes must be NULL after clearing")
+}
+
+func TestExpenses_Update_Notes_AbsentLeavesUnchanged(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	fix := testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+	_, err := env.Pool.Exec(context.Background(),
+		"UPDATE expenses SET notes = 'bring cash' WHERE id = $1", fix.Expense.ID)
+	require.NoError(t, err)
+
+	// PATCH without a notes field — notes must survive untouched.
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+groupID+"/expenses/"+fix.Expense.ID, `{"title":"New Title"}`, alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code, "body: %s", rr.Body.String())
+
+	var resp map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	assert.Equal(t, "bring cash", resp["notes"])
+
+	rr = env.Do(t, env.AuthRequest(t, "GET", "/api/groups/"+groupID+"/expenses/"+fix.Expense.ID, "", alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code)
+	var got map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&got))
+	assert.Equal(t, "bring cash", got["notes"])
+}
+
+func TestExpenses_Update_Category(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	// Fixture creates the expense with category "general".
+	fix := testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+groupID+"/expenses/"+fix.Expense.ID, `{"category":"food"}`, alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code, "body: %s", rr.Body.String())
+
+	var resp map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	assert.Equal(t, "food", resp["category"])
+
+	rr = env.Do(t, env.AuthRequest(t, "GET", "/api/groups/"+groupID+"/expenses/"+fix.Expense.ID, "", alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code)
+	var got map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&got))
+	assert.Equal(t, "food", got["category"])
+}
+
 // TestUpdateExpense_AuthorCanEdit verifies the author of an expense can PATCH it.
 func TestUpdateExpense_AuthorCanEdit(t *testing.T) {
 	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)

@@ -576,6 +576,7 @@ export interface CreateExpenseInput {
   paid_by_id: string;
   split_method: 'equal' | 'exact' | 'percentage';
   category?: string;
+  notes?: string;
   expense_date: string;
   participants?: string[];
   splits?: Array<{ member_id: string; share?: string; basis_points?: number }>;
@@ -688,6 +689,9 @@ export interface MyBalance {
   group_name: string;
   currency: string;
   net_balance: string;
+  /** When this per-currency balance last changed (RFC 3339). Used to show
+   *  how long a debt has been outstanding. Optional — older servers omit it. */
+  last_balance_change_at?: string | null;
 }
 
 export interface Settlement {

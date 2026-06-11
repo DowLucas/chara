@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
+import { ContentContainer } from '@/components/ContentContainer';
 import * as analytics from '@/lib/analytics';
 import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
 
@@ -54,22 +55,24 @@ export default function PrivacyScreen() {
         left={<IconButton icon="chevron-left" onPress={() => router.back()} label={t('common.back')} />}
       />
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.list}>
-          <View style={styles.row}>
-            <View style={styles.rowTextWrap}>
-              <Text style={styles.rowLabel}>{t('privacy.analyticsLabel')}</Text>
+        <ContentContainer>
+          <View style={styles.list}>
+            <View style={styles.row}>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>{t('privacy.analyticsLabel')}</Text>
+              </View>
+              <Switch
+                value={optedIn}
+                onValueChange={handleToggle}
+                disabled={!loaded}
+                trackColor={{ false: colors.bone, true: colors.vermillion }}
+                thumbColor={colors.paper}
+                accessibilityLabel={t('privacy.analyticsLabel')}
+              />
             </View>
-            <Switch
-              value={optedIn}
-              onValueChange={handleToggle}
-              disabled={!loaded}
-              trackColor={{ false: colors.bone, true: colors.vermillion }}
-              thumbColor={colors.paper}
-              accessibilityLabel={t('privacy.analyticsLabel')}
-            />
           </View>
-        </View>
-        <Text style={styles.description}>{t('privacy.analyticsDescription')}</Text>
+          <Text style={styles.description}>{t('privacy.analyticsDescription')}</Text>
+        </ContentContainer>
       </ScrollView>
     </View>
   );

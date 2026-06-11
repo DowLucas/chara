@@ -758,6 +758,11 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 	if req.Category != nil {
 		params.Category = pgtype.Text{String: *req.Category, Valid: true}
 	}
+	// Tri-state: absent = unchanged (param NULL), "" = clear (the SQL maps
+	// '' to NULL), non-empty = set.
+	if req.Notes != nil {
+		params.Notes = pgtype.Text{String: *req.Notes, Valid: true}
+	}
 
 	// Validate amount/currency up front so we can short-circuit before
 	// opening the tx.

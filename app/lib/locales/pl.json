@@ -365,7 +365,10 @@
     "archivePromptBody": "Grupa zostanie ukryta z twojej listy. Nadal możesz później przeglądać zarchiwizowane grupy.",
     "archivePromptTitle": "Zarchiwizować {{name}}?",
     "edit": "Edytuj grupę",
+    "emptyAddFirst": "Dodaj pierwszy wydatek",
     "emptyBody": "Dodaj pierwszy wydatek do tej grupy.",
+    "emptyBodyImport": "Dodaj swój pierwszy wydatek lub przenieś salda z innej aplikacji.",
+    "emptyImport": "Importuj z innej aplikacji",
     "emptyTitle": "Brak wydatków",
     "expensesCount": "wydatki · {{count}}",
     "expensesCount_few": "wydatki · {{count}}",
@@ -614,6 +617,126 @@
     "unchanged": "bez zmian",
     "wasOwed": "było na plusie",
     "wasOwes": "winien"
+  },
+  "import": {
+    "apps": {
+      "other": {
+        "label": "Inna aplikacja"
+      },
+      "settleup": {
+        "label": "Settle Up"
+      },
+      "splid": {
+        "label": "Splid"
+      },
+      "splitwise": {
+        "label": "Splitwise"
+      },
+      "steven": {
+        "label": "Steven"
+      },
+      "tricount": {
+        "label": "Tricount"
+      }
+    },
+    "capture": {
+      "extract": "Odczytaj salda"
+    },
+    "commitError": {
+      "title": "Import nie powiódł się"
+    },
+    "empty": {
+      "body": "Nie udało się odczytać żadnych sald z tych zrzutów ekranu. Spróbuj zrobić wyraźniejszy, pełnoekranowy zrzut ekranu z saldami lub rozliczeniem.",
+      "title": "Nic nie znaleziono"
+    },
+    "entry": "Importuj z innej aplikacji",
+    "extractError": {
+      "title": "Nie udało się odczytać zrzutów ekranu"
+    },
+    "guidance": {
+      "other": {
+        "body": "Otwórz ekran sald lub rozliczeń w swojej drugiej aplikacji i zrób zrzut ekranu. Odczytamy, kto jest ci winien i komu ty jesteś winien, a potem utworzymy tu odpowiadające im salda początkowe.",
+        "title": "Zrób zrzut ekranu swoich sald"
+      },
+      "settleup": {
+        "body": "Otwórz grupę w Settle Up, przejdź do ekranu sald i zrób zrzut ekranu. Odczytamy saldo netto każdej osoby.",
+        "title": "Zrób zrzut ekranu sald z Settle Up"
+      },
+      "splid": {
+        "body": "Otwórz grupę w Splid, przełącz się na zakładkę sald i zrób zrzut ekranu. Odczytamy saldo netto każdej osoby.",
+        "title": "Zrób zrzut ekranu sald z Splid"
+      },
+      "splitwise": {
+        "body": "Otwórz grupę w Splitwise i zrób zrzut ekranu sald u góry — kto jest ci winien i komu ty jesteś winien. Odtworzymy je jako salda początkowe.",
+        "title": "Zrób zrzut ekranu sald z Splitwise"
+      },
+      "steven": {
+        "body": "Otwórz Steven i zrób zrzut ekranu sald pokazujący, kto jest ci winien i komu ty jesteś winien. Odtworzymy je jako salda początkowe.",
+        "title": "Zrób zrzut ekranu sald ze Steven"
+      },
+      "tricount": {
+        "body": "Otwórz Tricount, przejdź do ekranu sald i zrób zrzut ekranu. Odczytamy saldo netto każdej osoby.",
+        "title": "Zrób zrzut ekranu sald z Tricount"
+      }
+    },
+    "permissionBody": "Zezwól na dostęp do zdjęć, aby dodać zrzuty ekranu swoich sald.",
+    "permissionTitle": "Potrzebny dostęp do zdjęć",
+    "picker": {
+      "eyebrow": "IMPORT",
+      "heading": "Przenieś swoje salda",
+      "intro": "Wybierz aplikację, z której przechodzisz. Zrób zrzut ekranu jej sald, a my utworzymy tu odpowiadające im salda początkowe.",
+      "title": "Import"
+    },
+    "progress": {
+      "committing": "Tworzenie sald początkowych…",
+      "extracting": "Odczytywanie sald…"
+    },
+    "reconcile": {
+      "body": "Dopasuj każde znalezione imię do członka grupy lub dodaj je jako nowego członka.",
+      "continue": "Dalej",
+      "newMember": "Nowy członek",
+      "title": "Dopasuj osoby"
+    },
+    "review": {
+      "badAmount": "Nie udało się odczytać prawidłowej kwoty dla tego salda.",
+      "badDirection": "Nie udało się ustalić kierunku tego salda.",
+      "body": "Sprawdź każde saldo przed importem. Utworzymy jedno saldo początkowe na osobę; później możesz je rozliczyć lub edytować.",
+      "currencyMismatch": "Te salda są w {{extracted}}, ale grupa używa {{group}}. Import między walutami nie jest obsługiwany.",
+      "import": "Importuj {{count}} sald",
+      "import_few": "Importuj {{count}} salda",
+      "import_many": "Importuj {{count}} sald",
+      "import_one": "Importuj 1 saldo",
+      "import_other": "Importuj {{count}} salda",
+      "owedToYouTotal": "Należne tobie",
+      "owesYou": "{{name}} jest ci winien",
+      "title": "Sprawdź salda",
+      "youOwe": "Jesteś winien {{name}}",
+      "youOweTotal": "Jesteś winien"
+    },
+    "step": {
+      "capture": "Krok 1 z 3",
+      "reconcile": "Krok 2 z 3",
+      "review": "Krok 3 z 3"
+    },
+    "success": {
+      "body": "Utworzono {{count}} sald początkowych w grupie.",
+      "body_few": "Utworzono {{count}} salda początkowe w grupie.",
+      "body_many": "Utworzono {{count}} sald początkowych w grupie.",
+      "body_one": "Utworzono 1 saldo początkowe w grupie.",
+      "body_other": "Utworzono {{count}} salda początkowe w grupie.",
+      "title": "Zaimportowano"
+    },
+    "tray": {
+      "add": "Dodaj zrzuty ekranu",
+      "count": "{{count}} z {{max}} zrzutów ekranu",
+      "count_few": "{{count}} z {{max}} zrzutów ekranu",
+      "count_many": "{{count}} z {{max}} zrzutów ekranu",
+      "count_one": "{{count}} z {{max}} zrzutu ekranu",
+      "count_other": "{{count}} z {{max}} zrzutów ekranu",
+      "eyebrow": "ZRZUTY EKRANU",
+      "remove": "Usuń zrzut ekranu"
+    },
+    "unknownApp": "Ta aplikacja nie jest jeszcze obsługiwana."
   },
   "invite": {
     "body": "Znajomi skanują to, aby dołączyć.",

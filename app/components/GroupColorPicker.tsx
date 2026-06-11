@@ -12,6 +12,7 @@ import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import ReactNativeColorPicker from 'react-native-wheel-color-picker';
 import { markPopupClosed } from '@/lib/popup-guard';
+import { useResponsive } from '@/lib/use-responsive';
 import {
   clearOverride,
   groupColorFor,
@@ -77,6 +78,7 @@ function isEphemeral(p: Props): p is EphemeralProps {
  *   - Ephemeral: pass (value, onChange); used before the group exists. */
 export function GroupColorPicker(props: Props) {
   const insets = useSafeAreaInsets();
+  const { sheetMaxWidth } = useResponsive();
   const { t } = useTranslation();
   const [customOpen, setCustomOpen] = useState(false);
   const [wheelColor, setWheelColor] = useState<string>('#6B4B7E');
@@ -152,6 +154,13 @@ export function GroupColorPicker(props: Props) {
         style={[
           styles.sheet,
           { paddingBottom: insets.bottom + spacing.s4 },
+          sheetMaxWidth != null && {
+            left: 'auto',
+            right: 'auto',
+            alignSelf: 'center',
+            width: '100%',
+            maxWidth: sheetMaxWidth,
+          },
         ]}
       >
         <Text style={styles.title}>{t('groupColor.title')}</Text>

@@ -48,7 +48,10 @@ SET title        = COALESCE(sqlc.narg(title), title),
     paid_by_id   = COALESCE(sqlc.narg(paid_by_id), paid_by_id),
     split_method = COALESCE(sqlc.narg(split_method), split_method),
     category     = COALESCE(sqlc.narg(category), category),
-    notes        = COALESCE(sqlc.narg(notes), notes),
+    -- notes is tri-state: NULL param = unchanged, '' = clear to NULL,
+    -- anything else = set.
+    notes        = CASE WHEN sqlc.narg(notes)::text IS NULL THEN notes
+                        ELSE NULLIF(sqlc.narg(notes)::text, '') END,
     expense_date = COALESCE(sqlc.narg(expense_date), expense_date),
     updated_at   = NOW()
 WHERE id = $1

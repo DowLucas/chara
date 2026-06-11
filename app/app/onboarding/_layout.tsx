@@ -9,13 +9,13 @@ export default function OnboardingLayout() {
   // migration (spec §11): empty `id` until `/api/me` fills it. Don't treat
   // a placeholder as "missing name" — wait for the fill.
   const isPlaceholder = !!user && !user.id;
-  // Full name and phone are required before any other onboarding step.
+  // Full name is required before any other onboarding step. Phone is
+  // optional (Swish/Vipps only) — collected lazily, never gated here.
   const missingName = !user?.name?.trim();
-  const missingPhone = !user?.phone?.trim();
   if (
     user &&
     !isPlaceholder &&
-    (missingName || missingPhone) &&
+    missingName &&
     pathname !== '/onboarding/name'
   ) {
     return <Redirect href="/onboarding/name" />;

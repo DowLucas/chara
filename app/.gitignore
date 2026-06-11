@@ -8,6 +8,11 @@ expo-env.d.ts
 # dependencies
 node_modules/
 
+# This project uses pnpm. A stray package-lock.json makes EAS/Metro infer the
+# wrong package manager (npm), which fails to resolve babel-preset-expo at
+# bundle time. Keep pnpm-lock.yaml as the single source of truth.
+package-lock.json
+
 # Expo
 .expo/
 dist/
@@ -16,6 +21,7 @@ web-build/
 # Native builds
 ios/
 android/
+*.aab
 *.jks
 *.p12
 *.key

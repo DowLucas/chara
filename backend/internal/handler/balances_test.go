@@ -320,7 +320,97 @@ func TestMyBalances_IncludesGroupName(t *testing.T) {
 	assert.Equal(t, "Sweden Trip", resp[0]["group_name"])
 }
 
+// ── ListMyBalances: last_balance_change_at ────────────────────────────────────
+
+func TestMyBalances_LastChangeAt_SetByExpense(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+
+	before := time.Now().Add(-2 * time.Second)
+	testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	resp := fetchMyBalances(t, env, alice.Token)
+	require.Len(t, resp, 1)
+
+	ts := parseLastChangeAt(t, resp[0])
+	assert.True(t, ts.After(before), "last_balance_change_at %s should be after expense creation %s", ts, before)
+}
+
+func TestMyBalances_LastChangeAt_BumpedBySettlement(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	resp := fetchMyBalances(t, env, alice.Token)
+	require.Len(t, resp, 1)
+	afterExpense := parseLastChangeAt(t, resp[0])
+
+	body := fmt.Sprintf(`{"from_member_id":%q,"to_member_id":%q,"amount":"45.00","currency":"SEK"}`, bobMemberID, aliceMemberID)
+	settleRR := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, bob.Token))
+	require.Equal(t, http.StatusCreated, settleRR.Code)
+
+	resp = fetchMyBalances(t, env, alice.Token)
+	require.Len(t, resp, 1)
+	afterSettle := parseLastChangeAt(t, resp[0])
+
+	assert.True(t, afterSettle.After(afterExpense),
+		"settlement should bump last_balance_change_at: %s should be after %s", afterSettle, afterExpense)
+}
+
+func TestMyBalances_LastChangeAt_IgnoresExpensesNotInvolvingUser(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	carolU := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "carol"), "Carol")
+	carolMember := testutil.AddMember(t, env.Pool, groupID, carolU.ID, "Carol")
+
+	testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	resp := fetchMyBalances(t, env, alice.Token)
+	require.Len(t, resp, 1)
+	afterOwn := parseLastChangeAt(t, resp[0])
+
+	// Bob pays, split Bob+Carol only — cannot change Alice's balance.
+	testutil.CreateExpense(t, env.Pool, groupID, "Taxi", 3000, "SEK", bobMemberID, bob.ID, []string{bobMemberID, carolMember.ID})
+
+	resp = fetchMyBalances(t, env, alice.Token)
+	require.Len(t, resp, 1)
+	afterUnrelated := parseLastChangeAt(t, resp[0])
+
+	assert.True(t, afterUnrelated.Equal(afterOwn),
+		"unrelated expense must not bump last_balance_change_at: got %s, want %s", afterUnrelated, afterOwn)
+}
+
+func TestMyBalances_LastChangeAt_AbsentWhenNoEventsInvolveUser(t *testing.T) {
+	env, alice, bob, groupID, _, bobMemberID := setupExpenseEnv(t)
+
+	// Bob pays an expense split only on himself — Alice gets a (zero) balance
+	// row but no event ever touched her balance.
+	testutil.CreateExpense(t, env.Pool, groupID, "Solo snack", 1000, "SEK", bobMemberID, bob.ID, []string{bobMemberID})
+
+	resp := fetchMyBalances(t, env, alice.Token)
+	require.Len(t, resp, 1)
+	assert.Equal(t, "0.00", resp[0]["net_balance"])
+
+	_, present := resp[0]["last_balance_change_at"]
+	assert.False(t, present, "last_balance_change_at should be absent when no balance events involve the user")
+}
+
 // ── helpers ───────────────────────────────────────────────────────────────────
+
+func fetchMyBalances(t *testing.T, env *testutil.Env, token string) []map[string]any {
+	t.Helper()
+	rr := env.Do(t, env.AuthRequest(t, "GET", "/api/me/balances", "", token))
+	require.Equal(t, http.StatusOK, rr.Code)
+	var resp []map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	return resp
+}
+
+func parseLastChangeAt(t *testing.T, item map[string]any) time.Time {
+	t.Helper()
+	raw, ok := item["last_balance_change_at"].(string)
+	require.True(t, ok, "last_balance_change_at missing or not a string in %v", item)
+	ts, err := time.Parse(time.RFC3339, raw)
+	require.NoError(t, err)
+	return ts
+}
 
 func indexByMemberID(items []map[string]any) map[string]map[string]any {
 	out := make(map[string]map[string]any, len(items))

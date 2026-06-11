@@ -4,6 +4,7 @@ import { showAlert } from '@/lib/app-alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TopBar } from '@/components/TopBar';
+import { ContentContainer } from '@/components/ContentContainer';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
 import { Avatar } from '@/components/Avatar';
@@ -21,9 +22,14 @@ import {
   buildSwishLink,
   isSwishEligible,
   normalizeSwishNumber,
+  shouldPromptOwnPhoneForSwish,
   swishRoundedKronor,
   type Platform as SwishPlatform,
 } from '@/lib/swish';
+import {
+  getSwishPhonePromptDismissed,
+  setSwishPhonePromptDismissed,
+} from '@/lib/preferences';
 import {
   colors,
   fontDisplay,
@@ -74,6 +80,13 @@ export default function SettleMethodScreen() {
   // only foreground the "I've paid" confirm button after they've
   // actually been to Swish, so a stray tap can't record a false settle.
   const [swishOpened, setSwishOpened] = useState(false);
+  // One-time "add your own Swish number" nudge: only fires while the user
+  // has no number on file and hasn't dismissed it before.
+  const [phonePromptDismissed, setPhonePromptDismissed] = useState(true);
+
+  useEffect(() => {
+    getSwishPhonePromptDismissed().then(setPhonePromptDismissed).catch(() => {});
+  }, []);
 
   // Members come from the GroupDetail response — no separate /members route.
   const members: GroupMember[] = group?.members ?? [];
@@ -177,6 +190,25 @@ export default function SettleMethodScreen() {
         });
         return;
       }
+      // Nudge the user to add their own number so friends can pay them
+      // back via Swish too. Non-blocking: sending only needs the
+      // recipient's number, so "Not now" just continues.
+      if (shouldPromptOwnPhoneForSwish(user?.phone, phonePromptDismissed)) {
+        const choice = await showAlert({
+          title: t('settleMethod.addOwnPhoneTitle'),
+          message: t('settleMethod.addOwnPhoneBody'),
+          buttons: [
+            { key: 'later', label: t('settleMethod.addOwnPhoneLater'), style: 'cancel' },
+            { key: 'add', label: t('settleMethod.addOwnPhoneCta') },
+          ],
+        });
+        setPhonePromptDismissed(true);
+        setSwishPhonePromptDismissed().catch(() => {});
+        if (choice === 'add') {
+          router.push('/onboarding/name');
+          return;
+        }
+      }
       let url: string;
       try {
         url = buildSwishLink({
@@ -220,45 +252,48 @@ export default function SettleMethodScreen() {
           left={<IconButton icon="arrow-left" onPress={() => { setStage('pick'); setSwishUrl(null); setSwishOpened(false); }} />}
         />
         <ScrollView style={styles.scroll} contentContainerStyle={styles.awaitingScroll}>
-          <View style={styles.counterRow}>
-            <Avatar initials={initialsOf(counter?.name)} />
-            <View style={styles.counterTextWrap}>
-              <Text style={styles.counterName} numberOfLines={1}>
-                {t('settleMethod.to', { name: counter?.name ?? '' })}
-              </Text>
-              <Text style={styles.counterMeta} numberOfLines={1}>
-                {t('settleMethod.subMeta', { group: group?.name ?? '' })}
-              </Text>
+          <ContentContainer>
+            <View style={styles.counterRow}>
+              <Avatar initials={initialsOf(counter?.name)} />
+              <View style={styles.counterTextWrap}>
+                <Text style={styles.counterName} numberOfLines={1}>
+                  {t('settleMethod.to', { name: counter?.name ?? '' })}
+                </Text>
+                <Text style={styles.counterMeta} numberOfLines={1}>
+                  {t('settleMethod.subMeta', { group: group?.name ?? '' })}
+                </Text>
+              </View>
+              <MoneyText
+                style={styles.counterAmount}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.5}
+                value={formattedSwishAmount}
+              />
             </View>
-            <MoneyText
-              style={styles.counterAmount}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.5}
-              value={formattedSwishAmount}
-            />
-          </View>
-          <View style={styles.heroRule} />
-          <View style={styles.awaitingBodyWrap}>
-            <Text style={styles.awaitingBody}>
-              {t('settleMethod.swishWaitBody', {
-                amount: formattedSwishAmount,
-                name: counter?.name ?? '',
-              })}
-            </Text>
-            {rounded && (
-              <Text style={styles.awaitingRoundingNote}>
-                {t('settleMethod.swishTipNote', {
-                  swish: formattedSwishAmount,
-                  debt: formattedAmount,
-                  tip: formattedSwishTip,
-                  name: counter?.name?.split(' ')[0] ?? '',
+            <View style={styles.heroRule} />
+            <View style={styles.awaitingBodyWrap}>
+              <Text style={styles.awaitingBody}>
+                {t('settleMethod.swishWaitBody', {
+                  amount: formattedSwishAmount,
+                  name: counter?.name ?? '',
                 })}
               </Text>
-            )}
-          </View>
+              {rounded && (
+                <Text style={styles.awaitingRoundingNote}>
+                  {t('settleMethod.swishTipNote', {
+                    swish: formattedSwishAmount,
+                    debt: formattedAmount,
+                    tip: formattedSwishTip,
+                    name: counter?.name?.split(' ')[0] ?? '',
+                  })}
+                </Text>
+              )}
+            </View>
+          </ContentContainer>
         </ScrollView>
         <View style={[styles.ctaBar, { paddingBottom: insets.bottom + 8 }]}>
+          <ContentContainer>
           {/* Stack the two actions. Before opening Swish the open
               button is the primary CTA and the confirm is a quiet
               ghost link; once they've been to Swish we swap the
@@ -304,6 +339,7 @@ export default function SettleMethodScreen() {
               </TouchableOpacity>
             </>
           )}
+          </ContentContainer>
         </View>
       </View>
     );
@@ -332,22 +368,26 @@ export default function SettleMethodScreen() {
             top rule echoes the red chop in the print. */}
         <View style={styles.settledPanel}>
           <View style={styles.settledPanelRule} />
-          <View style={styles.settledPanelInner}>
-            <Text style={styles.settledEyebrow}>{t('settle.settledTitle').toLowerCase()}</Text>
-            <View style={styles.settledStampRow}>
-              <View style={styles.settledStampLine} />
-              <Stamp size="lg" />
-              <View style={styles.settledStampLine} />
+          <ContentContainer>
+            <View style={styles.settledPanelInner}>
+              <Text style={styles.settledEyebrow}>{t('settle.settledTitle').toLowerCase()}</Text>
+              <View style={styles.settledStampRow}>
+                <View style={styles.settledStampLine} />
+                <Stamp size="lg" />
+                <View style={styles.settledStampLine} />
+              </View>
+              <Text style={styles.settledSentence}>{sentence}</Text>
+              <Text style={styles.settledChop}>
+                {completedAt && `${formatDate(completedAt)} · ${formatTime(completedAt)}`}
+              </Text>
             </View>
-            <Text style={styles.settledSentence}>{sentence}</Text>
-            <Text style={styles.settledChop}>
-              {completedAt && `${formatDate(completedAt)} · ${formatTime(completedAt)}`}
-            </Text>
-          </View>
+          </ContentContainer>
           <View style={[styles.ctaBar, styles.settledCta, { paddingBottom: insets.bottom + 8 }]}>
-            <Button kind="primary" onPress={() => router.back()} style={{ flex: 1 }}>
-              {t('common.done')}
-            </Button>
+            <ContentContainer>
+              <Button kind="primary" onPress={() => router.back()} style={{ flex: 1 }}>
+                {t('common.done')}
+              </Button>
+            </ContentContainer>
           </View>
         </View>
       </View>
@@ -363,6 +403,7 @@ export default function SettleMethodScreen() {
         left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
       />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.pickScroll}>
+        <ContentContainer>
         {/* Counterparty + amount */}
         <View style={styles.counterRow}>
           <Avatar initials={initialsOf(counter?.name)} />
@@ -456,19 +497,22 @@ export default function SettleMethodScreen() {
         </View>
 
         <View style={{ height: insets.bottom + 100 }} />
+        </ContentContainer>
       </ScrollView>
 
       <View style={[styles.ctaBar, { paddingBottom: insets.bottom + 8 }]}>
-        <Button
-          kind="primary"
-          disabled={submitting || !swishEligible}
-          onPress={() => handleMethod('swish')}
-          style={{ flex: 1 }}
-        >
-          {isOutgoing
-            ? t('settleMethod.sendVia', { method: t('settleMethod.swish') })
-            : t('settleMethod.requestVia', { method: t('settleMethod.swish') })}
-        </Button>
+        <ContentContainer>
+          <Button
+            kind="primary"
+            disabled={submitting || !swishEligible}
+            onPress={() => handleMethod('swish')}
+            style={{ flex: 1 }}
+          >
+            {isOutgoing
+              ? t('settleMethod.sendVia', { method: t('settleMethod.swish') })
+              : t('settleMethod.requestVia', { method: t('settleMethod.swish') })}
+          </Button>
+        </ContentContainer>
       </View>
 
     </View>

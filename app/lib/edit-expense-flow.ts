@@ -10,7 +10,12 @@
  */
 
 import type { MemberDelta } from './balance-impact';
-import type { Expense } from './api';
+import type { Expense, UpdateExpenseInput } from './api';
+import type {
+  ExpenseWizardInitialValue,
+  ExpenseWizardSubmitPayload,
+} from '../components/ExpenseWizard';
+import { normalizeCategory } from './categories';
 
 export type ConfirmFlow =
   | { kind: 'no-changes' }
@@ -207,4 +212,68 @@ export function projectExpenseToInputCurrency(expense: Expense): Expense {
       share: splitShareInInputCurrency(s.share, expense),
     })),
   };
+}
+
+/**
+ * Pre-fills the edit wizard from the original expense. Legacy / unknown
+ * categories collapse to 'other' (`normalizeCategory`); missing notes
+ * become ''.
+ */
+export function expenseToInitialValue(expense: Expense): ExpenseWizardInitialValue {
+  const { amount, currency } = expenseInputCurrencyAmount(expense);
+  const splits = expense.splits ?? [];
+  const exactByMember: Record<string, string> = {};
+  // The wire only preserves `share`. For percentage-split expenses the
+  // backend re-derives shares on save; pre-filling exactByMember from the
+  // projected splits matches the old ExpenseForm behaviour.
+  for (const s of splits) {
+    exactByMember[s.member_id] = splitShareInInputCurrency(s.share, expense);
+  }
+  const included: Record<string, boolean> = {};
+  if (splits.length > 0) {
+    for (const s of splits) included[s.member_id] = true;
+  }
+
+  const date = expense.expense_date
+    ? new Date(expense.expense_date + 'T00:00:00')
+    : new Date();
+
+  return {
+    title: expense.title,
+    amount: parseFloat(amount).toFixed(2),
+    currency,
+    date: Number.isNaN(date.getTime()) ? new Date() : date,
+    paidByMemberId: expense.paid_by_id,
+    splitMethod:
+      (expense.split_method as 'equal' | 'exact' | 'percentage') || 'equal',
+    included: splits.length > 0 ? included : undefined,
+    exactByMember,
+    pctByMember: {},
+    category: normalizeCategory(expense.category),
+    notes: expense.notes ?? '',
+  };
+}
+
+/**
+ * Maps the wizard's submit payload to the PATCH body. Category and notes are
+ * always included with the wizard's values — `notes: ''` clears them
+ * server-side (tri-state: field absent = unchanged, '' = clear).
+ */
+export function payloadToUpdateInput(
+  p: ExpenseWizardSubmitPayload,
+): UpdateExpenseInput {
+  const base: UpdateExpenseInput = {
+    title: p.title,
+    amount: p.amount,
+    currency: p.currency,
+    paid_by_id: p.paid_by_id,
+    expense_date: p.expense_date,
+    split_method: p.split_method,
+    category: p.category,
+    notes: p.notes,
+    ...(p.fx ?? {}),
+  };
+  if (p.participants) base.participants = p.participants;
+  if (p.splits) base.splits = p.splits;
+  return base;
 }
