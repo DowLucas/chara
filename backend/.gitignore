@@ -1,2 +1,13 @@
 tmp/
+bin/
 build-errors.log
+
+# Test / coverage artifacts
+*.test
+coverage.out
+coverage.html
+
+# Local environment overrides
+.env.dev
+.env.local
+.env.*.local

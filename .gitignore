@@ -1,12 +1,25 @@
+# Private working directories (not part of the open-source project)
 .claude/
 .gstack/
 docs/superpowers/
+council/
 .worktrees/
 
 # OS / editor
 .DS_Store
 *.swp
+*.swo
+.idea/
+.vscode/
+*~
+
+# Go
+*.test
+*.out
+coverage.out
+coverage.html
 
 # Local secret overrides — never commit
 **/.env.local
 **/.env.*.local
+deploy/.env

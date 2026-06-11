@@ -49,7 +49,7 @@ Google and Apple Sign In are **not available on self-hosted instances**. The app
 
 ## Multi-server accounts
 
-The app holds **N independent server-accounts** at once and aggregates their data into one UI. This is **aggregation, not federation** — servers don't talk to each other; "linking" lives only inside the app, on this device. The full design is `docs/superpowers/specs/2026-05-22-multi-server-accounts-design.md` — read it before changing anything in this area.
+The app holds **N independent server-accounts** at once and aggregates their data into one UI. This is **aggregation, not federation** — servers don't talk to each other; "linking" lives only inside the app, on this device. Read the rules below before changing anything in this area.
 
 Rules every new piece of code must follow:
 
@@ -137,10 +137,8 @@ The mobile app (`app/`) uses `i18next` + `react-i18next` + `expo-localization`. 
 
 ### Translation workflow (Weblate)
 
-Non-English locales are managed in **Weblate**, self-hosted on Lurkhuset:
+Non-English locales are managed in a **Weblate** instance synced with this repo:
 
-- **URL:** https://translate.lurkhuset.com (Tailscale-only; project: `chara`)
-- **Stack:** `/opt/stacks/weblate/` on the Proxmox host. Data on ZFS at `/tank/apps/weblate/{data,db,cache}`. See the `/proxmox-lurkhuset` skill for the standard stack recipe (Caddy route, AppArmor unconfined for Django, ZFS ownership, Uptime Kuma monitor).
 - **Source of truth:** the **codebase**, not Weblate. `en.json` is owned by the repo; Weblate writes `sv.json`, `de.json`, etc. Never hand-edit non-English JSON locally — let Weblate's GitHub sync produce the diff.
 - **Extracting keys:** in `app/`, `pnpm i18n:extract` walks every `t('…')` call and updates `en.json`. `pnpm i18n:check` is the CI-gate equivalent (fails on drift). Config: `app/i18next-parser.config.js`.
 - **Adding a new key:** wrap the string in `t('namespace.key')` → run `pnpm i18n:extract` → edit the English value in `en.json` to the real sentence (parser defaults it to the key) → commit. Weblate picks it up on its next pull and translators see it in their queue.
@@ -195,9 +193,6 @@ The Expo app caches `/.well-known/chara-instance` at module load (`app/lib/api.t
 - `docs/06-roadmap.md` — Week-by-week build sequence
 - `docs/07-ux-diagrams-index.md` — Index of all 82 UX flow diagrams
 - `docs/ux/` — Mermaid diagrams for every screen and user flow, organized by area
-- `docs/superpowers/specs/2026-05-22-multi-server-accounts-design.md` — Multi-server / multi-account design. **Read before touching anything in the auth, accounts, routing, or aggregated-reads area.**
-- `docs/superpowers/specs/2026-05-23-edit-expense-design.md` — Edit-expense + settlement-aware confirm sheet. **Read before touching the expense edit/delete path or the SettlementImpactSheet.**
-- `docs/superpowers/specs/2026-05-23-group-settings-design.md` — Group settings hub: lock / archive / hard-delete, leave/kick rules, stats endpoint. **Read before touching group lifecycle, group-member removal, or the lock write-gate.**
 
 ## MVP scope (P0)
 

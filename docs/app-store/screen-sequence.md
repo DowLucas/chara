@@ -75,7 +75,7 @@ Each entry specifies:
 - **Eyebrow:** `CH.08 · MULTI-SERVER`
 - **Headline:** Your homelab. Their server. One app.
 - **Subhead:** Hold every Chara account at once. Groups, balances, and activity aggregated into one inbox.
-- **Device shows:** Settings → Accounts list, three rows with different server hostnames (`chara.app`, `chara.lurkhuset.com`, `friend.example`), each with a status dot.
+- **Device shows:** Settings → Accounts list, three rows with different server hostnames (`chara.app`, `split.example.com`, `friend.example`), each with a status dot.
 - **Why:** Differentiator nobody else has. The technically-curious audience will pause on this one.
 
 ## Slide 9 — One file. One command.
@@ -83,7 +83,7 @@ Each entry specifies:
 - **Eyebrow:** `CH.09 · SELF-HOST`
 - **Headline:** One file. One command.
 - **Subhead:** Docker Compose, ARM64 and AMD64, OIDC out of the box. Same app, same code.
-- **Device shows:** "Add a server" flow with a URL field `https://chara.lurkhuset.com`. Faint terminal mock behind showing `docker compose up -d` and a green health-check line.
+- **Device shows:** "Add a server" flow with a URL field `https://split.example.com`. Faint terminal mock behind showing `docker compose up -d` and a green health-check line.
 - **Why:** Captures the self-hoster. Quiet signal of AGPL gravity without the lecture.
 
 ## Slide 10 — Keep your peace

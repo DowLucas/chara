@@ -34,7 +34,7 @@ No public marketing. Build the MVP. The only outward activity is:
 - Reserve social handles (Mastodon FOSS, Twitter/X, Bluesky)
 - Set up the empty repo with a "coming soon" README that says exactly what is being built and links to a notify list
 - Set up a Discord or Matrix room from day one for early followers
-- Build in public on personal channels (Lucas's existing LinkedIn audience, plus a project Twitter/Bluesky from day one)
+- Build in public on personal channels (the maintainer's existing LinkedIn audience, plus a project Twitter/Bluesky from day one)
 
 **Build-in-public cadence:** one technical thread or post per week. Topics: "money math is harder than you think", "why we chose Go over Node for the backend", "the Swish deep-link reverse engineering rabbit hole", "comparing how SplitPro and Spliit handle leftover pennies". These are share-friendly without being marketing copy.
 
@@ -64,16 +64,16 @@ This is where the unique value compounds. While the global self-host audience fi
 
 **Localization commitments before launching to Nordic users:**
 
-- Swedish UI translation complete (Lucas can drive this or hire a translator for 200 EUR)
+- Swedish UI translation complete (the maintainer can drive this or hire a translator for 200 EUR)
 - Norwegian Bokmål and Danish translations at 80%+
 - All public-facing copy (website, App Store description, README) in Swedish AND English
 - "Migrera från Steven" page with explicit positioning
 
 **Swedish content engine:**
 
-- LinkedIn posts in Swedish on Lucas's existing audience: "Bygger Chara: en öppen källkods-Splitwise med riktig Swish-integration"
+- LinkedIn posts in Swedish on the maintainer's existing audience: "Bygger Chara: en öppen källkods-Splitwise med riktig Swish-integration"
 - Blog series in Swedish on the project site: technical and product posts
-- Outreach to Swedish tech press: Breakit, Di Digital, Computer Sweden, Ny Teknik. Pitch: "KTH-student bygger öppen källkods-alternativ till Steven, kompletterad med Swish och självhostning"
+- Outreach to Swedish tech press: Breakit, Di Digital, Computer Sweden, Ny Teknik. Pitch: "Utvecklare bygger öppen källkods-alternativ till Steven, kompletterad med Swish och självhostning"
 - r/sweden post once there is something to show
 - Sweclockers thread (technical Swedish audience)
 - Swedish FOSS Discord / Mastodon presence
@@ -102,7 +102,7 @@ Success metric for Phase 3: 25k GitHub stars, 50k hosted-tier signups, top-3 Goo
 
 ## Content engine
 
-Lucas already runs a content motion for Eventfold and has internal data on what works on LinkedIn. The same playbook applies, with three streams:
+The maintainer already runs a content motion for another startup and has internal data on what works on LinkedIn. The same playbook applies, with three streams:
 
 ### Stream A: Engineering blog (project site)
 
@@ -166,7 +166,7 @@ The audience for Chara overlaps almost perfectly with these communities. Pre-lau
 - **Sweclockers forum**: tech-savvy Swedish audience.
 - **r/SwedishPersonalFinance**: bill splitting is on-topic.
 - **Swedish FOSS Mastodon instances**.
-- **KTH alumni networks**: useful for Lucas given his degree.
+- **University alumni networks**: useful for the maintainer given their Stockholm university background.
 
 ## Migration as a wedge
 

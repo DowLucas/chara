@@ -2,7 +2,7 @@
 
 A 12-month plan, phased into 4 quarters. Each phase has explicit exit criteria. Falling behind on these is a signal to cut scope, not to push the schedule.
 
-This roadmap assumes Chara is built around Lucas's existing commitments (Fidify full-time, Eventfold founder, KTH degree, consulting). Realistic time budget: 10-15 hours per week. Anything more is the danger zone for burnout.
+This roadmap assumes Chara is built around the maintainer's existing commitments (a full-time day job, another startup, university studies, consulting). Realistic time budget: 10-15 hours per week. Anything more is the danger zone for burnout.
 
 ## Phase 0: Decisions and spike (Weeks 0-2)
 
@@ -12,18 +12,18 @@ Goal: confirm or reject the assumptions in these docs.
 
 - [ ] Pick the final name and lock domain (chara.app first choice; verify trademark)
 - [ ] Reserve GitHub org and social handles
-- [ ] Deploy SplitPro on Lucas's homelab and use it daily for 1 week with a real expense group
+- [ ] Deploy SplitPro on a self-hosted instance and use it daily for 1 week with a real expense group
 - [ ] Read SplitPro's data model and money math implementation in detail
 - [ ] Decide: greenfield (Option A) vs SplitPro extension (Option B) vs greenfield-with-SplitPro-references (Option C; recommended). Document the decision.
 - [ ] Decide: license confirmed AGPLv3, CLA template chosen
 - [ ] Decide: hosted-tier infrastructure provider (Fly.io vs Hetzner vs Railway)
-- [ ] Identify and reach out to one potential co-maintainer (someone Lucas already knows in OSS or could meet at KTH / Stockholm tech scene)
+- [ ] Identify and reach out to one potential co-maintainer (someone the maintainer already knows in OSS or could meet through alumni networks / the Stockholm tech scene)
 
 ### Exit criteria
 
 - A final architectural decision document committed to the repo
 - An empty but real GitHub repo with the README and these strategy docs
-- A "Phase 0 retro" written by Lucas confirming this is worth the commitment
+- A "Phase 0 retro" written by the maintainer confirming this is worth the commitment
 
 If the retro is negative, archive the project here. Do not sunk-cost into building something you have lost conviction in.
 
@@ -65,7 +65,7 @@ Goal: a working web app that handles the core P0 feature set, deployable via Doc
 
 ### Exit criteria
 
-- Lucas has been using the web app daily for 2 weeks on his real expenses with friends
+- The maintainer has been using the web app daily for 2 weeks on real expenses with friends
 - Two external test users have installed the Docker Compose successfully without help
 - All P0 backend features working
 
@@ -100,7 +100,7 @@ Goal: native iOS and Android apps in the stores, Swish integration working, one-
 **Week 20**: Swish deep linking.
 - Settle-up screen with "Pay with Swish" button (SE locale)
 - Generate Swish deep link with payee phone, amount, message
-- Test on real Swedish phones with real Swish accounts (Lucas + 2 testers)
+- Test on real Swedish phones with real Swish accounts (the maintainer + 2 testers)
 
 **Week 22**: Splitwise importer.
 - Backend endpoint that accepts a Splitwise JSON export
@@ -109,7 +109,7 @@ Goal: native iOS and Android apps in the stores, Swish integration working, one-
 
 **Week 24**: TestFlight + Play internal testing.
 - App Store Connect listing prepared (Swedish + English)
-- Google Play Console listing prepared (Lucas already has experience here from Fidify)
+- Google Play Console listing prepared (the maintainer already has experience here from their day job)
 - TestFlight build live, ~20 invited testers
 - Play internal testing live
 
@@ -122,7 +122,7 @@ Goal: native iOS and Android apps in the stores, Swish integration working, one-
 
 ### Cut if needed
 
-- Android can ship 2-3 weeks behind iOS if needed (Lucas has more iOS testing capacity)
+- Android can ship 2-3 weeks behind iOS if needed (the maintainer has more iOS testing capacity)
 - Push notifications can ship without full granularity
 - Mobile offline support drops to Phase 4
 
@@ -141,7 +141,7 @@ Goal: public Phase 1 launch per the GTM doc. Get to first 1000 users and 500 Git
 
 **Week 26**: Soft launch on r/selfhosted.
 - Single post, low-key title, screenshots, Compose file in the post
-- Lucas available for 48 hours of comment responses
+- The maintainer available for 48 hours of comment responses
 - Bug-fix release every 1-2 days during the first 2 weeks
 
 **Week 28**: HN Show HN.
@@ -191,7 +191,7 @@ Goal: launch in Sweden, ship the hosted tier, hit 1000 paying signups.
 
 **Week 38**: Swedish press outreach.
 - Pitches to Breakit, Di Digital, Computer Sweden, Ny Teknik
-- LinkedIn campaign in Swedish on Lucas's audience
+- LinkedIn campaign in Swedish on the maintainer's audience
 - r/sweden post when ready
 
 **Week 40**: Receipt OCR shipped.
@@ -234,15 +234,15 @@ Year 2 priorities, listed but not scheduled:
 
 The honest list of what can kill this project, with mitigations.
 
-### Risk: Lucas's bandwidth fragments
+### Risk: the maintainer's bandwidth fragments
 
-**Likelihood: High.** Fidify, Eventfold, KTH degree, consulting, Chara = five major commitments. Each one has a credible claim on Lucas's attention.
+**Likelihood: High.** A day job, another startup, university studies, consulting, Chara = five major commitments. Each one has a credible claim on the maintainer's attention.
 
 **Mitigation**:
-- Hard time-budget: max 12 hours/week on Chara during weeks with Fidify work
+- Hard time-budget: max 12 hours/week on Chara during weeks with day-job work
 - Phase exit criteria are about deliverables, not dates; allow phases to take 50% longer than estimated
 - Bring on a co-maintainer by Month 6 even part-time
-- If Eventfold accelerates or Fidify equity negotiations intensify, Chara explicitly de-prioritizes
+- If the other startup accelerates or day-job equity negotiations intensify, Chara explicitly de-prioritizes
 
 ### Risk: Steven recovers
 
@@ -284,7 +284,7 @@ The honest list of what can kill this project, with mitigations.
 **Likelihood: Low-medium.** Hosting EU users' financial expense data is GDPR-sensitive. Sweden has its own additions to GDPR via Dataskyddslagen.
 
 **Mitigation**:
-- Lucas already understands KYC/AML/GDPR from Fidify work
+- The maintainer already understands KYC/AML/GDPR from day-job work
 - Hosted tier in EU region only; explicit DPA published; data minimization by design
 - No analytics on user content, only on app usage metrics
 - Privacy policy reviewed by a Swedish lawyer before hosted launch (one-time ~10-20k SEK expense)
@@ -304,7 +304,7 @@ The honest list of what can kill this project, with mitigations.
 
 **Mitigation**:
 - Submit early and often; first submission in Phase 2 Week 22 to surface rejections
-- Lucas already has Google Play Console experience from Fidify
+- The maintainer already has Google Play Console experience from their day job
 - Build a strong web-based fallback so the app isn't the only path
 
 ### Risk: Project becomes a job, not a hobby
@@ -315,7 +315,7 @@ The honest list of what can kill this project, with mitigations.
 - Set explicit support SLAs and stick to them ("email support: 3 business days, hosted tier")
 - Automate ruthlessly: status pages, automated billing, self-service everything
 - Bring on a co-maintainer / contractor for support before the burnout point
-- Lucas's wellbeing is a project asset; protect it
+- The maintainer's wellbeing is a project asset; protect it
 
 ## How to use this roadmap
 
@@ -324,6 +324,6 @@ This is a planning document, not a contract. Re-read it at the end of every phas
 - If a phase took 50% longer than planned: extend the next phase too, don't crunch
 - If a phase delivered 50% faster: don't pull the next phase forward, take the recovery week
 - If two consecutive phases miss exit criteria: pause and reassess scope
-- If at any point the question "is this still worth doing?" goes through Lucas's head more than twice in a week: pause and answer it explicitly
+- If at any point the question "is this still worth doing?" goes through the maintainer's head more than twice in a week: pause and answer it explicitly
 
-The roadmap exists to be honest with future-Lucas about what was promised to present-Lucas. Update it openly.
+The roadmap exists to keep the maintainer honest over time about what was promised at the outset. Update it openly.

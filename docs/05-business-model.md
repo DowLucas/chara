@@ -154,19 +154,19 @@ The honest staircase from side-project to sustainable project:
 
 ### Stage 1: Side project (Months 0-12)
 
-Lucas builds nights and weekends, paid nothing. Hosted tier revenue is reinvested entirely in infrastructure and OCR API credits. Sponsor income covers domain costs.
+The maintainer builds nights and weekends, paid nothing. Hosted tier revenue is reinvested entirely in infrastructure and OCR API credits. Sponsor income covers domain costs.
 
 **Risk**: burnout. Mitigation: ruthless scope, a co-maintainer brought on by Month 6 even if part-time, dogfooding to keep motivation real.
 
 ### Stage 2: Sponsored part-time (Months 12-24)
 
-Sponsor income + hosted MRR covers ~€1500-2500/month, allowing Lucas to scale back consulting (1Dow Technology) by 20-30% to invest more hours. Or, more realistically, brings a contributor on at €500-1000/month part-time.
+Sponsor income + hosted MRR covers ~€1500-2500/month, allowing the maintainer to scale back consulting work by 20-30% to invest more hours. Or, more realistically, brings a contributor on at €500-1000/month part-time.
 
-**Risk**: Lucas's other commitments (Fidify, Eventfold, KTH) compete for time. This is not a problem to solve by working more hours; it is solved by saying no to Chara growth that does not pay for itself.
+**Risk**: the maintainer's other commitments (a day job and another startup) compete for time. This is not a problem to solve by working more hours; it is solved by saying no to Chara growth that does not pay for itself.
 
 ### Stage 3: Funded or 1 FTE (Months 24-36)
 
-One of: FUTO grant gets approved (year 2), Vinnova grant gets approved, hosted MRR clears €5k+, or a strategic partnership materializes. Lucas or a contributor goes full-time.
+One of: FUTO grant gets approved (year 2), Vinnova grant gets approved, hosted MRR clears €5k+, or a strategic partnership materializes. The maintainer or a contributor goes full-time.
 
 **Risk**: feature scope explodes once there is full-time capacity. Mitigation: same ruthless scoping that got the project to this point.
 
@@ -180,7 +180,7 @@ This is the Immich path. It is achievable but not guaranteed.
 
 ### Project entity
 
-Form a Swedish enkel firma or aktiebolag (Lucas can leverage his existing knowledge of Swedish corporate structures from prior tax planning work) once revenue justifies it. The entity:
+Form a Swedish enkel firma or aktiebolag (the maintainer can leverage existing knowledge of Swedish corporate structures from prior experience) once revenue justifies it. The entity:
 
 - Holds trademark and domain
 - Receives hosted tier revenue via Stripe
@@ -192,7 +192,7 @@ Alternative: use an existing fiscal host like Open Collective Europe. Less contr
 
 ### Decision-making
 
-- **Lucas as benevolent maintainer** in Stage 1. Decisions are made publicly via GitHub issues and a small RFC process for non-trivial changes.
+- **The maintainer as benevolent maintainer** in Stage 1. Decisions are made publicly via GitHub issues and a small RFC process for non-trivial changes.
 - **Maintainer team** in Stage 2+. Add a second maintainer with merge rights. Document the process for adding more.
 - **Steering committee** in Stage 4+, only if the project needs it. Not before. Premature governance destroys velocity.
 
