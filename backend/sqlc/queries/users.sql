@@ -87,4 +87,6 @@ SELECT EXISTS (
       AND gm2.user_id = $2
       AND gm1.user_id IS NOT NULL
       AND gm2.user_id IS NOT NULL
+      AND gm1.removed_at IS NULL
+      AND gm2.removed_at IS NULL
 ) AS shares;

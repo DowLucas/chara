@@ -20,4 +20,4 @@ SELECT * FROM push_tokens WHERE user_id = $1;
 -- name: ListPushTokensByGroup :many
 SELECT pt.* FROM push_tokens pt
 JOIN group_members gm ON gm.user_id = pt.user_id
-WHERE gm.group_id = $1 AND gm.user_id != $2;
+WHERE gm.group_id = $1 AND gm.user_id != $2 AND gm.removed_at IS NULL;

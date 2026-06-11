@@ -28,7 +28,7 @@ func (q *Queries) DeletePushToken(ctx context.Context, arg DeletePushTokenParams
 const listPushTokensByGroup = `-- name: ListPushTokensByGroup :many
 SELECT pt.id, pt.user_id, pt.token, pt.platform, pt.created_at, pt.last_used_at FROM push_tokens pt
 JOIN group_members gm ON gm.user_id = pt.user_id
-WHERE gm.group_id = $1 AND gm.user_id != $2
+WHERE gm.group_id = $1 AND gm.user_id != $2 AND gm.removed_at IS NULL
 `
 
 type ListPushTokensByGroupParams struct {

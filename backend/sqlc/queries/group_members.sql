@@ -7,11 +7,15 @@ RETURNING *;
 SELECT * FROM group_members WHERE id = $1;
 
 -- name: GetGroupMemberByUserAndGroup :one
+-- Active membership only — a removed member is no longer "in" the group, so
+-- access checks (requireMember) and re-join must treat them as absent.
 SELECT * FROM group_members
-WHERE group_id = $1 AND user_id = $2;
+WHERE group_id = $1 AND user_id = $2 AND removed_at IS NULL;
 
 -- name: ListGroupMembers :many
-SELECT * FROM group_members WHERE group_id = $1 ORDER BY joined_at ASC;
+SELECT * FROM group_members
+WHERE group_id = $1 AND removed_at IS NULL
+ORDER BY joined_at ASC;
 
 -- name: ListGroupMembersWithUser :many
 -- Members joined against users so handlers can surface user-level fields
@@ -20,7 +24,7 @@ SELECT * FROM group_members WHERE group_id = $1 ORDER BY joined_at ASC;
 SELECT gm.*, u.phone AS user_phone
 FROM group_members gm
 LEFT JOIN users u ON u.id = gm.user_id
-WHERE gm.group_id = $1
+WHERE gm.group_id = $1 AND gm.removed_at IS NULL
 ORDER BY gm.joined_at ASC;
 
 -- name: UpdateGroupMemberName :one
@@ -30,7 +34,10 @@ UPDATE group_members SET name = $2 WHERE id = $1 RETURNING *;
 UPDATE group_members SET name = $2 WHERE user_id = $1;
 
 -- name: DeleteGroupMember :exec
-DELETE FROM group_members WHERE id = $1;
+-- Soft delete: the row is preserved so historical expenses/settlements that
+-- reference this member id still resolve (name, attribution). Active-roster
+-- reads filter on removed_at IS NULL.
+UPDATE group_members SET removed_at = NOW() WHERE id = $1;
 
 -- name: ClaimGhostMember :one
 UPDATE group_members
