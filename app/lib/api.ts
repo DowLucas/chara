@@ -20,7 +20,7 @@ import type {
 const TOKEN_KEY = 'auth_token';
 
 function resolveBaseUrl(): string {
-  if (!__DEV__) return 'https://chara-api.lurkhuset.com';
+  if (!__DEV__) return 'https://api.chara.app';
 
   // Explicit override always wins (e.g. EXPO_PUBLIC_API_URL=http://192.168.0.45:8080).
   const fromEnv = process.env.EXPO_PUBLIC_API_URL;

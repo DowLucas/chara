@@ -223,8 +223,8 @@ func (h *InviteHandler) Landing(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(buf.Bytes())
 }
 
-// extractHost pulls the host from cfg.BaseURL ("https://charaapp.lurkhuset.com"
-// → "charaapp.lurkhuset.com"). Falls back to the raw string on parse failure
+// extractHost pulls the host from cfg.BaseURL ("https://api.chara.app"
+// → "api.chara.app"). Falls back to the raw string on parse failure
 // rather than producing an empty footer.
 func extractHost(baseURL string) string {
 	u, err := url.Parse(baseURL)

@@ -146,13 +146,13 @@ describe('normalizeServerUrl — input tolerance', () => {
 
 describe('isMainHostedServer', () => {
   it('matches the canonical hosted URL exactly', () => {
-    expect(isMainHostedServer('https://chara-api.lurkhuset.com')).toBe(true);
+    expect(isMainHostedServer('https://api.chara.app')).toBe(true);
   });
   it('matches with a trailing slash', () => {
-    expect(isMainHostedServer('https://chara-api.lurkhuset.com/')).toBe(true);
+    expect(isMainHostedServer('https://api.chara.app/')).toBe(true);
   });
   it('matches case-insensitively', () => {
-    expect(isMainHostedServer('https://CHARA-API.lurkhuset.com')).toBe(true);
+    expect(isMainHostedServer('https://API.CHARA.APP')).toBe(true);
   });
   it('rejects self-hosted URLs', () => {
     expect(isMainHostedServer('https://chara.example.com')).toBe(false);
@@ -166,7 +166,7 @@ describe('isMainHostedServer', () => {
 
 describe('displayHostFor', () => {
   it('returns the brand label for the main hosted server', () => {
-    expect(displayHostFor('https://chara-api.lurkhuset.com', 'Chara Server')).toBe(
+    expect(displayHostFor('https://api.chara.app', 'Chara Server')).toBe(
       'Chara Server',
     );
   });

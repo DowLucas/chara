@@ -46,7 +46,7 @@ const fmtHero = (minor: number | string, currency: string) =>
 const fmtAmount = (minor: string, currency: string) => formatMinorUnits(minor, currency);
 
 // Host renders go through `displayHostFor` so the canonical hosted URL
-// (chara-api.lurkhuset.com) shows as the brand label "Chara Cloud"
+// (api.chara.app) shows as the brand label "Chara Cloud"
 // instead of leaking infra details into the UI. Self-hosted URLs still
 // render as the bare host.
 

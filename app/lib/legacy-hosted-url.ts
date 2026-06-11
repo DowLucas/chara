@@ -12,7 +12,7 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
-const PROD_URL = 'https://chara-api.lurkhuset.com';
+const PROD_URL = 'https://api.chara.app';
 
 export function legacyHostedUrl(): string {
   if (!__DEV__) return PROD_URL;

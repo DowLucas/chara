@@ -9,7 +9,7 @@ import (
 
 // Apple App Site Association (AASA) handler. Serves
 // /.well-known/apple-app-site-association so iOS can verify Chara's
-// Universal Link claim over chara-api.lurkhuset.com.
+// Universal Link claim over api.chara.app.
 //
 // See docs/superpowers/specs/2026-05-24-invite-deep-links-design.md
 // "Phase 2 — Native infrastructure" and decision #10. The components map

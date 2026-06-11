@@ -80,7 +80,7 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 	r.Get("/.well-known/quits-instance", wellknownHandler)
 
 	// Apple App Site Association — published so iOS can verify the
-	// Chara app's Universal Link claim on chara-api.lurkhuset.com.
+	// Chara app's Universal Link claim on api.chara.app.
 	// See invite-deep-links spec Phase 2. Both GET and HEAD are wired
 	// because Apple's CDN validator sometimes probes with HEAD first.
 	aasaHandler := handler.NewAppleAppSiteAssociationHandler(cfg)
@@ -88,7 +88,7 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 	r.Head("/.well-known/apple-app-site-association", aasaHandler)
 
 	// Android counterpart: Digital Asset Links proving the app's App Links
-	// claim on chara-api.lurkhuset.com. See invite-deep-links spec Phase 2.
+	// claim on api.chara.app. See invite-deep-links spec Phase 2.
 	assetLinksHandler := handler.NewAssetLinksHandler(cfg)
 	r.Get("/.well-known/assetlinks.json", assetLinksHandler)
 	r.Head("/.well-known/assetlinks.json", assetLinksHandler)

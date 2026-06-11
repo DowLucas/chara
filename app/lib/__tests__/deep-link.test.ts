@@ -38,25 +38,25 @@ function makeAccount(serverUrl: string): Account {
 
 describe('classifyGroupDeepLink', () => {
   it('returns a navigate intent when the server is a known account', () => {
-    const accounts = [makeAccount('https://chara-api.lurkhuset.com')];
-    const url = `chara://groups/${encodeURIComponent('https://chara-api.lurkhuset.com')}/g123`;
+    const accounts = [makeAccount('https://api.chara.app')];
+    const url = `chara://groups/${encodeURIComponent('https://api.chara.app')}/g123`;
     const intent = classifyGroupDeepLink(url, { accounts, isLoaded: true });
     expect(intent.kind).toBe('navigate');
     if (intent.kind === 'navigate') {
       expect(intent.groupId).toBe('g123');
-      expect(intent.serverUrl).toBe('https://chara-api.lurkhuset.com');
+      expect(intent.serverUrl).toBe('https://api.chara.app');
     }
   });
 
   it('refuses to navigate to a server the user is not signed into', () => {
-    const accounts = [makeAccount('https://chara-api.lurkhuset.com')];
+    const accounts = [makeAccount('https://api.chara.app')];
     const url = `chara://groups/${encodeURIComponent('https://unknown.example.com')}/g1`;
     const intent = classifyGroupDeepLink(url, { accounts, isLoaded: true });
     expect(intent.kind).toBe('unknown_server');
   });
 
   it('returns a "not_yet_loaded" intent if accounts blob is still loading', () => {
-    const url = `chara://groups/${encodeURIComponent('https://chara-api.lurkhuset.com')}/g1`;
+    const url = `chara://groups/${encodeURIComponent('https://api.chara.app')}/g1`;
     const intent = classifyGroupDeepLink(url, { accounts: [], isLoaded: false });
     expect(intent.kind).toBe('not_loaded');
   });
@@ -80,15 +80,15 @@ describe('classifyGroupDeepLink', () => {
   it('returns "malformed" when the embedded server URL is invalid', () => {
     const url = `chara://groups/${encodeURIComponent('not-a-url')}/g1`;
     const intent = classifyGroupDeepLink(url, {
-      accounts: [makeAccount('https://chara-api.lurkhuset.com')],
+      accounts: [makeAccount('https://api.chara.app')],
       isLoaded: true,
     });
     expect(intent.kind).toBe('malformed');
   });
 
   it('matches the account even when the embedded URL has a trailing slash', () => {
-    const accounts = [makeAccount('https://chara-api.lurkhuset.com')];
-    const url = `chara://groups/${encodeURIComponent('https://chara-api.lurkhuset.com/')}/g1`;
+    const accounts = [makeAccount('https://api.chara.app')];
+    const url = `chara://groups/${encodeURIComponent('https://api.chara.app/')}/g1`;
     const intent = classifyGroupDeepLink(url, { accounts, isLoaded: true });
     expect(intent.kind).toBe('navigate');
   });

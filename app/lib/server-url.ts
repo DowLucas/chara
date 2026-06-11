@@ -73,7 +73,7 @@ function stripTrailingColon(s: string): string {
  * this should be rendered as "Chara Server" in UI rather than the
  * domain.
  */
-export const MAIN_HOSTED_SERVER_URL = 'https://chara-api.lurkhuset.com';
+export const MAIN_HOSTED_SERVER_URL = 'https://api.chara.app';
 
 /**
  * True when `serverUrl` is the main Chara hosted instance. Comparison

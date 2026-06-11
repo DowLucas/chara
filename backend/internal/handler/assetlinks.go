@@ -8,7 +8,7 @@ import (
 )
 
 // Digital Asset Links handler. Serves /.well-known/assetlinks.json so Android
-// can verify Chara's App Links claim over chara-api.lurkhuset.com and route
+// can verify Chara's App Links claim over api.chara.app and route
 // matching https URLs (/i/*) directly to the app — the Android counterpart to
 // aasa.go.
 //

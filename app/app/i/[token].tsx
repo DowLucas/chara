@@ -14,7 +14,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { parseInviteUrl } from '@/lib/invite-url';
 
-const FALLBACK_HOST = 'chara-api.lurkhuset.com';
+const FALLBACK_HOST = 'api.chara.app';
 
 export default function InviteUniversalLink() {
   const { token } = useLocalSearchParams<{ token: string }>();

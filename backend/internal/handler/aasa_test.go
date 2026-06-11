@@ -164,7 +164,7 @@ func TestAASA_HEAD_IsAllowed(t *testing.T) {
 func TestAASA_FallsBackToDefaultsWhenConfigEmpty(t *testing.T) {
 	// Self-hosters who haven't configured Apple Sign In should still get
 	// the canonical Chara appID baked in — the hosted iOS build is what
-	// will hit any real chara-api.lurkhuset.com instance.
+	// will hit any real api.chara.app instance.
 	cfg := &config.Config{} // both empty
 	h := NewAppleAppSiteAssociationHandler(cfg)
 	rr := httptest.NewRecorder()
