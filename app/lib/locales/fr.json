@@ -354,7 +354,10 @@
     "archivePromptBody": "Le groupe sera masqué de ta liste. Tu pourras le retrouver dans les groupes archivés.",
     "archivePromptTitle": "Archiver {{name}} ?",
     "edit": "Modifier le groupe",
+    "emptyAddFirst": "Ajouter la première dépense",
     "emptyBody": "Ajoute la première dépense à ce groupe.",
+    "emptyBodyImport": "Ajoute ta première dépense, ou récupère tes soldes depuis une autre appli.",
+    "emptyImport": "Importer depuis une autre appli",
     "emptyTitle": "Pas encore de dépenses",
     "expensesCount": "dépenses · {{count}}",
     "expensesCount_one": "dépense · {{count}}",
@@ -577,6 +580,123 @@
     "unchanged": "inchangé",
     "wasOwed": "était dû",
     "wasOwes": "devait"
+  },
+  "import": {
+    "apps": {
+      "other": {
+        "label": "Autre appli"
+      },
+      "settleup": {
+        "label": "Settle Up"
+      },
+      "splid": {
+        "label": "Splid"
+      },
+      "splitwise": {
+        "label": "Splitwise"
+      },
+      "steven": {
+        "label": "Steven"
+      },
+      "tricount": {
+        "label": "Tricount"
+      }
+    },
+    "capture": {
+      "extract": "Lire les soldes"
+    },
+    "commitError": {
+      "title": "Échec de l'import"
+    },
+    "empty": {
+      "body": "Nous n'avons trouvé aucun solde sur ces captures d'écran. Essaie une capture plus nette et en plein écran de ton écran de soldes ou de comptes.",
+      "title": "Rien trouvé"
+    },
+    "entry": "Importer depuis une autre appli",
+    "extractError": {
+      "title": "Impossible de lire les captures d'écran"
+    },
+    "guidance": {
+      "other": {
+        "body": "Ouvre l'écran des soldes ou des comptes dans ton autre appli et fais-en une capture. Nous lirons qui te doit de l'argent et à qui tu en dois, puis nous créerons les soldes d'ouverture correspondants ici.",
+        "title": "Capture tes soldes"
+      },
+      "settleup": {
+        "body": "Ouvre le groupe dans Settle Up, va sur son écran de soldes et fais-en une capture. Nous lirons le solde net de chaque personne.",
+        "title": "Capture tes soldes Settle Up"
+      },
+      "splid": {
+        "body": "Ouvre le groupe dans Splid, passe sur l'onglet des soldes et fais-en une capture. Nous lirons le solde net de chaque personne.",
+        "title": "Capture tes soldes Splid"
+      },
+      "splitwise": {
+        "body": "Ouvre le groupe dans Splitwise et capture les soldes en haut — qui te doit de l'argent et à qui tu en dois. Nous les recréerons comme soldes d'ouverture.",
+        "title": "Capture tes soldes Splitwise"
+      },
+      "steven": {
+        "body": "Ouvre Steven et capture l'écran des soldes montrant qui te doit de l'argent et à qui tu en dois. Nous les recréerons comme soldes d'ouverture.",
+        "title": "Capture tes soldes Steven"
+      },
+      "tricount": {
+        "body": "Ouvre le Tricount, va sur l'écran des soldes et fais-en une capture. Nous lirons le solde net de chaque personne.",
+        "title": "Capture tes soldes Tricount"
+      }
+    },
+    "permissionBody": "Autorise l'accès aux photos pour ajouter des captures d'écran de tes soldes.",
+    "permissionTitle": "Accès aux photos requis",
+    "picker": {
+      "eyebrow": "IMPORTER",
+      "heading": "Récupère tes soldes",
+      "intro": "Choisis l'appli que tu quittes. Capture son écran de soldes et nous créerons ici les soldes d'ouverture correspondants.",
+      "title": "Importer"
+    },
+    "progress": {
+      "committing": "Création des soldes d'ouverture…",
+      "extracting": "Lecture des soldes…"
+    },
+    "reconcile": {
+      "body": "Associe chaque nom trouvé à un membre du groupe, ou ajoute-le comme nouveau membre.",
+      "continue": "Continuer",
+      "newMember": "Nouveau membre",
+      "title": "Associer les personnes"
+    },
+    "review": {
+      "badAmount": "Nous n'avons pas pu lire un montant valide pour ce solde.",
+      "badDirection": "Nous n'avons pas pu déterminer le sens de ce solde.",
+      "body": "Vérifie chaque solde avant d'importer. Nous créerons un solde d'ouverture par personne ; tu pourras les régler ou les modifier plus tard.",
+      "currencyMismatch": "Ces soldes sont en {{extracted}}, mais le groupe utilise {{group}}. L'import entre devises différentes n'est pas pris en charge.",
+      "import": "Importer {{count}} soldes",
+      "import_many": "Importer {{count}} soldes",
+      "import_one": "Importer 1 solde",
+      "import_other": "Importer {{count}} soldes",
+      "owedToYouTotal": "Ce qu'on te doit",
+      "owesYou": "{{name}} te doit",
+      "title": "Vérifier les soldes",
+      "youOwe": "Tu dois à {{name}}",
+      "youOweTotal": "Ce que tu dois"
+    },
+    "step": {
+      "capture": "Étape 1 sur 3",
+      "reconcile": "Étape 2 sur 3",
+      "review": "Étape 3 sur 3"
+    },
+    "success": {
+      "body": "{{count}} soldes d'ouverture créés dans le groupe.",
+      "body_many": "{{count}} soldes d'ouverture créés dans le groupe.",
+      "body_one": "1 solde d'ouverture créé dans le groupe.",
+      "body_other": "{{count}} soldes d'ouverture créés dans le groupe.",
+      "title": "Importé"
+    },
+    "tray": {
+      "add": "Ajouter des captures",
+      "count": "{{count}} captures sur {{max}}",
+      "count_many": "{{count}} captures sur {{max}}",
+      "count_one": "{{count}} capture sur {{max}}",
+      "count_other": "{{count}} captures sur {{max}}",
+      "eyebrow": "CAPTURES D'ÉCRAN",
+      "remove": "Supprimer la capture"
+    },
+    "unknownApp": "Cette appli n'est pas encore prise en charge."
   },
   "invite": {
     "body": "Tes amis scannent ce code pour rejoindre.",

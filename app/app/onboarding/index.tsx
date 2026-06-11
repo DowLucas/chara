@@ -7,6 +7,7 @@ import { useEnglishT } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 import { setFlag, FLAG_ONBOARDING_SKIPPED } from '@/lib/storage';
 import { colors, fontBody, fontBodyMedium, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { ContentContainer } from '@/components/ContentContainer';
 import * as analytics from '@/lib/analytics';
 
 export default function OnboardingHome() {
@@ -28,6 +29,7 @@ export default function OnboardingHome() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.s4 }]}>
+      <ContentContainer style={{ flex: 1 }}>
       <View style={styles.header}>
         <Text style={styles.eyebrow}>{t('onboarding.eyebrow')}</Text>
         <Text style={styles.headline}>{greeting}{'\n'}{t('onboarding.subhead')}</Text>
@@ -74,6 +76,7 @@ export default function OnboardingHome() {
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
         <Text style={styles.footerHint}>{t('onboarding.footerHint')}</Text>
       </View>
+      </ContentContainer>
     </View>
   );
 }

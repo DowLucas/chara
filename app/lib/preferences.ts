@@ -5,6 +5,7 @@ import { isValidSecurityCode, normalizeSecurityCode } from './security-code';
 const KEY_PIN = 'chara.securityCode';
 const KEY_FACE_ID = 'chara.confirmWithFaceId';
 const KEY_LANGUAGE = 'chara.language';
+const KEY_SWISH_PHONE_PROMPT_DISMISSED = 'chara.swishPhonePromptDismissed';
 
 // PBKDF2-lite: many SHA-256 rounds over salt||PIN, slows brute force
 // against the disclosed-keychain case (device unlock is the first line of
@@ -151,4 +152,14 @@ export async function setPreferredLanguage(code: string): Promise<void> {
 
 export async function clearPreferredLanguage(): Promise<void> {
   await SecureStore.deleteItemAsync(KEY_LANGUAGE);
+}
+
+/** True once the user has dismissed the one-time "add your Swish number"
+ *  nudge shown on the settle screen (so we don't ask again). */
+export async function getSwishPhonePromptDismissed(): Promise<boolean> {
+  return (await SecureStore.getItemAsync(KEY_SWISH_PHONE_PROMPT_DISMISSED)) === '1';
+}
+
+export async function setSwishPhonePromptDismissed(): Promise<void> {
+  await SecureStore.setItemAsync(KEY_SWISH_PHONE_PROMPT_DISMISSED, '1');
 }

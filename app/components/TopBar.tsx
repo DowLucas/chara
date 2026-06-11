@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, fontDisplay, fontBodyMedium, fontSize } from '@/lib/theme';
+import { useResponsive } from '@/lib/use-responsive';
 
 interface Props {
   title?: string;
@@ -11,10 +12,20 @@ interface Props {
 
 export function TopBar({ title, left, right }: Props) {
   const { t } = useTranslation();
+  const { contentMaxWidth } = useResponsive();
   const appName = t('app.name');
   return (
     <View style={styles.container}>
-      <View style={styles.inner}>
+      <View
+        style={[
+          styles.inner,
+          contentMaxWidth != null && {
+            maxWidth: contentMaxWidth,
+            alignSelf: 'center',
+            width: '100%',
+          },
+        ]}
+      >
         <View style={[styles.side, styles.leftSide]}>{left}</View>
         <View style={styles.center}>
           {title === appName ? (

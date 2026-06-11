@@ -29,6 +29,7 @@ import {
 } from '../lib/edit-expense-flow';
 import { settlementImpactSheetCopy, SheetMode } from './SettlementImpactSheet.helpers';
 import { formatMinorUnits } from '../lib/i18n';
+import { useResponsive } from '@/lib/use-responsive';
 import { markPopupClosed } from '../lib/popup-guard';
 import { initialsOf } from '../lib/name';
 import type { MemberDelta } from '../lib/balance-impact';
@@ -61,6 +62,13 @@ export function SettlementImpactSheet({
   onConfirm,
 }: Props) {
   const { t } = useTranslation();
+  const { sheetMaxWidth } = useResponsive();
+  // On tablet, cap+center the inner content so it doesn't stretch; the
+  // `container` background stays full-bleed. No-op on phone (sheetMaxWidth null).
+  const capStyle =
+    sheetMaxWidth != null
+      ? { maxWidth: sheetMaxWidth, width: '100%' as const, alignSelf: 'center' as const }
+      : null;
   // Stamp the popup-guard on dismissal so the row that opened us underneath
   // can't fire `onPress` in the same gesture. See app/lib/popup-guard.ts.
   const handleCancel = React.useCallback(() => {
@@ -88,7 +96,7 @@ export function SettlementImpactSheet({
       onRequestClose={handleCancel}
     >
       <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollBody}>
+        <ScrollView contentContainerStyle={[styles.scrollBody, capStyle]}>
           <Text style={styles.title}>{t(copy.titleKey)}</Text>
           <Text style={styles.lead}>{t(copy.leadKey, copy.leadParams)}</Text>
 
@@ -138,25 +146,27 @@ export function SettlementImpactSheet({
         </ScrollView>
 
         <View style={styles.ctaBar}>
-          <Button
-            kind="secondary"
-            onPress={handleCancel}
-            style={{ flex: 1 }}
-            disabled={submitting}
-          >
-            {t('impactSheet.cancel')}
-          </Button>
-          <Button
-            kind="primary"
-            onPress={onConfirm}
-            style={[
-              { flex: 1 },
-              copy.primaryDestructive ? styles.destructive : styles.constructive,
-            ] as any}
-            disabled={copy.primaryDisabled}
-          >
-            {submitting ? t('common.saving') : t(copy.primaryKey)}
-          </Button>
+          <View style={[styles.ctaRow, capStyle]}>
+            <Button
+              kind="secondary"
+              onPress={handleCancel}
+              style={{ flex: 1 }}
+              disabled={submitting}
+            >
+              {t('impactSheet.cancel')}
+            </Button>
+            <Button
+              kind="primary"
+              onPress={onConfirm}
+              style={[
+                { flex: 1 },
+                copy.primaryDestructive ? styles.destructive : styles.constructive,
+              ] as any}
+              disabled={copy.primaryDisabled}
+            >
+              {submitting ? t('common.saving') : t(copy.primaryKey)}
+            </Button>
+          </View>
         </View>
       </View>
     </Modal>
@@ -319,14 +329,16 @@ const styles = StyleSheet.create({
     color: colors.brick,
   },
   ctaBar: {
-    flexDirection: 'row',
-    gap: spacing.s2,
     paddingHorizontal: spacing.s5,
     paddingTop: spacing.s3,
     paddingBottom: spacing.s5,
     borderTopWidth: 1.5,
     borderTopColor: colors.graphite,
     backgroundColor: colors.paper,
+  },
+  ctaRow: {
+    flexDirection: 'row',
+    gap: spacing.s2,
   },
   destructive: {
     backgroundColor: colors.brick,

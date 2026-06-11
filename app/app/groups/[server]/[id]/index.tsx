@@ -15,6 +15,7 @@ import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TopBar } from '@/components/TopBar';
+import { ContentContainer } from '@/components/ContentContainer';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
 import { Stamp } from '@/components/Stamp';
@@ -22,6 +23,8 @@ import { MoneyText } from '@/components/MoneyText';
 import { Avatar, AvatarStack } from '@/components/Avatar';
 import { GroupAvatar } from '@/components/GroupAvatar';
 import { EmptyState } from '@/components/EmptyState';
+import { GroupEmptyState } from '@/components/GroupEmptyState';
+import { addExpenseHref, importHref } from '@/components/GroupEmptyState.helpers';
 import {
   apiFor,
   authToken,
@@ -257,6 +260,7 @@ export default function GroupDetailScreen() {
       {/* Hero: pinned below the top bar, doesn't scroll with the list.
           Group name lives in the top bar now; the hero is balance + avatars. */}
       <View style={styles.hero}>
+        <ContentContainer>
         <View style={styles.heroRow}>
           <View style={styles.heroBalanceCol}>
             {myNet === 0 ? (
@@ -291,10 +295,12 @@ export default function GroupDetailScreen() {
             <Feather name="chevron-right" size={16} color={colors.lead} />
           </TouchableOpacity>
         </View>
+        </ContentContainer>
       </View>
 
       {/* Tabs: pinned, also don't scroll. */}
       <View style={styles.tabBar}>
+        <ContentContainer style={styles.tabRow}>
         <TouchableOpacity
           onPress={() => setTab('overview')}
           style={[styles.tab, tab === 'overview' && styles.tabActive]}
@@ -322,6 +328,7 @@ export default function GroupDetailScreen() {
               {t('groupDetail.tabStandings')}
             </Text>
         </TouchableOpacity>
+        </ContentContainer>
       </View>
 
       {/* Only the tab body scrolls. Hero + tabs stay pinned above. */}
@@ -329,6 +336,7 @@ export default function GroupDetailScreen() {
         style={styles.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
+        <ContentContainer>
         {tab === 'payments' ? (
           <>
             {/* To Be Paid: suggested settlements from outstanding balances.
@@ -595,7 +603,10 @@ export default function GroupDetailScreen() {
         <View style={styles.listRule} />
 
         {expenses.length === 0 ? (
-          <EmptyState title={t('groupDetail.emptyTitle')} body={t('groupDetail.emptyBody')} />
+          <GroupEmptyState
+            onAddExpense={() => router.push(addExpenseHref(serverUrl, id))}
+            onImport={() => router.push(importHref(serverUrl, id))}
+          />
         ) : (
           sortedExpenses.map((e) => {
             const payerMember = members.find((m) => m.id === e.paid_by_id);
@@ -645,9 +656,11 @@ export default function GroupDetailScreen() {
           </>
         )}
         <View style={{ height: 80 }} />
+        </ContentContainer>
       </ScrollView>
 
       <View style={[styles.ctaBar, { paddingBottom: insets.bottom + 8 }]}>
+        <ContentContainer style={styles.ctaRow}>
         <Button
           kind="secondary"
           onPress={() => router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/add-expense`)}
@@ -663,6 +676,7 @@ export default function GroupDetailScreen() {
         >
           {t('groupDetail.settle')}
         </Button>
+        </ContentContainer>
       </View>
       <ActionSheet
         visible={sortMenuOpen}
@@ -921,12 +935,14 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   tabBar: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.s5,
     paddingTop: spacing.s4,
     paddingBottom: spacing.s2,
-    gap: 6,
     backgroundColor: colors.paper,
+  },
+  tabRow: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.s5,
+    gap: 6,
   },
   tab: {
     paddingVertical: 8,
@@ -1102,13 +1118,15 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   ctaBar: {
-    flexDirection: 'row',
-    gap: spacing.s2,
-    paddingHorizontal: spacing.s5,
     paddingTop: spacing.s3,
     borderTopWidth: 1.5,
     borderTopColor: colors.graphite,
     backgroundColor: colors.paper,
+  },
+  ctaRow: {
+    flexDirection: 'row',
+    gap: spacing.s2,
+    paddingHorizontal: spacing.s5,
   },
   ctaBtn: { flex: 1 },
 });

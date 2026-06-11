@@ -61,6 +61,21 @@ export function normalizeSwishNumber(input: string): string | null {
 }
 
 /**
+ * Whether to nudge the *current user* to add their own mobile number when
+ * they reach a Swish settle flow. Their number isn't needed to send a
+ * payment (that uses the recipient's number), but it lets friends pay them
+ * back via Swish. We only prompt when they have no number on file and
+ * haven't already dismissed the nudge — so it surfaces at most once.
+ */
+export function shouldPromptOwnPhoneForSwish(
+  myPhone: string | null | undefined,
+  alreadyDismissed: boolean,
+): boolean {
+  if (alreadyDismissed) return false;
+  return (myPhone ?? '').trim().length === 0;
+}
+
+/**
  * `true` iff a Swish payment link can be built and opened from this device.
  *
  * Swish only works in SEK, on iOS/Android (the app isn't on the web), with

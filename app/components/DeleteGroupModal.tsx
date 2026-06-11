@@ -18,6 +18,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useResponsive } from '@/lib/use-responsive';
 import { Button } from './Button';
 import { Text } from './Text';
 import {
@@ -53,6 +54,7 @@ export function DeleteGroupModal({
   onConfirm,
 }: Props) {
   const { t } = useTranslation();
+  const { sheetMaxWidth } = useResponsive();
   const [typed, setTyped] = useState('');
 
   // Stamp the popup-guard on dismissal so the Danger Zone row underneath
@@ -85,7 +87,16 @@ export function DeleteGroupModal({
       onRequestClose={handleCancel}
     >
       <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollBody}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollBody,
+            sheetMaxWidth != null && {
+              maxWidth: sheetMaxWidth,
+              alignSelf: 'center',
+              width: '100%',
+            },
+          ]}
+        >
           <Text style={styles.title}>{t('groupSettings.dangerZone.deleteModal.title')}</Text>
           <Text style={styles.lead}>
             {t('groupSettings.dangerZone.deleteModal.body')}
@@ -135,24 +146,35 @@ export function DeleteGroupModal({
         </ScrollView>
 
         <View style={styles.ctaBar}>
-          <Button
-            kind="secondary"
-            onPress={handleCancel}
-            style={{ flex: 1 }}
-            disabled={submitting}
+          <View
+            style={[
+              styles.ctaInner,
+              sheetMaxWidth != null && {
+                maxWidth: sheetMaxWidth,
+                alignSelf: 'center',
+                width: '100%',
+              },
+            ]}
           >
-            {t('common.cancel')}
-          </Button>
-          <Button
-            kind="primary"
-            onPress={() => onConfirm(typed.trim())}
-            style={[{ flex: 1 }, styles.destructive] as any}
-            disabled={!state.canConfirm}
-          >
-            {submitting
-              ? t('common.saving')
-              : t('groupSettings.dangerZone.deleteModal.confirm')}
-          </Button>
+            <Button
+              kind="secondary"
+              onPress={handleCancel}
+              style={{ flex: 1 }}
+              disabled={submitting}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              kind="primary"
+              onPress={() => onConfirm(typed.trim())}
+              style={[{ flex: 1 }, styles.destructive] as any}
+              disabled={!state.canConfirm}
+            >
+              {submitting
+                ? t('common.saving')
+                : t('groupSettings.dangerZone.deleteModal.confirm')}
+            </Button>
+          </View>
         </View>
       </View>
     </Modal>
@@ -224,14 +246,16 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   ctaBar: {
-    flexDirection: 'row',
-    gap: spacing.s2,
     paddingHorizontal: spacing.s5,
     paddingTop: spacing.s3,
     paddingBottom: spacing.s5,
     borderTopWidth: 1.5,
     borderTopColor: colors.graphite,
     backgroundColor: colors.paper,
+  },
+  ctaInner: {
+    flexDirection: 'row',
+    gap: spacing.s2,
   },
   destructive: {
     backgroundColor: colors.brick,

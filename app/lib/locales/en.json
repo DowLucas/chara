@@ -364,7 +364,9 @@
     "archivePromptBody": "The group will be hidden from your list. You can still view archived groups later.",
     "archivePromptTitle": "Archive {{name}}?",
     "edit": "Edit group",
-    "emptyBody": "Add the first expense to this group.",
+    "emptyAddFirst": "Add first expense",
+    "emptyBodyImport": "Add your first expense, or bring your balances over from another app.",
+    "emptyImport": "Import from another app",
     "emptyTitle": "No expenses yet",
     "expensesCount": "expenses · {{count}}",
     "expensesCount_one": "expenses · {{count}}",
@@ -664,11 +666,6 @@
       "committing": "Setting up opening balances…",
       "extracting": "Reading balances…"
     },
-    "step": {
-      "capture": "Step 1 of 3",
-      "reconcile": "Step 2 of 3",
-      "review": "Step 3 of 3"
-    },
     "reconcile": {
       "body": "Match each name we found to a group member, or add it as a new member.",
       "continue": "Continue",
@@ -688,6 +685,11 @@
       "title": "Review balances",
       "youOwe": "You owe {{name}}",
       "youOweTotal": "You owe"
+    },
+    "step": {
+      "capture": "Step 1 of 3",
+      "reconcile": "Step 2 of 3",
+      "review": "Step 3 of 3"
     },
     "success": {
       "body": "Set up {{count}} opening balances in the group.",
@@ -804,14 +806,13 @@
     "subhead": "Let's start a group."
   },
   "onboardingName": {
-    "body": "Your name appears on every expense and settlement. Your phone lets friends settle up with you via Swish, Vipps, or similar.",
+    "body": "Your name appears on every expense and settlement. Your phone is optional — it lets friends settle up with you via Swish, Vipps, or similar.",
     "errorEmpty": "Please enter your full name.",
-    "errorPhone": "Please enter your phone number.",
     "errorTitle": "Could not save profile",
     "eyebrow": "your profile",
     "headline": "Tell us about you.",
     "label": "Full name",
-    "phoneLabel": "Phone number",
+    "phoneLabel": "Phone number (optional)",
     "phonePlaceholder": "+46 70 123 45 67",
     "placeholder": "Jane Andersson",
     "saving": "Saving…",
@@ -1005,6 +1006,10 @@
     "yourTransfers_other": "your transfers · {{count}}"
   },
   "settleMethod": {
+    "addOwnPhoneBody": "Add your mobile number so friends can pay you back via Swish. You can do this anytime in You → Profile.",
+    "addOwnPhoneCta": "Add number",
+    "addOwnPhoneLater": "Not now",
+    "addOwnPhoneTitle": "Add your Swish number?",
     "bank": "Bank transfer",
     "bankSub": "SE — IBAN",
     "errorBody": "Please try again.",
@@ -1088,8 +1093,8 @@
     "hostedBy": "hosted by chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",
-      "charaCloudHint": "Hosted by us. Free to use.",
-      "charaCloudInfo": "Chara Cloud is hosted by us. It's free to use — we take care of the servers, backups, and updates so you don't have to.",
+      "charaCloudHint": "Hosted by us. Nothing to set up.",
+      "charaCloudInfo": "Chara Cloud is hosted by us — we take care of the servers, backups, and updates so you don't have to.",
       "label": "Where do you want to sign in?",
       "selfHost": "Self-hosted",
       "selfHostHint": "Connect to your own server.",

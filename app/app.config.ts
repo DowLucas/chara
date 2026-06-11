@@ -19,7 +19,10 @@ const config: ExpoConfig = {
   icon: './assets/icon.png',
   userInterfaceStyle: 'automatic',
   ios: {
-    supportsTablet: false,
+    // Chara is a proper iPad app: the UI uses a centered max-width content
+    // column (see lib/responsive.ts + components/ContentContainer.tsx) so it
+    // reads as a single column on iPad instead of stretching edge to edge.
+    supportsTablet: true,
     bundleIdentifier: 'app.chara',
     usesAppleSignIn: true,
     // Universal Links — the system fetches

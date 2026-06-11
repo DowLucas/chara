@@ -353,7 +353,10 @@
     "archivePromptBody": "归档后将从主屏幕隐藏，之后仍可查看。",
     "archivePromptTitle": "归档 {{name}}？",
     "edit": "编辑群组",
+    "emptyAddFirst": "记下第一笔支出",
     "emptyBody": "记下这个群组的第一笔支出吧。",
+    "emptyBodyImport": "记下第一笔支出，或从其他应用迁移你的余额。",
+    "emptyImport": "从其他应用导入",
     "emptyTitle": "还没有支出",
     "expensesCount": "支出 · {{count}} 笔",
     "expensesCount_one": "支出 · {{count}} 笔",
@@ -576,6 +579,117 @@
     "unchanged": "无变化",
     "wasOwed": "原应收",
     "wasOwes": "原应付"
+  },
+  "import": {
+    "apps": {
+      "other": {
+        "label": "其他应用"
+      },
+      "settleup": {
+        "label": "Settle Up"
+      },
+      "splid": {
+        "label": "Splid"
+      },
+      "splitwise": {
+        "label": "Splitwise"
+      },
+      "steven": {
+        "label": "Steven"
+      },
+      "tricount": {
+        "label": "Tricount"
+      }
+    },
+    "capture": {
+      "extract": "读取余额"
+    },
+    "commitError": {
+      "title": "导入失败"
+    },
+    "empty": {
+      "body": "我们无法从这些截图中读取到任何余额。请换一张更清晰、全屏的余额或结算页面截图再试。",
+      "title": "未找到内容"
+    },
+    "entry": "从其他应用导入",
+    "extractError": {
+      "title": "无法读取截图"
+    },
+    "guidance": {
+      "other": {
+        "body": "在您的另一款应用中打开余额或结算页面并截图。我们会读取谁欠你、你欠谁，然后在这里建立对应的初始余额。",
+        "title": "截取你的余额"
+      },
+      "settleup": {
+        "body": "在 Settle Up 中打开该群组，进入余额页面并截图。我们会读取每个人的净余额。",
+        "title": "截取你的 Settle Up 余额"
+      },
+      "splid": {
+        "body": "在 Splid 中打开该群组，切换到余额标签页并截图。我们会读取每个人的净余额。",
+        "title": "截取你的 Splid 余额"
+      },
+      "splitwise": {
+        "body": "在 Splitwise 中打开该群组，截取顶部的余额——谁欠你、你欠谁。我们会将其重建为初始余额。",
+        "title": "截取你的 Splitwise 余额"
+      },
+      "steven": {
+        "body": "打开 Steven，截取显示谁欠你、你欠谁的余额页面。我们会将其重建为初始余额。",
+        "title": "截取你的 Steven 余额"
+      },
+      "tricount": {
+        "body": "打开该 Tricount，进入余额页面并截图。我们会读取每个人的净余额。",
+        "title": "截取你的 Tricount 余额"
+      }
+    },
+    "permissionBody": "请允许访问相册，以便添加余额截图。",
+    "permissionTitle": "需要相册权限",
+    "picker": {
+      "eyebrow": "导入",
+      "heading": "把你的余额迁移过来",
+      "intro": "选择你正在使用的应用。截取它的余额页面，我们会在这里建立对应的初始余额。",
+      "title": "导入"
+    },
+    "progress": {
+      "committing": "正在建立初始余额……",
+      "extracting": "正在读取余额……"
+    },
+    "reconcile": {
+      "body": "将我们找到的每个名字匹配到群组成员，或添加为新成员。",
+      "continue": "继续",
+      "newMember": "新成员",
+      "title": "匹配成员"
+    },
+    "review": {
+      "badAmount": "我们无法读取到这笔余额的有效金额。",
+      "badDirection": "我们无法判断这笔余额的方向。",
+      "body": "导入前请核对每笔余额。我们会为每个人创建一笔初始余额，之后你可以结算或修改。",
+      "currencyMismatch": "这些余额以 {{extracted}} 计价，但群组使用 {{group}}。不支持跨币种导入。",
+      "import": "导入 {{count}} 笔余额",
+      "import_other": "导入 {{count}} 笔余额",
+      "owedToYouTotal": "应收",
+      "owesYou": "{{name}} 欠你",
+      "title": "核对余额",
+      "youOwe": "你欠 {{name}}",
+      "youOweTotal": "你欠"
+    },
+    "step": {
+      "capture": "第 1 步，共 3 步",
+      "reconcile": "第 2 步，共 3 步",
+      "review": "第 3 步，共 3 步"
+    },
+    "success": {
+      "body": "已在群组中建立 {{count}} 笔初始余额。",
+      "body_other": "已在群组中建立 {{count}} 笔初始余额。",
+      "title": "导入完成"
+    },
+    "tray": {
+      "add": "添加截图",
+      "count": "{{count}} / {{max}} 张截图",
+      "count_other": "{{count}} / {{max}} 张截图",
+      "eyebrow": "截图",
+      "remove": "移除截图"
+    },
+    "unknownApp": "暂不支持该应用。"
   },
   "invite": {
     "body": "朋友扫描此二维码即可加入。",

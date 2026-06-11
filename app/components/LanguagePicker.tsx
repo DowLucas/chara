@@ -12,6 +12,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { ContentContainer } from '@/components/ContentContainer';
+import { useResponsive } from '@/lib/use-responsive';
 import {
   LANGUAGE_NATIVE_NAMES,
   SUPPORTED_LANGUAGES,
@@ -58,6 +60,7 @@ export function LanguagePicker({
 }: Props) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const { contentMaxWidth } = useResponsive();
   const [query, setQuery] = useState('');
 
   const rows: Row[] = useMemo(() => {
@@ -110,26 +113,28 @@ export function LanguagePicker({
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={handleClose}>
       <View style={[styles.container, { paddingTop: insets.top + spacing.s2 }]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleClose} hitSlop={10} accessibilityLabel={t('common.close')}>
-            <Feather name="x" size={22} color={colors.graphite} />
-          </TouchableOpacity>
-          <Text style={styles.title}>{t('you.language')}</Text>
-          <View style={{ width: 22 }} />
-        </View>
+        <ContentContainer>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={handleClose} hitSlop={10} accessibilityLabel={t('common.close')}>
+              <Feather name="x" size={22} color={colors.graphite} />
+            </TouchableOpacity>
+            <Text style={styles.title}>{t('you.language')}</Text>
+            <View style={{ width: 22 }} />
+          </View>
 
-        <View style={styles.searchWrap}>
-          <Feather name="search" size={16} color={colors.lead} style={styles.searchIcon} />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder={t('languagePicker.searchPlaceholder')}
-            placeholderTextColor={colors.lead}
-            autoCorrect={false}
-            autoCapitalize="none"
-            style={styles.searchInput}
-          />
-        </View>
+          <View style={styles.searchWrap}>
+            <Feather name="search" size={16} color={colors.lead} style={styles.searchIcon} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder={t('languagePicker.searchPlaceholder')}
+              placeholderTextColor={colors.lead}
+              autoCorrect={false}
+              autoCapitalize="none"
+              style={styles.searchInput}
+            />
+          </View>
+        </ContentContainer>
 
         <FlatList
           data={rows}
@@ -185,7 +190,14 @@ export function LanguagePicker({
               <Text style={styles.emptyText}>{t('languagePicker.empty')}</Text>
             </View>
           }
-          contentContainerStyle={{ paddingBottom: insets.bottom + spacing.s5 }}
+          contentContainerStyle={[
+            { paddingBottom: insets.bottom + spacing.s5 },
+            contentMaxWidth != null && {
+              maxWidth: contentMaxWidth,
+              alignSelf: 'center',
+              width: '100%',
+            },
+          ]}
         />
       </View>
     </Modal>

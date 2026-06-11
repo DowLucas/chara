@@ -3,6 +3,7 @@ import {
   isSwishEligible,
   buildSwishLink,
   formatSwishDetails,
+  shouldPromptOwnPhoneForSwish,
 } from '../swish';
 
 // Helper: URI-decode the data param → JSON. The Swish app expects
@@ -233,5 +234,24 @@ describe('formatSwishDetails', () => {
     const out = formatSwishDetails({ ...opts, groupName: longName });
     expect(out.message.length).toBeLessThanOrEqual(50);
     expect(out.message.startsWith('Chara: ')).toBe(true);
+  });
+});
+
+describe('shouldPromptOwnPhoneForSwish', () => {
+  it('prompts when the user has no number and has not dismissed', () => {
+    expect(shouldPromptOwnPhoneForSwish(null, false)).toBe(true);
+    expect(shouldPromptOwnPhoneForSwish(undefined, false)).toBe(true);
+    expect(shouldPromptOwnPhoneForSwish('', false)).toBe(true);
+    expect(shouldPromptOwnPhoneForSwish('   ', false)).toBe(true);
+  });
+
+  it('does not prompt once a number is on file', () => {
+    expect(shouldPromptOwnPhoneForSwish('+46701234567', false)).toBe(false);
+    expect(shouldPromptOwnPhoneForSwish('0701234567', false)).toBe(false);
+  });
+
+  it('does not prompt after the nudge was dismissed', () => {
+    expect(shouldPromptOwnPhoneForSwish(null, true)).toBe(false);
+    expect(shouldPromptOwnPhoneForSwish('', true)).toBe(false);
   });
 });
