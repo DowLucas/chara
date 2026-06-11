@@ -72,8 +72,20 @@ function stripTrailingColon(s: string): string {
  * The canonical URL of the main Chara hosted server. Anything matching
  * this should be rendered as "Chara Server" in UI rather than the
  * domain.
+ *
+ * Build-time configurable: the official hosted build injects its real API
+ * origin via `EXPO_PUBLIC_HOSTED_API_URL` (an EAS env var, inlined by Metro),
+ * keeping the deployment domain out of the open-source tree. Forks/self-hosters
+ * set their own. The `api.chara.app` default is a neutral placeholder.
  */
-export const MAIN_HOSTED_SERVER_URL = 'https://api.chara.app';
+export const MAIN_HOSTED_SERVER_URL =
+  process.env.EXPO_PUBLIC_HOSTED_API_URL ?? 'https://api.chara.app';
+
+/** Bare host of {@link MAIN_HOSTED_SERVER_URL} (no scheme, no trailing slash). */
+export const MAIN_HOSTED_SERVER_HOST = MAIN_HOSTED_SERVER_URL.replace(
+  /^https?:\/\//i,
+  '',
+).replace(/\/+$/, '');
 
 /**
  * True when `serverUrl` is the main Chara hosted instance. Comparison

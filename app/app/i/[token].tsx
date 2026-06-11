@@ -13,8 +13,9 @@ import { View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { parseInviteUrl } from '@/lib/invite-url';
+import { MAIN_HOSTED_SERVER_HOST } from '@/lib/server-url';
 
-const FALLBACK_HOST = 'api.chara.app';
+const FALLBACK_HOST = MAIN_HOSTED_SERVER_HOST;
 
 export default function InviteUniversalLink() {
   const { token } = useLocalSearchParams<{ token: string }>();

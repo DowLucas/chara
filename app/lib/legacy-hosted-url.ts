@@ -11,11 +11,10 @@
 
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
-
-const PROD_URL = 'https://api.chara.app';
+import { MAIN_HOSTED_SERVER_URL } from './server-url';
 
 export function legacyHostedUrl(): string {
-  if (!__DEV__) return PROD_URL;
+  if (!__DEV__) return MAIN_HOSTED_SERVER_URL;
 
   const fromEnv = process.env.EXPO_PUBLIC_API_URL;
   if (fromEnv) return fromEnv;

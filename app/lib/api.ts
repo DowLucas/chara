@@ -16,11 +16,12 @@ import type {
   CreateRecurringInput,
   UpdateRecurringInput,
 } from './api-types-recurring';
+import { MAIN_HOSTED_SERVER_URL } from './server-url';
 
 const TOKEN_KEY = 'auth_token';
 
 function resolveBaseUrl(): string {
-  if (!__DEV__) return 'https://api.chara.app';
+  if (!__DEV__) return MAIN_HOSTED_SERVER_URL;
 
   // Explicit override always wins (e.g. EXPO_PUBLIC_API_URL=http://192.168.0.45:8080).
   const fromEnv = process.env.EXPO_PUBLIC_API_URL;

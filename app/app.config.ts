@@ -1,5 +1,15 @@
 import type { ExpoConfig } from 'expo/config';
 
+// Host that serves the app's AASA + assetlinks files (and the API). Build-time
+// configurable so the official hosted build can inject its real origin via
+// EXPO_PUBLIC_HOSTED_API_URL, keeping the deployment domain out of the
+// open-source tree. `api.chara.app` is a neutral placeholder default.
+const HOSTED_API_HOST = (
+  process.env.EXPO_PUBLIC_HOSTED_API_URL ?? 'https://api.chara.app'
+)
+  .replace(/^https?:\/\//i, '')
+  .replace(/\/.*$/, '');
+
 const config: ExpoConfig = {
   name: 'Chara',
   slug: 'chara',
@@ -13,12 +23,11 @@ const config: ExpoConfig = {
     bundleIdentifier: 'app.chara',
     usesAppleSignIn: true,
     // Universal Links — the system fetches
-    // https://api.chara.app/.well-known/apple-app-site-association
+    // https://<HOSTED_API_HOST>/.well-known/apple-app-site-association
     // at install time and routes matching https URLs (/i/*) directly to the
-    // app. See docs/superpowers/specs/2026-05-24-invite-deep-links-design.md
-    // Phase 2 and backend/internal/handler/aasa.go. Android `intentFilters`
+    // app. See backend/internal/handler/aasa.go. Android `intentFilters`
     // / `assetlinks.json` are a future wave gated on Play Console.
-    associatedDomains: ['applinks:api.chara.app'],
+    associatedDomains: [`applinks:${HOSTED_API_HOST}`],
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
       NSCameraUsageDescription:
@@ -117,10 +126,10 @@ const config: ExpoConfig = {
     },
     package: 'chara.app',
     // Android App Links — the system fetches
-    // https://api.chara.app/.well-known/assetlinks.json and, when it
+    // https://<HOSTED_API_HOST>/.well-known/assetlinks.json and, when it
     // verifies the app's signing cert, routes matching https /i/* URLs straight
     // to the app (autoVerify). Counterpart to iOS associatedDomains above.
-    // See backend/internal/handler/assetlinks.go and the invite-deep-links spec.
+    // See backend/internal/handler/assetlinks.go.
     intentFilters: [
       {
         action: 'VIEW',
@@ -128,7 +137,7 @@ const config: ExpoConfig = {
         data: [
           {
             scheme: 'https',
-            host: 'api.chara.app',
+            host: HOSTED_API_HOST,
             pathPrefix: '/i',
           },
         ],

@@ -43,6 +43,17 @@ Chara's multi-server model means the backend is chosen at sign-in, not baked int
 
 > Self-hosted instances support email magic link and OIDC sign-in. Google and Apple Sign In are hosted-only.
 
+### Build-time configuration
+
+A few values are injected at build time via `EXPO_PUBLIC_*` env vars (inlined by Metro; also read by `app.config.ts` during prebuild). The repo ships neutral defaults so the deployment's own domain is never committed:
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `EXPO_PUBLIC_HOSTED_API_URL` | `https://api.chara.app` | Origin of the official "Chara Cloud" server. Also derives the iOS Universal Links / Android App Links host (the domain serving `/.well-known/apple-app-site-association` + `assetlinks.json`). Set this in your EAS build profile/secrets to your real hosted API. |
+| `EXPO_PUBLIC_API_URL` | _(unset)_ | Dev-only override for the backend the app talks to (e.g. `http://192.168.0.45:8080`). |
+
+Forks set `EXPO_PUBLIC_HOSTED_API_URL` to their own hosted origin (or leave the default if they don't run one).
+
 ## Scripts
 
 | Script | What it does |
