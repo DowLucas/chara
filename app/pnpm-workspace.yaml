@@ -9,6 +9,9 @@
 # allowBuilds replaces the removed onlyBuiltDependencies/ignoredBuiltDependencies.
 # Without an explicit decision pnpm fails install with ERR_PNPM_IGNORED_BUILDS.
 # esbuild ships a postinstall to set up its platform binary; allow it.
+packages:
+  - .
+
 nodeLinker: hoisted
 
 allowBuilds:
