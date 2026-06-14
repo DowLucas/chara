@@ -156,6 +156,23 @@ const config: ExpoConfig = {
   plugins: [
     'expo-router',
     [
+      // GoogleSignIn 9.x pulls in AppCheckCore (a Swift pod) which depends on
+      // GoogleUtilities + RecaptchaInterop. Those don't define modules, so under
+      // static libraries `pod install` fails ("cannot be integrated as static
+      // libraries ... set :modular_headers => true"). Declaring them here with
+      // modular headers generates their module maps so AppCheckCore can import
+      // them. Without this, EAS iOS builds break at the Install pods phase.
+      'expo-build-properties',
+      {
+        ios: {
+          extraPods: [
+            { name: 'GoogleUtilities', modular_headers: true },
+            { name: 'RecaptchaInterop', modular_headers: true },
+          ],
+        },
+      },
+    ],
+    [
       'expo-splash-screen',
       {
         backgroundColor: '#F0E5CC',
