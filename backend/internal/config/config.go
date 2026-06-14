@@ -33,6 +33,7 @@ type Config struct {
 	JWTPrivateKeyPEM string // RS256, required for hosted
 	JWTPublicKeyPEM  string // RS256, required for hosted
 	MagicLinkTTL     time.Duration
+	RefreshTokenTTL  time.Duration // long-lived refresh token lifetime
 
 	// Email
 	ResendAPIKey string // hosted; takes precedence over SMTP
@@ -110,6 +111,7 @@ func Load() (*Config, error) {
 		JWTPrivateKeyPEM: getEnv("JWT_PRIVATE_KEY_PEM", ""),
 		JWTPublicKeyPEM:  getEnv("JWT_PUBLIC_KEY_PEM", ""),
 		MagicLinkTTL:     getDuration("MAGIC_LINK_TTL", 15*time.Minute),
+		RefreshTokenTTL:  getDuration("REFRESH_TOKEN_TTL", 365*24*time.Hour),
 
 		ResendAPIKey: getEnv("RESEND_API_KEY", ""),
 		SMTPHost:     getEnv("SMTP_HOST", ""),
