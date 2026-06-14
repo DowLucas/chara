@@ -56,6 +56,14 @@ export type AccountStatus = 'ok' | 'reauth_required' | 'incompatible' | 'unreach
 export interface Account {
   serverUrl: string;
   token: string;
+  /**
+   * Long-lived refresh token (default 1y, server-side revocable). Used to
+   * silently mint a new access `token` when the short-lived one (24h) expires,
+   * so the user stays signed in without re-authenticating. Optional: accounts
+   * created before refresh tokens existed (or via the legacy single-token
+   * sign-in) won't have one and fall back to full re-auth on expiry.
+   */
+  refreshToken?: string;
   user: AccountUser;
   instance: AccountInstanceInfo | null;
   addedAt: string;
