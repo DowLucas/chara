@@ -224,7 +224,7 @@ export default function SignInScreen() {
         nonce,
         name,
       });
-      await onTokenIssued(resp.token, 'apple');
+      await onTokenIssued(resp.token, 'apple', resp.refresh_token);
     } catch (e: unknown) {
       // User dismissed the system sheet — not an error worth surfacing.
       const code = (e as { code?: string } | null)?.code;
@@ -297,7 +297,7 @@ export default function SignInScreen() {
         nonce,
         name,
       });
-      await onTokenIssued(resp.token, 'google');
+      await onTokenIssued(resp.token, 'google', resp.refresh_token);
     } catch (e: unknown) {
       // User dismissed the system sheet — silent.
       const code = (e as { code?: string } | null)?.code;
@@ -329,7 +329,7 @@ export default function SignInScreen() {
       // Dev mode: server returns the raw token so we can sign in immediately.
       if (res.token) {
         const verify = await api.verifyMagicLink(res.token);
-        await onTokenIssued(verify.token, 'magic_link');
+        await onTokenIssued(verify.token, 'magic_link', verify.refresh_token);
         return;
       }
       setSent(true);
@@ -354,11 +354,16 @@ export default function SignInScreen() {
   async function onTokenIssued(
     token: string,
     method?: 'magic_link' | 'google' | 'apple',
+    refreshToken?: string,
   ) {
     const now = new Date().toISOString();
 
     if (mode === 'reauth') {
-      await updateAccount(serverUrl, { token, lastUsedAt: now });
+      await updateAccount(serverUrl, {
+        token,
+        ...(refreshToken ? { refreshToken } : {}),
+        lastUsedAt: now,
+      });
       await clearStatus(serverUrl);
       if (router.canGoBack()) router.back();
       else router.replace('/(tabs)');
@@ -383,6 +388,7 @@ export default function SignInScreen() {
         {
           serverUrl,
           token,
+          ...(refreshToken ? { refreshToken } : {}),
           user,
           instance: account?.instance ?? null,
           addedAt: account?.addedAt ?? now,

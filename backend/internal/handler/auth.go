@@ -85,8 +85,9 @@ type userResponse struct {
 }
 
 type tokenResponse struct {
-	Token string       `json:"token"`
-	User  userResponse `json:"user"`
+	Token        string       `json:"token"`
+	RefreshToken string       `json:"refresh_token,omitempty"`
+	User         userResponse `json:"user"`
 }
 
 func userToResponse(u db.User) userResponse {
@@ -233,27 +234,103 @@ func (h *AuthHandler) Verify(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	jwtStr, err := h.jwt.Sign(user.ID, user.Email, h.cfg.InstanceMode)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to sign token")
-		return
-	}
-
-	writeJSON(w, http.StatusOK, tokenResponse{Token: jwtStr, User: userToResponse(user)})
+	writeTokenPair(w, r, h.queries, h.jwt, h.cfg, user)
 }
 
-// Logout is an advisory hook for the future JWT-revocation spec.
-//
-// The JWT is HMAC-stateless and stays valid until expiry regardless of this
-// call — the server does nothing today. The endpoint exists so the app's
-// contract (best-effort POST on Remove account / Sign out) stays stable when
-// real revocation lands. See spec §16 item 4.
+// Logout revokes the caller's refresh token so it can never be exchanged
+// again. The access JWT is stateless and stays valid until it expires (≤24h),
+// but without a live refresh token the session can't be silently renewed, so
+// it dies at the next access-token expiry. The refresh token is optional in
+// the body for backward compatibility with older clients.
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	if middleware.ClaimsFromContext(r.Context()) == nil {
+	claims := middleware.ClaimsFromContext(r.Context())
+	if claims == nil {
 		writeError(w, http.StatusUnauthorized, "missing claims")
 		return
 	}
+
+	// Body is optional — an empty/absent/garbage body still 204s (best-effort
+	// logout). Older clients send no body at all (nil), so guard before reading.
+	var req refreshRequest
+	if r.Body != nil {
+		r.Body = http.MaxBytesReader(w, r.Body, authMaxBodyBytes)
+		_ = json.NewDecoder(r.Body).Decode(&req)
+	}
+	if req.RefreshToken != "" {
+		row, err := h.queries.GetRefreshTokenByHash(r.Context(), auth.HashToken(req.RefreshToken))
+		// Only revoke a token that actually belongs to the caller — never let
+		// a presented token revoke another user's row.
+		if err == nil && row.UserID == claims.UserID {
+			if err := h.queries.RevokeRefreshToken(r.Context(), row.ID); err != nil {
+				slog.Error("logout: revoke refresh token failed", "error", err)
+			}
+		}
+	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+type refreshRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+// Refresh exchanges a valid refresh token for a new access token plus a rotated
+// refresh token. Rotation: the presented token is revoked and a fresh one
+// issued on every call, so a leaked-then-rotated token stops working. Reuse of
+// an already-revoked token is treated as theft — every refresh token for that
+// user is revoked, forcing a full re-login on all devices.
+//
+// Unauthenticated: the refresh token itself is the bearer credential (the
+// access JWT may already be expired, which is the whole point).
+func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, authMaxBodyBytes)
+	var req refreshRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON body")
+		return
+	}
+	if req.RefreshToken == "" {
+		writeError(w, http.StatusBadRequest, "missing refresh token")
+		return
+	}
+
+	row, err := h.queries.GetRefreshTokenByHash(r.Context(), auth.HashToken(req.RefreshToken))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusUnauthorized, "invalid refresh token")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "lookup failed")
+		return
+	}
+
+	// Reuse detection: a token presented after it was already revoked (rotated
+	// out or logged out) signals possible theft — revoke the whole family.
+	if row.RevokedAt.Valid {
+		if err := h.queries.RevokeAllRefreshTokensForUser(r.Context(), row.UserID); err != nil {
+			slog.Error("refresh: revoke-all on reuse failed", "error", err)
+		}
+		writeError(w, http.StatusUnauthorized, "refresh token revoked")
+		return
+	}
+	if !row.ExpiresAt.Valid || !row.ExpiresAt.Time.After(time.Now()) {
+		writeError(w, http.StatusUnauthorized, "refresh token expired")
+		return
+	}
+
+	user, err := h.queries.GetActiveUserByID(r.Context(), row.UserID)
+	if err != nil {
+		// Deleted or missing user — treat as a dead session.
+		writeError(w, http.StatusUnauthorized, "user not found")
+		return
+	}
+
+	// Rotate: revoke the presented token, then issue + sign a fresh pair.
+	if err := h.queries.RevokeRefreshToken(r.Context(), row.ID); err != nil {
+		slog.Error("refresh: revoke on rotate failed", "error", err)
+		writeError(w, http.StatusInternalServerError, "rotation failed")
+		return
+	}
+	writeTokenPair(w, r, h.queries, h.jwt, h.cfg, user)
 }
 
 // Me returns the authenticated user.
@@ -385,6 +462,15 @@ func (h *AuthHandler) DeleteMe(w http.ResponseWriter, r *http.Request) {
 	// cheaper than leaving dead rows in the table.
 	if err := q.DeleteMagicLinkTokensByEmail(r.Context(), user.Email); err != nil {
 		slog.Error("delete me: magic link wipe failed", "error", err, "user_id", claims.UserID)
+		writeError(w, http.StatusInternalServerError, "delete failed")
+		return
+	}
+
+	// Revoke refresh tokens so the (soft-deleted) account can't silently renew
+	// its session. Soft delete keeps the user row, so the FK cascade never
+	// fires — this is the explicit equivalent.
+	if err := q.RevokeAllRefreshTokensForUser(r.Context(), claims.UserID); err != nil {
+		slog.Error("delete me: refresh token revoke failed", "error", err, "user_id", claims.UserID)
 		writeError(w, http.StatusInternalServerError, "delete failed")
 		return
 	}

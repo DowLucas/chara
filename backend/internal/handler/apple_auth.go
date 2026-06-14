@@ -179,10 +179,5 @@ func (h *AppleAuthHandler) Native(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	jwtStr, err := h.jwt.Sign(user.ID, user.Email, h.cfg.InstanceMode)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to sign token")
-		return
-	}
-	writeJSON(w, http.StatusOK, tokenResponse{Token: jwtStr, User: userToResponse(user)})
+	writeTokenPair(w, r, h.queries, h.jwt, h.cfg, user)
 }

@@ -207,6 +207,17 @@ type RecurringExpenseSplit struct {
 	Value       int64  `db:"value" json:"value"`
 }
 
+type RefreshToken struct {
+	ID         string             `db:"id" json:"id"`
+	UserID     string             `db:"user_id" json:"user_id"`
+	TokenHash  string             `db:"token_hash" json:"token_hash"`
+	ExpiresAt  pgtype.Timestamptz `db:"expires_at" json:"expires_at"`
+	RevokedAt  pgtype.Timestamptz `db:"revoked_at" json:"revoked_at"`
+	UserAgent  string             `db:"user_agent" json:"user_agent"`
+	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at"`
+	LastUsedAt pgtype.Timestamptz `db:"last_used_at" json:"last_used_at"`
+}
+
 type RiverClient struct {
 	ID        string             `db:"id" json:"id"`
 	CreatedAt pgtype.Timestamptz `db:"created_at" json:"created_at"`

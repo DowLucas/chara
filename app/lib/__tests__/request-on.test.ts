@@ -233,3 +233,114 @@ describe('requestOn', () => {
     expect(accountFor('https://unknown.example')).toBeNull();
   });
 });
+
+// A bearer token + refreshToken on the account. The data endpoint is mocked to
+// 401 the OLD token and 200 the rotated one, so behaviour is deterministic
+// regardless of call ordering.
+function accountWithRefresh(serverUrl: string, token: string, refreshToken: string): Account {
+  return { ...makeAccount(serverUrl, token), refreshToken };
+}
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+describe('requestOn refresh-on-401', () => {
+  let fetchSpy: jest.SpyInstance;
+
+  beforeEach(async () => {
+    __resetForTests();
+    configure(memoryStorage());
+    fetchSpy = jest.spyOn(global, 'fetch').mockImplementation();
+  });
+
+  afterEach(() => {
+    fetchSpy.mockRestore();
+  });
+
+  it('silently refreshes on 401, retries, persists rotated tokens, and does NOT reauth', async () => {
+    await addAccount(accountWithRefresh('https://a.example', 'tok-old', 'rt-old'));
+
+    fetchSpy.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith('/api/auth/refresh')) {
+        return jsonResponse({ token: 'tok-new', refresh_token: 'rt-new' });
+      }
+      const auth = (init?.headers as Record<string, string>)?.Authorization;
+      return auth === 'Bearer tok-new'
+        ? jsonResponse({ ok: true })
+        : new Response('expired', { status: 401 });
+    });
+
+    const result = await requestOn<{ ok: boolean }>('https://a.example', '/api/me');
+    await new Promise((r) => setImmediate(r));
+
+    expect(result).toEqual({ ok: true });
+    const acct = accountFor('https://a.example');
+    expect(acct?.token).toBe('tok-new');
+    expect(acct?.refreshToken).toBe('rt-new');
+    expect(acct?.status).toBeUndefined(); // never marked reauth_required
+
+    const refreshCalls = fetchSpy.mock.calls.filter((c) =>
+      String(c[0]).endsWith('/api/auth/refresh'),
+    );
+    expect(refreshCalls).toHaveLength(1);
+  });
+
+  it('marks reauth_required when the refresh token is also rejected', async () => {
+    await addAccount(accountWithRefresh('https://a.example', 'tok-old', 'rt-dead'));
+
+    fetchSpy.mockImplementation(async (url: string) => {
+      if (String(url).endsWith('/api/auth/refresh')) {
+        return new Response('revoked', { status: 401 });
+      }
+      return new Response('expired', { status: 401 });
+    });
+
+    await expect(requestOn('https://a.example', '/api/me')).rejects.toThrow();
+    await new Promise((r) => setImmediate(r));
+
+    expect(accountFor('https://a.example')?.status).toBe('reauth_required');
+  });
+
+  it('does not attempt refresh when the account has no refresh token (legacy)', async () => {
+    await addAccount(makeAccount('https://a.example', 'tok-a')); // no refreshToken
+    fetchSpy.mockResolvedValueOnce(new Response('expired', { status: 401 }));
+
+    await expect(requestOn('https://a.example', '/api/me')).rejects.toThrow();
+    await new Promise((r) => setImmediate(r));
+
+    expect(
+      fetchSpy.mock.calls.some((c) => String(c[0]).endsWith('/api/auth/refresh')),
+    ).toBe(false);
+    expect(accountFor('https://a.example')?.status).toBe('reauth_required');
+  });
+
+  it('coalesces concurrent 401s into a single refresh call (single-flight)', async () => {
+    await addAccount(accountWithRefresh('https://a.example', 'tok-old', 'rt-old'));
+
+    fetchSpy.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith('/api/auth/refresh')) {
+        return jsonResponse({ token: 'tok-new', refresh_token: 'rt-new' });
+      }
+      const auth = (init?.headers as Record<string, string>)?.Authorization;
+      return auth === 'Bearer tok-new'
+        ? jsonResponse({ ok: true })
+        : new Response('expired', { status: 401 });
+    });
+
+    const [r1, r2, r3] = await Promise.all([
+      requestOn<{ ok: boolean }>('https://a.example', '/api/groups'),
+      requestOn<{ ok: boolean }>('https://a.example', '/api/me'),
+      requestOn<{ ok: boolean }>('https://a.example', '/api/activity'),
+    ]);
+
+    expect([r1, r2, r3]).toEqual([{ ok: true }, { ok: true }, { ok: true }]);
+    const refreshCalls = fetchSpy.mock.calls.filter((c) =>
+      String(c[0]).endsWith('/api/auth/refresh'),
+    );
+    expect(refreshCalls).toHaveLength(1);
+  });
+});

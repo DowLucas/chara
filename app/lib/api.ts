@@ -10,6 +10,7 @@ import {
   defaultAccount,
   markIncompatible,
   markReauthRequired,
+  updateAccount,
 } from './accounts-store';
 import type {
   RecurringExpense,
@@ -246,11 +247,56 @@ export async function requestOn<T>(
   return requestWithToken<T>(serverUrl, path, rest, token);
 }
 
+// Single-flight refresh per server: concurrent 401s on the same account all
+// await one /api/auth/refresh call rather than each firing its own (which would
+// rotate the token N times and trip the server's reuse-detection). Resolves to
+// the new access token, or null if refresh isn't possible / failed.
+const refreshInFlight = new Map<string, Promise<string | null>>();
+
+async function attemptRefresh(serverUrl: string): Promise<string | null> {
+  const existing = refreshInFlight.get(serverUrl);
+  if (existing) return existing;
+
+  const p = (async (): Promise<string | null> => {
+    const refreshToken = accountFor(serverUrl)?.refreshToken;
+    if (!refreshToken) return null;
+    try {
+      const res = await fetch(`${serverUrl}/api/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          [PROTOCOL_HEADER]: String(APP_PROTOCOL_VERSION),
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as TokenResponse;
+      if (!data?.token) return null;
+      // Persist the rotated pair so the next request (and cold launches) use it.
+      await updateAccount(serverUrl, {
+        token: data.token,
+        ...(data.refresh_token ? { refreshToken: data.refresh_token } : {}),
+      });
+      return data.token;
+    } catch {
+      return null;
+    }
+  })();
+
+  refreshInFlight.set(serverUrl, p);
+  try {
+    return await p;
+  } finally {
+    refreshInFlight.delete(serverUrl);
+  }
+}
+
 async function requestWithToken<T>(
   serverUrl: string,
   path: string,
   options: RequestInit,
   token: string | null,
+  isRetry = false,
 ): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -263,6 +309,15 @@ async function requestWithToken<T>(
 
   // Mark account status based on response codes (spec §9, §12).
   if (res.status === 401 && accountFor(serverUrl)) {
+    // Access token likely expired — try a one-shot silent refresh and replay
+    // the request before giving up. Only mark the account reauth_required if
+    // the refresh itself fails (no/expired/revoked refresh token).
+    if (!isRetry) {
+      const newToken = await attemptRefresh(serverUrl);
+      if (newToken) {
+        return requestWithToken<T>(serverUrl, path, options, newToken, true);
+      }
+    }
     void markReauthRequired(serverUrl);
   } else if (res.status === 426 && accountFor(serverUrl)) {
     void markIncompatible(serverUrl);
@@ -309,7 +364,7 @@ export interface MagicLinkResponse {
   token?: string; // only set in dev mode — lets the app skip the email round-trip
   link?: string;
 }
-export interface TokenResponse { token: string; user: User }
+export interface TokenResponse { token: string; refresh_token?: string; user: User }
 
 export interface User {
   id: string;
@@ -1394,7 +1449,15 @@ export function apiFor(serverUrl: string) {
       }),
 
     // Logout (advisory; spec §16 item 4)
-    logout: () => requestOn<void>(serverUrl, '/api/me/logout', { method: 'POST' }),
+    logout: () => {
+      // Send the refresh token so the server can revoke it (the access JWT is
+      // stateless and dies on its own ≤24h later). Best-effort either way.
+      const refreshToken = accountFor(serverUrl)?.refreshToken;
+      return requestOn<void>(serverUrl, '/api/me/logout', {
+        method: 'POST',
+        ...(refreshToken ? { body: JSON.stringify({ refresh_token: refreshToken }) } : {}),
+      });
+    },
 
     // Permanent account self-deletion — Apple Guideline 5.1.1(v).
     // 204 → resolves. 401 → already gone, resolves. 409 → throws

@@ -117,6 +117,11 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 		r.Use(middleware.AuthRateLimit(30, 5))
 		r.Post("/api/auth/magic-link", authH.MagicLink)
 		r.Post("/api/auth/verify", authH.Verify)
+		// Unauthenticated: the refresh token is the bearer credential, and the
+		// access JWT it replaces may already be expired. Protocol-version
+		// middleware is skipped for the same reason as verify — a client whose
+		// access token lapsed must still be able to recover.
+		r.Post("/api/auth/refresh", authH.Refresh)
 	})
 
 	groupH := handler.NewGroupHandler(pool, queries, cfg)
