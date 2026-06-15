@@ -12,7 +12,7 @@ require (
 	github.com/oklog/ulid/v2 v2.1.1
 	github.com/riverqueue/river v0.38.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.38.0
-	github.com/riverqueue/river/rivertype v0.38.0
+	github.com/riverqueue/river/rivertype v0.39.0
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.35.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.35.0
