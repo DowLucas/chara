@@ -62,6 +62,13 @@ const (
 	stateInvalid  invitePreviewState = "invalid"
 )
 
+// hostedServerDisplayName is the friendly name shown for the official hosted
+// instance instead of its raw API host. Self-hosted instances keep showing
+// their own host so the recipient can see exactly which server the group lives
+// on. Keyed on InstanceMode == "hosted" (cfg.IsHosted()), so only the hosted
+// deployment ("Chara Cloud") is rebranded.
+const hostedServerDisplayName = "Chara Cloud"
+
 // previewResolved is the internal struct populated by resolveInvite and
 // consumed by both Preview (serialised to JSON) and Landing (rendered into
 // the HTML template). Fields that don't apply to a state stay zero — the
@@ -85,7 +92,13 @@ func (h *InviteHandler) resolveInvite(ctx context.Context, token string) (previe
 		ServerHost: extractHost(h.cfg.BaseURL),
 		Token:      token,
 	}
-	out.ServerName = out.ServerHost // no separate display-name config in v1; the host is the name.
+	// The hosted instance is branded "Chara Cloud"; self-hosted instances show
+	// their own host so the recipient can see which server the group lives on.
+	if h.cfg.IsHosted() {
+		out.ServerName = hostedServerDisplayName
+	} else {
+		out.ServerName = out.ServerHost
+	}
 
 	if token == "" {
 		out.State = stateInvalid
@@ -192,14 +205,14 @@ func (h *InviteHandler) Landing(w http.ResponseWriter, r *http.Request) {
 		GroupName       string
 		MemberCount     int64
 		InviterName     string
-		ServerHost      string
+		ServerName      string
 		CharaSchemeHref template.URL // template.URL bypasses html/template's URL re-escaping; we've already done it.
 	}{
 		State:       string(resolved.State),
 		GroupName:   resolved.GroupName,
 		MemberCount: resolved.MemberCount,
 		InviterName: resolved.InviterName,
-		ServerHost:  resolved.ServerHost,
+		ServerName:  resolved.ServerName,
 	}
 	if resolved.State == stateOK {
 		// The app's invite-url parser expects chara://join?invite=<urlencoded

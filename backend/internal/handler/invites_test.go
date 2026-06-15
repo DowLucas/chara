@@ -77,6 +77,22 @@ func TestInvitePreview_OkState_WithInviter(t *testing.T) {
 	assert.NotEmpty(t, body["serverName"])
 }
 
+// On the hosted instance the preview's serverName is the friendly "Chara
+// Cloud" display name while serverHost stays the raw host.
+func TestInvitePreview_HostedState_ServerNameIsCharaCloud(t *testing.T) {
+	env := setupEnv(t)
+	env.Config.InstanceMode = "hosted"
+	group, _ := seedInviteGroup(t, env, "Roommates", "Lucas")
+
+	rr := doRequest(t, env, "GET", "/api/invites/"+group.InviteToken+"/preview", "10.0.0.20:1234")
+	require.Equal(t, http.StatusOK, rr.Code)
+
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&body))
+	assert.Equal(t, "Chara Cloud", body["serverName"])
+	assert.Equal(t, "localhost:8080", body["serverHost"])
+}
+
 func TestInvitePreview_OkState_NullInviter(t *testing.T) {
 	env := setupEnv(t)
 	group, _ := seedInviteGroup(t, env, "Trip", "Lucas")
@@ -218,6 +234,22 @@ func TestInviteLanding_OkState_ContainsExpectedStrings(t *testing.T) {
 	assert.Contains(t, body, "http%3A%2F%2Flocalhost%3A8080%2Fi%2F"+group.InviteToken)
 	assert.NotContains(t, body, "%253A", "URL must not be double-encoded")
 	assert.Contains(t, body, "localhost:8080") // footer "Server: ..."
+}
+
+// On the hosted instance the footer shows the friendly "Chara Cloud" name
+// instead of the raw API host. Self-hosted instances keep showing their host
+// (covered by TestInviteLanding_OkState_ContainsExpectedStrings above).
+func TestInviteLanding_HostedState_FooterShowsCharaCloud(t *testing.T) {
+	env := setupEnv(t)
+	env.Config.InstanceMode = "hosted"
+	group, _ := seedInviteGroup(t, env, "Kroatien", "Lucas")
+
+	rr := doRequest(t, env, "GET", "/i/"+group.InviteToken, "10.0.1.20:1234")
+	require.Equal(t, http.StatusOK, rr.Code)
+	body := rr.Body.String()
+
+	assert.Contains(t, body, "Server: Chara Cloud")
+	assert.NotContains(t, body, "Server: localhost")
 }
 
 func TestInviteLanding_OkState_NullInviter_FallsBackCopy(t *testing.T) {
