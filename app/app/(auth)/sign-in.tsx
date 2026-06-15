@@ -9,13 +9,10 @@ import {
   Platform,
   Image,
   Linking,
-  Modal,
-  TouchableWithoutFeedback,
   ScrollView,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
 import { ContentContainer } from '@/components/ContentContainer';
-import { markPopupClosed } from '@/lib/popup-guard';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -33,6 +30,7 @@ import { apiFor, publicApi } from '@/lib/api';
 import { legacyHostedUrl } from '@/lib/legacy-hosted-url';
 import { parseInviteUrl } from '@/lib/invite-url';
 import { parseInstanceInfo } from '@/lib/discovery';
+import { refreshAccountInstance } from '@/lib/refresh-instance';
 import { registerForAccount } from '@/lib/push';
 import * as analytics from '@/lib/analytics';
 import {
@@ -110,12 +108,11 @@ export default function SignInScreen() {
   // Note: we call the store's addAccount directly (not the context shim) so we
   // can pass the optional `method` analytics arg. updateAccount still comes
   // from the context to stay consistent with the rest of the file.
-  const { accounts, updateAccount } = useAccounts();
+  const { updateAccount } = useAccounts();
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const [hostingSheetOpen, setHostingSheetOpen] = useState(false);
   const [authMethods, setAuthMethods] = useState<string[] | null>(
     account?.instance?.auth_methods ?? null,
   );
@@ -134,32 +131,29 @@ export default function SignInScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Opportunistically fetch auth_methods + features if we don't already
-  // have them cached on the account. Runs for every mode including
-  // first-launch — without it, a fresh install never learns the hosted
-  // server supports Apple/Google and Apple App Review rejects under
-  // Guideline 4.8. Failures are silently ignored; the email path always
-  // works.
+  // Always re-read the target server's advertised capabilities on mount, even
+  // when a cached snapshot already exists. The auth buttons (Apple/Google) are
+  // gated on the server's `features`, and that snapshot is cached on the
+  // account — on iOS it even survives app reinstall via the Keychain. Without
+  // an unconditional refresh, a stale snapshot (e.g. captured while the server
+  // was briefly misconfigured during an outage) would keep hiding social-login
+  // buttons the server actually supports. refreshAccountInstance persists the
+  // fresh instance back onto the account when one exists, so the cache
+  // self-heals across launches. Failures are silently ignored; the email path
+  // always works. (A fresh install must still learn the hosted server supports
+  // Apple/Google or Apple App Review rejects under Guideline 4.8.)
   useEffect(() => {
-    if (authMethods !== null) return;
     let cancelled = false;
     (async () => {
-      try {
-        const raw = await publicApi(serverUrl).instanceInfo();
-        const parsed = parseInstanceInfo(raw);
-        if (cancelled) return;
-        if (parsed) {
-          setAuthMethods(parsed.auth_methods);
-          setFeatures(parsed.features);
-        }
-      } catch {
-        /* swallow — leave authMethods null; email button always renders */
-      }
+      const parsed = await refreshAccountInstance(serverUrl);
+      if (cancelled || !parsed) return;
+      setAuthMethods(parsed.auth_methods);
+      setFeatures(parsed.features);
     })();
     return () => {
       cancelled = true;
     };
-  }, [serverUrl, authMethods]);
+  }, [serverUrl]);
 
   // For reauth on an existing account, keep authMethods synced with the
   // cached instance whenever it changes.
@@ -576,26 +570,19 @@ export default function SignInScreen() {
 
       <View style={{ flex: 1 }} />
 
-      {/* Hosting trigger — only shown once the user already has at least one
-          linked account. On a truly fresh install (Apple-review path) we
-          default silently to Chara Cloud and hide the self-host option to
-          avoid guideline 4.0 confusion. Self-host stays reachable from
-          Settings → add account. */}
-      {mode === 'first-launch' && !params.server && accounts.length > 0 && (
+      {/* Self-host escape hatch. First-launch always signs into Chara Cloud;
+          this small secondary link lets people who run their own server
+          connect to it instead. Additional servers are otherwise added after
+          login from Settings → Accounts → Add. */}
+      {mode === 'first-launch' && !params.server && (
         <TouchableOpacity
-          style={styles.hostingStrip}
+          style={styles.useServerLink}
           activeOpacity={0.7}
-          onPress={() => setHostingSheetOpen(true)}
+          onPress={() => router.push('/(auth)/add-server?mode=first-launch')}
           accessibilityRole="button"
-          accessibilityLabel={t('signIn.hosting.label')}
+          accessibilityLabel={t('signIn.useMyServer')}
         >
-          <Text style={styles.hostingStripLabel}>
-            {t('signIn.hosting.signingInOn')}
-          </Text>
-          <Text style={styles.hostingStripCurrent}>
-            {t('signIn.hosting.charaCloud')}
-          </Text>
-          <Feather name="chevron-down" size={14} color={colors.lead} />
+          <Text style={styles.useServerLinkLabel}>{t('signIn.useMyServer')}</Text>
         </TouchableOpacity>
       )}
 
@@ -625,102 +612,7 @@ export default function SignInScreen() {
 
       </ContentContainer>
       </ScrollView>
-
-      <HostingSheet
-        visible={hostingSheetOpen}
-        onClose={() => setHostingSheetOpen(false)}
-        onSelectSelfHost={() => {
-          setHostingSheetOpen(false);
-          router.push('/(auth)/add-server?mode=first-launch');
-        }}
-      />
     </KeyboardAvoidingView>
-  );
-}
-
-function HostingSheet({
-  visible,
-  onClose,
-  onSelectSelfHost,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  onSelectSelfHost: () => void;
-}) {
-  const insets = useSafeAreaInsets();
-  const t = useEnglishT();
-
-  // Stamp the popup-guard on close so the trigger underneath the backdrop
-  // can't re-fire `onPress` in the same gesture that dismissed us.
-  const closeWithGuard = () => {
-    markPopupClosed();
-    onClose();
-  };
-
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={closeWithGuard}
-      statusBarTranslucent
-    >
-      <TouchableWithoutFeedback onPress={closeWithGuard}>
-        <View style={styles.sheetBackdrop} />
-      </TouchableWithoutFeedback>
-      <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.s3 }]}>
-        <View style={styles.sheetHeader}>
-          <Text style={styles.sheetTitle}>{t('signIn.hosting.label')}</Text>
-        </View>
-
-        <TouchableOpacity
-          style={styles.sheetOption}
-          activeOpacity={0.7}
-          onPress={closeWithGuard}
-        >
-          <View style={styles.sheetOptionIcon}>
-            <View style={styles.sheetRadioOuterSelected}>
-              <View style={styles.sheetRadioInner} />
-            </View>
-          </View>
-          <View style={styles.sheetOptionText}>
-            <Text style={styles.sheetOptionTitle}>
-              {t('signIn.hosting.charaCloud')}
-            </Text>
-            <Text style={styles.sheetOptionDesc}>
-              {t('signIn.hosting.charaCloudInfo')}
-            </Text>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.sheetOption}
-          activeOpacity={0.7}
-          onPress={onSelectSelfHost}
-        >
-          <View style={styles.sheetOptionIcon}>
-            <View style={styles.sheetRadioOuter} />
-          </View>
-          <View style={styles.sheetOptionText}>
-            <Text style={styles.sheetOptionTitle}>
-              {t('signIn.hosting.selfHost')}
-            </Text>
-            <Text style={styles.sheetOptionDesc}>
-              {t('signIn.hosting.selfHostHint')}
-            </Text>
-          </View>
-          <Feather name="chevron-right" size={16} color={colors.lead} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.sheetCancel}
-          activeOpacity={0.7}
-          onPress={closeWithGuard}
-        >
-          <Text style={styles.sheetCancelLabel}>{t('common.cancel')}</Text>
-        </TouchableOpacity>
-      </View>
-    </Modal>
   );
 }
 
@@ -874,119 +766,16 @@ const styles = StyleSheet.create({
   authSpacerTop: {
     height: spacing.s6,
   },
-  hostingStrip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
+  useServerLink: {
+    alignSelf: 'center',
     paddingTop: spacing.s4,
     paddingHorizontal: spacing.s5,
   },
-  hostingStripLabel: {
+  useServerLinkLabel: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
     color: colors.lead,
     letterSpacing: 0.3,
-  },
-  hostingStripCurrent: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.graphite,
-    letterSpacing: 0.3,
-  },
-  // Bottom sheet
-  sheetBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  sheet: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: colors.paper,
-    borderTopLeftRadius: 14,
-    borderTopRightRadius: 14,
-    borderTopWidth: 0.5,
-    borderColor: colors.graphite,
-    paddingTop: spacing.s2,
-    paddingHorizontal: spacing.s2,
-  },
-  sheetHeader: {
-    paddingHorizontal: spacing.s4,
-    paddingVertical: spacing.s3,
-    borderBottomWidth: 0.5,
-    borderColor: colors.ruleSoft,
-  },
-  sheetTitle: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
-    letterSpacing: 0.3,
-  },
-  sheetOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.s3,
-    paddingHorizontal: spacing.s4,
-    paddingVertical: spacing.s4,
-    borderBottomWidth: 0.5,
-    borderColor: colors.ruleSoft,
-  },
-  sheetOptionIcon: {
-    width: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sheetRadioOuter: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 1,
-    borderColor: colors.lead,
-  },
-  sheetRadioOuterSelected: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 1.5,
-    borderColor: colors.vermillion,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sheetRadioInner: {
-    width: 9,
-    height: 9,
-    borderRadius: 4.5,
-    backgroundColor: colors.vermillion,
-  },
-  sheetOptionText: {
-    flex: 1,
-    gap: 2,
-  },
-  sheetOptionTitle: {
-    fontFamily: fontDisplay,
-    fontSize: fontSize.body,
-    color: colors.graphite,
-    letterSpacing: -0.2,
-  },
-  sheetOptionDesc: {
-    fontFamily: fontBody,
-    fontSize: fontSize.caption,
-    color: colors.lead,
-    lineHeight: 18,
-  },
-  sheetCancel: {
-    marginTop: spacing.s2,
-    paddingVertical: spacing.s4,
-    borderRadius: 8,
-    backgroundColor: colors.bone,
-    alignItems: 'center',
-  },
-  sheetCancelLabel: {
-    fontFamily: fontBody,
-    fontSize: fontSize.body,
-    color: colors.lead,
   },
   dividerRow: {
     flexDirection: 'row',

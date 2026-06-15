@@ -47,6 +47,10 @@ Auth is split by instance type:
 
 Google and Apple Sign In are **not available on self-hosted instances**. The app detects instance type from `/.well-known/chara-instance` and renders sign-in options accordingly.
 
+**Login entry: Chara Cloud first, other servers added later.** First-launch sign-in always targets Chara Cloud (`legacyHostedUrl()`); the only self-host affordance on the login screen is a small "use my server →" link (`signIn.useMyServer`) that routes to `add-server` (`mode=first-launch`). Additional servers are added **after** login via Settings → Accounts → Add. The login screen renders no server picker.
+
+**Never gate auth buttons on a stale cached instance.** The sign-in screen shows Apple/Google based on the target server's advertised `features`, but always re-reads them on mount via `refreshAccountInstance(serverUrl)` (`app/lib/refresh-instance.ts`), which persists the fresh `instance` back onto the account. Do **not** rely solely on the cached `account.instance` for button gating — on iOS the accounts blob (SecureStore = Keychain) survives app reinstall, so a snapshot captured while the server was briefly misconfigured would otherwise freeze the buttons (e.g. Apple stuck hidden) across reinstalls.
+
 ## Multi-server accounts
 
 The app holds **N independent server-accounts** at once and aggregates their data into one UI. This is **aggregation, not federation** — servers don't talk to each other; "linking" lives only inside the app, on this device. Read the rules below before changing anything in this area.
