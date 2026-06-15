@@ -156,7 +156,85 @@ describe('refreshAccountInstance', () => {
       fetchInstanceInfo: async () => {
         throw new Error('network down');
       },
+      sleep: async () => {},
     });
     expect(parsed).toBeNull();
+  });
+
+  it('retries a transient fetch failure, then succeeds and persists', async () => {
+    await addAccount(makeAccount(HOSTED));
+    let calls = 0;
+    const parsed = await refreshAccountInstance(HOSTED, {
+      fetchInstanceInfo: async () => {
+        calls++;
+        if (calls === 1) throw new Error('blip');
+        return VALID_RAW;
+      },
+      retries: 2,
+      sleep: async () => {},
+    });
+
+    expect(calls).toBe(2);
+    expect(parsed?.features.apple_auth).toBe(true);
+    expect(accountFor(HOSTED)?.instance?.features.apple_auth).toBe(true);
+  });
+
+  it('retries a transient failure with no account (post-logout) without persisting', async () => {
+    // The headline bug: after logout the account is deleted, so a blip on the
+    // single mount-time fetch must still recover in-memory (no cache to fall
+    // back on). Self-heals the sign-in screen without re-creating a phantom
+    // account.
+    let calls = 0;
+    const parsed = await refreshAccountInstance(HOSTED, {
+      fetchInstanceInfo: async () => {
+        calls++;
+        if (calls === 1) throw new Error('blip');
+        return VALID_RAW;
+      },
+      retries: 2,
+      sleep: async () => {},
+    });
+
+    expect(calls).toBe(2);
+    expect(parsed?.features.apple_auth).toBe(true);
+    expect(accountFor(HOSTED)).toBeNull();
+  });
+
+  it('gives up after exhausting retries and leaves the cache untouched', async () => {
+    const acct = makeAccount(HOSTED);
+    acct.instance = STALE_EMAIL_ONLY;
+    await addAccount(acct);
+
+    let calls = 0;
+    const parsed = await refreshAccountInstance(HOSTED, {
+      fetchInstanceInfo: async () => {
+        calls++;
+        throw new Error('down');
+      },
+      retries: 2,
+      sleep: async () => {},
+    });
+
+    expect(parsed).toBeNull();
+    expect(calls).toBe(3); // initial attempt + 2 retries
+    expect(accountFor(HOSTED)?.instance?.auth_methods).toEqual(['magic_link']);
+  });
+
+  it('does NOT retry a successful but non-Chara response', async () => {
+    // A 200 that fails parseInstanceInfo is a definitive negative, not a
+    // transient blip — retrying it would just waste time and delay the email
+    // path. Only thrown fetches (network / non-2xx) are retried.
+    let calls = 0;
+    const parsed = await refreshAccountInstance(HOSTED, {
+      fetchInstanceInfo: async () => {
+        calls++;
+        return { nope: true };
+      },
+      retries: 2,
+      sleep: async () => {},
+    });
+
+    expect(parsed).toBeNull();
+    expect(calls).toBe(1);
   });
 });
