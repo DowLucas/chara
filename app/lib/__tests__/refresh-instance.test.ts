@@ -72,7 +72,7 @@ function makeAccount(serverUrl: string): Account {
   };
 }
 
-const HOSTED = 'https://api.chara.app';
+const HOSTED = 'https://api.example.com';
 
 const VALID_RAW = {
   mode: 'hosted',

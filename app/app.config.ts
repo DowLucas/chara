@@ -3,17 +3,24 @@ import type { ExpoConfig } from 'expo/config';
 // Host that serves the app's AASA + assetlinks files (and the API). Build-time
 // configurable so the official hosted build can inject its real origin via
 // EXPO_PUBLIC_HOSTED_API_URL, keeping the deployment domain out of the
-// open-source tree. `api.chara.app` is a neutral placeholder default.
-const HOSTED_API_HOST = (
-  process.env.EXPO_PUBLIC_HOSTED_API_URL ?? 'https://api.chara.app'
-)
+// open-source tree. A missing value in an EAS build is a hard error — better to
+// fail the build than ship a build aimed at a non-functional host. Local dev
+// (where universal links don't matter) falls back to localhost.
+const HOSTED_FROM_ENV = process.env.EXPO_PUBLIC_HOSTED_API_URL;
+if (!HOSTED_FROM_ENV && process.env.EAS_BUILD === 'true') {
+  throw new Error(
+    'EXPO_PUBLIC_HOSTED_API_URL must be set for EAS builds. The official build injects ' +
+      'it as an EAS environment variable; forks/self-hosters must set their own hosted API origin.',
+  );
+}
+const HOSTED_API_HOST = (HOSTED_FROM_ENV ?? 'http://localhost:8080')
   .replace(/^https?:\/\//i, '')
   .replace(/\/.*$/, '');
 
 const config: ExpoConfig = {
   name: 'Chara',
   slug: 'chara',
-  version: '1.0.5',
+  version: '1.0.6',
   scheme: 'chara',
   orientation: 'portrait',
   icon: './assets/icon.png',

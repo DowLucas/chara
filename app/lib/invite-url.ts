@@ -22,7 +22,7 @@ import { normalizeServerUrl } from './server-url';
 export type InviteParseError = { kind: 'invalid'; reason: string };
 
 export interface InviteRef {
-  /** Normalized server URL (no path), e.g. `https://api.chara.app`. */
+  /** Normalized server URL (no path), e.g. `https://api.example.com`. */
   serverUrl: string;
   /** URL-decoded join token. */
   token: string;

@@ -6,7 +6,7 @@ import {
   type MigrationStorage,
 } from '../migrate-legacy-auth';
 
-const LEGACY_URL = 'https://api.chara.app';
+const LEGACY_URL = 'https://api.example.com';
 const FIXED_NOW = '2026-05-22T10:00:00Z';
 
 /**

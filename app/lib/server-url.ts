@@ -76,10 +76,28 @@ function stripTrailingColon(s: string): string {
  * Build-time configurable: the official hosted build injects its real API
  * origin via `EXPO_PUBLIC_HOSTED_API_URL` (an EAS env var, inlined by Metro),
  * keeping the deployment domain out of the open-source tree. Forks/self-hosters
- * set their own. The `api.chara.app` default is a neutral placeholder.
+ * set their own.
+ *
+ * There is deliberately no production fallback: a missing value in a release
+ * build throws rather than silently pointing the app at a non-functional host
+ * (an unset var once shipped a build aimed at a dead placeholder, breaking
+ * login and hiding the Apple/Google buttons). In dev/test the hosted origin
+ * isn't used for API calls (see `resolveBaseUrl` / `legacyHostedUrl`), so a
+ * local placeholder keeps module load working.
  */
-export const MAIN_HOSTED_SERVER_URL =
-  process.env.EXPO_PUBLIC_HOSTED_API_URL ?? 'https://api.chara.app';
+function resolveMainHostedServerUrl(): string {
+  const fromEnv = process.env.EXPO_PUBLIC_HOSTED_API_URL;
+  if (fromEnv) return fromEnv;
+  if (typeof __DEV__ !== 'undefined' && !__DEV__) {
+    throw new Error(
+      'EXPO_PUBLIC_HOSTED_API_URL is not set. The official build injects it as an ' +
+        'EAS environment variable; forks/self-hosters must set their own hosted API origin.',
+    );
+  }
+  return 'http://localhost:8080';
+}
+
+export const MAIN_HOSTED_SERVER_URL = resolveMainHostedServerUrl();
 
 /** Bare host of {@link MAIN_HOSTED_SERVER_URL} (no scheme, no trailing slash). */
 export const MAIN_HOSTED_SERVER_HOST = MAIN_HOSTED_SERVER_URL.replace(
