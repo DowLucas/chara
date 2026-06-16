@@ -1,12 +1,12 @@
 import { parseInviteUrl } from '../invite-url';
 
 const TOKEN = '01HGZABCDEFGHJKMNPQRSTVWXY';
-const HTTPS = `https://api.chara.app/api/groups/join/${TOKEN}`;
+const HTTPS = `https://api.example.com/api/groups/join/${TOKEN}`;
 
 describe('parseInviteUrl — three accepted forms', () => {
   it('parses the canonical HTTPS form', () => {
     expect(parseInviteUrl(HTTPS)).toEqual({
-      serverUrl: 'https://api.chara.app',
+      serverUrl: 'https://api.example.com',
       token: TOKEN,
     });
   });
@@ -14,7 +14,7 @@ describe('parseInviteUrl — three accepted forms', () => {
   it('parses the chara:// app-scheme form', () => {
     const link = `chara://join?invite=${encodeURIComponent(HTTPS)}`;
     expect(parseInviteUrl(link)).toEqual({
-      serverUrl: 'https://api.chara.app',
+      serverUrl: 'https://api.example.com',
       token: TOKEN,
     });
   });
@@ -22,7 +22,7 @@ describe('parseInviteUrl — three accepted forms', () => {
   it('parses the legacy quits:// alias identically', () => {
     const link = `quits://join?invite=${encodeURIComponent(HTTPS)}`;
     expect(parseInviteUrl(link)).toEqual({
-      serverUrl: 'https://api.chara.app',
+      serverUrl: 'https://api.example.com',
       token: TOKEN,
     });
   });
@@ -92,43 +92,43 @@ describe('parseInviteUrl — new /i/<token> form', () => {
 describe('parseInviteUrl — tolerance', () => {
   it('tolerates a trailing slash on the HTTPS form', () => {
     expect(parseInviteUrl(`${HTTPS}/`)).toEqual({
-      serverUrl: 'https://api.chara.app',
+      serverUrl: 'https://api.example.com',
       token: TOKEN,
     });
   });
 
   it('preserves a non-default port through parse', () => {
-    const httpsWithPort = `https://api.chara.app:8443/api/groups/join/${TOKEN}`;
+    const httpsWithPort = `https://api.example.com:8443/api/groups/join/${TOKEN}`;
     expect(parseInviteUrl(httpsWithPort)).toEqual({
-      serverUrl: 'https://api.chara.app:8443',
+      serverUrl: 'https://api.example.com:8443',
       token: TOKEN,
     });
   });
 
   it('preserves a non-default port through the chara:// form too', () => {
-    const httpsWithPort = `https://api.chara.app:8443/api/groups/join/${TOKEN}`;
+    const httpsWithPort = `https://api.example.com:8443/api/groups/join/${TOKEN}`;
     const link = `chara://join?invite=${encodeURIComponent(httpsWithPort)}`;
     expect(parseInviteUrl(link)).toEqual({
-      serverUrl: 'https://api.chara.app:8443',
+      serverUrl: 'https://api.example.com:8443',
       token: TOKEN,
     });
   });
 
   it('round-trips a URL-encoded token', () => {
     const messyToken = 'abc.def-XYZ_123';
-    const httpsUrl = `https://api.chara.app/api/groups/join/${encodeURIComponent(messyToken)}`;
+    const httpsUrl = `https://api.example.com/api/groups/join/${encodeURIComponent(messyToken)}`;
     const result = parseInviteUrl(httpsUrl);
     expect((result as any).token).toBe(messyToken);
   });
 
   it('lowercases the host in the returned serverUrl', () => {
-    const r = parseInviteUrl(`https://API.Chara.App/api/groups/join/${TOKEN}`);
-    expect((r as any).serverUrl).toBe('https://api.chara.app');
+    const r = parseInviteUrl(`https://API.Example.Com/api/groups/join/${TOKEN}`);
+    expect((r as any).serverUrl).toBe('https://api.example.com');
   });
 
   it('trims surrounding whitespace', () => {
     expect(parseInviteUrl(`  ${HTTPS}  `)).toEqual({
-      serverUrl: 'https://api.chara.app',
+      serverUrl: 'https://api.example.com',
       token: TOKEN,
     });
   });
@@ -149,21 +149,21 @@ describe('parseInviteUrl — rejections', () => {
   });
 
   it('rejects the wrong path', () => {
-    assertInvalid(`https://api.chara.app/api/groups/${TOKEN}`);
-    assertInvalid(`https://api.chara.app/other/path/${TOKEN}`);
+    assertInvalid(`https://api.example.com/api/groups/${TOKEN}`);
+    assertInvalid(`https://api.example.com/other/path/${TOKEN}`);
   });
 
   it('rejects a missing token segment', () => {
-    assertInvalid('https://api.chara.app/api/groups/join/');
-    assertInvalid('https://api.chara.app/api/groups/join');
+    assertInvalid('https://api.example.com/api/groups/join/');
+    assertInvalid('https://api.example.com/api/groups/join');
   });
 
   it('rejects extra path segments after the token', () => {
-    assertInvalid(`https://api.chara.app/api/groups/join/${TOKEN}/extra`);
+    assertInvalid(`https://api.example.com/api/groups/join/${TOKEN}/extra`);
   });
 
   it('rejects an http (non-https) public HTTPS form', () => {
-    assertInvalid(`http://api.chara.app/api/groups/join/${TOKEN}`);
+    assertInvalid(`http://api.example.com/api/groups/join/${TOKEN}`);
   });
 
   it('rejects chara:// without ?invite=', () => {
@@ -176,7 +176,7 @@ describe('parseInviteUrl — rejections', () => {
   });
 
   it('rejects chara://join with non-https invite payload', () => {
-    const httpForm = `http://api.chara.app/api/groups/join/${TOKEN}`;
+    const httpForm = `http://api.example.com/api/groups/join/${TOKEN}`;
     assertInvalid(`chara://join?invite=${encodeURIComponent(httpForm)}`);
   });
 
@@ -195,6 +195,6 @@ describe('parseInviteUrl — rejections', () => {
   it('rejects an HTTPS URL whose server-url portion fails normalization', () => {
     // A non-empty path other than the join path is caught earlier; this
     // covers e.g. an https URL with a query on the join path itself.
-    assertInvalid(`https://api.chara.app/api/groups/join/${TOKEN}?x=1`);
+    assertInvalid(`https://api.example.com/api/groups/join/${TOKEN}?x=1`);
   });
 });

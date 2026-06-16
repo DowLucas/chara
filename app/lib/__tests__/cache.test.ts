@@ -41,7 +41,7 @@ beforeEach(() => {
 
 describe('cacheKey / parseCacheKey', () => {
   it('produces a deterministic string for the same input', () => {
-    const k = { serverUrl: 'https://api.chara.app', userId: 'u1', endpoint: 'groups' };
+    const k = { serverUrl: 'https://api.example.com', userId: 'u1', endpoint: 'groups' };
     expect(cacheKey(k)).toBe(cacheKey(k));
   });
 
@@ -52,7 +52,7 @@ describe('cacheKey / parseCacheKey', () => {
 
   it('round-trips through parseCacheKey', () => {
     const original = {
-      serverUrl: 'https://api.chara.app',
+      serverUrl: 'https://api.example.com',
       userId: 'user-123',
       endpoint: 'balances',
     };
@@ -71,7 +71,7 @@ describe('cacheKey / parseCacheKey', () => {
 
   it('round-trips userIds containing colons and slashes', () => {
     const original = {
-      serverUrl: 'https://api.chara.app',
+      serverUrl: 'https://api.example.com',
       userId: 'weird::id/with:bits',
       endpoint: 'groups',
     };
@@ -92,7 +92,7 @@ describe('cacheKey / parseCacheKey', () => {
 describe('readCache', () => {
   it('returns null for a never-written key', async () => {
     const r = await readCache({
-      serverUrl: 'https://api.chara.app',
+      serverUrl: 'https://api.example.com',
       userId: 'u',
       endpoint: 'groups',
     });
@@ -101,7 +101,7 @@ describe('readCache', () => {
 
   it('returns null and self-heals when stored JSON is corrupt', async () => {
     const k = {
-      serverUrl: 'https://api.chara.app',
+      serverUrl: 'https://api.example.com',
       userId: 'u',
       endpoint: 'groups',
     };
@@ -116,7 +116,7 @@ describe('readCache', () => {
 describe('writeCache + readCache', () => {
   it('round-trips a value with a storedAt timestamp', async () => {
     const k = {
-      serverUrl: 'https://api.chara.app',
+      serverUrl: 'https://api.example.com',
       userId: 'u',
       endpoint: 'groups',
     };
@@ -133,7 +133,7 @@ describe('writeCache + readCache', () => {
 
   it('overwrites a previous entry', async () => {
     const k = {
-      serverUrl: 'https://api.chara.app',
+      serverUrl: 'https://api.example.com',
       userId: 'u',
       endpoint: 'groups',
     };
@@ -148,12 +148,12 @@ describe('writeCache + readCache', () => {
 describe('deleteCache', () => {
   it('removes a specific entry without affecting siblings', async () => {
     const a = {
-      serverUrl: 'https://api.chara.app',
+      serverUrl: 'https://api.example.com',
       userId: 'u',
       endpoint: 'groups',
     };
     const b = {
-      serverUrl: 'https://api.chara.app',
+      serverUrl: 'https://api.example.com',
       userId: 'u',
       endpoint: 'balances',
     };
@@ -170,7 +170,7 @@ describe('deleteCache', () => {
   it('is a no-op for a missing key', async () => {
     await expect(
       deleteCache({
-        serverUrl: 'https://api.chara.app',
+        serverUrl: 'https://api.example.com',
         userId: 'u',
         endpoint: 'nope',
       }),
@@ -180,7 +180,7 @@ describe('deleteCache', () => {
 
 describe('evictServer', () => {
   it('removes only entries matching the given serverUrl', async () => {
-    const serverA = 'https://api.chara.app';
+    const serverA = 'https://api.example.com';
     const serverB = 'https://other.example';
 
     await writeCache({ serverUrl: serverA, userId: 'u1', endpoint: 'groups' }, { a: 1 });
@@ -207,18 +207,18 @@ describe('evictServer', () => {
   it('does not touch unrelated AsyncStorage keys', async () => {
     await AsyncStorage.setItem('some.other.app.key', 'preserve me');
     await writeCache(
-      { serverUrl: 'https://api.chara.app', userId: 'u', endpoint: 'groups' },
+      { serverUrl: 'https://api.example.com', userId: 'u', endpoint: 'groups' },
       { v: 1 },
     );
 
-    await evictServer('https://api.chara.app');
+    await evictServer('https://api.example.com');
 
     expect(await AsyncStorage.getItem('some.other.app.key')).toBe('preserve me');
   });
 
   it('is a no-op when nothing matches', async () => {
     await writeCache(
-      { serverUrl: 'https://api.chara.app', userId: 'u', endpoint: 'groups' },
+      { serverUrl: 'https://api.example.com', userId: 'u', endpoint: 'groups' },
       { v: 1 },
     );
 
@@ -226,7 +226,7 @@ describe('evictServer', () => {
 
     // Existing entry still intact.
     const r = await readCache<{ v: number }>({
-      serverUrl: 'https://api.chara.app',
+      serverUrl: 'https://api.example.com',
       userId: 'u',
       endpoint: 'groups',
     });
@@ -234,15 +234,15 @@ describe('evictServer', () => {
   });
 
   it('is a no-op when the cache is empty', async () => {
-    await expect(evictServer('https://api.chara.app')).resolves.toBeUndefined();
+    await expect(evictServer('https://api.example.com')).resolves.toBeUndefined();
   });
 
   it('distinguishes servers that share a URL prefix', async () => {
-    // Without urlencoding the serverUrl, "https://api.chara.app" would be a
-    // prefix of "https://api.chara.app.evil.example" and naive
+    // Without urlencoding the serverUrl, "https://api.example.com" would be a
+    // prefix of "https://api.example.com.evil.example" and naive
     // string-startsWith eviction would over-delete.
-    const target = 'https://api.chara.app';
-    const lookalike = 'https://api.chara.app.evil.example';
+    const target = 'https://api.example.com';
+    const lookalike = 'https://api.example.com.evil.example';
 
     await writeCache({ serverUrl: target, userId: 'u', endpoint: 'groups' }, { v: 1 });
     await writeCache(

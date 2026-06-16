@@ -6,23 +6,23 @@ import {
 
 describe('normalizeServerUrl — happy path', () => {
   it('passes through an already-canonical https URL', () => {
-    expect(normalizeServerUrl('https://api.chara.app')).toBe('https://api.chara.app');
+    expect(normalizeServerUrl('https://api.example.com')).toBe('https://api.example.com');
   });
 
   it('strips a bare trailing slash silently', () => {
-    expect(normalizeServerUrl('https://api.chara.app/')).toBe('https://api.chara.app');
+    expect(normalizeServerUrl('https://api.example.com/')).toBe('https://api.example.com');
   });
 
   it('lowercases an uppercase host', () => {
-    expect(normalizeServerUrl('https://API.Chara.APP')).toBe('https://api.chara.app');
+    expect(normalizeServerUrl('https://API.Example.COM')).toBe('https://api.example.com');
   });
 
   it('strips the default https port (:443)', () => {
-    expect(normalizeServerUrl('https://api.chara.app:443')).toBe('https://api.chara.app');
+    expect(normalizeServerUrl('https://api.example.com:443')).toBe('https://api.example.com');
   });
 
   it('keeps a non-default port', () => {
-    expect(normalizeServerUrl('https://api.chara.app:8443')).toBe('https://api.chara.app:8443');
+    expect(normalizeServerUrl('https://api.example.com:8443')).toBe('https://api.example.com:8443');
   });
 
   it('converts IDN host to punycode', () => {
@@ -140,19 +140,19 @@ describe('normalizeServerUrl — rejections', () => {
 
 describe('normalizeServerUrl — input tolerance', () => {
   it('trims surrounding whitespace', () => {
-    expect(normalizeServerUrl('  https://api.chara.app  ')).toBe('https://api.chara.app');
+    expect(normalizeServerUrl('  https://api.example.com  ')).toBe('https://api.example.com');
   });
 });
 
 describe('isMainHostedServer', () => {
   it('matches the canonical hosted URL exactly', () => {
-    expect(isMainHostedServer('https://api.chara.app')).toBe(true);
+    expect(isMainHostedServer('https://api.example.com')).toBe(true);
   });
   it('matches with a trailing slash', () => {
-    expect(isMainHostedServer('https://api.chara.app/')).toBe(true);
+    expect(isMainHostedServer('https://api.example.com/')).toBe(true);
   });
   it('matches case-insensitively', () => {
-    expect(isMainHostedServer('https://API.CHARA.APP')).toBe(true);
+    expect(isMainHostedServer('https://API.EXAMPLE.COM')).toBe(true);
   });
   it('rejects self-hosted URLs', () => {
     expect(isMainHostedServer('https://chara.example.com')).toBe(false);
@@ -166,7 +166,7 @@ describe('isMainHostedServer', () => {
 
 describe('displayHostFor', () => {
   it('returns the brand label for the main hosted server', () => {
-    expect(displayHostFor('https://api.chara.app', 'Chara Server')).toBe(
+    expect(displayHostFor('https://api.example.com', 'Chara Server')).toBe(
       'Chara Server',
     );
   });
@@ -175,5 +175,51 @@ describe('displayHostFor', () => {
       'chara.example.com',
     );
     expect(displayHostFor('http://10.0.0.5:8080', 'Chara Server')).toBe('10.0.0.5:8080');
+  });
+});
+
+// Regression guard: an unset EXPO_PUBLIC_HOSTED_API_URL once shipped a release
+// build aimed at a dead placeholder host, breaking magic-link login and hiding
+// the Apple/Google buttons. A production build with the var unset must now
+// throw at module load rather than fall back to any host.
+describe('MAIN_HOSTED_SERVER_URL resolution', () => {
+  const realEnv = process.env.EXPO_PUBLIC_HOSTED_API_URL;
+  const g = global as unknown as { __DEV__?: boolean };
+  const realDev = g.__DEV__;
+
+  afterEach(() => {
+    if (realEnv === undefined) delete process.env.EXPO_PUBLIC_HOSTED_API_URL;
+    else process.env.EXPO_PUBLIC_HOSTED_API_URL = realEnv;
+    g.__DEV__ = realDev;
+    jest.resetModules();
+  });
+
+  it('uses the injected env var when set', () => {
+    process.env.EXPO_PUBLIC_HOSTED_API_URL = 'https://hosted.example.org';
+    g.__DEV__ = false;
+    jest.isolateModules(() => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      expect(require('../server-url').MAIN_HOSTED_SERVER_URL).toBe('https://hosted.example.org');
+    });
+  });
+
+  it('throws in a production build when the env var is unset', () => {
+    delete process.env.EXPO_PUBLIC_HOSTED_API_URL;
+    g.__DEV__ = false;
+    expect(() =>
+      jest.isolateModules(() => {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        require('../server-url');
+      }),
+    ).toThrow(/EXPO_PUBLIC_HOSTED_API_URL/);
+  });
+
+  it('falls back to localhost in dev/test when unset (no dead placeholder)', () => {
+    delete process.env.EXPO_PUBLIC_HOSTED_API_URL;
+    g.__DEV__ = true;
+    jest.isolateModules(() => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      expect(require('../server-url').MAIN_HOSTED_SERVER_URL).toBe('http://localhost:8080');
+    });
   });
 });

@@ -108,8 +108,8 @@ export async function deleteCache(k: CacheKey): Promise<void> {
  * Implementation note: we scan `getAllKeys()` and decode each key via
  * `parseCacheKey` rather than doing a string `startsWith` on the encoded
  * prefix — that avoids over-deleting when one serverUrl is a literal
- * prefix of another (e.g. `https://api.chara.app` vs
- * `https://api.chara.app.evil.example`).
+ * prefix of another (e.g. `https://api.example.com` vs
+ * `https://api.example.com.evil.example`).
  */
 export async function evictServer(serverUrl: string): Promise<void> {
   const allKeys = await AsyncStorage.getAllKeys();

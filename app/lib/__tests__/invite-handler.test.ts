@@ -1,7 +1,7 @@
 import { classifyInvite, type ClassifyDepsAccount } from '../invite-handler';
 
 const TOKEN = '01HGZABCDEFGHJKMNPQRSTVWXY';
-const HTTPS = `https://api.chara.app/api/groups/join/${TOKEN}`;
+const HTTPS = `https://api.example.com/api/groups/join/${TOKEN}`;
 const CHARA = `chara://join?invite=${encodeURIComponent(HTTPS)}`;
 const QUITS = `quits://join?invite=${encodeURIComponent(HTTPS)}`;
 
@@ -33,7 +33,7 @@ describe('classifyInvite', () => {
     });
     expect(result).toEqual({
       kind: 'add-account-then-join',
-      serverUrl: 'https://api.chara.app',
+      serverUrl: 'https://api.example.com',
       token: TOKEN,
     });
   });
@@ -47,14 +47,14 @@ describe('classifyInvite', () => {
     const result = classifyInvite(HTTPS, {
       accounts: [
         acc('https://other.example', 'u1', '2026-05-01T00:00:00Z'),
-        acc('https://api.chara.app', 'u2', '2026-05-10T00:00:00Z'),
+        acc('https://api.example.com', 'u2', '2026-05-10T00:00:00Z'),
       ],
     });
     expect(result).toEqual({
       kind: 'join-with-account',
-      serverUrl: 'https://api.chara.app',
+      serverUrl: 'https://api.example.com',
       token: TOKEN,
-      accountServerUrl: 'https://api.chara.app',
+      accountServerUrl: 'https://api.example.com',
     });
   });
 
@@ -65,25 +65,25 @@ describe('classifyInvite', () => {
     // per-handle case (spec §10).
     const result = classifyInvite(HTTPS, {
       accounts: [
-        acc('https://api.chara.app', 'older', '2026-04-01T00:00:00Z'),
-        acc('https://api.chara.app', 'newest', '2026-05-22T12:00:00Z'),
-        acc('https://api.chara.app', 'middle', '2026-05-10T00:00:00Z'),
+        acc('https://api.example.com', 'older', '2026-04-01T00:00:00Z'),
+        acc('https://api.example.com', 'newest', '2026-05-22T12:00:00Z'),
+        acc('https://api.example.com', 'middle', '2026-05-10T00:00:00Z'),
       ],
     });
     expect(result.kind).toBe('choose-account');
     if (result.kind === 'choose-account') {
-      expect(result.serverUrl).toBe('https://api.chara.app');
+      expect(result.serverUrl).toBe('https://api.example.com');
       expect(result.token).toBe(TOKEN);
       expect(result.candidateServerUrls).toHaveLength(3);
       // All three candidates share the same serverUrl; the chooser disambiguates
       // by some future per-handle key, but defaultPick still resolves.
-      expect(result.defaultPick).toBe('https://api.chara.app');
+      expect(result.defaultPick).toBe('https://api.example.com');
     }
   });
 
   it('all three invite URL forms produce the same outcome', () => {
     const deps: { accounts: ClassifyDepsAccount[] } = {
-      accounts: [acc('https://api.chara.app', 'u1', '2026-05-10T00:00:00Z')],
+      accounts: [acc('https://api.example.com', 'u1', '2026-05-10T00:00:00Z')],
     };
     const a = classifyInvite(HTTPS, deps);
     const b = classifyInvite(CHARA, deps);
