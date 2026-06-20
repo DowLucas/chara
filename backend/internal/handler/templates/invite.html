@@ -98,9 +98,14 @@
       <h1>{{if .InviterName}}{{.InviterName}} invited you to &lsquo;{{.GroupName}}&rsquo;{{else}}You&rsquo;re invited to &lsquo;{{.GroupName}}&rsquo;{{end}}</h1>
       <p class="meta">{{.MemberCount}} members</p>
       <div class="badges">
-        <!-- TODO: replace placeholder iOS App ID once TestFlight upload assigns one. -->
-        <a class="badge" href="https://apps.apple.com/app/chara/id000000000">Get Chara on the App Store</a>
-        <a class="badge" href="https://play.google.com/store/apps/details?id=app.chara">Get Chara on Google Play</a>
+        {{if .IsIOS}}
+        <a class="badge" href="https://apps.apple.com/app/id6773089720">Get Chara on the App Store</a>
+        {{else if .IsAndroid}}
+        <a class="badge" href="https://play.google.com/store/apps/details?id=chara.app">Get Chara on Google Play</a>
+        {{else}}
+        <a class="badge" href="https://apps.apple.com/app/id6773089720">Get Chara on the App Store</a>
+        <a class="badge" href="https://play.google.com/store/apps/details?id=chara.app">Get Chara on Google Play</a>
+        {{end}}
       </div>
       <a class="open-link" href="{{.CharaSchemeHref}}">Already installed? Open in Chara &rarr;</a>
       <div class="footer">Server: {{.ServerName}}</div>

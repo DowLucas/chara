@@ -226,14 +226,73 @@ func TestInviteLanding_OkState_ContainsExpectedStrings(t *testing.T) {
 	assert.Contains(t, body, "Open-source bill splitting you can self-host.")
 	assert.Contains(t, body, "Roommates")
 	assert.Contains(t, body, "Lucas invited you to")
-	assert.Contains(t, body, "apps.apple.com/app/chara")
-	assert.Contains(t, body, "play.google.com/store/apps/details?id=app.chara")
+	assert.Contains(t, body, "apps.apple.com/app/id6773089720")
+	assert.Contains(t, body, "play.google.com/store/apps/details?id=chara.app")
 	assert.Contains(t, body, "chara://join?invite=")
 	// The invite= value is the urlencoded BaseURL (test env uses http://) —
 	// assert single-pass encoding, not double-encoded (%253A).
 	assert.Contains(t, body, "http%3A%2F%2Flocalhost%3A8080%2Fi%2F"+group.InviteToken)
 	assert.NotContains(t, body, "%253A", "URL must not be double-encoded")
 	assert.Contains(t, body, "localhost:8080") // footer "Server: ..."
+}
+
+// doRequestUA is doRequest with a User-Agent header set, so we can exercise
+// the OS-aware store-badge rendering on the landing page.
+func doRequestUA(t *testing.T, env *testutil.Env, path, userAgent string) *httptest.ResponseRecorder {
+	t.Helper()
+	req, err := http.NewRequest("GET", path, nil)
+	require.NoError(t, err)
+	req.RemoteAddr = "10.0.1.1:1234"
+	req.Header.Set("User-Agent", userAgent)
+	rr := httptest.NewRecorder()
+	env.Router.ServeHTTP(rr, req)
+	return rr
+}
+
+const (
+	iosUA     = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"
+	androidUA = "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36"
+	desktopUA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+)
+
+// On iOS, only the App Store badge should render — showing a Play Store button
+// to an iPhone user is the friction we're removing.
+func TestInviteLanding_IOSUserAgent_ShowsOnlyAppStore(t *testing.T) {
+	env := setupEnv(t)
+	group, _ := seedInviteGroup(t, env, "Roommates", "Lucas")
+
+	rr := doRequestUA(t, env, "/i/"+group.InviteToken, iosUA)
+	require.Equal(t, http.StatusOK, rr.Code)
+	body := rr.Body.String()
+
+	assert.Contains(t, body, "apps.apple.com/app/id6773089720")
+	assert.NotContains(t, body, "play.google.com")
+}
+
+// On Android, only the Google Play badge should render.
+func TestInviteLanding_AndroidUserAgent_ShowsOnlyPlay(t *testing.T) {
+	env := setupEnv(t)
+	group, _ := seedInviteGroup(t, env, "Roommates", "Lucas")
+
+	rr := doRequestUA(t, env, "/i/"+group.InviteToken, androidUA)
+	require.Equal(t, http.StatusOK, rr.Code)
+	body := rr.Body.String()
+
+	assert.Contains(t, body, "play.google.com/store/apps/details?id=chara.app")
+	assert.NotContains(t, body, "apps.apple.com")
+}
+
+// On desktop / unknown clients we can't pick a store, so show both badges.
+func TestInviteLanding_DesktopUserAgent_ShowsBoth(t *testing.T) {
+	env := setupEnv(t)
+	group, _ := seedInviteGroup(t, env, "Roommates", "Lucas")
+
+	rr := doRequestUA(t, env, "/i/"+group.InviteToken, desktopUA)
+	require.Equal(t, http.StatusOK, rr.Code)
+	body := rr.Body.String()
+
+	assert.Contains(t, body, "apps.apple.com/app/id6773089720")
+	assert.Contains(t, body, "play.google.com/store/apps/details?id=chara.app")
 }
 
 // On the hosted instance the footer shows the friendly "Chara Cloud" name

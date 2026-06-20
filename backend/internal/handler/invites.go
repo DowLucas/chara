@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
@@ -30,8 +31,8 @@ var inviteTemplate = template.Must(
 
 // InviteHandler serves the two public invite-deep-link endpoints:
 //
-//   GET /i/{token}                       — HTML landing page (state-aware)
-//   GET /api/invites/{token}/preview     — JSON preview (state-aware)
+//	GET /i/{token}                       — HTML landing page (state-aware)
+//	GET /api/invites/{token}/preview     — JSON preview (state-aware)
 //
 // Both are unauthenticated. The token is the bearer credential for joining,
 // so anything the join would expose is fair game here (group name, member
@@ -74,13 +75,13 @@ const hostedServerDisplayName = "Chara Cloud"
 // the HTML template). Fields that don't apply to a state stay zero — the
 // state-aware JSON marshaller and the template's state branch ignore them.
 type previewResolved struct {
-	State        invitePreviewState
-	GroupName    string
-	MemberCount  int64
-	InviterName  string // empty when invite_token_created_by_user_id is NULL or user lookup failed
-	ServerName   string
-	ServerHost   string
-	Token        string // only set for ok/locked, used by landing-page chara:// link
+	State       invitePreviewState
+	GroupName   string
+	MemberCount int64
+	InviterName string // empty when invite_token_created_by_user_id is NULL or user lookup failed
+	ServerName  string
+	ServerHost  string
+	Token       string // only set for ok/locked, used by landing-page chara:// link
 }
 
 // resolveInvite looks up the group by invite token and returns the resolved
@@ -174,7 +175,7 @@ func (h *InviteHandler) Preview(w http.ResponseWriter, r *http.Request) {
 			"groupName":   resolved.GroupName,
 			"memberCount": resolved.MemberCount,
 			"serverName":  resolved.ServerName,
-			"serverHost": resolved.ServerHost,
+			"serverHost":  resolved.ServerHost,
 		}
 		if resolved.InviterName != "" {
 			body["inviterName"] = resolved.InviterName
@@ -200,12 +201,15 @@ func (h *InviteHandler) Landing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	platform := detectMobilePlatform(r.UserAgent())
 	view := struct {
 		State           string
 		GroupName       string
 		MemberCount     int64
 		InviterName     string
 		ServerName      string
+		IsIOS           bool
+		IsAndroid       bool
 		CharaSchemeHref template.URL // template.URL bypasses html/template's URL re-escaping; we've already done it.
 	}{
 		State:       string(resolved.State),
@@ -213,6 +217,8 @@ func (h *InviteHandler) Landing(w http.ResponseWriter, r *http.Request) {
 		MemberCount: resolved.MemberCount,
 		InviterName: resolved.InviterName,
 		ServerName:  resolved.ServerName,
+		IsIOS:       platform == "ios",
+		IsAndroid:   platform == "android",
 	}
 	if resolved.State == stateOK {
 		// The app's invite-url parser expects chara://join?invite=<urlencoded
@@ -234,6 +240,24 @@ func (h *InviteHandler) Landing(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(buf.Bytes())
+}
+
+// detectMobilePlatform classifies a User-Agent so the landing page can lead
+// with the right store button: "ios", "android", or "" (desktop / unknown,
+// where we show both). iPad in desktop-mode reports as "Macintosh" and falls
+// through to "" — acceptable, since that visitor still sees both badges.
+func detectMobilePlatform(userAgent string) string {
+	ua := strings.ToLower(userAgent)
+	// Order matters: a few Android UAs mention "like Mac OS"; check the
+	// unambiguous Apple device tokens first, then Android.
+	switch {
+	case strings.Contains(ua, "iphone"), strings.Contains(ua, "ipad"), strings.Contains(ua, "ipod"):
+		return "ios"
+	case strings.Contains(ua, "android"):
+		return "android"
+	default:
+		return ""
+	}
 }
 
 // extractHost pulls the host from cfg.BaseURL ("https://api.chara.app"

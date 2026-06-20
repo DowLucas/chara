@@ -61,7 +61,8 @@ import { storeReviewUrl, type StorePlatform } from '@/lib/store-url';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 
 // TODO: real App Store ID once the app is published
-const APP_STORE_ID: string | null = null;
+// App Store numeric ID (ascAppId in eas.json). Powers the "Rate us" deep link.
+const APP_STORE_ID: string | null = '6773089720';
 const ANDROID_PACKAGE = Application.applicationId ?? 'app.chara';
 
 export default function YouScreen() {
