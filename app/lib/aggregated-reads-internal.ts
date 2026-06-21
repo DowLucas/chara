@@ -10,7 +10,12 @@ import type { Account } from './accounts-store';
 import type { CacheKey } from './cache';
 
 export type ReadStatus = 'idle' | 'loading' | 'ok' | 'error';
-export type Endpoint = 'groups' | 'balances' | 'activity' | `mynet:${string}`;
+export type Endpoint =
+  | 'groups'
+  | 'archived-groups'
+  | 'balances'
+  | 'activity'
+  | `mynet:${string}`;
 
 export interface AccountRead<T> {
   serverUrl: string;

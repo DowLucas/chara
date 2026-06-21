@@ -320,6 +320,52 @@ func TestMyBalances_IncludesGroupName(t *testing.T) {
 	assert.Equal(t, "Sweden Trip", resp[0]["group_name"])
 }
 
+func TestMyBalances_ExcludesArchivedGroups(t *testing.T) {
+	env, alice, bob, groupID1, aliceMem1, bobMem1 := setupExpenseEnv(t)
+
+	// Active group: Alice pays 90 SEK split equally → Alice +45.
+	testutil.CreateExpense(t, env.Pool, groupID1, "Dinner", 9000, "SEK", aliceMem1, alice.ID, []string{aliceMem1, bobMem1})
+
+	// Second group Alice owns, then archive it.
+	group2, aliceMem2 := testutil.CreateGroup(t, env.Pool, "Road Trip", "SEK", alice.ID, "Alice")
+	bobMem2 := testutil.AddMember(t, env.Pool, group2.ID, bob.ID, "Bob")
+	testutil.CreateExpense(t, env.Pool, group2.ID, "Gas", 6000, "SEK", bobMem2.ID, bob.ID, []string{aliceMem2.ID, bobMem2.ID})
+
+	archiveRR := env.Do(t, env.AuthRequest(t, "DELETE", "/api/groups/"+group2.ID, "", alice.Token))
+	require.Equal(t, http.StatusNoContent, archiveRR.Code)
+
+	rr := env.Do(t, env.AuthRequest(t, "GET", "/api/me/balances", "", alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code)
+
+	var resp []map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	require.Len(t, resp, 1)
+	assert.Equal(t, groupID1, resp[0]["group_id"])
+}
+
+func TestMyNet_ExcludesArchivedGroups(t *testing.T) {
+	env, alice, bob, groupID1, aliceMem1, bobMem1 := setupExpenseEnv(t)
+
+	// Active group: Alice pays 100 SEK split equally → Alice net +50.
+	testutil.CreateExpense(t, env.Pool, groupID1, "Dinner", 10000, "SEK", aliceMem1, alice.ID, []string{aliceMem1, bobMem1})
+
+	// Archived group carrying an extra balance that must NOT count.
+	group2, aliceMem2 := testutil.CreateGroup(t, env.Pool, "Road Trip", "SEK", alice.ID, "Alice")
+	bobMem2 := testutil.AddMember(t, env.Pool, group2.ID, bob.ID, "Bob")
+	testutil.CreateExpense(t, env.Pool, group2.ID, "Gas", 8000, "SEK", aliceMem2.ID, alice.ID, []string{aliceMem2.ID, bobMem2.ID})
+
+	archiveRR := env.Do(t, env.AuthRequest(t, "DELETE", "/api/groups/"+group2.ID, "", alice.Token))
+	require.Equal(t, http.StatusNoContent, archiveRR.Code)
+
+	rr := env.Do(t, env.AuthRequest(t, "GET", "/api/me/net?in=SEK", "", alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code)
+
+	var resp map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	// Only the active group's +50.00 should be reflected, not the archived +40.00.
+	assert.Equal(t, "50.00", resp["net_minor"])
+}
+
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 func indexByMemberID(items []map[string]any) map[string]map[string]any {

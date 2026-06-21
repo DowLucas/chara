@@ -287,6 +287,47 @@ func (q *Queries) HardDeleteGroup(ctx context.Context, id string) error {
 	return err
 }
 
+const listArchivedGroupsByUserID = `-- name: ListArchivedGroupsByUserID :many
+SELECT g.id, g.name, g.currency, g.created_by, g.invite_token, g.is_archived, g.created_at, g.updated_at, g.language, g.is_locked, g.invite_token_created_by_user_id FROM groups g
+JOIN group_members gm ON gm.group_id = g.id
+WHERE gm.user_id = $1 AND gm.removed_at IS NULL AND g.is_archived
+ORDER BY g.updated_at DESC
+`
+
+// Mirror of ListGroupsByUserID for the "Archived groups" screen: only groups
+// the user is still a member of that have been archived.
+func (q *Queries) ListArchivedGroupsByUserID(ctx context.Context, userID pgtype.Text) ([]Group, error) {
+	rows, err := q.db.Query(ctx, listArchivedGroupsByUserID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Group{}
+	for rows.Next() {
+		var i Group
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Currency,
+			&i.CreatedBy,
+			&i.InviteToken,
+			&i.IsArchived,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Language,
+			&i.IsLocked,
+			&i.InviteTokenCreatedByUserID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listGroupsByUserID = `-- name: ListGroupsByUserID :many
 SELECT g.id, g.name, g.currency, g.created_by, g.invite_token, g.is_archived, g.created_at, g.updated_at, g.language, g.is_locked, g.invite_token_created_by_user_id FROM groups g
 JOIN group_members gm ON gm.group_id = g.id

@@ -1206,6 +1206,7 @@ export function apiFor(serverUrl: string) {
 
     // Groups
     listGroups: () => requestOn<Group[]>(serverUrl, '/api/groups'),
+    listArchivedGroups: () => requestOn<Group[]>(serverUrl, '/api/groups?archived=true'),
     getGroup: (id: string) => requestOn<GroupDetail>(serverUrl, `/api/groups/${id}`),
     createGroup: (name: string, currency: string, language?: string) =>
       requestOn<Group>(serverUrl, '/api/groups', {

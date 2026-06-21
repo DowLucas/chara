@@ -189,6 +189,7 @@ export default function RootLayout() {
           <Stack.Screen name="settings/security-code" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="settings/about" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="settings/accounts" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="settings/archived-groups" options={{ animation: 'slide_from_right' }} />
         </Stack>
         <StatusBar style="dark" />
         <AppAlertHost />

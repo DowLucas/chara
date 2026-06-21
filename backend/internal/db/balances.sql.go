@@ -67,7 +67,8 @@ func (q *Queries) ListGroupBalances(ctx context.Context, groupID string) ([]Memb
 
 const listUserBalancesAcrossGroups = `-- name: ListUserBalancesAcrossGroups :many
 SELECT mb.group_id, mb.member_id, mb.user_id, mb.currency, mb.net_balance FROM member_balances mb
-WHERE mb.user_id = $1 AND mb.currency IS NOT NULL
+JOIN groups g ON g.id = mb.group_id
+WHERE mb.user_id = $1 AND mb.currency IS NOT NULL AND NOT g.is_archived
 `
 
 func (q *Queries) ListUserBalancesAcrossGroups(ctx context.Context, userID pgtype.Text) ([]MemberBalance, error) {
@@ -106,6 +107,7 @@ SELECT
         - COALESCE(es.share, 0))::BIGINT         AS signed_minor,
     e.currency                                   AS currency
 FROM group_members gm
+JOIN groups g ON g.id = gm.group_id AND NOT g.is_archived
 JOIN expenses e
     ON e.group_id = gm.group_id
     AND NOT e.is_deleted
@@ -127,6 +129,7 @@ SELECT
           ELSE -s.amount END)::BIGINT AS signed_minor,
     s.currency                    AS currency
 FROM group_members gm
+JOIN groups g ON g.id = gm.group_id AND NOT g.is_archived
 JOIN settlements s
     ON s.group_id = gm.group_id
     AND s.reverted_at IS NULL

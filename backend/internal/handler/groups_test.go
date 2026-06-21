@@ -136,6 +136,43 @@ func TestGroups_List_IncludesGroupsWhereUserIsMember(t *testing.T) {
 	assert.Len(t, body, 1)
 }
 
+func TestGroups_List_ExcludesArchivedByDefault(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice-arch"), "Alice")
+	token := env.MintToken(t, alice.ID, alice.Email)
+
+	active, _ := testutil.CreateGroup(t, env.Pool, "Active", "SEK", alice.ID, "Alice")
+	archived, _ := testutil.CreateGroup(t, env.Pool, "Archived", "SEK", alice.ID, "Alice")
+	require.Equal(t, http.StatusNoContent,
+		env.Do(t, env.AuthRequest(t, "DELETE", "/api/groups/"+archived.ID, "", token)).Code)
+
+	rr := env.Do(t, env.AuthRequest(t, "GET", "/api/groups", "", token))
+	require.Equal(t, http.StatusOK, rr.Code)
+	var body []map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&body))
+	require.Len(t, body, 1)
+	assert.Equal(t, active.ID, body[0]["id"])
+}
+
+func TestGroups_List_ArchivedTrue_ReturnsOnlyArchived(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice-arch2"), "Alice")
+	token := env.MintToken(t, alice.ID, alice.Email)
+
+	testutil.CreateGroup(t, env.Pool, "Active", "SEK", alice.ID, "Alice")
+	archived, _ := testutil.CreateGroup(t, env.Pool, "Archived", "SEK", alice.ID, "Alice")
+	require.Equal(t, http.StatusNoContent,
+		env.Do(t, env.AuthRequest(t, "DELETE", "/api/groups/"+archived.ID, "", token)).Code)
+
+	rr := env.Do(t, env.AuthRequest(t, "GET", "/api/groups?archived=true", "", token))
+	require.Equal(t, http.StatusOK, rr.Code)
+	var body []map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&body))
+	require.Len(t, body, 1)
+	assert.Equal(t, archived.ID, body[0]["id"])
+	assert.Equal(t, true, body[0]["is_archived"])
+}
+
 // ── Get ───────────────────────────────────────────────────────────────────────
 
 func TestGroups_Get_HappyPath(t *testing.T) {

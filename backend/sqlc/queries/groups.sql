@@ -29,6 +29,14 @@ JOIN group_members gm ON gm.group_id = g.id
 WHERE gm.user_id = $1 AND gm.removed_at IS NULL AND NOT g.is_archived
 ORDER BY g.updated_at DESC;
 
+-- name: ListArchivedGroupsByUserID :many
+-- Mirror of ListGroupsByUserID for the "Archived groups" screen: only groups
+-- the user is still a member of that have been archived.
+SELECT g.* FROM groups g
+JOIN group_members gm ON gm.group_id = g.id
+WHERE gm.user_id = $1 AND gm.removed_at IS NULL AND g.is_archived
+ORDER BY g.updated_at DESC;
+
 -- name: UpdateGroup :one
 UPDATE groups
 SET name        = COALESCE(sqlc.narg(name), name),
