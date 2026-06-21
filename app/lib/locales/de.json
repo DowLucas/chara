@@ -22,6 +22,11 @@
       "confirmCta": "Konto löschen",
       "confirmTitle": "Konto löschen?",
       "eyebrow": "Gefahrenzone",
+      "openBalanceWarnBody": "Auf {{servers}} hast du noch offene Salden. Beim Löschen deines Kontos verfallen diese Salden, und für andere Gruppenmitglieder erscheinst du als gelöschter Nutzer. Das lässt sich nicht rückgängig machen.",
+      "openBalanceWarnCancel": "Konto behalten",
+      "openBalanceWarnConfirm": "Trotzdem löschen",
+      "openBalanceWarnTitle": "Du hast noch offene Salden",
+      "rowValue": "Dauerhaft",
       "summaryBlocked": "Blockiert (offene Salden): {{count}}",
       "summaryBlocked_one": "Blockiert (offener Saldo): {{count}}",
       "summaryBlocked_other": "Blockiert (offener Saldo): {{count}}",
@@ -42,7 +47,8 @@
       "confirmCta": "Konto löschen",
       "confirmTitle": "Konto löschen?",
       "title": "Konto auf diesem Server löschen"
-    }
+    },
+    "eyebrow": "konto"
   },
   "accounts": {
     "add": "Konto hinzufügen",
@@ -114,7 +120,6 @@
     "back": "Zurück",
     "between": "zwischen",
     "categoryLabel": "Kategorie",
-    "change": "ändern",
     "changeCurrency": "Währung ändern",
     "continue": "Weiter",
     "dupView": "Anzeigen",
@@ -201,6 +206,14 @@
   "app": {
     "name": "Chara"
   },
+  "archivedGroups": {
+    "empty": {
+      "body": "Gruppen, die du archivierst, erscheinen hier. Du kannst sie über ihre Einstellungen wieder einblenden.",
+      "title": "Keine archivierten Gruppen"
+    },
+    "loadError": "Archivierte Gruppen nicht geladen. Zurückziehen und nochmal versuchen.",
+    "title": "Archivierte Gruppen"
+  },
   "categories": {
     "drinks": "Getränke",
     "food": "Essen",
@@ -217,6 +230,7 @@
     "done": "Fertig",
     "error": "Fehler",
     "loading": "Lädt…",
+    "mainServerInfoLabel": "Über Chara Cloud",
     "mainServerLabel": "Chara Server",
     "ok": "OK",
     "save": "Speichern",
@@ -274,12 +288,12 @@
       "menu": "Weitere Aktionen"
     },
     "activityHeader": "erstellt {{created}}, {{time}}",
+    "addReceipt": "Beleg hinzufügen",
     "category": "Kategorie",
     "commentsLabel": "Kommentare",
     "context": "Ausgabe · {{groupName}}",
     "date": "Datum",
     "deletedToast": "Ausgabe gelöscht.",
-    "eachOwes": "{{amount}} pro Person",
     "editTitle": "Ausgabe bearbeiten",
     "fx": {
       "asOf": "Stand {{date}}",
@@ -297,12 +311,16 @@
     "noReceipt": "Kein Beleg angehängt.",
     "notFoundToast": "Diese Ausgabe gibt es nicht mehr.",
     "paidBy": "bezahlt von",
+    "paidBySentence": "Bezahlt von <b>{{name}}</b> am <b>{{date}}</b>",
     "receipt": "Beleg",
+    "receiptChooseLibrary": "Aus Mediathek wählen",
+    "receiptPermissionBody": "Erteil in den Einstellungen Foto- oder Kamerazugriff, um einen Beleg anzuhängen.",
+    "receiptPermissionTitle": "Berechtigung erforderlich",
+    "receiptSheetTitle": "Beleg hinzufügen",
+    "receiptTakePhoto": "Foto aufnehmen",
+    "receiptUploading": "Lädt hoch…",
     "reload": "Neu laden",
     "savedToast": "Änderungen gespeichert.",
-    "splitMeta": "aufgeteilt · {{method}} · {{count}}-fach",
-    "splitMeta_one": "aufgeteilt · {{method}} · {{count}}-fach",
-    "splitMeta_other": "aufgeteilt · {{method}} · {{count}}-fach",
     "staleBanner": "Diese Ausgabe wurde inzwischen geändert. Neu laden für den aktuellen Stand.",
     "viewReceipt": "Beleg anzeigen",
     "you": "Du"
@@ -355,7 +373,6 @@
     "archivePromptTitle": "{{name}} archivieren?",
     "edit": "Gruppe bearbeiten",
     "emptyAddFirst": "Erste Ausgabe eintragen",
-    "emptyBody": "Trag die erste Ausgabe ein.",
     "emptyBodyImport": "Trag deine erste Ausgabe ein oder bring deine Salden aus einer anderen App mit.",
     "emptyImport": "Aus anderer App importieren",
     "emptyTitle": "Noch keine Ausgaben",
@@ -530,6 +547,9 @@
     "homeNetSheetPartial": "{{ok}} von {{total}} Konten berücksichtigt.",
     "homeNetSheetTitle": "Zu dieser Summe",
     "hostChip": "auf {{host}}",
+    "mixedSignsBody": "In manchen Währungen bekommst du etwas, in anderen schuldest du noch – die Summe zeigt nur eine. Öffne die Gruppe für das ganze Bild.",
+    "mixedSignsLabel": "Gemischte Salden über mehrere Währungen",
+    "mixedSignsTitle": "Gemischte Salden",
     "netBalance": "Nettosaldo",
     "noActivity": "Noch nichts los.",
     "noGroupsBody": "Leg eine Gruppe an, um Ausgaben zu teilen.",
@@ -702,6 +722,27 @@
     "share": "Einladungslink teilen",
     "shareMessage": "Tritt „{{name}}“ auf Chara bei: {{link}}"
   },
+  "joinConfirm": {
+    "cancel": "Nicht jetzt",
+    "errorExpired": "Dieser Einladungslink ist nicht mehr gültig. Bitte um einen neuen.",
+    "errorGeneric": "Einladung nicht geladen. Bitte nochmal versuchen.",
+    "errorTitle": "Einladung nicht verfügbar",
+    "errorUnreachable": "{{host}} nicht erreichbar. Prüf deine Verbindung und versuch es erneut.",
+    "eyebrow": "einladung",
+    "incompatibleNote": "Aktualisiere Chara zum Beitreten – dieser Server nutzt ein neueres Protokoll, als diese App unterstützt.",
+    "invitedBy": "{{name}} hat dich eingeladen zu",
+    "invitedByUnknown": "du wurdest eingeladen zu",
+    "join": "Gruppe beitreten",
+    "joining": "Tritt bei…",
+    "loading": "Einladung lädt…",
+    "lockedNote": "Diese Gruppe ist gesperrt – beim Beitreten erhältst du nur Lesezugriff, bis der Eigentümer sie entsperrt.",
+    "memberCount_one": "1 Mitglied",
+    "memberCount_other": "{{count}} Mitglieder",
+    "onServer": "auf {{host}}",
+    "reauthToJoin": "Zum Beitreten erneut anmelden",
+    "retry": "Erneut versuchen",
+    "signInToJoin": "Zum Beitreten anmelden"
+  },
   "keypad": {
     "backspace": "Rücktaste (lang drücken: leeren)",
     "clear": "leeren",
@@ -775,7 +816,6 @@
   "onboardingName": {
     "body": "Dein Name steht auf jeder Ausgabe und jedem Ausgleich. Mit deiner Nummer können Freunde dich über Swish, Vipps & Co. bezahlen.",
     "errorEmpty": "Bitte vollständigen Namen eingeben.",
-    "errorPhone": "Bitte Telefonnummer eingeben.",
     "errorTitle": "Profil nicht gespeichert",
     "eyebrow": "dein Profil",
     "headline": "Erzähl uns kurz, wer du bist.",
@@ -974,6 +1014,10 @@
     "yourTransfers_other": "deine Überweisungen · {{count}}"
   },
   "settleMethod": {
+    "addOwnPhoneBody": "Hinterleg deine Mobilnummer, damit Freunde dich per Swish zurückzahlen können. Geht jederzeit unter Profil → Profil bearbeiten.",
+    "addOwnPhoneCta": "Nummer hinzufügen",
+    "addOwnPhoneLater": "Nicht jetzt",
+    "addOwnPhoneTitle": "Deine Swish-Nummer hinzufügen?",
     "bank": "Banküberweisung",
     "bankSub": "SEPA — IBAN",
     "errorBody": "Bitte nochmal versuchen.",
@@ -1038,6 +1082,14 @@
     "continueEmail": "Weiter mit E-Mail",
     "continueGoogle": "Weiter mit Google",
     "couldNotSend": "Magic Link nicht gesendet",
+    "dict": {
+      "def1": ": quitt; unter Freunden ausgeglichen",
+      "def2": ": das Streichen einer kleinen Schuld",
+      "def3": ": „nennen wir's chara“ – nennen wir's quitt",
+      "headword": "cha·ra",
+      "partOfSpeech": "Substantiv, aus dem Japanischen チャラ",
+      "pronunciation": "| \\ ˈtʃa-rə \\"
+    },
     "emailPlaceholder": "deine@email.de",
     "eyebrow": "anmelden",
     "google": {
@@ -1047,7 +1099,18 @@
     },
     "headline": "Teilen.\nAusgleichen.\nFertig.",
     "hostedBy": "gehostet von chara.app",
+    "hosting": {
+      "charaCloud": "Chara Cloud",
+      "charaCloudHint": "Von uns gehostet. Nichts einzurichten.",
+      "charaCloudInfo": "Chara Cloud hosten wir für dich – wir kümmern uns um Server, Backups und Updates, damit du es nicht musst.",
+      "label": "Wo möchtest du dich anmelden?",
+      "selfHost": "Selbst gehostet",
+      "selfHostHint": "Mit deinem eigenen Server verbinden.",
+      "signingInOn": "Anmeldung auf",
+      "switchToSelfHost": "Selbst hosten"
+    },
     "legalFooter": "Mit „Weiter“ akzeptierst du unsere <terms>Nutzungsbedingungen</terms> und unsere <privacy>Datenschutzerklärung</privacy>.",
+    "or": "oder",
     "sending": "Sendet…",
     "useMyServer": "eigenen Server nutzen →"
   },
@@ -1059,13 +1122,13 @@
     "you": "Profil"
   },
   "waitlist": {
-    "beta": "Chara ist in der öffentlichen Beta",
     "body": "Wir begrenzen Belegscans, solange wir unsere Hosting-Pläne klären. Gib deine E-Mail an, dann melden wir uns, sobald mehr Kapazität bereitsteht.",
     "dismiss": "Nicht jetzt",
     "emailLabel": "E-Mail-Adresse",
     "emailPlaceholder": "du@beispiel.de",
     "errorBadEmail": "Bitte gib eine gültige E-Mail-Adresse ein.",
     "errorGeneric": "Anmeldung nicht möglich. Bitte versuch es erneut.",
+    "eyebrow": "Belegscans",
     "resetsAt": "Kostenlose Scans werden am {{date}} zurückgesetzt.",
     "selfHostHint": "Oder host Chara selbst – unbegrenzt alles",
     "submit": "Benachrichtige mich",
@@ -1074,10 +1137,13 @@
   },
   "you": {
     "about": "Über die App",
+    "accountsRowCount_one": "{{count}} Konto",
+    "accountsRowCount_other": "{{count}} Konten",
     "accountsRowMany": "Konten · {{count}}",
     "accountsRowMany_one": "Konten · {{count}}",
     "accountsRowMany_other": "Konten · {{count}}",
     "accountsRowSingle": "Konten · 1",
+    "archivedGroups": "Archivierte Gruppen",
     "avatar": {
       "choosePhoto": "Aus Mediathek wählen",
       "chooseTitle": "Profilbild",
@@ -1094,6 +1160,7 @@
     "codeOn": "An",
     "createSecurityCode": "Sicherheitscode einrichten",
     "devEyebrow": "Entwickler-Tools",
+    "editNameAndPhone": "Name und Telefon bearbeiten",
     "editProfile": "Profil bearbeiten",
     "faceIdPrompt": "Bestätigen, um Face ID für Zahlungen zu aktivieren",
     "faceIdRowLabel": "Zahlungen per Face ID bestätigen",

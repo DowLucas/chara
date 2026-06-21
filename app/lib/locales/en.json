@@ -206,6 +206,14 @@
   "app": {
     "name": "Chara"
   },
+  "archivedGroups": {
+    "empty": {
+      "body": "Groups you archive show up here. You can reopen one from its settings.",
+      "title": "No archived groups"
+    },
+    "loadError": "Couldn't load archived groups. Pull back and try again.",
+    "title": "Archived groups"
+  },
   "categories": {
     "drinks": "drinks",
     "food": "food",
@@ -1135,6 +1143,7 @@
     "accountsRowMany_one": "Accounts · {{count}}",
     "accountsRowMany_other": "Accounts · {{count}}",
     "accountsRowSingle": "Accounts · 1",
+    "archivedGroups": "Archived groups",
     "avatar": {
       "choosePhoto": "Choose from library",
       "chooseTitle": "Profile photo",

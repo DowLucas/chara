@@ -8,7 +8,8 @@ WHERE group_id = $1 AND currency IS NOT NULL;
 
 -- name: ListUserBalancesAcrossGroups :many
 SELECT mb.* FROM member_balances mb
-WHERE mb.user_id = $1 AND mb.currency IS NOT NULL;
+JOIN groups g ON g.id = mb.group_id
+WHERE mb.user_id = $1 AND mb.currency IS NOT NULL AND NOT g.is_archived;
 
 -- name: ListUserLedgerLegs :many
 -- Per-leg ledger entries that contribute to a user's net across every group
@@ -33,6 +34,7 @@ SELECT
         - COALESCE(es.share, 0))::BIGINT         AS signed_minor,
     e.currency                                   AS currency
 FROM group_members gm
+JOIN groups g ON g.id = gm.group_id AND NOT g.is_archived
 JOIN expenses e
     ON e.group_id = gm.group_id
     AND NOT e.is_deleted
@@ -54,6 +56,7 @@ SELECT
           ELSE -s.amount END)::BIGINT AS signed_minor,
     s.currency                    AS currency
 FROM group_members gm
+JOIN groups g ON g.id = gm.group_id AND NOT g.is_archived
 JOIN settlements s
     ON s.group_id = gm.group_id
     AND s.reverted_at IS NULL

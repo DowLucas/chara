@@ -520,6 +520,10 @@ export default function YouScreen() {
             onPress={handleAccountsRowPress}
           />
           <NavRow
+            label={t('you.archivedGroups')}
+            onPress={() => router.push('/settings/archived-groups')}
+          />
+          <NavRow
             label={pinSet ? t('you.changeSecurityCode') : t('you.createSecurityCode')}
             value={pinSet ? t('you.codeOn') : t('you.codeOff')}
             onPress={() => router.push('/settings/security-code')}

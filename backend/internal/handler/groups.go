@@ -315,7 +315,19 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 func (h *GroupHandler) List(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.ClaimsFromContext(r.Context())
-	groups, err := h.queries.ListGroupsByUserID(r.Context(), pgtype.Text{String: claims.UserID, Valid: true})
+	userID := pgtype.Text{String: claims.UserID, Valid: true}
+
+	// ?archived=true returns the user's archived groups (for the "Archived
+	// groups" screen); the default omits them, mirroring the home list.
+	var (
+		groups []db.Group
+		err    error
+	)
+	if r.URL.Query().Get("archived") == "true" {
+		groups, err = h.queries.ListArchivedGroupsByUserID(r.Context(), userID)
+	} else {
+		groups, err = h.queries.ListGroupsByUserID(r.Context(), userID)
+	}
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error")
 		return

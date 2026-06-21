@@ -234,6 +234,19 @@ export function useAggregatedGroups(): AccountRead<Group[]>[] {
   );
 }
 
+/**
+ * Archived groups across every account, for the "Archived groups" screen.
+ * Online-only (not cached): the screen is opened on demand and an archived
+ * list going briefly stale is harmless, unlike the cold-start home list.
+ */
+export function useAggregatedArchivedGroups(): AccountRead<Group[]>[] {
+  return useAggregated<Group[]>(
+    'archived-groups',
+    (serverUrl) => apiFor(serverUrl).listArchivedGroups(),
+    false,
+  );
+}
+
 export function useAggregatedBalances(): AccountRead<MyBalance[]>[] {
   return useAggregated<MyBalance[]>(
     'balances',

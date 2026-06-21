@@ -22,6 +22,11 @@
       "confirmCta": "Radera konto",
       "confirmTitle": "Radera konto?",
       "eyebrow": "riskzon",
+      "openBalanceWarnBody": "Du har fortfarande öppna saldon på {{servers}}. Om du raderar kontot går dessa saldon förlorade och du visas som en raderad användare för andra gruppmedlemmar. Det går inte att ångra.",
+      "openBalanceWarnCancel": "Behåll kontot",
+      "openBalanceWarnConfirm": "Radera ändå",
+      "openBalanceWarnTitle": "Du har fortfarande öppna saldon",
+      "rowValue": "Permanent",
       "summaryBlocked": "Blockerade (öppet saldo): {{count}}",
       "summaryBlocked_one": "Blockerad (öppen saldo): {{count}}",
       "summaryBlocked_other": "Blockerade (öppen saldo): {{count}}",
@@ -42,7 +47,8 @@
       "confirmCta": "Radera konto",
       "confirmTitle": "Radera konto?",
       "title": "Radera konto på den här servern"
-    }
+    },
+    "eyebrow": "konto"
   },
   "accounts": {
     "add": "Lägg till konto",
@@ -114,7 +120,6 @@
     "back": "Tillbaka",
     "between": "mellan",
     "categoryLabel": "kategori",
-    "change": "ändra",
     "changeCurrency": "Byt valuta",
     "continue": "Fortsätt",
     "dupView": "Visa",
@@ -201,6 +206,14 @@
   "app": {
     "name": "Chara"
   },
+  "archivedGroups": {
+    "empty": {
+      "body": "Grupper du arkiverar dyker upp här. Du kan ta fram en igen från dess inställningar.",
+      "title": "Inga arkiverade grupper"
+    },
+    "loadError": "Kunde inte ladda arkiverade grupper. Dra ner och försök igen.",
+    "title": "Arkiverade grupper"
+  },
   "categories": {
     "drinks": "dryck",
     "food": "mat",
@@ -217,6 +230,7 @@
     "done": "Klart",
     "error": "Något gick fel",
     "loading": "Laddar…",
+    "mainServerInfoLabel": "Om Chara Cloud",
     "mainServerLabel": "Chara Server",
     "ok": "OK",
     "save": "Spara",
@@ -274,12 +288,12 @@
       "menu": "Fler val"
     },
     "activityHeader": "skapad {{created}} kl. {{time}}",
+    "addReceipt": "Lägg till kvitto",
     "category": "kategori",
     "commentsLabel": "Kommentarer",
     "context": "utgift · {{groupName}}",
     "date": "datum",
     "deletedToast": "Utgiften togs bort.",
-    "eachOwes": "{{amount}} per person",
     "editTitle": "Redigera utgift",
     "fx": {
       "asOf": "per {{date}}",
@@ -297,12 +311,16 @@
     "noReceipt": "Inget kvitto bifogat.",
     "notFoundToast": "Utgiften finns inte längre.",
     "paidBy": "betalat av",
+    "paidBySentence": "Betalat av <b>{{name}}</b> den <b>{{date}}</b>",
     "receipt": "kvitto",
+    "receiptChooseLibrary": "Välj från bilder",
+    "receiptPermissionBody": "Ge åtkomst till foton eller kamera i Inställningar för att bifoga ett kvitto.",
+    "receiptPermissionTitle": "Behörighet krävs",
+    "receiptSheetTitle": "Lägg till kvitto",
+    "receiptTakePhoto": "Ta en bild",
+    "receiptUploading": "Laddar upp…",
     "reload": "Ladda om",
     "savedToast": "Ändringarna sparades.",
-    "splitMeta": "delad · {{method}} · {{count}} delar",
-    "splitMeta_one": "delad · {{method}} · {{count}} delar",
-    "splitMeta_other": "delad · {{method}} · {{count}} delar",
     "staleBanner": "Utgiften har ändrats sedan du öppnade den. Ladda om för att se det senaste.",
     "viewReceipt": "Visa kvitto",
     "you": "Du"
@@ -355,7 +373,6 @@
     "archivePromptTitle": "Arkivera {{name}}?",
     "edit": "Redigera grupp",
     "emptyAddFirst": "Lägg till första utgiften",
-    "emptyBody": "Lägg till första utgiften i gruppen.",
     "emptyBodyImport": "Lägg till din första utgift, eller ta med dig dina saldon från en annan app.",
     "emptyImport": "Importera från en annan app",
     "emptyTitle": "Inga utgifter ännu",
@@ -530,6 +547,9 @@
     "homeNetSheetPartial": "{{ok}} av {{total}} konton inräknade.",
     "homeNetSheetTitle": "Om summan",
     "hostChip": "på {{host}}",
+    "mixedSignsBody": "Du ska få i vissa valutor och är fortfarande skyldig i andra — summan visar bara en. Öppna gruppen för att se hela bilden.",
+    "mixedSignsLabel": "Blandade saldon i olika valutor",
+    "mixedSignsTitle": "Blandade saldon",
     "netBalance": "nettosaldo",
     "noActivity": "Ingen aktivitet ännu.",
     "noGroupsBody": "Skapa en grupp för att börja dela utgifter.",
@@ -702,6 +722,27 @@
     "share": "Dela inbjudningslänk",
     "shareMessage": "Gå med i ”{{name}}” på Chara: {{link}}"
   },
+  "joinConfirm": {
+    "cancel": "Inte nu",
+    "errorExpired": "Den här inbjudningslänken gäller inte längre. Be om en ny.",
+    "errorGeneric": "Kunde inte ladda inbjudan. Försök igen.",
+    "errorTitle": "Inbjudan otillgänglig",
+    "errorUnreachable": "Kunde inte nå {{host}}. Kontrollera uppkopplingen och försök igen.",
+    "eyebrow": "inbjudan",
+    "incompatibleNote": "Uppdatera Chara för att gå med — den här servern använder ett nyare protokoll än appen stöder.",
+    "invitedBy": "{{name}} bjöd in dig till",
+    "invitedByUnknown": "du har blivit inbjuden till",
+    "join": "Gå med i grupp",
+    "joining": "Går med…",
+    "loading": "Laddar inbjudan…",
+    "lockedNote": "Den här gruppen är låst — om du går med får du läsbehörighet tills ägaren låser upp den.",
+    "memberCount_one": "1 medlem",
+    "memberCount_other": "{{count}} medlemmar",
+    "onServer": "på {{host}}",
+    "reauthToJoin": "Logga in igen för att gå med",
+    "retry": "Försök igen",
+    "signInToJoin": "Logga in för att gå med"
+  },
   "keypad": {
     "backspace": "backsteg (håll inne för att rensa)",
     "clear": "rensa",
@@ -775,7 +816,6 @@
   "onboardingName": {
     "body": "Ditt namn syns på varje utgift och betalning. Med ditt telefonnummer kan vänner Swisha dig direkt.",
     "errorEmpty": "Ange ditt fullständiga namn.",
-    "errorPhone": "Ange ditt telefonnummer.",
     "errorTitle": "Kunde inte spara profilen",
     "eyebrow": "din profil",
     "headline": "Berätta lite om dig.",
@@ -974,6 +1014,10 @@
     "yourTransfers_other": "dina överföringar · {{count}}"
   },
   "settleMethod": {
+    "addOwnPhoneBody": "Lägg till ditt mobilnummer så att vänner kan Swisha tillbaka till dig. Du kan göra det när som helst under Profil → Profil.",
+    "addOwnPhoneCta": "Lägg till nummer",
+    "addOwnPhoneLater": "Inte nu",
+    "addOwnPhoneTitle": "Lägg till ditt Swish-nummer?",
     "bank": "Banköverföring",
     "bankSub": "SE — IBAN",
     "errorBody": "Försök igen.",
@@ -1038,6 +1082,14 @@
     "continueEmail": "Fortsätt med e-post",
     "continueGoogle": "Fortsätt med Google",
     "couldNotSend": "Kunde inte skicka länken",
+    "dict": {
+      "def1": ": kvitt; uppgjort mellan vänner",
+      "def2": ": avskrivningen av en liten skuld",
+      "def3": ": ”vi säger chara” — vi säger att vi är kvitt",
+      "headword": "cha·ra",
+      "partOfSpeech": "substantiv, från japanskans チャラ",
+      "pronunciation": "| \\ ˈtʃa-rə \\"
+    },
     "emailPlaceholder": "din@mejl.se",
     "eyebrow": "logga in",
     "google": {
@@ -1047,7 +1099,18 @@
     },
     "headline": "Dela.\nGör upp.\nKlart.",
     "hostedBy": "drivs av chara.app",
+    "hosting": {
+      "charaCloud": "Chara Cloud",
+      "charaCloudHint": "Driftas av oss. Inget att ställa in.",
+      "charaCloudInfo": "Chara Cloud driftas av oss — vi sköter servrarna, säkerhetskopiorna och uppdateringarna så att du slipper.",
+      "label": "Var vill du logga in?",
+      "selfHost": "Egen drift",
+      "selfHostHint": "Anslut till din egen server.",
+      "signingInOn": "Loggar in på",
+      "switchToSelfHost": "Använd egen drift"
+    },
     "legalFooter": "Genom att fortsätta godkänner du våra <terms>Användarvillkor</terms> och vår <privacy>Integritetspolicy</privacy>.",
+    "or": "eller",
     "sending": "Skickar…",
     "useMyServer": "använd min server →"
   },
@@ -1059,13 +1122,13 @@
     "you": "Profil"
   },
   "waitlist": {
-    "beta": "Chara är i öppen beta",
     "body": "Vi håller kvittoskanningar begränsade medan vi funderar på hostingplaner. Lämna din e-post så hör vi av oss när mer kapacitet rullar ut.",
     "dismiss": "Inte nu",
     "emailLabel": "E-postadress",
     "emailPlaceholder": "du@exempel.se",
     "errorBadEmail": "Ange en giltig e-postadress.",
     "errorGeneric": "Kunde inte registrera dig. Försök igen.",
+    "eyebrow": "Kvittoskanningar",
     "resetsAt": "Fria skanningar nollställs {{date}}.",
     "selfHostHint": "Eller drifta Chara själv för obegränsat allt",
     "submit": "Meddela mig",
@@ -1074,10 +1137,13 @@
   },
   "you": {
     "about": "Om appen",
+    "accountsRowCount_one": "{{count}} konto",
+    "accountsRowCount_other": "{{count}} konton",
     "accountsRowMany": "Konton · {{count}}",
     "accountsRowMany_one": "Konton · {{count}}",
     "accountsRowMany_other": "Konton · {{count}}",
     "accountsRowSingle": "Konton · 1",
+    "archivedGroups": "Arkiverade grupper",
     "avatar": {
       "choosePhoto": "Välj från bilder",
       "chooseTitle": "Profilbild",
@@ -1094,6 +1160,7 @@
     "codeOn": "På",
     "createSecurityCode": "Skapa säkerhetskod",
     "devEyebrow": "utvecklarverktyg",
+    "editNameAndPhone": "Redigera namn och telefon",
     "editProfile": "Redigera profil",
     "faceIdPrompt": "Bekräfta för att aktivera Face ID för betalningar",
     "faceIdRowLabel": "Bekräfta betalningar med Face ID",
