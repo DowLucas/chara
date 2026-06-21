@@ -22,6 +22,11 @@
       "confirmCta": "Slet konto",
       "confirmTitle": "Slet konto?",
       "eyebrow": "farezone",
+      "openBalanceWarnBody": "Du har stadig udestående saldi på {{servers}}. Sletter du din konto, opgiver du disse saldi, og du vises som en slettet bruger for de øvrige gruppemedlemmer. Det kan ikke fortrydes.",
+      "openBalanceWarnCancel": "Behold konto",
+      "openBalanceWarnConfirm": "Slet alligevel",
+      "openBalanceWarnTitle": "Du har stadig udestående saldi",
+      "rowValue": "Permanent",
       "summaryBlocked": "Blokeret (udestående saldo): {{count}}",
       "summaryBlocked_one": "Blokeret (udestående saldo): {{count}}",
       "summaryBlocked_other": "Blokeret (udestående saldo): {{count}}",
@@ -42,7 +47,8 @@
       "confirmCta": "Slet konto",
       "confirmTitle": "Slet konto?",
       "title": "Slet konto på denne server"
-    }
+    },
+    "eyebrow": "konto"
   },
   "accounts": {
     "add": "Tilføj konto",
@@ -114,7 +120,6 @@
     "back": "Tilbage",
     "between": "mellem",
     "categoryLabel": "kategori",
-    "change": "skift",
     "changeCurrency": "Skift valuta",
     "continue": "Fortsæt",
     "dupView": "Vis",
@@ -201,6 +206,14 @@
   "app": {
     "name": "Chara"
   },
+  "archivedGroups": {
+    "empty": {
+      "body": "Grupper, du arkiverer, dukker op her. Du kan åbne en igen fra dens indstillinger.",
+      "title": "Ingen arkiverede grupper"
+    },
+    "loadError": "Kunne ikke hente arkiverede grupper. Træk ned for at prøve igen.",
+    "title": "Arkiverede grupper"
+  },
   "categories": {
     "drinks": "drikkevarer",
     "food": "mad",
@@ -217,6 +230,7 @@
     "done": "Færdig",
     "error": "Fejl",
     "loading": "Henter…",
+    "mainServerInfoLabel": "Om Chara Cloud",
     "mainServerLabel": "Chara-server",
     "ok": "OK",
     "save": "Gem",
@@ -274,12 +288,12 @@
       "menu": "Flere handlinger"
     },
     "activityHeader": "oprettet {{created}}, {{time}}",
+    "addReceipt": "Tilføj kvittering",
     "category": "kategori",
     "commentsLabel": "Kommentarer",
     "context": "udgift · {{groupName}}",
     "date": "dato",
     "deletedToast": "Udgift slettet.",
-    "eachOwes": "{{amount}} pr. person",
     "editTitle": "Rediger udgift",
     "fx": {
       "asOf": "pr. {{date}}",
@@ -297,12 +311,16 @@
     "noReceipt": "Ingen kvittering vedhæftet.",
     "notFoundToast": "Den udgift findes ikke længere.",
     "paidBy": "betalt af",
+    "paidBySentence": "Betalt af <b>{{name}}</b> den <b>{{date}}</b>",
     "receipt": "kvittering",
+    "receiptChooseLibrary": "Vælg fra biblioteket",
+    "receiptPermissionBody": "Giv adgang til billeder eller kamera i Indstillinger for at vedhæfte en kvittering.",
+    "receiptPermissionTitle": "Tilladelse kræves",
+    "receiptSheetTitle": "Tilføj kvittering",
+    "receiptTakePhoto": "Tag et billede",
+    "receiptUploading": "Uploader…",
     "reload": "Hent igen",
     "savedToast": "Ændringer gemt.",
-    "splitMeta": "delt · {{method}} · {{count}} dele",
-    "splitMeta_one": "delt · {{method}} · {{count}} dele",
-    "splitMeta_other": "delt · {{method}} · {{count}} dele",
     "staleBanner": "Udgiften er ændret, siden du åbnede den. Hent igen for at se det nyeste.",
     "viewReceipt": "Vis kvittering",
     "you": "Du"
@@ -355,7 +373,6 @@
     "archivePromptTitle": "Arkivér {{name}}?",
     "edit": "Rediger gruppe",
     "emptyAddFirst": "Tilføj første udgift",
-    "emptyBody": "Tilføj den første udgift i gruppen.",
     "emptyBodyImport": "Tilføj din første udgift, eller tag dine saldi med over fra en anden app.",
     "emptyImport": "Importér fra en anden app",
     "emptyTitle": "Ingen udgifter endnu",
@@ -530,6 +547,9 @@
     "homeNetSheetPartial": "{{ok}} af {{total}} konti medregnet.",
     "homeNetSheetTitle": "Om dette beløb",
     "hostChip": "på {{host}}",
+    "mixedSignsBody": "Du har penge til gode i nogle valutaer og skylder stadig i andre — overskriften viser kun den ene. Åbn gruppen for at se det fulde billede.",
+    "mixedSignsLabel": "Blandede saldi på tværs af valutaer",
+    "mixedSignsTitle": "Blandede saldi",
     "netBalance": "nettosaldo",
     "noActivity": "Ingen aktivitet endnu.",
     "noGroupsBody": "Lav en gruppe, og kom i gang med at dele udgifter.",
@@ -702,6 +722,27 @@
     "share": "Del invitationslink",
     "shareMessage": "Kom med i \"{{name}}\" på Chara: {{link}}"
   },
+  "joinConfirm": {
+    "cancel": "Ikke nu",
+    "errorExpired": "Dette invitationslink er ikke gyldigt længere. Bed om et nyt.",
+    "errorGeneric": "Kunne ikke hente invitationen. Prøv igen.",
+    "errorTitle": "Invitation utilgængelig",
+    "errorUnreachable": "Kunne ikke nå {{host}}. Tjek din forbindelse, og prøv igen.",
+    "eyebrow": "invitation",
+    "incompatibleNote": "Opdater Chara for at komme med — denne server bruger en nyere protokol, end appen understøtter.",
+    "invitedBy": "{{name}} har inviteret dig til",
+    "invitedByUnknown": "du er inviteret til",
+    "join": "Kom med i gruppen",
+    "joining": "Kommer med…",
+    "loading": "Henter invitation…",
+    "lockedNote": "Gruppen er låst — du får skrivebeskyttet adgang, indtil ejeren låser op.",
+    "memberCount_one": "1 medlem",
+    "memberCount_other": "{{count}} medlemmer",
+    "onServer": "på {{host}}",
+    "reauthToJoin": "Log ind igen for at komme med",
+    "retry": "Prøv igen",
+    "signInToJoin": "Log ind for at komme med"
+  },
   "keypad": {
     "backspace": "tilbage (hold nede for at rydde)",
     "clear": "ryd",
@@ -775,7 +816,6 @@
   "onboardingName": {
     "body": "Dit navn vises på hver udgift og afregning. Med dit telefonnummer kan vennerne afregne med dig via MobilePay, Swish eller Vipps.",
     "errorEmpty": "Skriv dit fulde navn.",
-    "errorPhone": "Skriv dit telefonnummer.",
     "errorTitle": "Kunne ikke gemme profilen",
     "eyebrow": "din profil",
     "headline": "Fortæl os lidt om dig.",
@@ -974,6 +1014,10 @@
     "yourTransfers_other": "dine overførsler · {{count}}"
   },
   "settleMethod": {
+    "addOwnPhoneBody": "Tilføj dit mobilnummer, så venner kan betale dig tilbage via Swish. Du kan gøre det når som helst under Profil → Rediger profil.",
+    "addOwnPhoneCta": "Tilføj nummer",
+    "addOwnPhoneLater": "Ikke nu",
+    "addOwnPhoneTitle": "Tilføj dit Swish-nummer?",
     "bank": "Bankoverførsel",
     "bankSub": "SE — IBAN",
     "errorBody": "Prøv igen.",
@@ -1038,6 +1082,14 @@
     "continueEmail": "Fortsæt med mail",
     "continueGoogle": "Fortsæt med Google",
     "couldNotSend": "Kunne ikke sende magisk link",
+    "dict": {
+      "def1": ": kvit; gjort op mellem venner",
+      "def2": ": eftergivelsen af en lille gæld",
+      "def3": ": \"lad os kalde det chara\" — lad os kalde det kvit",
+      "headword": "cha·ra",
+      "partOfSpeech": "navneord, fra japansk チャラ",
+      "pronunciation": "| \\ ˈtʃa-rə \\"
+    },
     "emailPlaceholder": "din@mail.dk",
     "eyebrow": "log ind",
     "google": {
@@ -1047,7 +1099,18 @@
     },
     "headline": "Del.\nGør op.\nBliv kvit.",
     "hostedBy": "hostet af chara.app",
+    "hosting": {
+      "charaCloud": "Chara Cloud",
+      "charaCloudHint": "Hostet af os. Intet at sætte op.",
+      "charaCloudInfo": "Chara Cloud hostes af os — vi tager os af servere, sikkerhedskopier og opdateringer, så du slipper.",
+      "label": "Hvor vil du logge ind?",
+      "selfHost": "Selv-hostet",
+      "selfHostHint": "Forbind til din egen server.",
+      "signingInOn": "Logger ind på",
+      "switchToSelfHost": "Brug selv-hostet"
+    },
     "legalFooter": "Når du fortsætter, accepterer du vores <terms>Servicevilkår</terms> og <privacy>Privatlivspolitik</privacy>.",
+    "or": "eller",
     "sending": "Sender…",
     "useMyServer": "brug min server →"
   },
@@ -1059,13 +1122,13 @@
     "you": "Profil"
   },
   "waitlist": {
-    "beta": "Chara er i offentlig beta",
     "body": "Vi holder kvitteringsscanninger begrænsede, mens vi finder ud af hostingplaner. Skriv din e-mail, så giver vi besked, når der kommer mere kapacitet.",
     "dismiss": "Ikke nu",
     "emailLabel": "E-mailadresse",
     "emailPlaceholder": "dig@eksempel.dk",
     "errorBadEmail": "Indtast en gyldig e-mailadresse.",
     "errorGeneric": "Kunne ikke tilmelde dig. Prøv igen.",
+    "eyebrow": "Kvitteringsscanninger",
     "resetsAt": "Gratis scanninger nulstilles {{date}}.",
     "selfHostHint": "Eller selv-host Chara for ubegrænset alt",
     "submit": "Giv mig besked",
@@ -1074,10 +1137,13 @@
   },
   "you": {
     "about": "Om appen",
+    "accountsRowCount_one": "{{count}} konto",
+    "accountsRowCount_other": "{{count}} konti",
     "accountsRowMany": "Konti · {{count}}",
     "accountsRowMany_one": "Konti · {{count}}",
     "accountsRowMany_other": "Konti · {{count}}",
     "accountsRowSingle": "Konti · 1",
+    "archivedGroups": "Arkiverede grupper",
     "avatar": {
       "choosePhoto": "Vælg fra biblioteket",
       "chooseTitle": "Profilbillede",
@@ -1094,6 +1160,7 @@
     "codeOn": "Til",
     "createSecurityCode": "Opret en sikkerhedskode",
     "devEyebrow": "udviklerværktøjer",
+    "editNameAndPhone": "Rediger navn og telefon",
     "editProfile": "Rediger profil",
     "faceIdPrompt": "Bekræft for at slå Face ID til ved betalinger",
     "faceIdRowLabel": "Bekræft betalinger med Face ID",

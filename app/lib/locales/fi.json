@@ -22,6 +22,11 @@
       "confirmCta": "Poista tili",
       "confirmTitle": "Poistetaanko tili?",
       "eyebrow": "vaaravyöhyke",
+      "openBalanceWarnBody": "Sinulla on vielä avoimia saldoja palvelimilla {{servers}}. Tilin poistaminen menettää nämä saldot, ja näyt muille ryhmäläisille poistettuna käyttäjänä. Tätä ei voi peruuttaa.",
+      "openBalanceWarnCancel": "Säilytä tili",
+      "openBalanceWarnConfirm": "Poista silti",
+      "openBalanceWarnTitle": "Sinulla on vielä avoimia saldoja",
+      "rowValue": "Pysyvä",
       "summaryBlocked": "Estetty (avoin saldo): {{count}}",
       "summaryBlocked_one": "Estetty (avoin saldo): {{count}}",
       "summaryBlocked_other": "Estetty (avoin saldo): {{count}}",
@@ -42,7 +47,8 @@
       "confirmCta": "Poista tili",
       "confirmTitle": "Poistetaanko tili?",
       "title": "Poista tili tältä palvelimelta"
-    }
+    },
+    "eyebrow": "tili"
   },
   "accounts": {
     "add": "Lisää tili",
@@ -114,7 +120,6 @@
     "back": "Takaisin",
     "between": "kesken",
     "categoryLabel": "kategoria",
-    "change": "vaihda",
     "changeCurrency": "Vaihda valuutta",
     "continue": "Jatka",
     "dupView": "Näytä",
@@ -201,6 +206,14 @@
   "app": {
     "name": "Chara"
   },
+  "archivedGroups": {
+    "empty": {
+      "body": "Arkistoimasi ryhmät näkyvät täällä. Voit avata ryhmän uudelleen sen asetuksista.",
+      "title": "Ei arkistoituja ryhmiä"
+    },
+    "loadError": "Arkistoituja ryhmiä ei voitu ladata. Vedä alas ja yritä uudelleen.",
+    "title": "Arkistoidut ryhmät"
+  },
   "categories": {
     "drinks": "juomat",
     "food": "ruoka",
@@ -217,6 +230,7 @@
     "done": "Valmis",
     "error": "Virhe",
     "loading": "Ladataan…",
+    "mainServerInfoLabel": "Tietoja Chara Cloudista",
     "mainServerLabel": "Chara-palvelin",
     "ok": "OK",
     "save": "Tallenna",
@@ -274,12 +288,12 @@
       "menu": "Lisää toimintoja"
     },
     "activityHeader": "luotu {{created}}, {{time}}",
+    "addReceipt": "Lisää kuitti",
     "category": "kategoria",
     "commentsLabel": "Kommentit",
     "context": "kulu · {{groupName}}",
     "date": "päivämäärä",
     "deletedToast": "Kulu poistettu.",
-    "eachOwes": "{{amount}} / hlö",
     "editTitle": "Muokkaa kulua",
     "fx": {
       "asOf": "päivämäärältä {{date}}",
@@ -297,12 +311,16 @@
     "noReceipt": "Ei kuittia.",
     "notFoundToast": "Tätä kulua ei enää ole.",
     "paidBy": "maksaja",
+    "paidBySentence": "Maksaja <b>{{name}}</b> · <b>{{date}}</b>",
     "receipt": "kuitti",
+    "receiptChooseLibrary": "Valitse kuvista",
+    "receiptPermissionBody": "Salli kuvien tai kameran käyttö asetuksista liittääksesi kuitin.",
+    "receiptPermissionTitle": "Lupa tarvitaan",
+    "receiptSheetTitle": "Lisää kuitti",
+    "receiptTakePhoto": "Ota kuva",
+    "receiptUploading": "Ladataan…",
     "reload": "Lataa uudelleen",
     "savedToast": "Muutokset tallennettu.",
-    "splitMeta": "jako · {{method}} · {{count}} osaan",
-    "splitMeta_one": "jako · {{method}} · {{count}} osaan",
-    "splitMeta_other": "jako · {{method}} · {{count}} osaan",
     "staleBanner": "Kulu on muuttunut sen jälkeen, kun avasit sen. Lataa uudelleen nähdäksesi uusimman version.",
     "viewReceipt": "Näytä kuitti",
     "you": "Sinä"
@@ -355,7 +373,6 @@
     "archivePromptTitle": "Arkistoidaanko {{name}}?",
     "edit": "Muokkaa ryhmää",
     "emptyAddFirst": "Lisää ensimmäinen kulu",
-    "emptyBody": "Lisää ryhmään ensimmäinen kulu.",
     "emptyBodyImport": "Lisää ensimmäinen kulusi tai tuo saldosi toisesta sovelluksesta.",
     "emptyImport": "Tuo toisesta sovelluksesta",
     "emptyTitle": "Ei vielä kuluja",
@@ -530,6 +547,9 @@
     "homeNetSheetPartial": "{{ok}} / {{total}} tiliä mukana.",
     "homeNetSheetTitle": "Tästä summasta",
     "hostChip": "palvelimella {{host}}",
+    "mixedSignsBody": "Sinulle ollaan velkaa joissakin valuutoissa ja sinä olet velkaa toisissa — otsikko näyttää vain yhden. Avaa ryhmä nähdäksesi koko kuvan.",
+    "mixedSignsLabel": "Sekalaisia saldoja eri valuutoissa",
+    "mixedSignsTitle": "Sekalaiset saldot",
     "netBalance": "nettosaldo",
     "noActivity": "Ei vielä tapahtumia.",
     "noGroupsBody": "Perusta ryhmä ja aloita kulujen jakaminen.",
@@ -702,6 +722,27 @@
     "share": "Jaa kutsulinkki",
     "shareMessage": "Liity ryhmään ”{{name}}” Charassa: {{link}}"
   },
+  "joinConfirm": {
+    "cancel": "Ei nyt",
+    "errorExpired": "Tämä kutsulinkki ei ole enää voimassa. Pyydä uusi.",
+    "errorGeneric": "Kutsua ei voitu ladata. Yritä uudelleen.",
+    "errorTitle": "Kutsu ei käytettävissä",
+    "errorUnreachable": "Palvelimeen {{host}} ei saatu yhteyttä. Tarkista verkkoyhteytesi ja yritä uudelleen.",
+    "eyebrow": "kutsu",
+    "incompatibleNote": "Päivitä Chara liittyäksesi — tämä palvelin käyttää uudempaa protokollaa kuin sovellus tukee.",
+    "invitedBy": "{{name}} kutsui sinut ryhmään",
+    "invitedByUnknown": "sinut on kutsuttu ryhmään",
+    "join": "Liity ryhmään",
+    "joining": "Liitytään…",
+    "loading": "Ladataan kutsua…",
+    "lockedNote": "Tämä ryhmä on lukittu — liittyessä saat vain lukuoikeuden, kunnes omistaja avaa sen.",
+    "memberCount_one": "1 jäsen",
+    "memberCount_other": "{{count}} jäsentä",
+    "onServer": "palvelimella {{host}}",
+    "reauthToJoin": "Kirjaudu uudelleen liittyäksesi",
+    "retry": "Yritä uudelleen",
+    "signInToJoin": "Kirjaudu liittyäksesi"
+  },
   "keypad": {
     "backspace": "askelpalautin (tyhjennä pitkällä painalluksella)",
     "clear": "tyhjennä",
@@ -775,7 +816,6 @@
   "onboardingName": {
     "body": "Nimi näkyy jokaisessa kulussa ja tasauksessa. Puhelinnumeron avulla kaverit voivat tasata sinulle vaikka Swishillä tai Vippsillä.",
     "errorEmpty": "Kirjoita koko nimesi.",
-    "errorPhone": "Kirjoita puhelinnumerosi.",
     "errorTitle": "Profiilia ei voitu tallentaa",
     "eyebrow": "profiilisi",
     "headline": "Kerro itsestäsi.",
@@ -974,6 +1014,10 @@
     "yourTransfers_other": "siirtosi · {{count}}"
   },
   "settleMethod": {
+    "addOwnPhoneBody": "Lisää matkapuhelinnumerosi, jotta kaverit voivat tasata sinulle Swishillä. Voit tehdä tämän koska tahansa kohdassa Profiili → Profiili.",
+    "addOwnPhoneCta": "Lisää numero",
+    "addOwnPhoneLater": "Ei nyt",
+    "addOwnPhoneTitle": "Lisätäänkö Swish-numerosi?",
     "bank": "Tilisiirto",
     "bankSub": "SE — IBAN",
     "errorBody": "Yritä uudelleen.",
@@ -1038,6 +1082,14 @@
     "continueEmail": "Jatka sähköpostilla",
     "continueGoogle": "Jatka Googlella",
     "couldNotSend": "Kirjautumislinkkiä ei voitu lähettää",
+    "dict": {
+      "def1": ": tasan; kaverien kesken selvät",
+      "def2": ": pienen velan pyyhkiminen pois",
+      "def3": ": ”sanotaan sitä charaksi” — sanotaan tasoihin",
+      "headword": "cha·ra",
+      "partOfSpeech": "substantiivi, japanin sanasta チャラ",
+      "pronunciation": "| \\ ˈtʃa-rə \\"
+    },
     "emailPlaceholder": "oma@sähköposti.fi",
     "eyebrow": "kirjaudu sisään",
     "google": {
@@ -1047,7 +1099,18 @@
     },
     "headline": "Jaa.\nTasaa.\nAsia selvä.",
     "hostedBy": "isäntä chara.app",
+    "hosting": {
+      "charaCloud": "Chara Cloud",
+      "charaCloudHint": "Me hostaamme. Ei mitään asetettavaa.",
+      "charaCloudInfo": "Chara Cloudin hostaamme me — huolehdimme palvelimista, varmuuskopioista ja päivityksistä, jotta sinun ei tarvitse.",
+      "label": "Mihin haluat kirjautua?",
+      "selfHost": "Itse pystytetty",
+      "selfHostHint": "Yhdistä omaan palvelimeesi.",
+      "signingInOn": "Kirjaudutaan palvelimelle",
+      "switchToSelfHost": "Käytä itse pystytettyä"
+    },
     "legalFooter": "Jatkamalla hyväksyt <terms>Käyttöehdot</terms> ja <privacy>Tietosuojakäytännön</privacy>.",
+    "or": "tai",
     "sending": "Lähetetään…",
     "useMyServer": "käytä omaa palvelinta →"
   },
@@ -1059,13 +1122,13 @@
     "you": "Profiili"
   },
   "waitlist": {
-    "beta": "Chara on julkisessa beetavaiheessa",
     "body": "Pidämme kuittiskannaukset rajattuina, kun mietimme hosting-suunnitelmia. Jätä sähköpostisi, niin kerromme kun lisäkapasiteettia tulee.",
     "dismiss": "Ei nyt",
     "emailLabel": "Sähköpostiosoite",
     "emailPlaceholder": "sina@esimerkki.fi",
     "errorBadEmail": "Syötä kelvollinen sähköpostiosoite.",
     "errorGeneric": "Ilmoittautumista ei voitu tehdä. Yritä uudelleen.",
+    "eyebrow": "Kuittiskannaukset",
     "resetsAt": "Ilmaiset skannaukset nollautuvat {{date}}.",
     "selfHostHint": "Tai pystytä Chara itse rajattomilla skannauksilla",
     "submit": "Ilmoita minulle",
@@ -1074,10 +1137,13 @@
   },
   "you": {
     "about": "Tietoja sovelluksesta",
+    "accountsRowCount_one": "{{count}} tili",
+    "accountsRowCount_other": "{{count}} tiliä",
     "accountsRowMany": "Tilit · {{count}}",
     "accountsRowMany_one": "Tilit · {{count}}",
     "accountsRowMany_other": "Tilit · {{count}}",
     "accountsRowSingle": "Tilit · 1",
+    "archivedGroups": "Arkistoidut ryhmät",
     "avatar": {
       "choosePhoto": "Valitse kirjastosta",
       "chooseTitle": "Profiilikuva",
@@ -1094,6 +1160,7 @@
     "codeOn": "Päällä",
     "createSecurityCode": "Luo turvakoodi",
     "devEyebrow": "kehitystyökalut",
+    "editNameAndPhone": "Muokkaa nimeä ja puhelinta",
     "editProfile": "Muokkaa profiilia",
     "faceIdPrompt": "Vahvista ottaaksesi Face ID:n käyttöön maksuissa",
     "faceIdRowLabel": "Vahvista maksut Face ID:llä",

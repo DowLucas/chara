@@ -22,6 +22,11 @@
       "confirmCta": "删除账户",
       "confirmTitle": "删除账户？",
       "eyebrow": "危险操作",
+      "openBalanceWarnBody": "你在 {{servers}} 上仍有未结清的余额。删除账户将放弃这些余额，其他群组成员会看到你已成为已删除用户。此操作无法撤销。",
+      "openBalanceWarnCancel": "保留账户",
+      "openBalanceWarnConfirm": "仍要删除",
+      "openBalanceWarnTitle": "你仍有未结清的余额",
+      "rowValue": "永久",
       "summaryBlocked": "已阻止（余额未结清）：{{count}}",
       "summaryBlocked_one": "已阻止(有未结余额):{{count}}",
       "summaryBlocked_other": "已阻止(有未结余额):{{count}}",
@@ -42,7 +47,8 @@
       "confirmCta": "删除账户",
       "confirmTitle": "删除账户？",
       "title": "删除此服务器上的账户"
-    }
+    },
+    "eyebrow": "账户"
   },
   "accounts": {
     "add": "添加账户",
@@ -200,6 +206,14 @@
   "app": {
     "name": "Chara"
   },
+  "archivedGroups": {
+    "empty": {
+      "body": "你归档的群组会显示在这里，可在其设置中重新打开。",
+      "title": "暂无已归档群组"
+    },
+    "loadError": "无法加载已归档群组，请下拉重试。",
+    "title": "已归档群组"
+  },
   "categories": {
     "drinks": "饮品",
     "food": "餐饮",
@@ -216,6 +230,7 @@
     "done": "完成",
     "error": "出错了",
     "loading": "加载中……",
+    "mainServerInfoLabel": "关于 Chara Cloud",
     "mainServerLabel": "Chara 服务器",
     "ok": "好",
     "save": "保存",
@@ -273,12 +288,12 @@
       "menu": "更多操作"
     },
     "activityHeader": "创建于 {{created}} {{time}}",
+    "addReceipt": "添加小票",
     "category": "分类",
     "commentsLabel": "评论",
     "context": "支出 · {{groupName}}",
     "date": "日期",
     "deletedToast": "已删除。",
-    "eachOwes": "每人 {{amount}}",
     "editTitle": "编辑支出",
     "fx": {
       "asOf": "截至 {{date}}",
@@ -296,12 +311,16 @@
     "noReceipt": "未附小票。",
     "notFoundToast": "这笔支出已不存在。",
     "paidBy": "付款人",
+    "paidBySentence": "由 <b>{{name}}</b> 于 <b>{{date}}</b> 付款",
     "receipt": "小票",
+    "receiptChooseLibrary": "从相册选择",
+    "receiptPermissionBody": "请在系统“设置”中授予相册或相机权限，以添加小票。",
+    "receiptPermissionTitle": "需要授权",
+    "receiptSheetTitle": "添加小票",
+    "receiptTakePhoto": "拍照",
+    "receiptUploading": "上传中……",
     "reload": "重新加载",
     "savedToast": "已保存。",
-    "splitMeta": "分摊 · {{method}} · {{count}} 人",
-    "splitMeta_one": "分摊 · {{method}} · 1 人",
-    "splitMeta_other": "分摊 · {{method}} · {{count}} 人",
     "staleBanner": "这笔支出已被修改，请重新加载查看最新内容。",
     "viewReceipt": "查看小票",
     "you": "我"
@@ -354,7 +373,6 @@
     "archivePromptTitle": "归档 {{name}}？",
     "edit": "编辑群组",
     "emptyAddFirst": "记下第一笔支出",
-    "emptyBody": "记下这个群组的第一笔支出吧。",
     "emptyBodyImport": "记下第一笔支出，或从其他应用迁移你的余额。",
     "emptyImport": "从其他应用导入",
     "emptyTitle": "还没有支出",
@@ -529,6 +547,9 @@
     "homeNetSheetPartial": "已纳入 {{total}} 个账户中的 {{ok}} 个。",
     "homeNetSheetTitle": "关于此合计",
     "hostChip": "于 {{host}}",
+    "mixedSignsBody": "你在部分币种中是应收，在其他币种中仍是应付——头条只显示其中一项。打开群组可查看完整情况。",
+    "mixedSignsLabel": "多种币种余额涨跌不一",
+    "mixedSignsTitle": "余额涨跌不一",
     "netBalance": "净余额",
     "noActivity": "暂无动态。",
     "noGroupsBody": "新建一个群组，开始分账。",
@@ -698,6 +719,26 @@
     "share": "分享邀请链接",
     "shareMessage": "来加入“{{name}}”：{{link}}"
   },
+  "joinConfirm": {
+    "cancel": "暂不",
+    "errorExpired": "此邀请链接已失效，请索取一个新的。",
+    "errorGeneric": "无法加载此邀请，请重试。",
+    "errorTitle": "邀请不可用",
+    "errorUnreachable": "无法连接 {{host}}，请检查网络后重试。",
+    "eyebrow": "邀请",
+    "incompatibleNote": "请更新 Chara 后加入——此服务器使用的协议比本应用支持的更新。",
+    "invitedBy": "{{name}} 邀请你加入",
+    "invitedByUnknown": "你受邀加入",
+    "join": "加入群组",
+    "joining": "加入中……",
+    "loading": "正在加载邀请……",
+    "lockedNote": "此群组已锁定——加入后将获得只读访问权限，直至群主解锁。",
+    "memberCount_other": "{{count}} 位成员",
+    "onServer": "于 {{host}}",
+    "reauthToJoin": "重新登录以加入",
+    "retry": "重试",
+    "signInToJoin": "登录以加入"
+  },
   "keypad": {
     "backspace": "退格（长按清空）",
     "clear": "清空",
@@ -771,7 +812,6 @@
   "onboardingName": {
     "body": "你的名字会出现在每一笔支出和结算上。手机号用于让朋友通过 Swish、Vipps 等方式向你结算。",
     "errorEmpty": "请输入姓名。",
-    "errorPhone": "请输入手机号。",
     "errorTitle": "资料保存失败",
     "eyebrow": "个人资料",
     "headline": "介绍一下自己。",
@@ -970,6 +1010,10 @@
     "yourTransfers_other": "我的转账 · {{count}} 笔"
   },
   "settleMethod": {
+    "addOwnPhoneBody": "填写你的手机号，朋友就能通过 Swish 向你还款。随时可在“我的 → 个人资料”中填写。",
+    "addOwnPhoneCta": "填写号码",
+    "addOwnPhoneLater": "暂不",
+    "addOwnPhoneTitle": "填写你的 Swish 号码？",
     "bank": "银行转账",
     "bankSub": "SE · IBAN",
     "errorBody": "请重试。",
@@ -1034,6 +1078,14 @@
     "continueEmail": "使用邮箱继续",
     "continueGoogle": "使用 Google 继续",
     "couldNotSend": "魔法链接发送失败",
+    "dict": {
+      "def1": "：两清；朋友之间扯平",
+      "def2": "：抹平一笔小额债务",
+      "def3": "：“就当 chara 吧”——就算两清吧",
+      "headword": "cha·ra",
+      "partOfSpeech": "名词，源自日语 チャラ",
+      "pronunciation": "| \\ ˈtʃa-rə \\"
+    },
     "emailPlaceholder": "your@email.com",
     "eyebrow": "登录",
     "google": {
@@ -1043,7 +1095,18 @@
     },
     "headline": "分账。\n结算。\n两清。",
     "hostedBy": "由 chara.app 托管",
+    "hosting": {
+      "charaCloud": "Chara Cloud",
+      "charaCloudHint": "由我们托管，无需任何设置。",
+      "charaCloudInfo": "Chara Cloud 由我们托管——服务器、备份和更新都交给我们，你无需操心。",
+      "label": "你想在哪里登录？",
+      "selfHost": "自托管",
+      "selfHostHint": "连接到你自己的服务器。",
+      "signingInOn": "登录于",
+      "switchToSelfHost": "使用自托管"
+    },
     "legalFooter": "继续即表示您同意我们的<terms>服务条款</terms>和<privacy>隐私政策</privacy>。",
+    "or": "或",
     "sending": "发送中……",
     "useMyServer": "使用我的服务器 →"
   },
@@ -1055,13 +1118,13 @@
     "you": "我的"
   },
   "waitlist": {
-    "beta": "Chara 正处于公开测试阶段",
     "body": "在确定托管方案之前，我们暂时限制小票扫描次数。留下您的邮箱，我们将在容量增加时通知您。",
     "dismiss": "暂不需要",
     "emailLabel": "邮箱地址",
     "emailPlaceholder": "you@example.com",
     "errorBadEmail": "请输入有效的邮箱地址。",
     "errorGeneric": "注册失败，请重试。",
+    "eyebrow": "小票扫描",
     "resetsAt": "免费扫描次数将于 {{date}} 重置。",
     "selfHostHint": "或自托管 Chara，享受无限制使用",
     "submit": "通知我",
@@ -1070,10 +1133,12 @@
   },
   "you": {
     "about": "关于",
+    "accountsRowCount_other": "{{count}} 个账户",
     "accountsRowMany": "账户 · {{count}}",
     "accountsRowMany_one": "账户 · {{count}}",
     "accountsRowMany_other": "账户 · {{count}}",
     "accountsRowSingle": "账户 · 1",
+    "archivedGroups": "已归档群组",
     "avatar": {
       "choosePhoto": "从相册选择",
       "chooseTitle": "头像",
@@ -1090,6 +1155,7 @@
     "codeOn": "已开启",
     "createSecurityCode": "设置安全码",
     "devEyebrow": "开发者选项",
+    "editNameAndPhone": "编辑姓名和手机号",
     "editProfile": "编辑资料",
     "faceIdPrompt": "验证以启用 Face ID 支付",
     "faceIdRowLabel": "Face ID 确认支付",

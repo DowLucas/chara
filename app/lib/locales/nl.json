@@ -22,6 +22,11 @@
       "confirmCta": "Account verwijderen",
       "confirmTitle": "Account verwijderen?",
       "eyebrow": "gevarenzone",
+      "openBalanceWarnBody": "Je hebt nog openstaande saldi op {{servers}}. Als je je account verwijdert, verlies je deze saldi en verschijn je als verwijderde gebruiker voor andere groepsleden. Dit kan niet ongedaan worden gemaakt.",
+      "openBalanceWarnCancel": "Account behouden",
+      "openBalanceWarnConfirm": "Toch verwijderen",
+      "openBalanceWarnTitle": "Je hebt nog openstaande saldi",
+      "rowValue": "Permanent",
       "summaryBlocked": "Geblokkeerd (openstaand saldo): {{count}}",
       "summaryBlocked_one": "Geblokkeerd (openstaand saldo): {{count}}",
       "summaryBlocked_other": "Geblokkeerd (openstaand saldo): {{count}}",
@@ -42,7 +47,8 @@
       "confirmCta": "Account verwijderen",
       "confirmTitle": "Account verwijderen?",
       "title": "Account op deze server verwijderen"
-    }
+    },
+    "eyebrow": "account"
   },
   "accounts": {
     "add": "Account toevoegen",
@@ -114,7 +120,6 @@
     "back": "Terug",
     "between": "tussen",
     "categoryLabel": "categorie",
-    "change": "wijzig",
     "changeCurrency": "Valuta wijzigen",
     "continue": "Verder",
     "dupView": "Bekijk",
@@ -201,6 +206,14 @@
   "app": {
     "name": "Chara"
   },
+  "archivedGroups": {
+    "empty": {
+      "body": "Groepen die je archiveert verschijnen hier. Je kunt ze heropenen via hun instellingen.",
+      "title": "Geen gearchiveerde groepen"
+    },
+    "loadError": "Kon gearchiveerde groepen niet laden. Trek omlaag om opnieuw te proberen.",
+    "title": "Gearchiveerde groepen"
+  },
   "categories": {
     "drinks": "drankjes",
     "food": "eten",
@@ -217,6 +230,7 @@
     "done": "Klaar",
     "error": "Fout",
     "loading": "Laden…",
+    "mainServerInfoLabel": "Over Chara Cloud",
     "mainServerLabel": "Chara Server",
     "ok": "OK",
     "save": "Opslaan",
@@ -274,12 +288,12 @@
       "menu": "Meer acties"
     },
     "activityHeader": "aangemaakt op {{created}}, {{time}}",
+    "addReceipt": "Bon toevoegen",
     "category": "categorie",
     "commentsLabel": "Opmerkingen",
     "context": "uitgave · {{groupName}}",
     "date": "datum",
     "deletedToast": "Uitgave verwijderd.",
-    "eachOwes": "{{amount}} per persoon",
     "editTitle": "Uitgave bewerken",
     "fx": {
       "asOf": "op {{date}}",
@@ -297,12 +311,16 @@
     "noReceipt": "Geen bon toegevoegd.",
     "notFoundToast": "Deze uitgave bestaat niet meer.",
     "paidBy": "betaald door",
+    "paidBySentence": "Betaald door <b>{{name}}</b> op <b>{{date}}</b>",
     "receipt": "bon",
+    "receiptChooseLibrary": "Kies uit bibliotheek",
+    "receiptPermissionBody": "Geef toegang tot foto's of camera in Instellingen om een bon toe te voegen.",
+    "receiptPermissionTitle": "Toestemming vereist",
+    "receiptSheetTitle": "Bon toevoegen",
+    "receiptTakePhoto": "Maak een foto",
+    "receiptUploading": "Uploaden…",
     "reload": "Opnieuw laden",
     "savedToast": "Wijzigingen opgeslagen.",
-    "splitMeta": "verdeeld · {{method}} · {{count}} personen",
-    "splitMeta_one": "verdeeld · {{method}} · {{count}} personen",
-    "splitMeta_other": "verdeeld · {{method}} · {{count}} personen",
     "staleBanner": "Deze uitgave is gewijzigd sinds je hem opende. Herlaad om de laatste versie te zien.",
     "viewReceipt": "Bon bekijken",
     "you": "Jij"
@@ -355,7 +373,6 @@
     "archivePromptTitle": "{{name}} archiveren?",
     "edit": "Groep bewerken",
     "emptyAddFirst": "Eerste uitgave toevoegen",
-    "emptyBody": "Voeg de eerste uitgave toe aan deze groep.",
     "emptyBodyImport": "Voeg je eerste uitgave toe, of neem je saldi mee uit een andere app.",
     "emptyImport": "Importeren uit een andere app",
     "emptyTitle": "Nog geen uitgaven",
@@ -530,6 +547,9 @@
     "homeNetSheetPartial": "{{ok}} van {{total}} accounts meegenomen.",
     "homeNetSheetTitle": "Over dit totaal",
     "hostChip": "op {{host}}",
+    "mixedSignsBody": "In sommige valuta's krijg je nog en in andere moet je nog betalen — het totaal toont er maar één. Open de groep voor het volledige beeld.",
+    "mixedSignsLabel": "Gemengde saldi over valuta's",
+    "mixedSignsTitle": "Gemengde saldi",
     "netBalance": "nettosaldo",
     "noActivity": "Nog geen activiteit.",
     "noGroupsBody": "Maak een groep aan om uitgaven te delen.",
@@ -702,6 +722,27 @@
     "share": "Uitnodigingslink delen",
     "shareMessage": "Word lid van \"{{name}}\" op Chara: {{link}}"
   },
+  "joinConfirm": {
+    "cancel": "Niet nu",
+    "errorExpired": "Deze uitnodigingslink is niet meer geldig. Vraag om een nieuwe.",
+    "errorGeneric": "Kon deze uitnodiging niet laden. Probeer het opnieuw.",
+    "errorTitle": "Uitnodiging niet beschikbaar",
+    "errorUnreachable": "Kon {{host}} niet bereiken. Controleer je verbinding en probeer het opnieuw.",
+    "eyebrow": "uitnodiging",
+    "incompatibleNote": "Werk Chara bij om mee te doen — deze server gebruikt een nieuwer protocol dan deze app ondersteunt.",
+    "invitedBy": "{{name}} nodigde je uit voor",
+    "invitedByUnknown": "je bent uitgenodigd voor",
+    "join": "Lid worden",
+    "joining": "Lid worden…",
+    "loading": "Uitnodiging laden…",
+    "lockedNote": "Deze groep is vergrendeld — bij deelname krijg je alleen-lezen toegang tot de eigenaar ontgrendelt.",
+    "memberCount_one": "1 lid",
+    "memberCount_other": "{{count}} leden",
+    "onServer": "op {{host}}",
+    "reauthToJoin": "Log opnieuw in om mee te doen",
+    "retry": "Opnieuw proberen",
+    "signInToJoin": "Log in om mee te doen"
+  },
   "keypad": {
     "backspace": "backspace (lang indrukken om te wissen)",
     "clear": "wissen",
@@ -775,7 +816,6 @@
   "onboardingName": {
     "body": "Je naam staat bij elke uitgave en afrekening. Met je telefoonnummer kunnen vrienden je betalen via Swish, Vipps of vergelijkbare apps.",
     "errorEmpty": "Vul je volledige naam in.",
-    "errorPhone": "Vul je telefoonnummer in.",
     "errorTitle": "Kon profiel niet opslaan",
     "eyebrow": "je profiel",
     "headline": "Vertel ons over jezelf.",
@@ -974,6 +1014,10 @@
     "yourTransfers_other": "jouw overboekingen · {{count}}"
   },
   "settleMethod": {
+    "addOwnPhoneBody": "Voeg je mobiele nummer toe zodat vrienden je via Swish kunnen terugbetalen. Dit kan altijd via Profiel → Profiel.",
+    "addOwnPhoneCta": "Nummer toevoegen",
+    "addOwnPhoneLater": "Niet nu",
+    "addOwnPhoneTitle": "Je Swish-nummer toevoegen?",
     "bank": "Bankoverschrijving",
     "bankSub": "SE — IBAN",
     "errorBody": "Probeer het opnieuw.",
@@ -1038,6 +1082,14 @@
     "continueEmail": "Verder met e-mail",
     "continueGoogle": "Verder met Google",
     "couldNotSend": "Kon magische link niet versturen",
+    "dict": {
+      "def1": ": quitte; afgerekend tussen vrienden",
+      "def2": ": het kwijtschelden van een kleine schuld",
+      "def3": ": \"let's call it chara\" — laten we het quitte noemen",
+      "headword": "cha·ra",
+      "partOfSpeech": "zelfstandig naamwoord, uit het Japans チャラ",
+      "pronunciation": "| \\ ˈtʃa-rə \\"
+    },
     "emailPlaceholder": "jouw@email.com",
     "eyebrow": "inloggen",
     "google": {
@@ -1047,7 +1099,18 @@
     },
     "headline": "Splits het.\nReken af.\nKlaar is Kees.",
     "hostedBy": "gehost door chara.app",
+    "hosting": {
+      "charaCloud": "Chara Cloud",
+      "charaCloudHint": "Door ons gehost. Niets in te stellen.",
+      "charaCloudInfo": "Chara Cloud wordt door ons gehost — wij zorgen voor de servers, back-ups en updates, zodat jij dat niet hoeft.",
+      "label": "Waar wil je inloggen?",
+      "selfHost": "Zelf gehost",
+      "selfHostHint": "Verbind met je eigen server.",
+      "signingInOn": "Inloggen op",
+      "switchToSelfHost": "Zelf hosten"
+    },
     "legalFooter": "Door verder te gaan ga je akkoord met onze <terms>Servicevoorwaarden</terms> en <privacy>Privacybeleid</privacy>.",
+    "or": "of",
     "sending": "Versturen…",
     "useMyServer": "gebruik mijn server →"
   },
@@ -1059,13 +1122,13 @@
     "you": "Profiel"
   },
   "waitlist": {
-    "beta": "Chara is in publieke beta",
     "body": "We houden bonnetjes scannen voorlopig beperkt terwijl we hostingplannen uitwerken. Laat je e-mail achter, dan laten we weten wanneer er meer capaciteit komt.",
     "dismiss": "Niet nu",
     "emailLabel": "E-mailadres",
     "emailPlaceholder": "jij@voorbeeld.com",
     "errorBadEmail": "Vul een geldig e-mailadres in.",
     "errorGeneric": "Kon je niet aanmelden. Probeer het opnieuw.",
+    "eyebrow": "Bonnen scannen",
     "resetsAt": "Gratis scans worden gereset op {{date}}.",
     "selfHostHint": "Of host Chara zelf voor onbeperkt alles",
     "submit": "Houd me op de hoogte",
@@ -1074,10 +1137,13 @@
   },
   "you": {
     "about": "Over de app",
+    "accountsRowCount_one": "{{count}} account",
+    "accountsRowCount_other": "{{count}} accounts",
     "accountsRowMany": "Accounts · {{count}}",
     "accountsRowMany_one": "Accounts · {{count}}",
     "accountsRowMany_other": "Accounts · {{count}}",
     "accountsRowSingle": "Accounts · 1",
+    "archivedGroups": "Gearchiveerde groepen",
     "avatar": {
       "choosePhoto": "Kies uit bibliotheek",
       "chooseTitle": "Profielfoto",
@@ -1094,6 +1160,7 @@
     "codeOn": "Aan",
     "createSecurityCode": "Beveiligingscode aanmaken",
     "devEyebrow": "dev tools",
+    "editNameAndPhone": "Naam en telefoon bewerken",
     "editProfile": "Profiel bewerken",
     "faceIdPrompt": "Bevestig om Face ID in te schakelen voor betalingen",
     "faceIdRowLabel": "Betalingen bevestigen met Face ID",

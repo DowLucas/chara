@@ -24,6 +24,11 @@
       "confirmCta": "Usuń konto",
       "confirmTitle": "Usunąć konto?",
       "eyebrow": "Strefa zagrożenia",
+      "openBalanceWarnBody": "Masz jeszcze otwarte salda na {{servers}}. Usunięcie konta spowoduje przepadek tych sald, a dla pozostałych członków grupy będziesz widoczny jako usunięty użytkownik. Tego nie można cofnąć.",
+      "openBalanceWarnCancel": "Zachowaj konto",
+      "openBalanceWarnConfirm": "Usuń mimo to",
+      "openBalanceWarnTitle": "Masz jeszcze otwarte salda",
+      "rowValue": "Trwałe",
       "summaryBlocked": "Zablokowane (otwarte saldo): {{count}}",
       "summaryBlocked_few": "Zablokowane (otwarte saldo): {{count}}",
       "summaryBlocked_many": "Zablokowane (otwarte saldo): {{count}}",
@@ -50,7 +55,8 @@
       "confirmCta": "Usuń konto",
       "confirmTitle": "Usunąć konto?",
       "title": "Usuń konto na tym serwerze"
-    }
+    },
+    "eyebrow": "konto"
   },
   "accounts": {
     "add": "Dodaj konto",
@@ -210,6 +216,14 @@
   "app": {
     "name": "Chara"
   },
+  "archivedGroups": {
+    "empty": {
+      "body": "Grupy, które zarchiwizujesz, pojawią się tutaj. Możesz je przywrócić z ich ustawień.",
+      "title": "Brak zarchiwizowanych grup"
+    },
+    "loadError": "Nie udało się załadować zarchiwizowanych grup. Pociągnij w dół i spróbuj ponownie.",
+    "title": "Zarchiwizowane grupy"
+  },
   "categories": {
     "drinks": "napoje",
     "food": "jedzenie",
@@ -226,6 +240,7 @@
     "done": "Gotowe",
     "error": "Błąd",
     "loading": "Ładowanie…",
+    "mainServerInfoLabel": "O Chara Cloud",
     "mainServerLabel": "Chara Server",
     "ok": "OK",
     "save": "Zapisz",
@@ -283,12 +298,12 @@
       "menu": "Więcej akcji"
     },
     "activityHeader": "utworzono {{created}}, {{time}}",
+    "addReceipt": "Dodaj paragon",
     "category": "kategoria",
     "commentsLabel": "Komentarze",
     "context": "wydatek · {{groupName}}",
     "date": "data",
     "deletedToast": "Wydatek usunięty.",
-    "eachOwes": "{{amount}} każdy",
     "editTitle": "Edytuj wydatek",
     "fx": {
       "asOf": "na dzień {{date}}",
@@ -306,14 +321,16 @@
     "noReceipt": "Brak załączonego paragonu.",
     "notFoundToast": "Ten wydatek już nie istnieje.",
     "paidBy": "zapłacone przez",
+    "paidBySentence": "Zapłacone przez <b>{{name}}</b> dnia <b>{{date}}</b>",
     "receipt": "paragon",
+    "receiptChooseLibrary": "Wybierz ze zdjęć",
+    "receiptPermissionBody": "Zezwól na dostęp do zdjęć lub aparatu w Ustawieniach, aby dołączyć paragon.",
+    "receiptPermissionTitle": "Wymagane uprawnienie",
+    "receiptSheetTitle": "Dodaj paragon",
+    "receiptTakePhoto": "Zrób zdjęcie",
+    "receiptUploading": "Przesyłanie…",
     "reload": "Odśwież",
     "savedToast": "Zmiany zapisane.",
-    "splitMeta": "podział · {{method}} · na {{count}}",
-    "splitMeta_few": "podział · {{method}} · na {{count}}",
-    "splitMeta_many": "podział · {{method}} · na {{count}}",
-    "splitMeta_one": "podział · {{method}} · na 1",
-    "splitMeta_other": "podział · {{method}} · na {{count}}",
     "staleBanner": "Ten wydatek zmienił się od czasu, gdy go otworzyłeś. Odśwież, aby zobaczyć najnowszą wersję.",
     "viewReceipt": "Zobacz paragon",
     "you": "Ty"
@@ -366,7 +383,6 @@
     "archivePromptTitle": "Zarchiwizować {{name}}?",
     "edit": "Edytuj grupę",
     "emptyAddFirst": "Dodaj pierwszy wydatek",
-    "emptyBody": "Dodaj pierwszy wydatek do tej grupy.",
     "emptyBodyImport": "Dodaj swój pierwszy wydatek lub przenieś salda z innej aplikacji.",
     "emptyImport": "Importuj z innej aplikacji",
     "emptyTitle": "Brak wydatków",
@@ -561,6 +577,9 @@
     "homeNetSheetPartial": "{{ok}} z {{total}} kont uwzględnionych.",
     "homeNetSheetTitle": "O tej sumie",
     "hostChip": "na {{host}}",
+    "mixedSignsBody": "W niektórych walutach jesteś na plusie, a w innych nadal masz dług — nagłówek pokazuje tylko jedną. Otwórz grupę, aby zobaczyć pełny obraz.",
+    "mixedSignsLabel": "Mieszane salda w różnych walutach",
+    "mixedSignsTitle": "Mieszane salda",
     "netBalance": "saldo netto",
     "noActivity": "Brak aktywności.",
     "noGroupsBody": "Utwórz grupę, aby zacząć dzielić wydatki.",
@@ -745,6 +764,29 @@
     "share": "Udostępnij link zaproszenia",
     "shareMessage": "Dołącz do „{{name}}” w Chara: {{link}}"
   },
+  "joinConfirm": {
+    "cancel": "Nie teraz",
+    "errorExpired": "Ten link zaproszenia jest już nieważny. Poproś o nowy.",
+    "errorGeneric": "Nie udało się załadować tego zaproszenia. Spróbuj ponownie.",
+    "errorTitle": "Zaproszenie niedostępne",
+    "errorUnreachable": "Nie udało się połączyć z {{host}}. Sprawdź połączenie i spróbuj ponownie.",
+    "eyebrow": "zaproszenie",
+    "incompatibleNote": "Zaktualizuj Chara, aby dołączyć — ten serwer używa nowszego protokołu niż wspiera ta aplikacja.",
+    "invitedBy": "{{name}} zaprosił(a) cię do",
+    "invitedByUnknown": "masz zaproszenie do",
+    "join": "Dołącz do grupy",
+    "joining": "Dołączanie…",
+    "loading": "Ładowanie zaproszenia…",
+    "lockedNote": "Ta grupa jest zablokowana — dołączenie zapewni dostęp tylko do odczytu, dopóki właściciel jej nie odblokuje.",
+    "memberCount_few": "{{count}} członków",
+    "memberCount_many": "{{count}} członków",
+    "memberCount_one": "1 członek",
+    "memberCount_other": "{{count}} członków",
+    "onServer": "na {{host}}",
+    "reauthToJoin": "Zaloguj się ponownie, aby dołączyć",
+    "retry": "Ponów",
+    "signInToJoin": "Zaloguj się, aby dołączyć"
+  },
   "keypad": {
     "backspace": "backspace (przytrzymaj, aby wyczyścić)",
     "clear": "wyczyść",
@@ -820,7 +862,6 @@
   "onboardingName": {
     "body": "Twoje imię pojawia się na każdym wydatku i rozliczeniu. Twój telefon pozwala znajomym rozliczyć się z tobą przez Swish, Vipps lub podobne.",
     "errorEmpty": "Wprowadź swoje imię i nazwisko.",
-    "errorPhone": "Wprowadź swój numer telefonu.",
     "errorTitle": "Nie udało się zapisać profilu",
     "eyebrow": "twój profil",
     "headline": "Powiedz nam o sobie.",
@@ -1049,6 +1090,10 @@
     "yourTransfers_other": "twoje transfery · {{count}}"
   },
   "settleMethod": {
+    "addOwnPhoneBody": "Dodaj swój numer telefonu, aby znajomi mogli ci się odwdzięczyć przez Swish. Możesz to zrobić w dowolnym momencie w Ty → Profil.",
+    "addOwnPhoneCta": "Dodaj numer",
+    "addOwnPhoneLater": "Nie teraz",
+    "addOwnPhoneTitle": "Dodać swój numer Swish?",
     "bank": "Przelew bankowy",
     "bankSub": "SE — IBAN",
     "errorBody": "Spróbuj ponownie.",
@@ -1113,6 +1158,14 @@
     "continueEmail": "Kontynuuj z e-mailem",
     "continueGoogle": "Kontynuuj z Google",
     "couldNotSend": "Nie udało się wysłać magicznego linku",
+    "dict": {
+      "def1": ": na zero; rozliczeni między znajomymi",
+      "def2": ": umorzenie drobnego długu",
+      "def3": ": „let's call it chara” — uznajmy to za rozliczone",
+      "headword": "cha·ra",
+      "partOfSpeech": "rzeczownik, z japońskiego チャラ",
+      "pronunciation": "| \\ ˈtʃa-rə \\"
+    },
     "emailPlaceholder": "twoj@email.com",
     "eyebrow": "zaloguj się",
     "google": {
@@ -1122,7 +1175,18 @@
     },
     "headline": "Podziel.\nRozlicz.\nZakończ sprawę.",
     "hostedBy": "hostowane przez chara.app",
+    "hosting": {
+      "charaCloud": "Chara Cloud",
+      "charaCloudHint": "Hostowane przez nas. Nic nie trzeba konfigurować.",
+      "charaCloudInfo": "Chara Cloud jest hostowane przez nas — zajmujemy się serwerami, kopiami zapasowymi i aktualizacjami, więc nie musisz.",
+      "label": "Gdzie chcesz się zalogować?",
+      "selfHost": "Własny hosting",
+      "selfHostHint": "Połącz się z własnym serwerem.",
+      "signingInOn": "Logowanie na",
+      "switchToSelfHost": "Użyj własnego hostingu"
+    },
     "legalFooter": "Kontynuując, akceptujesz nasz <terms>Regulamin</terms> i <privacy>Politykę prywatności</privacy>.",
+    "or": "lub",
     "sending": "Wysyłanie…",
     "useMyServer": "użyj mojego serwera →"
   },
@@ -1134,13 +1198,13 @@
     "you": "Profil"
   },
   "waitlist": {
-    "beta": "Chara jest w publicznej wersji beta",
     "body": "Utrzymujemy limity skanów paragonów, dopóki nie rozstrzygniemy planów hostingu. Zostaw swój e-mail, a damy znać, gdy pojawi się więcej miejsca.",
     "dismiss": "Nie teraz",
     "emailLabel": "Adres e-mail",
     "emailPlaceholder": "ty@example.com",
     "errorBadEmail": "Wpisz poprawny adres e-mail.",
     "errorGeneric": "Nie udało się zapisać. Spróbuj ponownie.",
+    "eyebrow": "Skany paragonów",
     "resetsAt": "Darmowe skany resetują się {{date}}.",
     "selfHostHint": "Albo postaw Chara na własnym serwerze, by mieć wszystko bez ograniczeń",
     "submit": "Powiadom mnie",
@@ -1149,12 +1213,17 @@
   },
   "you": {
     "about": "O aplikacji",
+    "accountsRowCount_few": "{{count}} konta",
+    "accountsRowCount_many": "{{count}} kont",
+    "accountsRowCount_one": "1 konto",
+    "accountsRowCount_other": "{{count}} konta",
     "accountsRowMany": "Konta · {{count}}",
     "accountsRowMany_few": "Konta · {{count}}",
     "accountsRowMany_many": "Konta · {{count}}",
     "accountsRowMany_one": "Konta · {{count}}",
     "accountsRowMany_other": "Konta · {{count}}",
     "accountsRowSingle": "Konta · 1",
+    "archivedGroups": "Zarchiwizowane grupy",
     "avatar": {
       "choosePhoto": "Wybierz z galerii",
       "chooseTitle": "Zdjęcie profilowe",
@@ -1171,6 +1240,7 @@
     "codeOn": "Wł.",
     "createSecurityCode": "Utwórz kod zabezpieczający",
     "devEyebrow": "narzędzia dev",
+    "editNameAndPhone": "Edytuj imię i telefon",
     "editProfile": "Edytuj profil",
     "faceIdPrompt": "Potwierdź, aby włączyć Face ID dla płatności",
     "faceIdRowLabel": "Potwierdzaj płatności z Face ID",
