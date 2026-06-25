@@ -317,6 +317,7 @@ type User struct {
 	AvatarObjectKey pgtype.Text        `db:"avatar_object_key" json:"avatar_object_key"`
 	AvatarUpdatedAt pgtype.Timestamptz `db:"avatar_updated_at" json:"avatar_updated_at"`
 	DeletedAt       pgtype.Timestamptz `db:"deleted_at" json:"deleted_at"`
+	OcrCapOverride  pgtype.Int4        `db:"ocr_cap_override" json:"ocr_cap_override"`
 }
 
 type WaitlistSignup struct {

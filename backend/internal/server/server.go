@@ -236,7 +236,9 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 		if cfg.HasGemini() {
 			receiptH := handler.NewReceiptHandler(receipt.NewGemini(cfg.GeminiAPIKey))
 			if cfg.IsHosted() {
-				receiptH = receiptH.WithCounter(billing.NewCounter(queries), FreeOCRCap)
+				receiptH = receiptH.
+					WithCounter(billing.NewCounter(queries), FreeOCRCap).
+					WithCapOverrides(queries)
 			}
 			r.Post("/api/receipts/scan", receiptH.Scan)
 		}

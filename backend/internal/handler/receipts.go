@@ -11,6 +11,8 @@ import (
 	"github.com/DowLucas/chara/internal/billing"
 	"github.com/DowLucas/chara/internal/middleware"
 	"github.com/DowLucas/chara/internal/receipt"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // MaxReceiptImageBytes caps the decoded image size sent to Gemini. ~6 MB is
@@ -26,9 +28,17 @@ const OCRFeatureKey = "ocr"
 // pays the Gemini bill), the handler skips all metering. When non-nil, it
 // reserves a slot before each scan and refunds on downstream failure.
 type ReceiptHandler struct {
-	scanner receipt.Scanner
-	counter *billing.Counter
-	freeCap int
+	scanner   receipt.Scanner
+	counter   *billing.Counter
+	freeCap   int
+	overrides CapOverrides
+}
+
+// CapOverrides resolves a per-user OCR cap override. The billing counter
+// already takes the cap as a per-call argument; this is the per-user lookup
+// the global FreeOCRCap always anticipated. *db.Queries satisfies it.
+type CapOverrides interface {
+	GetOCRCapOverride(ctx context.Context, userID string) (pgtype.Int4, error)
 }
 
 func NewReceiptHandler(scanner receipt.Scanner) *ReceiptHandler {
@@ -41,6 +51,13 @@ func NewReceiptHandler(scanner receipt.Scanner) *ReceiptHandler {
 func (h *ReceiptHandler) WithCounter(counter *billing.Counter, cap int) *ReceiptHandler {
 	h.counter = counter
 	h.freeCap = cap
+	return h
+}
+
+// WithCapOverrides wires the per-user cap lookup. Only consulted when a
+// counter is set (hosted instances). Returns the receiver for chaining.
+func (h *ReceiptHandler) WithCapOverrides(o CapOverrides) *ReceiptHandler {
+	h.overrides = o
 	return h
 }
 
@@ -146,25 +163,50 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 
 	// Reserve a slot before invoking Gemini. Without a counter (selfhost
 	// or unit tests), the reservation is nil and there's nothing to refund.
+	// `metered` tracks whether this request actually consumed a slot — an
+	// unlimited user (negative override) is hosted but bypasses metering, so
+	// its response omits the billing fields just like selfhost.
 	var reservation *billing.Reservation
 	var meterResult billing.Result
+	var metered bool
 	if h.counter != nil {
 		claims := middleware.ClaimsFromContext(r.Context())
 		if claims == nil || claims.UserID == "" {
 			writeError(w, http.StatusUnauthorized, "missing user context")
 			return
 		}
-		res, mErr := h.counter.Reserve(r.Context(), claims.UserID, OCRFeatureKey, h.freeCap)
-		if mErr != nil {
-			writeError(w, http.StatusInternalServerError, "usage counter unavailable")
-			return
+
+		cap := h.freeCap
+		unlimited := false
+		if h.overrides != nil {
+			ov, oErr := h.overrides.GetOCRCapOverride(r.Context(), claims.UserID)
+			if oErr != nil && !errors.Is(oErr, pgx.ErrNoRows) {
+				writeError(w, http.StatusInternalServerError, "usage counter unavailable")
+				return
+			}
+			if ov.Valid {
+				if ov.Int32 < 0 {
+					unlimited = true
+				} else {
+					cap = int(ov.Int32)
+				}
+			}
 		}
-		if !res.Allowed {
-			writeCapReached(w, res)
-			return
+
+		if !unlimited {
+			res, mErr := h.counter.Reserve(r.Context(), claims.UserID, OCRFeatureKey, cap)
+			if mErr != nil {
+				writeError(w, http.StatusInternalServerError, "usage counter unavailable")
+				return
+			}
+			if !res.Allowed {
+				writeCapReached(w, res)
+				return
+			}
+			reservation = res.Reservation
+			meterResult = res
+			metered = true
 		}
-		reservation = res.Reservation
-		meterResult = res
 	}
 
 	res, scanErr := h.scanner.Scan(r.Context(), imgData, req.MIMEType, req.Language)
@@ -207,7 +249,7 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 		TipMinor:      int64(res.TipMinor),
 		Items:         items,
 	}
-	if h.counter != nil {
+	if metered {
 		remaining := meterResult.Remaining
 		body.Tier = "free"
 		body.Remaining = &remaining

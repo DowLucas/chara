@@ -29,9 +29,9 @@ import (
 // fakeReceiptScanner is the integration-test stub. atomic.Int32 lets us
 // assert concurrency-correctness without races.
 type fakeReceiptScanner struct {
-	mu       sync.Mutex
-	resp     *receipt.Receipt
-	err      error
+	mu        sync.Mutex
+	resp      *receipt.Receipt
+	err       error
 	callCount atomic.Int32
 }
 
@@ -52,7 +52,9 @@ func hostedReceiptsRouter(t *testing.T, env *testutil.Env, scanner receipt.Scann
 	if now != nil {
 		counter = counter.WithNow(now)
 	}
-	h := handler.NewReceiptHandler(scanner).WithCounter(counter, freeCap)
+	h := handler.NewReceiptHandler(scanner).
+		WithCounter(counter, freeCap).
+		WithCapOverrides(env.Queries)
 	mux := http.NewServeMux()
 	mux.Handle("/api/receipts/scan", middleware.Authenticate(env.JWT, env.Queries)(http.HandlerFunc(h.Scan)))
 	return mux
@@ -173,9 +175,9 @@ func TestReceiptScan_Hosted_ConcurrentScansRespectCap(t *testing.T) {
 	// actually verifying here.
 	const N = 10
 	var (
-		wg       sync.WaitGroup
-		ok2xx    atomic.Int32
-		hit429   atomic.Int32
+		wg     sync.WaitGroup
+		ok2xx  atomic.Int32
+		hit429 atomic.Int32
 	)
 	wg.Add(N)
 	for i := 0; i < N; i++ {
@@ -226,6 +228,68 @@ func TestReceiptScan_Hosted_CrossingMonthBoundaryResetsCounter(t *testing.T) {
 	}
 	rr = postAuthedScan(t, juneRouter, token)
 	require.Equal(t, http.StatusTooManyRequests, rr.Code, "june 4th must cap")
+}
+
+// ── Hosted: per-user cap override ──────────────────────────────────────────────
+
+func setOCRCapOverride(t *testing.T, env *testutil.Env, userID string, cap int) {
+	t.Helper()
+	_, err := env.Pool.Exec(context.Background(),
+		`UPDATE users SET ocr_cap_override = $1 WHERE id = $2`, cap, userID)
+	require.NoError(t, err)
+}
+
+func TestReceiptScan_Hosted_UnlimitedOverrideBypassesCap(t *testing.T) {
+	env := testutil.NewEnv(t)
+	user := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "unlimited"), "Unlimited User")
+	token := env.MintToken(t, user.ID, user.Email)
+
+	// Negative override = unlimited; metering is bypassed entirely.
+	setOCRCapOverride(t, env, user.ID, -1)
+
+	scanner := &fakeReceiptScanner{resp: successReceipt()}
+	router := hostedReceiptsRouter(t, env, scanner, 3, nil)
+
+	// Far more than the free cap of 3 — all must succeed.
+	for i := 0; i < 12; i++ {
+		rr := postAuthedScan(t, router, token)
+		require.Equal(t, http.StatusOK, rr.Code, "unlimited scan %d: %s", i+1, rr.Body.String())
+
+		// Unlimited users are not metered, so the response carries no
+		// remaining-counter fields (same shape as selfhost).
+		var got map[string]any
+		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &got))
+		assert.NotContains(t, got, "remaining", "unlimited scan %d", i+1)
+	}
+	assert.EqualValues(t, 12, scanner.callCount.Load())
+
+	// And the unlimited path must never write to usage_counters.
+	var count int
+	err := env.Pool.QueryRow(context.Background(),
+		`SELECT COUNT(*) FROM usage_counters WHERE user_id = $1`, user.ID).Scan(&count)
+	require.NoError(t, err)
+	assert.Equal(t, 0, count, "unlimited path must not touch usage_counters")
+}
+
+func TestReceiptScan_Hosted_PositiveOverrideRaisesCap(t *testing.T) {
+	env := testutil.NewEnv(t)
+	user := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "raised"), "Raised Cap User")
+	token := env.MintToken(t, user.ID, user.Email)
+
+	// Override to 5 even though the global free cap is 3.
+	setOCRCapOverride(t, env, user.ID, 5)
+
+	scanner := &fakeReceiptScanner{resp: successReceipt()}
+	router := hostedReceiptsRouter(t, env, scanner, 3, nil)
+
+	for i := 0; i < 5; i++ {
+		rr := postAuthedScan(t, router, token)
+		require.Equal(t, http.StatusOK, rr.Code, "raised scan %d: %s", i+1, rr.Body.String())
+	}
+	// 6th hits the per-user cap of 5.
+	rr := postAuthedScan(t, router, token)
+	require.Equal(t, http.StatusTooManyRequests, rr.Code, rr.Body.String())
+	assert.EqualValues(t, 5, scanner.callCount.Load())
 }
 
 // ── Self-host: no counter, no metering ────────────────────────────────────────

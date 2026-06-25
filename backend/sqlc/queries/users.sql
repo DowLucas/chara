@@ -43,6 +43,11 @@ DELETE FROM magic_link_tokens WHERE email = $1;
 -- name: GetUserByEmail :one
 SELECT * FROM users WHERE email = $1;
 
+-- name: GetOCRCapOverride :one
+-- Per-user OCR cap override for hosted metering. NULL = use the global
+-- FreeOCRCap; >= 0 = explicit cap; < 0 = unlimited (metering bypassed).
+SELECT ocr_cap_override FROM users WHERE id = $1;
+
 -- name: UpsertUser :one
 INSERT INTO users (id, email, display_name, avatar_url, locale)
 VALUES ($1, $2, $3, $4, $5)
