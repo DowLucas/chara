@@ -1064,6 +1064,71 @@ export function listExpenseAttachments(groupId: string, expenseId: string) {
   );
 }
 
+/**
+ * Upload a receipt attachment with progress reporting. `fetch` can't report
+ * upload progress in React Native, so this uses XMLHttpRequest over the same
+ * base64-JSON body the backend already accepts (no backend change). It:
+ *  - reports 0..1 progress via `onProgress`,
+ *  - times out (so a stalled upload surfaces an error instead of hanging on
+ *    "uploading" forever — the original bug), and
+ *  - retries once after a silent token refresh on 401.
+ */
+export function uploadExpenseAttachmentWithProgress(
+  serverUrl: string,
+  groupId: string,
+  expenseId: string,
+  imageBase64: string,
+  mimeType: string,
+  onProgress?: (fraction: number) => void,
+): Promise<ExpenseAttachment> {
+  const url = `${serverUrl}/api/groups/${groupId}/expenses/${expenseId}/attachments`;
+  const body = JSON.stringify({ image_base64: imageBase64, mime_type: mimeType });
+
+  const send = (token: string | null) =>
+    new Promise<{ status: number; text: string }>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader(PROTOCOL_HEADER, String(APP_PROTOCOL_VERSION));
+      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      xhr.timeout = 60000;
+      if (onProgress && xhr.upload) {
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) onProgress(e.loaded / e.total);
+        };
+      }
+      xhr.onload = () => resolve({ status: xhr.status, text: xhr.responseText });
+      xhr.onerror = () => reject(new ApiError(0, 'network error during upload'));
+      xhr.ontimeout = () => reject(new ApiError(0, 'upload timed out'));
+      xhr.send(body);
+    });
+
+  return (async () => {
+    let token = accountFor(serverUrl)?.token ?? null;
+    let res = await send(token);
+    if (res.status === 401) {
+      const refreshed = await attemptRefresh(serverUrl);
+      if (refreshed) {
+        token = refreshed;
+        res = await send(token);
+      }
+    }
+    if (res.status < 200 || res.status >= 300) {
+      let parsed: unknown = null;
+      let msg = `upload failed (${res.status})`;
+      try {
+        parsed = JSON.parse(res.text);
+        const e = (parsed as { error?: string })?.error;
+        if (e) msg = e;
+      } catch {
+        /* non-JSON error body */
+      }
+      throw new ApiError(res.status, msg, parsed);
+    }
+    return JSON.parse(res.text) as ExpenseAttachment;
+  })();
+}
+
 // Avatars
 export type AvatarMimeType = 'image/jpeg' | 'image/png' | 'image/webp';
 
@@ -1317,6 +1382,21 @@ export function apiFor(serverUrl: string) {
           method: 'POST',
           body: JSON.stringify({ image_base64: imageBase64, mime_type: mimeType }),
         },
+      ),
+    uploadExpenseAttachmentWithProgress: (
+      groupId: string,
+      expenseId: string,
+      imageBase64: string,
+      mimeType: string,
+      onProgress?: (fraction: number) => void,
+    ) =>
+      uploadExpenseAttachmentWithProgress(
+        serverUrl,
+        groupId,
+        expenseId,
+        imageBase64,
+        mimeType,
+        onProgress,
       ),
     listExpenseAttachments: (groupId: string, expenseId: string) =>
       requestOn<ExpenseAttachment[]>(

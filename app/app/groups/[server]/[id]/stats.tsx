@@ -23,7 +23,7 @@ import { Text } from '@/components/Text';
 import { apiFor, Expense, GroupStats } from '@/lib/api';
 import { formatDate, formatMinorUnits } from '@/lib/i18n';
 import { aggregateByCategory } from '@/lib/category-stats';
-import { categoryIcon, categoryLabelKey } from '@/lib/categories';
+import { categoryIcon, categoryLabel } from '@/lib/categories';
 import {
   colors,
   fontBody,
@@ -143,7 +143,7 @@ export default function GroupStatsScreen() {
                   <View key={row.category} style={styles.row}>
                     <View style={styles.catLeft}>
                       <Feather name={categoryIcon(row.category)} size={16} color={colors.lead} />
-                      <Text style={styles.rowLabel}>{t(categoryLabelKey(row.category))}</Text>
+                      <Text style={styles.rowLabel}>{categoryLabel(row.category, t)}</Text>
                     </View>
                     <Text style={styles.rowValueMono} numberOfLines={1}>
                       {row.totals
