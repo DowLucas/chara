@@ -1384,3 +1384,38 @@ func TestUpdateExpense_DoesNotCollapseAfterFiveMinutes(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 2, count, "edits >5 min apart must produce two rows")
 }
+
+// ── Category (now user-selectable via the wizard picker) ──────────────────────
+
+func TestExpenses_Category_RoundTripsThroughCreateAndUpdate(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+
+	createBody := fmt.Sprintf(`{"title":"Taxi","amount":"30.00","currency":"SEK","paid_by_id":%q,"category":"transport","split_method":"equal","participants":[%q,%q]}`,
+		aliceMemberID, aliceMemberID, bobMemberID)
+	cr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", createBody, alice.Token))
+	require.Equal(t, http.StatusCreated, cr.Code, cr.Body.String())
+	var created map[string]any
+	require.NoError(t, json.NewDecoder(cr.Body).Decode(&created))
+	assert.Equal(t, "transport", created["category"])
+	id := created["id"].(string)
+
+	patch := fmt.Sprintf(`{"title":"Taxi","amount":"30.00","currency":"SEK","paid_by_id":%q,"category":"food","split_method":"equal","participants":[%q,%q]}`,
+		aliceMemberID, aliceMemberID, bobMemberID)
+	pr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+groupID+"/expenses/"+id, patch, alice.Token))
+	require.Equal(t, http.StatusOK, pr.Code, pr.Body.String())
+	var updated map[string]any
+	require.NoError(t, json.NewDecoder(pr.Body).Decode(&updated))
+	assert.Equal(t, "food", updated["category"])
+}
+
+func TestExpenses_Category_DefaultsToGeneralWhenOmitted(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+
+	body := fmt.Sprintf(`{"title":"Misc","amount":"10.00","currency":"SEK","paid_by_id":%q,"split_method":"equal","participants":[%q,%q]}`,
+		aliceMemberID, aliceMemberID, bobMemberID)
+	cr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", body, alice.Token))
+	require.Equal(t, http.StatusCreated, cr.Code, cr.Body.String())
+	var created map[string]any
+	require.NoError(t, json.NewDecoder(cr.Body).Decode(&created))
+	assert.Equal(t, "general", created["category"])
+}

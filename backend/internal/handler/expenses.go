@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -1303,6 +1304,225 @@ func (h *ExpenseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+type mergeExpensesReq struct {
+	SourceExpenseIDs []string `json:"source_expense_ids"`
+	Title            string   `json:"title"`
+}
+
+// Merge combines two or more of the caller's own expenses into a single new
+// expense and soft-deletes the originals, all in one transaction.
+//
+// First-version constraints (see docs / product decision): every source must
+// share the same payer and currency, and the caller must be the author of all
+// of them (merge soft-deletes them, and delete is author-only). The merged
+// expense is an `exact` split whose per-member shares are the sum of the
+// sources' shares — so the combined splits provably sum to the combined
+// amount. FX snapshots on the sources are dropped: the merged row is a plain
+// group-currency expense.
+func (h *ExpenseHandler) Merge(w http.ResponseWriter, r *http.Request) {
+	groupID := chi.URLParam(r, "groupID")
+	claims := middleware.ClaimsFromContext(r.Context())
+
+	if _, ok := h.requireGroupMember(w, r, groupID); !ok {
+		return
+	}
+
+	if err := requireGroupUnlocked(r.Context(), h.queries, groupID); err != nil {
+		if errors.Is(err, ErrGroupLocked) {
+			writeLockedError(w)
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	var req mergeExpensesReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// De-duplicate ids while preserving order.
+	seen := make(map[string]bool, len(req.SourceExpenseIDs))
+	ids := make([]string, 0, len(req.SourceExpenseIDs))
+	for _, id := range req.SourceExpenseIDs {
+		if id == "" || seen[id] {
+			continue
+		}
+		seen[id] = true
+		ids = append(ids, id)
+	}
+	if len(ids) < 2 {
+		writeError(w, http.StatusBadRequest, "merge requires at least two distinct expenses")
+		return
+	}
+
+	type loadedExpense struct {
+		exp    db.GetExpenseByIDAndGroupRow
+		splits []db.ExpenseSplit
+	}
+	sources := make([]loadedExpense, 0, len(ids))
+	for _, id := range ids {
+		exp, err := h.queries.GetExpenseByIDAndGroup(r.Context(), db.GetExpenseByIDAndGroupParams{
+			ID:      id,
+			GroupID: groupID,
+		})
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				writeError(w, http.StatusNotFound, "expense not found: "+id)
+			} else {
+				writeError(w, http.StatusInternalServerError, "internal error")
+			}
+			return
+		}
+		splits, err := h.queries.ListSplitsByExpense(r.Context(), id)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+		sources = append(sources, loadedExpense{exp: exp, splits: splits})
+	}
+
+	// Preconditions: same payer + currency, and caller authored every source.
+	payer := sources[0].exp.PaidByID
+	curr := sources[0].exp.Currency
+	for _, s := range sources {
+		if s.exp.CreatedByID != claims.UserID {
+			writeError(w, http.StatusForbidden, "you can only merge expenses you created")
+			return
+		}
+		if s.exp.PaidByID != payer {
+			writeError(w, http.StatusUnprocessableEntity, "all expenses must have the same payer to merge")
+			return
+		}
+		if s.exp.Currency != curr {
+			writeError(w, http.StatusUnprocessableEntity, "all expenses must be in the same currency to merge")
+			return
+		}
+	}
+
+	// Combine: sum the amounts and per-member shares, take the earliest date.
+	var amount int64
+	shareByMember := make(map[string]int64)
+	memberOrder := make([]string, 0)
+	var earliest pgtype.Date
+	for _, s := range sources {
+		amount += s.exp.Amount
+		for _, sp := range s.splits {
+			if _, ok := shareByMember[sp.MemberID]; !ok {
+				memberOrder = append(memberOrder, sp.MemberID)
+			}
+			shareByMember[sp.MemberID] += sp.Share
+		}
+		if s.exp.ExpenseDate.Valid && (!earliest.Valid || s.exp.ExpenseDate.Time.Before(earliest.Time)) {
+			earliest = s.exp.ExpenseDate
+		}
+	}
+
+	title := strings.TrimSpace(req.Title)
+	if title == "" {
+		title = sources[0].exp.Title
+	}
+	expenseDate := time.Now()
+	if earliest.Valid {
+		expenseDate = earliest.Time
+	}
+
+	splitsIn := make([]expense.SplitInput, 0, len(memberOrder))
+	for _, mid := range memberOrder {
+		splitsIn = append(splitsIn, expense.SplitInput{MemberID: mid, Value: shareByMember[mid]})
+	}
+
+	// Snapshot attachment keys across all sources before the tx, so we can
+	// best-effort sweep the bucket after commit (mirrors Delete).
+	var attachmentKeys []string
+	if h.store != nil {
+		for _, id := range ids {
+			atts, err := h.queries.ListAttachmentsByExpense(r.Context(), id)
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, "internal error")
+				return
+			}
+			for _, a := range atts {
+				attachmentKeys = append(attachmentKeys, a.S3Key)
+			}
+		}
+	}
+
+	tx, err := h.pool.Begin(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+	defer tx.Rollback(context.Background())
+
+	created, err := expense.Create(r.Context(), tx, h.queries, expense.Input{
+		GroupID:         groupID,
+		Title:           title,
+		AmountMinor:     amount,
+		Currency:        curr,
+		PaidByMemberID:  payer,
+		SplitMethod:     "exact",
+		Splits:          splitsIn,
+		Category:        sources[0].exp.Category,
+		ExpenseDate:     expenseDate,
+		CreatedByUserID: claims.UserID,
+	})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	q := db.New(tx)
+	for i, id := range ids {
+		if err := q.SoftDeleteExpense(r.Context(), id); err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+		if err := q.DeleteAttachmentsByExpense(r.Context(), id); err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+		if err := writeActivity(r.Context(), q, groupID, claims.UserID,
+			EventExpenseDeleted, id, EntityExpense,
+			&ActivityPayload{Snapshot: ExpenseSnapshot{
+				Title:         sources[i].exp.Title,
+				Amount:        sources[i].exp.Amount,
+				Currency:      sources[i].exp.Currency,
+				PayerMemberID: sources[i].exp.PaidByID,
+			}}); err != nil {
+			writeError(w, http.StatusInternalServerError, "could not write activity")
+			return
+		}
+	}
+
+	if err := tx.Commit(r.Context()); err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	if h.store != nil {
+		for _, key := range attachmentKeys {
+			if err := h.store.Delete(context.Background(), key); err != nil {
+				slog.Warn("attachment bucket sweep failed", "key", key, "err", err)
+			}
+		}
+	}
+
+	resp := buildExpenseResponse(
+		created.Row.ID, created.Row.GroupID, created.Row.Title,
+		created.Row.Amount, created.Row.Currency, created.Row.PaidByID,
+		created.Row.SplitMethod, created.Row.Category,
+		created.Row.Notes, created.Row.ExpenseDate,
+		created.Row.IsReimbursement, created.Row.CreatedByID,
+		created.Row.CreatedAt, created.Row.UpdatedAt,
+		dbSplitsToResponse(created.Splits),
+		created.Row.OriginalAmount, created.Row.OriginalCurrency,
+		created.Row.FxRate, created.Row.FxAsOf, created.Row.FxSource,
+	)
+	writeJSON(w, http.StatusCreated, resp)
 }
 
 func strOrEmpty(s *string) string {

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/docker/docker/api/types/container"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -45,8 +47,7 @@ func SharedDB(t *testing.T) *pgxpool.Pool {
 func startTestDB() (*pgxpool.Pool, error) {
 	ctx := context.Background()
 
-	pgContainer, err := tcpostgres.Run(ctx,
-		"postgres:16-alpine",
+	opts := []testcontainers.ContainerCustomizer{
 		tcpostgres.WithDatabase("chara_test"),
 		tcpostgres.WithUsername("chara"),
 		tcpostgres.WithPassword("test"),
@@ -55,7 +56,21 @@ func startTestDB() (*pgxpool.Pool, error) {
 				WithOccurrence(2).
 				WithStartupTimeout(60*time.Second),
 		),
-	)
+	}
+
+	// Some hosts (notably Docker inside an unprivileged Proxmox LXC) ship an
+	// AppArmor profile that blocks the AF_UNIX bind() Postgres needs for its
+	// socket, so the container dies on boot with "could not create any
+	// Unix-domain sockets". Opt out per-host by setting
+	// CHARA_TEST_PG_APPARMOR_UNCONFINED=1 — left unset (e.g. in CI) this is a
+	// no-op and the default seccomp/AppArmor profiles stay in force.
+	if os.Getenv("CHARA_TEST_PG_APPARMOR_UNCONFINED") != "" {
+		opts = append(opts, testcontainers.WithHostConfigModifier(func(hc *container.HostConfig) {
+			hc.SecurityOpt = append(hc.SecurityOpt, "apparmor=unconfined")
+		}))
+	}
+
+	pgContainer, err := tcpostgres.Run(ctx, "postgres:16-alpine", opts...)
 	if err != nil {
 		return nil, fmt.Errorf("start postgres container: %w", err)
 	}
