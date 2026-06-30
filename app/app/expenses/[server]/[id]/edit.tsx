@@ -11,8 +11,8 @@
  *
  * Stale-banner: re-fetches on focus; if `updated_at` changes, prompts a reload.
  *
- * The wizard doesn't expose `category` or `notes` editing; we forward the
- * original expense's values verbatim so saving doesn't wipe them.
+ * The wizard exposes `category` (editable) but not `notes`; we forward the
+ * original expense's notes verbatim so saving doesn't wipe them.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -39,6 +39,7 @@ import {
   UpdateExpenseInput,
 } from '@/lib/api';
 import { useAccount } from '@/lib/accounts';
+import { DEFAULT_CATEGORY } from '@/lib/categories';
 import { computeBalanceImpact, MemberDelta } from '@/lib/balance-impact';
 import {
   decideConfirmFlow,
@@ -75,6 +76,7 @@ function expenseToInitialValue(expense: Expense): ExpenseWizardInitialValue {
     currency,
     date: Number.isNaN(date.getTime()) ? new Date() : date,
     paidByMemberId: expense.paid_by_id,
+    category: expense.category || DEFAULT_CATEGORY,
     splitMethod:
       (expense.split_method as 'equal' | 'exact' | 'percentage') || 'equal',
     included: splits.length > 0 ? included : undefined,
@@ -89,7 +91,7 @@ function snapshotFromPayload(
 ): NonShareFieldsSnapshot {
   return {
     title: p.title,
-    category: original.category || 'other',
+    category: p.category || original.category || DEFAULT_CATEGORY,
     notes: original.notes ?? '',
     expense_date: p.expense_date,
     currency: p.fx?.original_currency ?? p.currency,
@@ -120,7 +122,7 @@ function payloadToUpdateInput(
     paid_by_id: p.paid_by_id,
     expense_date: p.expense_date,
     split_method: p.split_method,
-    category: original.category || 'other',
+    category: p.category || original.category || DEFAULT_CATEGORY,
     notes: original.notes ?? '',
     ...(p.fx ?? {}),
   };

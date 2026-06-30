@@ -29,6 +29,7 @@ import { Avatar } from '@/components/Avatar';
 import { avatarImageSource, GroupMember } from '@/lib/api';
 import { currentLocale } from '@/lib/i18n';
 import { initialsOf } from '@/lib/name';
+import { previewApportion } from '@/lib/split';
 import {
   colors,
   fontBody,
@@ -157,13 +158,27 @@ export function SplitEditor({
     return out;
   }, [method, includedMembers, lockedById]);
 
+  // Percentage shares are apportioned together (floor + largest-remainder) so
+  // they sum to exactly the total when the locked/auto percentages add up to
+  // 100% — otherwise independent rounding of each member produces a phantom
+  // "0.01 left to assign". When percentages genuinely don't sum to 100%, the
+  // result reflects the real over/under.
+  const percentMinorById = useMemo<Record<string, number>>(() => {
+    if (method !== 'percentage') return {};
+    const ids = includedMembers.map((m) => m.id);
+    const bps = ids.map((id) => lockedById.get(id) ?? autoPctBp[id] ?? 0);
+    const shares = previewApportion(totalMinor, bps);
+    const out: Record<string, number> = {};
+    ids.forEach((id, i) => (out[id] = shares[i] ?? 0));
+    return out;
+  }, [method, includedMembers, lockedById, autoPctBp, totalMinor]);
+
   function effectiveMinor(memberId: string): number {
     if (method === 'exact') {
       return lockedById.get(memberId) ?? autoExactMinor[memberId] ?? 0;
     }
     if (method === 'percentage') {
-      const bp = lockedById.get(memberId) ?? autoPctBp[memberId] ?? 0;
-      return Math.round((totalMinor * bp) / 10000);
+      return percentMinorById[memberId] ?? 0;
     }
     // equal — equal share rounded; reconcile picks up the remainder.
     return equalShare;
@@ -173,7 +188,7 @@ export function SplitEditor({
     if (method === 'equal') return totalMinor;
     return includedMembers.reduce((s, m) => s + effectiveMinor(m.id), 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [method, includedMembers, lockedById, autoExactMinor, autoPctBp, totalMinor]);
+  }, [method, includedMembers, lockedById, autoExactMinor, percentMinorById, totalMinor]);
 
   const offBy = totalSplitMinor - totalMinor;
 

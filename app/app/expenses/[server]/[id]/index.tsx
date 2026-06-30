@@ -24,7 +24,7 @@ import {
   Settlement,
 } from '@/lib/api';
 import { useAccount } from '@/lib/accounts';
-import { currentLocale, formatDate, formatMinorUnits } from '@/lib/i18n';
+import { currentLocale, formatDate, formatFxRate, formatMinorUnits } from '@/lib/i18n';
 import { computeBalanceImpact } from '@/lib/balance-impact';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import { initialsOf, makeNameShortener } from '@/lib/name';
@@ -323,7 +323,7 @@ export default function ExpenseDetailScreen() {
               <Text style={styles.fxRateLine}>
                 {t('expenseDetail.fx.rateLine', {
                   from: expense.original_currency,
-                  rate: formatRate(expense.fx_rate),
+                  rate: formatFxRate(expense.fx_rate),
                   to: expense.currency,
                 })}
               </Text>
@@ -531,17 +531,6 @@ export default function ExpenseDetailScreen() {
       )}
     </View>
   );
-}
-
-// Trim a decimal string like "11.5000000000" to a humane display width
-// (max 6 fractional digits, trailing zeros stripped). Keeps integers
-// integer-looking ("12").
-function formatRate(s: string): string {
-  const n = parseFloat(s);
-  if (!Number.isFinite(n)) return s;
-  const fixed = n.toFixed(6);
-  if (!fixed.includes('.')) return fixed;
-  return fixed.replace(/0+$/, '').replace(/\.$/, '');
 }
 
 interface SplitRowProps {

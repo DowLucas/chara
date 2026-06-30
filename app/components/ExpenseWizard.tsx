@@ -39,6 +39,9 @@ import { ContentContainer } from '@/components/ContentContainer';
 import { AmountKeypad } from '@/components/AmountKeypad';
 import { AmountField } from '@/components/AmountField';
 import { CurrencyPicker } from '@/components/CurrencyPicker';
+import { ActionSheet } from '@/components/ActionSheet';
+import { EXPENSE_CATEGORIES, DEFAULT_CATEGORY, categoryLabelKey } from '@/lib/categories';
+import { loadDraft, saveDraft, clearDraft } from '@/lib/expense-draft';
 import {
   FxConversionSection,
   useFxConversion,
@@ -70,6 +73,7 @@ export interface ExpenseWizardInitialValue {
   currency?: string;
   date?: Date;
   paidByMemberId?: string;
+  category?: string;
   splitMethod?: SplitMethod;
   included?: Record<string, boolean>;
   exactByMember?: Record<string, string>;
@@ -82,6 +86,7 @@ export interface ExpenseWizardSubmitPayload {
   currency: string;
   expense_date: string;
   paid_by_id: string;
+  category: string;
   split_method: SplitMethod;
   participants?: string[];
   splits?: Array<{ member_id: string; share?: string; basis_points?: number }>;
@@ -130,6 +135,11 @@ export interface ExpenseWizardProps {
   topBarTitle?: string;
   onCancel?: () => void;
   onSubmit: (payload: ExpenseWizardSubmitPayload) => void | Promise<void>;
+  /** When set (create mode only), the in-progress form is auto-saved to local
+   *  storage under this key and restored on next mount, so accidentally
+   *  leaving the wizard doesn't lose what was typed. Cleared on a successful
+   *  submit. Use `draftKey(serverUrl, groupId)` from `@/lib/expense-draft`. */
+  draftKey?: string;
   /** Rendered above Step 1's hero (e.g. the "Scan receipt" row). */
   topSlot?: React.ReactNode;
   /** Rendered between the scroll and the CTA bar (e.g. duplicate banner). */
@@ -210,9 +220,11 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       topSlot,
       preCtaSlot,
       onValuesChange,
+      draftKey,
     } = props;
 
     const { t } = useTranslation();
+    const draftEnabled = mode === 'create' && !!draftKey;
     const [step, setStep] = useState<Step>(1);
 
     const [amount, setAmount] = useState(initialValue?.amount ?? '');
@@ -223,10 +235,15 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
     );
     const [pickerOpen, setPickerOpen] = useState(false);
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [payerSheetOpen, setPayerSheetOpen] = useState(false);
 
     const [payerMemberId, setPayerMemberId] = useState<string>(
       initialValue?.paidByMemberId ?? currentUserMemberId ?? '',
     );
+    const [category, setCategory] = useState<string>(
+      initialValue?.category ?? DEFAULT_CATEGORY,
+    );
+    const [categorySheetOpen, setCategorySheetOpen] = useState(false);
 
     const [method, setMethod] = useState<SplitMethod>(
       initialValue?.splitMethod ?? 'equal',
@@ -249,11 +266,16 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
     // after first render). Matches the `initialKey` pattern from ExpenseForm.
     const resetKey = initialKeyOf(initialValue, members);
     const firstRender = useRef(true);
+    // Draft hydration owns create-mode state; skip the members-changed reset so
+    // a restored draft isn't wiped when the member list arrives after mount.
+    const draftHydrated = useRef(false);
+    const draftSubmitted = useRef(false);
     useEffect(() => {
       if (firstRender.current) {
         firstRender.current = false;
         return;
       }
+      if (draftEnabled) return;
       setAmount(initialValue?.amount ?? '');
       setTitle(initialValue?.title ?? '');
       setDate(initialValue?.date ?? new Date());
@@ -261,6 +283,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       setPayerMemberId(
         initialValue?.paidByMemberId ?? currentUserMemberId ?? '',
       );
+      setCategory(initialValue?.category ?? DEFAULT_CATEGORY);
       setMethod(initialValue?.splitMethod ?? 'equal');
       setIncluded(buildInitialIncluded(members, initialValue));
       setExactByMember(initialValue?.exactByMember ?? {});
@@ -282,6 +305,73 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentUserMemberId]);
+
+    // Restore an auto-saved draft once, on mount (create mode only).
+    useEffect(() => {
+      if (!draftEnabled || !draftKey) {
+        draftHydrated.current = true;
+        return;
+      }
+      let cancelled = false;
+      loadDraft(draftKey, Date.now()).then((d) => {
+        if (cancelled) return;
+        if (d) {
+          if (d.amount != null) setAmount(d.amount);
+          if (d.title != null) setTitle(d.title);
+          if (d.dateMs != null) setDate(new Date(d.dateMs));
+          if (d.currency != null) setSelectedCurrency(d.currency);
+          if (d.payerMemberId != null) setPayerMemberId(d.payerMemberId);
+          if (d.category != null) setCategory(d.category);
+          if (d.method != null) setMethod(d.method);
+          if (d.included != null) setIncluded(d.included);
+          if (d.exactByMember != null) setExactByMember(d.exactByMember);
+          if (d.pctByMember != null) setPctByMember(d.pctByMember);
+        }
+        draftHydrated.current = true;
+      });
+      return () => {
+        cancelled = true;
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Auto-save the in-progress draft (debounced) after hydration, until the
+    // form is successfully submitted.
+    useEffect(() => {
+      if (!draftEnabled || !draftKey) return;
+      if (!draftHydrated.current || draftSubmitted.current) return;
+      const fields = {
+        amount,
+        title,
+        dateMs: date.getTime(),
+        currency: selectedCurrency,
+        payerMemberId,
+        category,
+        method,
+        included,
+        exactByMember,
+        pctByMember,
+      };
+      const handle = setTimeout(() => {
+        if (draftSubmitted.current) return;
+        saveDraft(draftKey, fields, Date.now());
+      }, 600);
+      return () => clearTimeout(handle);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+      draftEnabled,
+      draftKey,
+      amount,
+      title,
+      date,
+      selectedCurrency,
+      payerMemberId,
+      category,
+      method,
+      included,
+      exactByMember,
+      pctByMember,
+    ]);
 
     // When members arrive after the wizard has mounted in create mode and
     // included is still empty, seed it.
@@ -325,6 +415,11 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       isForeignCurrency && fx?.kind === 'ready' && rateNumber !== null;
     const effectiveAmountMinor = fxApplied ? convertedMinor : amountMinor;
     const effectiveCurrency = fxApplied ? groupCurrency : currency;
+
+    const payerLabel =
+      (payerMemberId === currentUserMemberId
+        ? t('addExpense.you')
+        : members.find((m) => m.id === payerMemberId)?.name) ?? '';
 
     const includedMembers = members.filter((m) => included[m.id]);
     const equalShare =
@@ -546,6 +641,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
         amount: amountDecimal,
         currency: effectiveCurrency,
         paid_by_id: payerMemberId,
+        category,
         expense_date: toDateStr(date),
         split_method: method,
         ...(fx_payload ? { fx: fx_payload } : {}),
@@ -565,7 +661,20 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
         }));
       }
 
-      await onSubmit(base);
+      if (draftEnabled && draftKey) {
+        // Only clear the draft once the save actually succeeds — on failure we
+        // keep it so the user doesn't lose their work. Relies on the host's
+        // onSubmit rejecting on failure (add-expense rethrows).
+        try {
+          await onSubmit(base);
+          draftSubmitted.current = true;
+          clearDraft(draftKey);
+        } catch {
+          /* keep the draft for next time */
+        }
+      } else {
+        await onSubmit(base);
+      }
     }
 
     const recapMeta = fmtMinor(amountMinor, currency);
@@ -610,6 +719,10 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
                 setDate={setDate}
                 onOpenDatePicker={() => setShowDatePicker(true)}
                 groupName={groupName}
+                payerLabel={payerLabel}
+                onOpenPayerPicker={() => setPayerSheetOpen(true)}
+                categoryLabel={t(categoryLabelKey(category))}
+                onOpenCategoryPicker={() => setCategorySheetOpen(true)}
                 onOpenKeypad={() => setKeypadTarget({ kind: 'amount' })}
                 topSlot={topSlot}
                 isForeignCurrency={isForeignCurrency}
@@ -708,6 +821,26 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
             setPickerOpen(false);
           }}
         />
+
+        <ActionSheet
+          visible={payerSheetOpen}
+          onClose={() => setPayerSheetOpen(false)}
+          title={t('addExpense.whoPaid')}
+          options={members.map((m) => ({
+            label: m.id === currentUserMemberId ? t('addExpense.you') : m.name,
+            onPress: () => setPayerMemberId(m.id),
+          }))}
+        />
+
+        <ActionSheet
+          visible={categorySheetOpen}
+          onClose={() => setCategorySheetOpen(false)}
+          title={t('addExpense.categoryLabel')}
+          options={EXPENSE_CATEGORIES.map((key) => ({
+            label: t(categoryLabelKey(key)),
+            onPress: () => setCategory(key),
+          }))}
+        />
       </KeyboardAvoidingView>
     );
   },
@@ -757,6 +890,10 @@ interface Step1Props {
   setDate: (d: Date) => void;
   onOpenDatePicker: () => void;
   groupName: string;
+  payerLabel: string;
+  onOpenPayerPicker: () => void;
+  categoryLabel: string;
+  onOpenCategoryPicker: () => void;
   onOpenKeypad: () => void;
   topSlot?: React.ReactNode;
   isForeignCurrency: boolean;
@@ -778,6 +915,10 @@ function Step1({
   setDate,
   onOpenDatePicker,
   groupName,
+  payerLabel,
+  onOpenPayerPicker,
+  categoryLabel,
+  onOpenCategoryPicker,
   onOpenKeypad,
   topSlot,
   isForeignCurrency,
@@ -830,6 +971,34 @@ function Step1({
       <View style={styles.fieldWrap}>
         <Text style={styles.fieldLabel}>{t('addExpense.whenLabel')}</Text>
         <DateInput date={date} setDate={setDate} onOpenPicker={onOpenDatePicker} />
+      </View>
+
+      <View style={styles.fieldWrap}>
+        <Text style={styles.fieldLabel}>{t('addExpense.paidByLabel')}</Text>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={onOpenPayerPicker}
+          style={styles.groupRow}
+          accessibilityRole="button"
+          accessibilityLabel={t('addExpense.whoPaid')}
+        >
+          <Text style={styles.groupName}>{payerLabel}</Text>
+          <Text style={styles.dateInputCaret}>▾</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.fieldWrap}>
+        <Text style={styles.fieldLabel}>{t('addExpense.categoryLabel')}</Text>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={onOpenCategoryPicker}
+          style={styles.groupRow}
+          accessibilityRole="button"
+          accessibilityLabel={t('addExpense.categoryLabel')}
+        >
+          <Text style={styles.groupName}>{categoryLabel}</Text>
+          <Text style={styles.dateInputCaret}>▾</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={[styles.fieldWrap, { borderBottomWidth: 0 }]}>

@@ -13,7 +13,7 @@ export type StandingRow = {
 };
 
 export function computeStandings(members: GroupMember[], balances: Balance[]): StandingRow[] {
-  return members.map((m) => {
+  const rows = members.map((m) => {
     const entries: StandingEntry[] = [];
     for (const b of balances) {
       if (b.member_id !== m.id) continue;
@@ -23,6 +23,13 @@ export function computeStandings(members: GroupMember[], balances: Balance[]): S
     const isSettled = entries.length === 0 || entries.every((e) => e.netMinor === 0);
     return { memberId: m.id, entries, isSettled };
   });
+
+  // Sort most positive (owed the most) → most negative (owes the most).
+  // Cross-currency groups are rare; sum the per-currency nets purely as an
+  // ordering key (never shown — display stays per-currency). Stable for ties,
+  // so same-net members keep their original member order.
+  const netSum = (r: StandingRow) => r.entries.reduce((s, e) => s + e.netMinor, 0);
+  return rows.sort((a, b) => netSum(b) - netSum(a));
 }
 
 export function expensesInvolvingMember(expenses: Expense[], memberId: string): Expense[] {

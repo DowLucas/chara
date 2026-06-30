@@ -127,6 +127,44 @@ export function percentageSplit(total: bigint, pcts: BasisPointShare[]): Share[]
 }
 
 /**
+ * Preview-only apportionment for the live split editor. Given a total in minor
+ * units and a list of basis-point weights (one per member, 10000 == 100%),
+ * returns integer minor-unit shares using floor + largest-remainder, in input
+ * order.
+ *
+ * Unlike `percentageSplit` (which requires the weights to sum to exactly
+ * 10000), this tolerates any weight sum so the reconcile card can show a real
+ * over/under when the user's locked percentages don't add up to 100%. The
+ * shares always sum to `round(total * sum(bp) / 10000)`, so when the weights DO
+ * sum to 10000 the result sums to exactly `total` — no phantom rounding penny.
+ *
+ * For weights summing to 10000 this is byte-identical to `percentageSplit`.
+ * Number-based (not bigint) because the editor works in JS numbers; safe for
+ * the magnitudes involved (minor units of a single expense).
+ */
+export function previewApportion(totalMinor: number, basisPoints: number[]): number[] {
+  const n = basisPoints.length;
+  if (n === 0) return [];
+  if (totalMinor <= 0) return new Array(n).fill(0);
+
+  const floors = basisPoints.map((bp) => Math.floor((totalMinor * bp) / 10000));
+  const sumFloors = floors.reduce((a, b) => a + b, 0);
+  const bpSum = basisPoints.reduce((a, b) => a + b, 0);
+  const target = Math.round((totalMinor * bpSum) / 10000);
+
+  const remainder = target - sumFloors;
+  if (remainder <= 0) return floors;
+
+  // Distribute the leftover pennies to the largest fractional remainders;
+  // ties keep input order, matching `percentageSplit`.
+  const fracs = basisPoints.map((bp, i) => ({ i, frac: (totalMinor * bp) % 10000 }));
+  fracs.sort((a, b) => b.frac - a.frac || a.i - b.i);
+  const out = [...floors];
+  for (let k = 0; k < remainder && k < n; k++) out[fracs[k].i] += 1;
+  return out;
+}
+
+/**
  * High-level split entry point used by the edit-expense screen. Routes to the
  * appropriate engine based on `method`.
  *

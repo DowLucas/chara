@@ -1277,6 +1277,14 @@ export function apiFor(serverUrl: string) {
       requestOn<void>(serverUrl, `/api/groups/${groupId}/expenses/${expenseId}`, {
         method: 'DELETE',
       }),
+    mergeExpenses: (
+      groupId: string,
+      input: { source_expense_ids: string[]; title?: string },
+    ) =>
+      requestOn<Expense>(serverUrl, `/api/groups/${groupId}/expenses/merge`, {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
 
     // Balances + settlements
     listGroupBalances: (groupId: string) =>

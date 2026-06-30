@@ -187,6 +187,19 @@ export function formatMinorUnitsCompact(
   return raw.replace(/[    ]/g, ' ');
 }
 
+/** Display an FX rate with exactly two decimal places, locale-formatted.
+ *  Accepts the raw rate string from the API (which may carry up to eight
+ *  decimals) or a number. Used everywhere a rate is *shown* — the underlying
+ *  stored/derived rate keeps full precision so converted totals stay exact. */
+export function formatFxRate(rate: string | number): string {
+  const n = typeof rate === 'string' ? parseFloat(rate) : rate;
+  if (!Number.isFinite(n)) return String(rate);
+  return n.toLocaleString(currentLocale(), {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 /** Localized date string (short form). */
 export function formatDate(d: Date | string): string {
   const date = typeof d === 'string' ? new Date(d) : d;

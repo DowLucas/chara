@@ -1,4 +1,9 @@
-import { prorateItemAssignments, ScanItem, ItemAssignment } from '../scan-items';
+import {
+  buildScanItemsState,
+  prorateItemAssignments,
+  ScanItem,
+  ItemAssignment,
+} from '../scan-items';
 
 // Test fixtures -------------------------------------------------------------
 const PARTICIPANTS = ['a', 'b', 'c']; // memberIDs sorted alphabetically
@@ -129,5 +134,97 @@ describe('prorateItemAssignments', () => {
     });
     const total = Object.values(result).reduce((s, v) => s + v, 0);
     expect(total).toBe(30);
+  });
+});
+
+describe('buildScanItemsState', () => {
+  function receiptItems(...rows: Array<[number, number]>) {
+    // [unit_price_minor, total_minor]
+    return rows.map(([unit_price_minor, total_minor], i) => ({
+      id: `r${i}`,
+      description: `item ${i}`,
+      qty: 1,
+      unit_price_minor,
+      total_minor,
+    }));
+  }
+
+  it('returns null when the receipt has no line items', () => {
+    const receipt = { currency: 'EUR', total_minor: 5000, items: [] };
+    expect(
+      buildScanItemsState(receipt, { amount_minor: 5000, currency: 'EUR' }, 'EUR'),
+    ).toBeNull();
+  });
+
+  it('returns null when the applied amount is not in group currency (FX failed)', () => {
+    // Foreign receipt whose conversion failed: applied stays in EUR while the
+    // group is SEK. The wizard's own FX section handles it, not the item view.
+    const receipt = {
+      currency: 'EUR',
+      total_minor: 5000,
+      items: receiptItems([5000, 5000]),
+    };
+    expect(
+      buildScanItemsState(receipt, { amount_minor: 5000, currency: 'EUR' }, 'SEK'),
+    ).toBeNull();
+  });
+
+  it('passes same-currency receipts through unchanged (factor 1)', () => {
+    const its = receiptItems([3000, 3000], [2000, 2000]);
+    const receipt = {
+      currency: 'EUR',
+      total_minor: 5000,
+      tax_minor: 0,
+      tip_minor: 0,
+      items: its,
+    };
+    const state = buildScanItemsState(
+      receipt,
+      { amount_minor: 5000, currency: 'EUR' },
+      'EUR',
+    );
+    expect(state).not.toBeNull();
+    expect(state!.items).toBe(its); // identity — no remapping
+    expect(state!.totalMinor).toBe(5000);
+    expect(state!.currency).toBe('EUR');
+  });
+
+  it('scales line items, tax and tip into group currency for a foreign receipt', () => {
+    // 50.00 EUR receipt converted to 550.00 SEK → factor 11.
+    const receipt = {
+      currency: 'EUR',
+      total_minor: 5000,
+      tax_minor: 500,
+      tip_minor: 0,
+      items: receiptItems([4500, 4500]),
+    };
+    const state = buildScanItemsState(
+      receipt,
+      { amount_minor: 55000, currency: 'SEK' },
+      'SEK',
+    );
+    expect(state).not.toBeNull();
+    expect(state!.currency).toBe('SEK');
+    expect(state!.totalMinor).toBe(55000);
+    expect(state!.items[0].total_minor).toBe(49500); // 4500 * 11
+    // Tax is exclusive here (4500 + 500 == 5000 total), so it survives, scaled.
+    expect(state!.taxMinor).toBe(5500); // 500 * 11
+  });
+
+  it('drops tax already baked into the line items (inclusive receipt)', () => {
+    // Items already sum to the total; the separately-reported tax is inclusive.
+    const receipt = {
+      currency: 'EUR',
+      total_minor: 5000,
+      tax_minor: 500,
+      tip_minor: 0,
+      items: receiptItems([5000, 5000]),
+    };
+    const state = buildScanItemsState(
+      receipt,
+      { amount_minor: 5000, currency: 'EUR' },
+      'EUR',
+    );
+    expect(state!.taxMinor).toBe(0);
   });
 });

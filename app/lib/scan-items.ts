@@ -28,6 +28,81 @@ export interface ProrateInput {
   participants: string[];
 }
 
+/** Minimal shape of a scanned line item this module needs to scale. */
+export interface ConvertibleItem {
+  unit_price_minor: number;
+  total_minor: number;
+}
+
+export interface ScanItemsState<I extends ConvertibleItem> {
+  items: I[];
+  taxMinor: number;
+  tipMinor: number;
+  totalMinor: number;
+  currency: string;
+}
+
+/**
+ * Decide whether (and how) to open the itemised assign view after a receipt
+ * scan, scaling line items + tax + tip into the group's currency.
+ *
+ * Returns `null` when there are no line items, or when the applied amount is
+ * NOT in the group currency (the FX-failed fallback, where the wizard's own FX
+ * section converts instead and an itemised split in the receipt currency would
+ * be inconsistent with the converted total).
+ *
+ * When the receipt was foreign and converted, every minor amount is scaled by
+ * `applied.amount_minor / receipt.total_minor` — the exact rate the user
+ * accepted on the scan screen, including any bank-rate bump. Same-currency
+ * receipts have factor 1, so this is a no-op for them.
+ */
+export function buildScanItemsState<I extends ConvertibleItem>(
+  receipt: {
+    currency: string;
+    total_minor: number;
+    tax_minor?: number;
+    tip_minor?: number;
+    items?: I[];
+  },
+  applied: { amount_minor: number; currency: string },
+  groupCurrency: string,
+): ScanItemsState<I> | null {
+  const items = receipt.items ?? [];
+  if (items.length === 0 || applied.currency !== groupCurrency) return null;
+
+  // Tax-inclusivity heuristic, computed in the receipt currency (ratios are
+  // conversion-invariant): line-item prices on most non-US receipts already
+  // include VAT, and Gemini *also* returns tax separately, so naively summing
+  // items + tax + tip double-counts. Pick whichever candidate reconciles
+  // better against the printed total; ties go to tax-exclusive.
+  const tax = receipt.tax_minor ?? 0;
+  const tip = receipt.tip_minor ?? 0;
+  const itemsSum = items.reduce((s, it) => s + it.total_minor, 0);
+  const inclusiveErr = Math.abs(itemsSum + tip - receipt.total_minor);
+  const exclusiveErr = Math.abs(itemsSum + tax + tip - receipt.total_minor);
+  const taxAlreadyInItems = tax > 0 && inclusiveErr < exclusiveErr;
+
+  const factor =
+    receipt.total_minor > 0 ? applied.amount_minor / receipt.total_minor : 1;
+  const conv = (m: number) => Math.round(m * factor);
+  const convItems =
+    factor === 1
+      ? items
+      : items.map((it) => ({
+          ...it,
+          unit_price_minor: conv(it.unit_price_minor),
+          total_minor: conv(it.total_minor),
+        }));
+
+  return {
+    items: convItems,
+    taxMinor: taxAlreadyInItems ? 0 : conv(tax),
+    tipMinor: conv(tip),
+    totalMinor: applied.amount_minor,
+    currency: applied.currency,
+  };
+}
+
 /** Distribute `total` int minor units across `count` recipients as evenly
  *  as possible. First `remainder` recipients get one extra minor unit. */
 function distributeInt(total: number, count: number): number[] {

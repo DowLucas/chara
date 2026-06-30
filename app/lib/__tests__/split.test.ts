@@ -1,4 +1,10 @@
-import { computeSplits, equalSplit, exactSplit, percentageSplit } from '../split';
+import {
+  computeSplits,
+  equalSplit,
+  exactSplit,
+  percentageSplit,
+  previewApportion,
+} from '../split';
 
 describe('equalSplit', () => {
   it('splits evenly when divisible', () => {
@@ -106,6 +112,72 @@ describe('percentageSplit', () => {
 
   it('throws on empty pcts', () => {
     expect(() => percentageSplit(100n, [])).toThrow();
+  });
+});
+
+describe('previewApportion', () => {
+  it('sums exactly to the total when basis points sum to 100% (no phantom remainder)', () => {
+    // 0.10 split 33.34/33.33/33.33. Independent Math.round() would give
+    // [3,3,3] = 9 öre, showing a phantom "0.01 left". Apportionment gives 10.
+    const shares = previewApportion(10, [3334, 3333, 3333]);
+    expect(shares.reduce((a, b) => a + b, 0)).toBe(10);
+    expect(shares).toEqual([4, 3, 3]);
+  });
+
+  it('matches percentageSplit when basis points sum to 10000', () => {
+    const total = 10000;
+    const bps = [3333, 3333, 3334];
+    const ids = ['a', 'b', 'c'];
+    const preview = previewApportion(total, bps);
+    const canonical = percentageSplit(
+      BigInt(total),
+      ids.map((id, i) => ({ memberId: id, basisPoints: bps[i] })),
+    ).map((s) => Number(s.amountMinor));
+    expect(preview).toEqual(canonical);
+  });
+
+  it('distributes the rounding penny to the largest fractional remainder', () => {
+    // 101 split 50/50: target 101, floors [50,50], one penny to the first.
+    const shares = previewApportion(101, [5000, 5000]);
+    expect(shares).toEqual([51, 50]);
+  });
+
+  it('reflects a genuine under-allocation when percentages sum below 100%', () => {
+    // 50% + 40% of 1.00 → 0.90 assigned, leaving a real 0.10 gap.
+    const shares = previewApportion(100, [5000, 4000]);
+    expect(shares.reduce((a, b) => a + b, 0)).toBe(90);
+  });
+
+  it('reflects a genuine over-allocation when percentages exceed 100%', () => {
+    const shares = previewApportion(100, [6000, 5000]);
+    expect(shares.reduce((a, b) => a + b, 0)).toBe(110);
+  });
+
+  it('handles zero total', () => {
+    expect(previewApportion(0, [5000, 5000])).toEqual([0, 0]);
+  });
+
+  it('returns empty for no members', () => {
+    expect(previewApportion(100, [])).toEqual([]);
+  });
+
+  it('gives the whole total to a sole 100% member', () => {
+    expect(previewApportion(9999, [10000])).toEqual([9999]);
+  });
+
+  it('absorbs multi-cent drift across many members, summing exactly', () => {
+    // Seven members at 1/7 each (1429/1428×6 bp ≈ 100%). Independent rounding
+    // would scatter; apportionment must still sum to the exact total.
+    const bps = [1429, 1429, 1428, 1429, 1428, 1429, 1428];
+    expect(bps.reduce((a, b) => a + b, 0)).toBe(10000);
+    const shares = previewApportion(10000, bps); // 100.00
+    expect(shares.reduce((a, b) => a + b, 0)).toBe(10000);
+    // Each member is within a cent of the 1428.57 ideal.
+    for (const s of shares) expect([1428, 1429]).toContain(s);
+  });
+
+  it('reflects a zero-weight member as a zero share', () => {
+    expect(previewApportion(100, [10000, 0])).toEqual([100, 0]);
   });
 });
 
