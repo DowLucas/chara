@@ -20,7 +20,7 @@ const HOSTED_API_HOST = (HOSTED_FROM_ENV ?? 'http://localhost:8080')
 const config: ExpoConfig = {
   name: 'Chara',
   slug: 'chara',
-  version: '1.0.9',
+  version: '1.0.10',
   scheme: 'chara',
   orientation: 'portrait',
   icon: './assets/icon.png',
