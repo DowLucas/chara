@@ -186,6 +186,18 @@ cd backend && set -a && . ./.env.local && set +a && go run ./cmd/api
 
 There is no `.env.dev` / `.env.dev.local` split — secrets and dev config are co-located. `.env.example` documents the schema.
 
+### Backend integration tests
+
+Integration tests are tagged `//go:build integration` and spin up a throwaway Postgres via testcontainers (no standing DB needed). Run them with:
+
+```
+cd backend && go test -tags integration ./...
+# single suite, e.g. merge:
+go test -tags integration -run TestExpenses_Merge ./internal/handler/
+```
+
+On this Proxmox host Docker runs inside an unprivileged LXC whose AppArmor profile blocks the AF_UNIX `bind()` Postgres needs for its socket (`could not create any Unix-domain sockets`). Export `CHARA_TEST_PG_APPARMOR_UNCONFINED=1` to launch the test container with `apparmor=unconfined` (see `testutil/db.go`); the var is unset in CI, so the default profile stays in force there. Also set `TESTCONTAINERS_RYUK_DISABLED=true` to skip the reaper sidecar.
+
 ### Expo app caching
 
 The Expo app caches `/.well-known/chara-instance` at module load (`app/lib/api.ts`), so after toggling a backend feature flag (e.g. adding `GEMINI_API_KEY`) you must hard-reload the Expo bundle (`r` in Metro) — restarting only the server isn't enough.

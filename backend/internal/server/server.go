@@ -192,6 +192,7 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 		r.Post("/api/groups/{groupID}/import/commit", importH.Commit)
 
 		r.Post("/api/groups/{groupID}/expenses", expenseH.Create)
+		r.Post("/api/groups/{groupID}/expenses/merge", expenseH.Merge)
 		r.Get("/api/groups/{groupID}/expenses", expenseH.List)
 		r.Get("/api/groups/{groupID}/expenses/{expenseID}", expenseH.Get)
 		r.Patch("/api/groups/{groupID}/expenses/{expenseID}", expenseH.Update)
