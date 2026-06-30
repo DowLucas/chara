@@ -27,6 +27,8 @@ import { ReceiptScanner, ReceiptScanResult } from '@/components/ReceiptScanner';
 import { ExpenseSavedOverlay } from '@/components/ExpenseSavedOverlay';
 import { notifyGroupChanged } from '@/lib/group-refresh';
 import { ScanItemsAssign } from '@/components/ScanItemsAssign';
+import { buildScanItemsState } from '@/lib/scan-items';
+import { draftKey } from '@/lib/expense-draft';
 import { useAuth } from '@/lib/auth';
 import {
   ExpenseWizard,
@@ -143,29 +145,12 @@ export default function AddExpenseScreen() {
         : undefined,
     });
 
-    const items = receipt.items ?? [];
-    if (items.length > 0 && applied.currency === receipt.currency) {
-      // Tax-inclusivity heuristic. On European-style receipts (and most of the
-      // rest of the world outside the US/CA), line-item prices already include
-      // VAT/sales tax — and Gemini *also* returns the tax amount as a separate
-      // field. Naively adding `items + tax + tip` then double-counts tax and
-      // produces a ~10–25% overshoot. We compare both candidate sums against
-      // the printed receipt total and pick whichever reconciles better;
-      // ties go to "tax exclusive" (the safer assumption when both fit).
-      const tax = receipt.tax_minor ?? 0;
-      const tip = receipt.tip_minor ?? 0;
-      const itemsSum = items.reduce((s, it) => s + it.total_minor, 0);
-      const inclusiveErr = Math.abs(itemsSum + tip - receipt.total_minor);
-      const exclusiveErr = Math.abs(itemsSum + tax + tip - receipt.total_minor);
-      const taxAlreadyInItems = tax > 0 && inclusiveErr < exclusiveErr;
-      setScanItemsState({
-        items,
-        taxMinor: taxAlreadyInItems ? 0 : tax,
-        tipMinor: tip,
-        totalMinor: receipt.total_minor,
-        currency: receipt.currency,
-      });
-    }
+    // Open the itemised assign view, scaling line items / tax / tip into the
+    // group currency. Returns null (and we skip the view) when there are no
+    // items, or when the applied amount isn't in group currency — see
+    // buildScanItemsState for the FX rationale.
+    const state = buildScanItemsState(receipt, applied, group?.currency ?? 'SEK');
+    if (state) setScanItemsState(state);
   }
 
   function applyScanItemsAssignment(perMemberMinor: Record<string, number>) {
@@ -198,6 +183,7 @@ export default function AddExpenseScreen() {
         amount: payload.amount,
         currency: payload.currency,
         paid_by_id: payload.paid_by_id,
+        category: payload.category,
         expense_date: payload.expense_date,
         split_method: payload.split_method,
         ...(payload.fx ?? {}),
@@ -238,6 +224,8 @@ export default function AddExpenseScreen() {
         title: t('addExpense.saveErrorTitle'),
         message: e?.message || t('addExpense.saveErrorBody'),
       });
+      // Rethrow so the wizard keeps the auto-saved draft on failure.
+      throw e;
     } finally {
       setSaving(false);
     }
@@ -301,6 +289,7 @@ export default function AddExpenseScreen() {
         authToken={token}
         submitting={saving}
         onSubmit={handleSubmit}
+        draftKey={id ? draftKey(serverUrl, id) : undefined}
         onValuesChange={setLiveValues}
         topSlot={topSlot}
         preCtaSlot={preCtaSlot}

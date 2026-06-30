@@ -41,28 +41,15 @@ import { useAuth } from '@/lib/auth';
 import { formatMinorUnits, decimalToMinor, formatDate } from '@/lib/i18n';
 import { initialsOf, makeNameShortener } from '@/lib/name';
 import { isPopupJustClosed } from '@/lib/popup-guard';
-import { subscribeGroupChanged } from '@/lib/group-refresh';
+import { subscribeGroupChanged, notifyGroupChanged } from '@/lib/group-refresh';
 import { computeStandings, expensesInvolvingMember } from '@/lib/standings';
+import { categoryIcon } from '@/lib/categories';
 import { displayHostFor, isMainHostedServer } from '@/lib/server-url';
 import { colors, fontDisplay, fontBody, fontBodyMedium, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
 
 const fmtAmount = (minor: string, currency: string, relative?: boolean) =>
   formatMinorUnits(minor, currency, { relative });
 
-// Map expense category → Feather icon name. Keep this in sync with the
-// category enum in en.json (categories.*). Unknown categories fall back to
-// the generic tag glyph so we never render a missing icon.
-const CATEGORY_ICONS: Record<string, keyof typeof Feather.glyphMap> = {
-  food: 'coffee',
-  rent: 'home',
-  transport: 'navigation',
-  groceries: 'shopping-cart',
-  drinks: 'droplet',
-  other: 'tag',
-};
-function categoryIcon(category?: string): keyof typeof Feather.glyphMap {
-  return CATEGORY_ICONS[category ?? 'other'] ?? 'tag';
-}
 
 export default function GroupDetailScreen() {
   const { server, id, tab: initialTab } = useLocalSearchParams<{
@@ -84,6 +71,70 @@ export default function GroupDetailScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
+  // Multi-select merge (expenses/Overview tab). Long-press a row to enter.
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [merging, setMerging] = useState(false);
+
+  function exitSelect() {
+    setSelectMode(false);
+    setSelectedIds([]);
+  }
+  function toggleSelect(expenseId: string) {
+    setSelectedIds((prev) =>
+      prev.includes(expenseId)
+        ? prev.filter((x) => x !== expenseId)
+        : [...prev, expenseId],
+    );
+  }
+  function enterSelect(expenseId: string) {
+    setSelectMode(true);
+    setSelectedIds([expenseId]);
+  }
+
+  async function handleMerge() {
+    if (merging || selectedIds.length < 2) return;
+    const selected = expenses.filter((e) => selectedIds.includes(e.id));
+    const payer = selected[0].paid_by_id;
+    if (!selected.every((e) => e.paid_by_id === payer)) {
+      showAlert({
+        title: t('groupDetail.merge.cantTitle'),
+        message: t('groupDetail.merge.differentPayers'),
+      });
+      return;
+    }
+    const currency = selected[0].currency;
+    if (!selected.every((e) => e.currency === currency)) {
+      showAlert({
+        title: t('groupDetail.merge.cantTitle'),
+        message: t('groupDetail.merge.differentCurrencies'),
+      });
+      return;
+    }
+    const r = await showAlert({
+      title: t('groupDetail.merge.confirmTitle'),
+      message: t('groupDetail.merge.confirmBody', { count: selected.length }),
+      buttons: [
+        { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
+        { key: 'merge', label: t('groupDetail.merge.action'), style: 'default' },
+      ],
+    });
+    if (r !== 'merge') return;
+    setMerging(true);
+    try {
+      await api.mergeExpenses(id, { source_expense_ids: selectedIds });
+      notifyGroupChanged(serverUrl, id);
+      exitSelect();
+      await load();
+    } catch (e: any) {
+      showAlert({
+        title: t('groupDetail.merge.errorTitle'),
+        message: e?.message || String(e),
+      });
+    } finally {
+      setMerging(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -181,6 +232,28 @@ export default function GroupDetailScreen() {
       case 'amount_asc': return t('groupDetail.sortByAmountAsc');
     }
   }
+
+  // Filter the expenses list by who paid. null = everyone. "Only mine" is the
+  // current user's member id.
+  const [filterPayerId, setFilterPayerId] = useState<string | null>(null);
+  const [filterMenuOpen, setFilterMenuOpen] = useState(false);
+  const filterOptions = [
+    { label: t('groupDetail.filterAll'), onPress: () => setFilterPayerId(null) },
+    ...(me ? [{ label: t('groupDetail.filterMine'), onPress: () => setFilterPayerId(me.id) }] : []),
+    ...members
+      .filter((m) => m.id !== me?.id)
+      .map((m) => ({ label: m.name, onPress: () => setFilterPayerId(m.id) })),
+  ];
+  function openFilterMenu() {
+    if (isPopupJustClosed()) return;
+    if (openNativeActionSheet(t('groupDetail.filterTitle'), filterOptions)) return;
+    setFilterMenuOpen(true);
+  }
+  function filterLabel(): string {
+    if (!filterPayerId) return t('groupDetail.filterAll');
+    if (filterPayerId === me?.id) return t('groupDetail.filterMine');
+    return members.find((m) => m.id === filterPayerId)?.name ?? t('groupDetail.filterAll');
+  }
   // Context-aware shortener: each member resolves to the shortest
   // unambiguous label within this group ("Lucas" if unique, "Lucas H." on
   // first-name collision, "Lucas Heinonen" if also colliding).
@@ -202,6 +275,10 @@ export default function GroupDetailScreen() {
     const bd = sortBy === 'expense_date' ? (b.expense_date ?? b.created_at) : b.created_at;
     return bd.localeCompare(ad);
   });
+
+  const visibleExpenses = filterPayerId
+    ? sortedExpenses.filter((e) => e.paid_by_id === filterPayerId)
+    : sortedExpenses;
 
   const myBalance = balances.find((b) => b.user_id === user?.id);
   const myNet = myBalance ? decimalToMinor(myBalance.net_balance) : 0;
@@ -243,6 +320,11 @@ export default function GroupDetailScreen() {
               icon="user-plus"
               onPress={() => router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/invite`)}
               label={t('groupDetail.inviteLabel')}
+            />
+            <IconButton
+              icon="bar-chart-2"
+              onPress={() => router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/stats`)}
+              label={t('groupDetail.statsLabel')}
             />
             <IconButton
               icon="bell"
@@ -587,18 +669,35 @@ export default function GroupDetailScreen() {
           <>
         {/* Expenses header */}
         <View style={styles.listHeader}>
-          <Text style={styles.listHeaderLabel}>{t('groupDetail.expensesTotal', { count: expenses.length })}</Text>
-          <TouchableOpacity
-            onPress={openSortMenu}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel={t('groupDetail.sortTitle')}
-            hitSlop={8}
-            style={styles.sortBtn}
-          >
-            <Text style={styles.listHeaderRight}>{sortLabel(sortBy)}</Text>
-            <Feather name="chevron-down" size={14} color={colors.lead} />
-          </TouchableOpacity>
+          <Text style={styles.listHeaderLabel}>{t('groupDetail.expensesTotal', { count: visibleExpenses.length })}</Text>
+          <View style={styles.listHeaderActions}>
+            {members.length > 1 && expenses.length > 0 && (
+              <TouchableOpacity
+                onPress={openFilterMenu}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={t('groupDetail.filterTitle')}
+                hitSlop={8}
+                style={styles.sortBtn}
+              >
+                <Feather name="filter" size={13} color={filterPayerId ? colors.graphite : colors.lead} />
+                <Text style={[styles.listHeaderRight, filterPayerId && { color: colors.graphite }]}>
+                  {filterLabel()}
+                </Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              onPress={openSortMenu}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={t('groupDetail.sortTitle')}
+              hitSlop={8}
+              style={styles.sortBtn}
+            >
+              <Text style={styles.listHeaderRight}>{sortLabel(sortBy)}</Text>
+              <Feather name="chevron-down" size={14} color={colors.lead} />
+            </TouchableOpacity>
+          </View>
         </View>
         <View style={styles.listRule} />
 
@@ -607,8 +706,10 @@ export default function GroupDetailScreen() {
             onAddExpense={() => router.push(addExpenseHref(serverUrl, id))}
             onImport={() => router.push(importHref(serverUrl, id))}
           />
+        ) : visibleExpenses.length === 0 ? (
+          <Text style={styles.filterEmpty}>{t('groupDetail.filterEmpty')}</Text>
         ) : (
-          sortedExpenses.map((e) => {
+          visibleExpenses.map((e) => {
             const payerMember = members.find((m) => m.id === e.paid_by_id);
             const youPaid = payerMember?.user_id === user?.id;
             const payerLabel = youPaid
@@ -626,18 +727,32 @@ export default function GroupDetailScreen() {
               : youPaid
                 ? colors.moss
                 : colors.brick;
+            const selected = selectedIds.includes(e.id);
             return (
               <TouchableOpacity
                 key={e.id}
-                style={styles.row}
-                onPress={() =>
+                style={[styles.row, selected && styles.rowSelected]}
+                onPress={() => {
+                  if (selectMode) {
+                    toggleSelect(e.id);
+                    return;
+                  }
                   router.push({
                     pathname: '/expenses/[server]/[id]',
                     params: { server: encodeURIComponent(serverUrl), id: e.id, groupId: id },
-                  })
-                }
+                  });
+                }}
+                onLongPress={() => {
+                  if (!selectMode) enterSelect(e.id);
+                }}
+                delayLongPress={300}
                 activeOpacity={0.7}
               >
+                {selectMode && (
+                  <View style={[styles.selectBox, selected && styles.selectBoxOn]}>
+                    {selected && <Feather name="check" size={13} color={colors.paper} />}
+                  </View>
+                )}
                 <View style={styles.rowLeft}>
                   <Text style={[styles.rowTitle, settled && styles.rowTitleSettled]}>{e.title}</Text>
                   <Text style={styles.rowMeta}>
@@ -660,29 +775,53 @@ export default function GroupDetailScreen() {
       </ScrollView>
 
       <View style={[styles.ctaBar, { paddingBottom: insets.bottom + 8 }]}>
-        <ContentContainer style={styles.ctaRow}>
-        <Button
-          kind="secondary"
-          onPress={() => router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/add-expense`)}
-          style={styles.ctaBtn}
-        >
-          {t('groupDetail.addExpense')}
-        </Button>
-        <Button
-          kind="positive"
-          onPress={() => router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/settle`)}
-          style={styles.ctaBtn}
-          disabled={balances.length === 0 || balances.every((b) => decimalToMinor(b.net_balance) === 0)}
-        >
-          {t('groupDetail.settle')}
-        </Button>
-        </ContentContainer>
+        {selectMode ? (
+          <ContentContainer style={styles.ctaRow}>
+            <Button kind="secondary" onPress={exitSelect} style={styles.ctaBtn}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              kind="positive"
+              onPress={handleMerge}
+              style={styles.ctaBtn}
+              disabled={selectedIds.length < 2 || merging}
+            >
+              {selectedIds.length >= 2
+                ? t('groupDetail.merge.actionCount', { count: selectedIds.length })
+                : t('groupDetail.merge.action')}
+            </Button>
+          </ContentContainer>
+        ) : (
+          <ContentContainer style={styles.ctaRow}>
+          <Button
+            kind="secondary"
+            onPress={() => router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/add-expense`)}
+            style={styles.ctaBtn}
+          >
+            {t('groupDetail.addExpense')}
+          </Button>
+          <Button
+            kind="positive"
+            onPress={() => router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/settle`)}
+            style={styles.ctaBtn}
+            disabled={balances.length === 0 || balances.every((b) => decimalToMinor(b.net_balance) === 0)}
+          >
+            {t('groupDetail.settle')}
+          </Button>
+          </ContentContainer>
+        )}
       </View>
       <ActionSheet
         visible={sortMenuOpen}
         onClose={() => setSortMenuOpen(false)}
         title={t('groupDetail.sortTitle')}
         options={sortOptions}
+      />
+      <ActionSheet
+        visible={filterMenuOpen}
+        onClose={() => setFilterMenuOpen(false)}
+        title={t('groupDetail.filterTitle')}
+        options={filterOptions}
       />
       <Modal
         visible={infoOpen}
@@ -1063,10 +1202,23 @@ const styles = StyleSheet.create({
     fontSize: fontSize.bodyS,
     color: colors.lead,
   },
+  listHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
   listHeaderRight: {
     fontFamily: fontMono,
     fontSize: fontSize.bodyS,
     color: colors.lead,
+  },
+  filterEmpty: {
+    fontFamily: fontBody,
+    fontSize: fontSize.bodyS,
+    color: colors.lead,
+    textAlign: 'center',
+    paddingVertical: spacing.s6,
+    paddingHorizontal: spacing.s5,
   },
   sortBtn: {
     flexDirection: 'row',
@@ -1094,6 +1246,23 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.s4,
     marginTop: spacing.s2,
   },
+  rowSelected: {
+    borderWidth: 1.5,
+    borderColor: colors.graphite,
+    paddingHorizontal: spacing.s4 - 1.5,
+    paddingVertical: spacing.s4 - 1.5,
+  },
+  selectBox: {
+    width: 20,
+    height: 20,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: colors.lead,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  selectBoxOn: { backgroundColor: colors.graphite, borderColor: colors.graphite },
   rowLeft: { flex: 1, marginRight: 12 },
   rowTitle: {
     fontFamily: fontDisplay,

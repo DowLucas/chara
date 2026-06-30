@@ -16,6 +16,7 @@ import {
   spacing,
 } from '@/lib/theme';
 import { ApiError, FxConvertResponse } from '@/lib/api';
+import { formatFxRate } from '@/lib/i18n';
 
 export type FxState =
   | { kind: 'loading' }
@@ -125,6 +126,16 @@ export function FxConversionSection({
 }: Props) {
   const { t } = useTranslation();
 
+  // Resting display of the rate is clamped to 2 decimals; while the field is
+  // focused we show the raw (possibly higher-precision) value so the user can
+  // edit it freely. The underlying `rateInput` keeps full precision so an
+  // edited total stays exact.
+  const [rateFocused, setRateFocused] = useState(false);
+  // Draft buffer for the editable converted total. Without it the controlled
+  // value recomputes from the rate on every keystroke and clobbers what the
+  // user is typing.
+  const [totalDraft, setTotalDraft] = useState<string | null>(null);
+
   if (!fx) return null;
 
   if (fx.kind === 'loading') {
@@ -166,10 +177,16 @@ export function FxConversionSection({
         <Text style={styles.fxRateLabel}>{t('fx.rateLabel', { from })}</Text>
         <View style={styles.fxRateInputWrap}>
           <TextInput
-            value={rateInput}
+            value={
+              rateFocused || rateNumber === null
+                ? rateInput
+                : formatFxRate(rateInput)
+            }
             onChangeText={setRateInput}
+            onFocus={() => setRateFocused(true)}
+            onBlur={() => setRateFocused(false)}
             keyboardType="decimal-pad"
-            placeholder={fx.data.rate}
+            placeholder={formatFxRate(fx.data.rate)}
             placeholderTextColor={colors.lead}
             style={styles.fxRateInput}
             selectTextOnFocus
@@ -183,14 +200,26 @@ export function FxConversionSection({
         <View style={styles.fxConvertedInputWrap}>
           <TextInput
             value={
-              rateNumber !== null
+              totalDraft !== null
+                ? totalDraft
+                : rateNumber !== null
                 ? formatMinorAsDecimal(convertedMinor)
                 : ''
             }
+            onFocus={() =>
+              setTotalDraft(
+                rateNumber !== null ? formatMinorAsDecimal(convertedMinor) : '',
+              )
+            }
+            onBlur={() => setTotalDraft(null)}
             onChangeText={(txt) => {
-              // User editing converted derives a new rate.
+              // User editing the converted total derives a new rate, kept at
+              // full precision so the total they typed is honored exactly even
+              // though the rate is *displayed* at 2 decimals. This is the
+              // "bank charged me more than ECB" affordance.
               // converted (major) * 100 = amountMinor * rate
               // → rate = (converted * 100) / amountMinor
+              setTotalDraft(txt);
               if (amountMinor <= 0) return;
               const n = parseFloat(txt.replace(',', '.'));
               if (!Number.isFinite(n) || n < 0) {

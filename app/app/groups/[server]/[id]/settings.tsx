@@ -32,7 +32,6 @@ import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
 import { GroupAvatar } from '@/components/GroupAvatar';
 import { GroupColorPicker } from '@/components/GroupColorPicker';
-import { MoneyText } from '@/components/MoneyText';
 import { Text } from '@/components/Text';
 import { DeleteGroupModal } from '@/components/DeleteGroupModal';
 import { lifecycleActionsForViewer } from '@/lib/group-settings';
@@ -42,13 +41,12 @@ import {
   Balance,
   CanLeaveResponse,
   GroupDetail,
-  GroupStats,
 } from '@/lib/api';
 import { useAccount } from '@/lib/accounts';
 import { formatLeaveReasons } from '@/lib/group-settings';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import type { DeleteGroupModalError } from '@/components/DeleteGroupModal.helpers';
-import { formatDate, formatMinorUnits } from '@/lib/i18n';
+import { formatMinorUnits } from '@/lib/i18n';
 import {
   colors,
   fontBody,
@@ -92,7 +90,6 @@ export default function GroupSettingsScreen() {
   const { t } = useTranslation();
 
   const [group, setGroup] = useState<GroupDetail | null>(null);
-  const [stats, setStats] = useState<GroupStats | null>(null);
   const [canLeave, setCanLeave] = useState<CanLeaveResponse | null>(null);
   const [balances, setBalances] = useState<Balance[] | null>(null);
   const [loadError, setLoadError] = useState(false);
@@ -115,14 +112,12 @@ export default function GroupSettingsScreen() {
       const isOwner = myMember?.role === 'owner';
       // Balances are owner-only (drives the Delete eligibility gate). Members
       // never see the danger zone, so we skip the fetch for them.
-      const [statsResult, canLeaveResult, balancesResult, recurringResult] =
+      const [canLeaveResult, balancesResult, recurringResult] =
         await Promise.allSettled([
-          api.getGroupStats(id),
           !isOwner && myMember ? api.getMemberCanLeave(id, myMember.id) : Promise.resolve(null),
           isOwner ? api.listGroupBalances(id) : Promise.resolve(null),
           api.recurring.list(id),
         ]);
-      if (statsResult.status === 'fulfilled') setStats(statsResult.value);
       if (canLeaveResult.status === 'fulfilled') setCanLeave(canLeaveResult.value);
       if (balancesResult.status === 'fulfilled' && Array.isArray(balancesResult.value)) {
         setBalances(balancesResult.value);
@@ -321,21 +316,6 @@ export default function GroupSettingsScreen() {
     }
   }
 
-  const totalsByCurrency = stats?.totals_by_currency ?? [];
-  const formattedTotal =
-    totalsByCurrency.length === 0
-      ? t('groupSettings.stats.noActivityYet')
-      : totalsByCurrency
-          .map((row) => formatMinorUnits(row.minor_units, row.currency))
-          .join(' · ');
-  const topSpenderName = stats?.top_spender?.display_name ?? '';
-  const topSpenderAmount = stats?.top_spender
-    ? formatMinorUnits(
-        stats.top_spender.minor_units_paid,
-        stats.top_spender.currency,
-      )
-    : '';
-
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <TopBar
@@ -403,43 +383,6 @@ export default function GroupSettingsScreen() {
           </View>
         </View>
 
-        {/* STATISTICS — passive at-a-glance numbers */}
-        <View style={styles.section}>
-          <Text style={styles.sectionEyebrow}>{t('groupSettings.stats.title')}</Text>
-          <View style={styles.list}>
-            {stats == null ? (
-              <View style={styles.row}>
-                <Text style={styles.rowLabel}>{t('common.loading')}</Text>
-              </View>
-            ) : (
-              <>
-                <InfoRow
-                  label={t('groupSettings.stats.totalExpenses')}
-                  value={String(stats.expense_count)}
-                />
-                <View style={styles.row}>
-                  <Text style={styles.rowLabel}>{t('groupSettings.stats.totalSpent')}</Text>
-                  <MoneyText style={styles.rowValue} numberOfLines={1} value={formattedTotal} />
-                </View>
-                {/* Suppress top-spender on thin groups — with one or two
-                    expenses the "winner" is just the one person who paid
-                    and reads as silly. Surfaces once there's a real
-                    comparison to make. */}
-                {stats.top_spender && stats.expense_count >= 3 && (
-                  <TopSpenderRow
-                    label={t('groupSettings.stats.topSpender')}
-                    name={topSpenderName}
-                    amount={topSpenderAmount}
-                  />
-                )}
-                <InfoRow
-                  label={t('groupSettings.stats.created')}
-                  value={formatDate(stats.created_at)}
-                />
-              </>
-            )}
-          </View>
-        </View>
 
         {/* AUTOMATION — recurring bills entry, visible to everyone */}
         <View style={styles.section}>
@@ -648,45 +591,6 @@ function NavRow({
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={styles.rowValue} numberOfLines={1}>
-        {value}
-      </Text>
-    </View>
-  );
-}
-
-function TopSpenderRow({
-  label,
-  name,
-  amount,
-}: {
-  label: string;
-  name: string;
-  amount: string;
-}) {
-  return (
-    <View style={styles.topSpenderRow}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <View style={styles.topSpenderValueRow}>
-        <Text style={styles.topSpenderName} numberOfLines={1}>
-          {name}
-        </Text>
-        <MoneyText
-          style={styles.topSpenderAmount}
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.6}
-          value={amount}
-        />
-      </View>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
@@ -807,38 +711,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.s2,
-  },
-  rowValue: {
-    fontFamily: fontMonoMedium,
-    fontSize: fontSize.bodyS,
-    color: colors.lead,
-    letterSpacing: 0.3,
-    fontVariant: ['tabular-nums'],
-    flexShrink: 1,
-    textAlign: 'right',
-  },
-  topSpenderRow: {
-    paddingVertical: spacing.s4,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.ruleSoft,
-  },
-  topSpenderValueRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-    gap: spacing.s3,
-    marginTop: spacing.s1,
-  },
-  topSpenderName: {
-    fontFamily: fontDisplay,
-    fontSize: fontSize.body,
-    color: colors.graphite,
-    flexShrink: 1,
-  },
-  topSpenderAmount: {
-    fontFamily: fontMonoMedium,
-    fontSize: fontSize.body,
-    color: colors.graphite,
-    fontVariant: ['tabular-nums'],
   },
 });

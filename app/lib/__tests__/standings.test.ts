@@ -81,6 +81,17 @@ describe('computeStandings', () => {
     expect(rows[0].isSettled).toBe(false);
   });
 
+  it('sorts rows from most positive net (owed) to most negative (owes)', () => {
+    const members = [member('m1', 'A'), member('m2', 'B'), member('m3', 'C')];
+    const balances: Balance[] = [
+      { member_id: 'm1', user_id: 'u1', currency: 'SEK', net_balance: '-50.00' },
+      { member_id: 'm2', user_id: 'u2', currency: 'SEK', net_balance: '100.00' },
+      { member_id: 'm3', user_id: 'u3', currency: 'SEK', net_balance: '0' },
+    ];
+    const rows = computeStandings(members, balances);
+    expect(rows.map((r) => r.memberId)).toEqual(['m2', 'm3', 'm1']);
+  });
+
   it('ignores balances for members that are not in the list', () => {
     const balances: Balance[] = [
       { member_id: 'ghost', user_id: 'u9', currency: 'SEK', net_balance: '100.00' },
