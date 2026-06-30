@@ -555,8 +555,14 @@ export default function GroupDetailScreen() {
             ) : (
               (() => {
                 const rows = computeStandings(members, balances);
-                return members.map((m, i) => {
-                  const row = rows[i];
+                const memberById = new Map(members.map((mm) => [mm.id, mm]));
+                // Iterate the SORTED rows and resolve each member by id, so the
+                // name/avatar always matches its balance. Pairing members[i]
+                // with rows[i] by index broke once computeStandings started
+                // sorting by net (the values reordered, the names didn't).
+                return rows.map((row) => {
+                  const m = memberById.get(row.memberId);
+                  if (!m) return null;
                   // Standings show net balance per currency (positive = owed,
                   // negative = owes). The expanded body lists every expense the
                   // member is involved in — either as payer or as a split
