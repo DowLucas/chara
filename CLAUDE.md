@@ -133,20 +133,12 @@ For settings-style screens (`(tabs)/you.tsx`, `groups/.../settings.tsx`):
 
 The mobile app (`app/`) uses `i18next` + `react-i18next` + `expo-localization`. **All user-facing strings must go through `t()`** — no hardcoded English in JSX, `Alert.alert`, `placeholder`, `accessibilityLabel`, `Share.share`, etc.
 
-- Catalog: `app/lib/locales/<lang>.json`, namespaced by screen (`signIn`, `home`, `groupDetail`, …). English is the only language today; add new locales by dropping a JSON file and registering it in `app/lib/i18n.ts` (`SUPPORTED_LANGUAGES`, `resources`).
+- Catalog: `app/lib/locales/<lang>.json`, namespaced by screen (`signIn`, `home`, `groupDetail`, …). `en.json` is the source of truth; add new locales by dropping a JSON file and registering it in `app/lib/i18n.ts` (`SUPPORTED_LANGUAGES`, `resources`).
 - In components: `const { t } = useTranslation();` then `t('namespace.key', { interpolation })`. Outside React (e.g. `ActionSheet` helpers), `import i18n from '@/lib/i18n'` and call `i18n.t(...)`.
 - Locale-aware formatting helpers live in `app/lib/i18n.ts`: `formatMinorUnits(minor, currency, { relative })`, `formatDate`, `formatTime`, `currentLocale()`. **Never hardcode a locale** (`'sv-SE'`, `'en-US'`) in `toLocaleString` — use `currentLocale()` or the helpers.
 - Currency codes (`SEK`, `EUR`, …) are data, not UI copy — leave them as strings.
 - When adding a new screen or string, add the key to `en.json` in the same commit. PRs that introduce raw English strings are incomplete.
-
-### Translation workflow (Weblate)
-
-Non-English locales are managed in a **Weblate** instance synced with this repo:
-
-- **Source of truth:** the **codebase**, not Weblate. `en.json` is owned by the repo; Weblate writes `sv.json`, `de.json`, etc. Never hand-edit non-English JSON locally — let Weblate's GitHub sync produce the diff.
-- **Extracting keys:** in `app/`, `pnpm i18n:extract` walks every `t('…')` call and updates `en.json`. `pnpm i18n:check` is the CI-gate equivalent (fails on drift). Config: `app/i18next-parser.config.js`.
-- **Adding a new key:** wrap the string in `t('namespace.key')` → run `pnpm i18n:extract` → edit the English value in `en.json` to the real sentence (parser defaults it to the key) → commit. Weblate picks it up on its next pull and translators see it in their queue.
-- **Adding a new language:** in Weblate's UI under the Chara component → Manage → Languages → Add. A new `<lang>.json` will be committed back via the Weblate ↔ GitHub sync.
+- Non-English locale files are maintained by hand directly in the repo (no Weblate). When `en.json` changes, update every other `<lang>.json` in the same commit — keep keys in sync across all locales.
 
 ## Local dev
 
