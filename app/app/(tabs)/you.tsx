@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as Application from 'expo-application';
+import Constants from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
 import { getLocales } from 'expo-localization';
 import { TopBar } from '@/components/TopBar';
@@ -65,6 +66,18 @@ import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/li
 // App Store numeric ID (ascAppId in eas.json). Powers the "Rate us" deep link.
 const APP_STORE_ID: string | null = '6773089720';
 const ANDROID_PACKAGE = Application.applicationId ?? 'app.chara';
+
+// App version footer. Prefer the app-config marketing version — it's our
+// source of truth and correct in every environment. `nativeApplicationVersion`
+// is NOT used as the primary: inside Expo Go it returns Expo Go's own version
+// (e.g. 54.0.6), not this app's. The native build number is only meaningful in
+// a real build, so it's hidden in Expo Go (executionEnvironment 'storeClient').
+const APP_VERSION = Constants.expoConfig?.version ?? Application.nativeApplicationVersion ?? '';
+const APP_BUILD =
+  Constants.executionEnvironment === 'storeClient' ? null : Application.nativeBuildVersion;
+const VERSION_LABEL = APP_VERSION
+  ? `Chara ${APP_VERSION}${APP_BUILD ? ` (${APP_BUILD})` : ''}`
+  : '';
 
 export default function YouScreen() {
   const insets = useSafeAreaInsets();
@@ -601,6 +614,12 @@ export default function YouScreen() {
             />
           )}
         </View>
+
+        {VERSION_LABEL ? (
+          <Text style={styles.versionText} accessibilityLabel={VERSION_LABEL}>
+            {VERSION_LABEL}
+          </Text>
+        ) : null}
         </ContentContainer>
       </ScrollView>
       <ActionSheet
@@ -695,6 +714,14 @@ function ToggleRow({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper },
+  versionText: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    textAlign: 'center',
+    letterSpacing: 0.3,
+    marginTop: spacing.s6,
+  },
   scroll: { paddingHorizontal: spacing.s5, paddingTop: spacing.s5, paddingBottom: spacing.s7 },
   profile: { alignItems: 'center' },
   avatarWrap: { position: 'relative' },
