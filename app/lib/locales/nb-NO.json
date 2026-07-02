@@ -563,6 +563,7 @@
     "balancesAcrossCurrencies": "{{count}} valutaer",
     "balancesEmpty": "Ingenting gjort opp eller skyldig ennå.",
     "errorStrip": "{{host}} utilgjengelig",
+    "groupActions": "Gruppehandlinger",
     "groupsCount": "dine grupper · {{count}}",
     "groupsCount_one": "dine grupper · {{count}}",
     "groupsCount_other": "dine grupper · {{count}}",

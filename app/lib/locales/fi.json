@@ -563,6 +563,7 @@
     "balancesAcrossCurrencies": "{{count}} valuuttaa",
     "balancesEmpty": "Ei vielä tasauksia eikä velkoja.",
     "errorStrip": "{{host}} ei tavoitettavissa",
+    "groupActions": "Ryhmän toiminnot",
     "groupsCount": "ryhmäsi · {{count}}",
     "groupsCount_one": "ryhmäsi · {{count}}",
     "groupsCount_other": "ryhmäsi · {{count}}",

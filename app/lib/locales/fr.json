@@ -576,6 +576,7 @@
     "balancesAcrossCurrencies": "{{count}} devises",
     "balancesEmpty": "Aucun solde pour l'instant.",
     "errorStrip": "{{host}} indisponible",
+    "groupActions": "Actions du groupe",
     "groupsCount": "tes groupes · {{count}}",
     "groupsCount_many": "tes groupes · {{count}}",
     "groupsCount_one": "ton groupe · {{count}}",

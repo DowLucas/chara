@@ -13,7 +13,8 @@ import { ActionSheet, openNativeActionSheet } from '@/components/ActionSheet';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useAccount } from '@/lib/accounts';
-import { apiFor, GroupDetail, GroupMember } from '@/lib/api';
+import { apiFor, avatarImageSourceOn, GroupDetail, GroupMember } from '@/lib/api';
+import { Avatar } from '@/components/Avatar';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import { formatLeaveReasons } from '@/lib/group-settings';
 import { formatMinorUnits, formatDate } from '@/lib/i18n';
@@ -23,7 +24,6 @@ import {
   fontDisplay,
   fontBody,
   fontMono,
-  fontMonoMedium,
   fontSize,
   spacing,
 } from '@/lib/theme';
@@ -193,9 +193,11 @@ export default function GroupMembersScreen() {
                 accessibilityLabel={canKick ? t('kickMember.cta') : undefined}
               >
                 <View style={styles.rowLeft}>
-                  <View style={[styles.avatar, m.is_ghost && styles.avatarGhost]}>
-                    <Text style={styles.avatarText}>{initialsOf(m.name)}</Text>
-                  </View>
+                  <Avatar
+                    initials={initialsOf(m.name)}
+                    source={avatarImageSourceOn(serverUrl, m)}
+                    style={[styles.avatar, m.is_ghost && styles.avatarGhost]}
+                  />
                   <View style={styles.rowText}>
                     <Text style={styles.rowName} numberOfLines={1}>
                       {shorten(m.name)}
@@ -321,11 +323,6 @@ const styles = StyleSheet.create({
   },
   avatarGhost: {
     borderStyle: 'dashed',
-  },
-  avatarText: {
-    fontFamily: fontMonoMedium,
-    fontSize: 14,
-    color: colors.graphite,
   },
   rowName: {
     fontFamily: fontDisplay,

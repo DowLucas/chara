@@ -623,6 +623,7 @@
     "balancesAcrossCurrencies": "{{count}} عملات",
     "balancesEmpty": "لا شيء مسوّى أو مستحق بعد.",
     "errorStrip": "{{host}} غير متاح",
+    "groupActions": "إجراءات المجموعة",
     "groupsCount": "مجموعاتك · {{count}}",
     "groupsCount_few": "مجموعاتك · {{count}}",
     "groupsCount_many": "مجموعاتك · {{count}}",

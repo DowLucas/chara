@@ -563,6 +563,7 @@
     "balancesAcrossCurrencies": "{{count}} valuta's",
     "balancesEmpty": "Nog niets te betalen of te ontvangen.",
     "errorStrip": "{{host}} niet beschikbaar",
+    "groupActions": "Groepsacties",
     "groupsCount": "je groepen · {{count}}",
     "groupsCount_one": "je groepen · {{count}}",
     "groupsCount_other": "je groepen · {{count}}",

@@ -563,6 +563,7 @@
     "balancesAcrossCurrencies": "{{count}} 种币种",
     "balancesEmpty": "暂无结算或欠款。",
     "errorStrip": "{{host}} 不可用",
+    "groupActions": "群组操作",
     "groupsCount": "我的群组 · {{count}}",
     "groupsCount_one": "我的群组 · {{count}}",
     "groupsCount_other": "我的群组 · {{count}}",

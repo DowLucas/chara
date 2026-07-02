@@ -12,7 +12,7 @@ import { Stamp } from '@/components/Stamp';
 import { EmptyState } from '@/components/EmptyState';
 import { MoneyText } from '@/components/MoneyText';
 import { useTranslation } from 'react-i18next';
-import { apiFor, Group, GroupMember, MyBalance } from '@/lib/api';
+import { apiFor, avatarImageSourceOn, Group, GroupMember, MyBalance } from '@/lib/api';
 import { useAccounts } from '@/lib/accounts';
 import { readCache, writeCache } from '@/lib/cache';
 import { initialsOf } from '@/lib/name';
@@ -457,20 +457,11 @@ export default function HomeScreen() {
                         </Text>
                       </View>
                       <View style={styles.groupMetaRow}>
-                        {/* No icon for the "active" state — that's the
-                            default and an icon there would just add noise.
-                            Show a marker only when the state is worth
-                            calling out: settled (positive) or new (no
-                            activity yet). */}
-                        {hasActivity && settled ? (
-                          <Feather
-                            name="check-circle"
-                            size={12}
-                            color={colors.moss}
-                            strokeWidth={1.8}
-                            accessibilityLabel={t('home.statusSettled')}
-                          />
-                        ) : !hasActivity ? (
+                        {/* No icon for active or settled state — the amount
+                            column already carries that signal. Mark only the
+                            "new" (no activity yet) group, where there's no
+                            amount to speak for it. */}
+                        {!hasActivity ? (
                           <Feather
                             name="feather"
                             size={12}
@@ -532,6 +523,18 @@ export default function HomeScreen() {
                         </>
                       )}
                     </View>
+                    <TouchableOpacity
+                      style={styles.groupMore}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        openGroupActionsMenu(serverUrl, g.id, g.name);
+                      }}
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('home.groupActions')}
+                    >
+                      <Feather name="more-horizontal" size={18} color={colors.lead} strokeWidth={2} />
+                    </TouchableOpacity>
                   </TouchableOpacity>
                 );
               })}
@@ -768,7 +771,10 @@ function GroupMemberStrip({ serverUrl, groupId }: { serverUrl: string; groupId: 
   }, [serverUrl, groupId, cacheEndpoint]);
 
   if (!members || members.length === 0) return null;
-  const people = members.map((m) => ({ initials: initialsOf(m.name) }));
+  const people = members.map((m) => ({
+    initials: initialsOf(m.name),
+    source: avatarImageSourceOn(serverUrl, m),
+  }));
   return <AvatarStack people={people} max={MEMBER_STRIP_MAX} overflow="ellipsis" tone="paper" />;
 }
 
@@ -934,6 +940,12 @@ const styles = StyleSheet.create({
   groupRight: {
     alignItems: 'flex-end',
     minWidth: 104,
+  },
+  groupMore: {
+    marginLeft: spacing.s1,
+    marginRight: -spacing.s1,
+    padding: 2,
+    alignSelf: 'center',
   },
   groupEyebrowRow: {
     flexDirection: 'row',

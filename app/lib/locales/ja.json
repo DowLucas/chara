@@ -563,6 +563,7 @@
     "balancesAcrossCurrencies": "{{count}}通貨",
     "balancesEmpty": "精算・貸し借りなし。",
     "errorStrip": "{{host}}に接続できません",
+    "groupActions": "グループの操作",
     "groupsCount": "グループ・{{count}}件",
     "groupsCount_one": "グループ・{{count}}件",
     "groupsCount_other": "グループ・{{count}}件",

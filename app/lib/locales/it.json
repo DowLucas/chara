@@ -576,6 +576,7 @@
     "balancesAcrossCurrencies": "{{count}} valute",
     "balancesEmpty": "Niente da saldare, niente in entrata.",
     "errorStrip": "{{host}} non raggiungibile",
+    "groupActions": "Azioni del gruppo",
     "groupsCount": "i tuoi gruppi · {{count}}",
     "groupsCount_many": "i tuoi gruppi · {{count}}",
     "groupsCount_one": "i tuoi gruppi · {{count}}",

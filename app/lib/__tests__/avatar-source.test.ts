@@ -33,7 +33,20 @@ jest.mock('expo-constants', () => ({
 }));
 jest.mock('react-native', () => ({ Platform: { OS: 'ios' } }));
 
-import { avatarImageSource } from '../api';
+// avatarImageSourceOn resolves the token for a specific server from the
+// accounts blob. Mock it so we can assert per-server base + token selection.
+const mockAccounts: Record<string, { token: string }> = {
+  'https://beta.example.com': { token: 'beta-token' },
+};
+jest.mock('../accounts-store', () => ({
+  accountFor: (serverUrl: string) => mockAccounts[serverUrl] ?? null,
+  defaultAccount: () => null,
+  markIncompatible: () => undefined,
+  markReauthRequired: () => undefined,
+  updateAccount: () => undefined,
+}));
+
+import { avatarImageSource, avatarImageSourceOn } from '../api';
 
 describe('avatarImageSource', () => {
   const TOKEN = 'jwt.secret.value';
@@ -84,5 +97,34 @@ describe('avatarImageSource', () => {
     const src = avatarImageSource({ avatar_object_url: '/api/avatars/x.jpg' }, null);
     expect(src).not.toBeNull();
     expect(src!.headers).toBeUndefined();
+  });
+});
+
+describe('avatarImageSourceOn', () => {
+  it('builds the URI against the given server and uses that account token', () => {
+    const src = avatarImageSourceOn('https://beta.example.com', {
+      avatar_object_url: '/api/avatars/u1.jpg',
+    });
+    expect(src).not.toBeNull();
+    // Not the default BASE_URL — the relative path resolves against the
+    // per-server host so multi-server surfaces load the right avatar.
+    expect(src!.uri).toBe('https://beta.example.com/api/avatars/u1.jpg');
+    expect(src!.headers?.Authorization).toBe('Bearer beta-token');
+  });
+
+  it('omits Authorization when the server has no linked account', () => {
+    const src = avatarImageSourceOn('https://unknown.example.com', {
+      avatar_object_url: '/api/avatars/u1.jpg',
+    });
+    expect(src).not.toBeNull();
+    expect(src!.uri).toBe('https://unknown.example.com/api/avatars/u1.jpg');
+    expect(src!.headers).toBeUndefined();
+  });
+
+  it('still refuses to attach the token to an absolute URL', () => {
+    const src = avatarImageSourceOn('https://beta.example.com', {
+      avatar_object_url: 'https://attacker.example.com/steal.jpg',
+    });
+    expect(src).toBeNull();
   });
 });

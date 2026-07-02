@@ -11,6 +11,7 @@ import { MoneyText } from '@/components/MoneyText';
 import { useTranslation } from 'react-i18next';
 import {
   apiFor,
+  avatarImageSourceOn,
   GroupDetail,
   GroupMember,
   Balance,
@@ -196,7 +197,7 @@ export default function SettleScreen() {
                   onPress={() => openMethodPicker(s)}
                 >
                   <View style={styles.rowLeft}>
-                    <Avatar initials={initialsOf(counter?.name)} />
+                    <Avatar initials={initialsOf(counter?.name)} source={avatarImageSourceOn(serverUrl, counter)} />
                     <View style={styles.rowTextWrap}>
                       <Text style={styles.rowName} numberOfLines={1}>
                         {counter?.name ?? t('settle.unknownUser')}
@@ -249,8 +250,8 @@ export default function SettleScreen() {
                 >
                   <View style={styles.rowLeft}>
                     <View style={styles.pairAvatars}>
-                      <Avatar initials={initialsOf(from?.name)} size="sm" />
-                      <Avatar initials={initialsOf(to?.name)} size="sm" stack />
+                      <Avatar initials={initialsOf(from?.name)} size="sm" source={avatarImageSourceOn(serverUrl, from)} />
+                      <Avatar initials={initialsOf(to?.name)} size="sm" stack source={avatarImageSourceOn(serverUrl, to)} />
                     </View>
                     <Text style={styles.pairLabel} numberOfLines={1}>
                       {from?.name?.split(' ')[0] ?? '?'}

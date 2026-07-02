@@ -563,6 +563,7 @@
     "balancesAcrossCurrencies": "{{count}} Währungen",
     "balancesEmpty": "Nichts offen, nichts geschuldet.",
     "errorStrip": "{{host}} nicht erreichbar",
+    "groupActions": "Gruppenaktionen",
     "groupsCount": "deine Gruppen · {{count}}",
     "groupsCount_one": "deine Gruppen · {{count}}",
     "groupsCount_other": "deine Gruppen · {{count}}",

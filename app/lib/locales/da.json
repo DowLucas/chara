@@ -563,6 +563,7 @@
     "balancesAcrossCurrencies": "{{count}} valutaer",
     "balancesEmpty": "Intet at gøre op endnu.",
     "errorStrip": "{{host}} kan ikke nås",
+    "groupActions": "Gruppehandlinger",
     "groupsCount": "dine grupper · {{count}}",
     "groupsCount_one": "dine grupper · {{count}}",
     "groupsCount_other": "dine grupper · {{count}}",

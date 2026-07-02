@@ -576,6 +576,7 @@
     "balancesAcrossCurrencies": "{{count}} moedas",
     "balancesEmpty": "Nada acertado ou devido ainda.",
     "errorStrip": "{{host}} indisponível",
+    "groupActions": "Ações do grupo",
     "groupsCount": "seus grupos · {{count}}",
     "groupsCount_many": "seus grupos · {{count}}",
     "groupsCount_one": "seus grupos · {{count}}",

@@ -285,7 +285,10 @@ export default function GroupDetailScreen() {
 
   const myBalance = balances.find((b) => b.user_id === user?.id);
   const myNet = myBalance ? decimalToMinor(myBalance.net_balance) : 0;
-  const memberInitials = members.map((m) => initialsOf(m.name));
+  const memberInitials = members.map((m) => ({
+    initials: initialsOf(m.name),
+    source: avatarImageSource(m, token),
+  }));
 
 
   return (

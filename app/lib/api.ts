@@ -1092,11 +1092,14 @@ export function deleteAvatar() {
  *  doesn't need auth headers. The cache-buster (`?v=<updated_at>`) only
  *  applies to the server avatar so a fresh upload invalidates the RN
  *  image cache. */
-export function avatarImageSource(
-  input:
-    | { avatar_object_url?: string | null; avatar_url?: string | null; avatar_updated_at?: string | null }
-    | null
-    | undefined,
+type AvatarInput =
+  | { avatar_object_url?: string | null; avatar_url?: string | null; avatar_updated_at?: string | null }
+  | null
+  | undefined;
+
+function buildAvatarSource(
+  base: string,
+  input: AvatarInput,
   token: string | null,
 ): { uri: string; headers?: Record<string, string> } | null {
   if (!input) return null;
@@ -1108,13 +1111,26 @@ export function avatarImageSource(
     const bust = input.avatar_updated_at
       ? `${sep}v=${encodeURIComponent(input.avatar_updated_at)}`
       : '';
-    const uri = `${BASE_URL}${path}${bust}`;
+    const uri = `${base}${path}${bust}`;
     return token ? { uri, headers: { Authorization: `Bearer ${token}` } } : { uri };
   }
   if (input.avatar_url) {
     return { uri: input.avatar_url };
   }
   return null;
+}
+
+export function avatarImageSource(input: AvatarInput, token: string | null) {
+  return buildAvatarSource(BASE_URL, input, token);
+}
+
+/** Per-server variant: builds the avatar source against `serverUrl` (not the
+ *  default `BASE_URL`) and pulls that account's token. Use this on any
+ *  multi-server surface — e.g. the home groups list, whose member avatars can
+ *  live on any linked server. Relative `avatar_object_url`s would otherwise
+ *  resolve against the wrong host. */
+export function avatarImageSourceOn(serverUrl: string, input: AvatarInput) {
+  return buildAvatarSource(serverUrl, input, accountFor(serverUrl)?.token ?? null);
 }
 
 // FX

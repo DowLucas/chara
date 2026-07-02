@@ -563,6 +563,7 @@
     "balancesAcrossCurrencies": "{{count}} valutor",
     "balancesEmpty": "Inget öppet eller uppgjort ännu.",
     "errorStrip": "{{host}} ej tillgänglig",
+    "groupActions": "Gruppåtgärder",
     "groupsCount": "dina grupper · {{count}}",
     "groupsCount_one": "dina grupper · {{count}}",
     "groupsCount_other": "dina grupper · {{count}}",

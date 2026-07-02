@@ -563,6 +563,7 @@
     "balancesAcrossCurrencies": "{{count}} currencies",
     "balancesEmpty": "Nothing settled or owed yet.",
     "errorStrip": "{{host}} unavailable",
+    "groupActions": "Group actions",
     "groupsCount": "your groups · {{count}}",
     "groupsCount_one": "your groups · {{count}}",
     "groupsCount_other": "your groups · {{count}}",

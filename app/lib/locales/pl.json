@@ -593,6 +593,7 @@
     "balancesAcrossCurrencies": "{{count}} walut",
     "balancesEmpty": "Nic jeszcze nierozliczone ani należne.",
     "errorStrip": "{{host}} niedostępny",
+    "groupActions": "Działania grupy",
     "groupsCount": "twoje grupy · {{count}}",
     "groupsCount_few": "twoje grupy · {{count}}",
     "groupsCount_many": "twoje grupy · {{count}}",

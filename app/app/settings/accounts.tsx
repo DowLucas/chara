@@ -10,7 +10,7 @@ import { IconButton } from '@/components/IconButton';
 import { Avatar } from '@/components/Avatar';
 import { useTranslation } from 'react-i18next';
 import { useAccounts } from '@/lib/accounts';
-import { apiFor, AccountDeleteBlockedError } from '@/lib/api';
+import { apiFor, avatarImageSourceOn, AccountDeleteBlockedError } from '@/lib/api';
 import { hasOpenBalance } from '@/lib/balance-utils';
 import { displayHostFor } from '@/lib/server-url';
 import { unregisterForAccount } from '@/lib/push';
@@ -197,7 +197,7 @@ function AccountCard({
   return (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
-        <Avatar initials={initials} size="md" />
+        <Avatar initials={initials} size="md" source={avatarImageSourceOn(account.serverUrl, account.user)} />
         <View style={styles.cardIdentity}>
           <Text style={styles.cardName} numberOfLines={1}>
             {account.user.name || t('common.dash')}
