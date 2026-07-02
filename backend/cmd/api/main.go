@@ -14,13 +14,16 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/riverqueue/river"
 
 	"github.com/DowLucas/chara/internal/auth"
 	"github.com/DowLucas/chara/internal/config"
 	"github.com/DowLucas/chara/internal/db"
 	"github.com/DowLucas/chara/internal/fx"
 	"github.com/DowLucas/chara/internal/jobs"
+	"github.com/DowLucas/chara/internal/pushsend"
 	"github.com/DowLucas/chara/internal/server"
 	"github.com/DowLucas/chara/internal/storage"
 )
@@ -86,12 +89,16 @@ func main() {
 		slog.Warn("S3_ENDPOINT not set; receipt attachments will be unavailable")
 	}
 
-	// River-backed recurring-expense queue. Bootstrapped behind
-	// RECURRING_ENABLED (default off) so the API still starts cleanly on
-	// instances that haven't yet rolled out the queue tables.
+	// River-backed job queue (recurring expenses + push notifications).
+	// Bootstrapped behind RECURRING_ENABLED (default off) so the API still
+	// starts cleanly on instances that haven't yet rolled out the queue
+	// tables. rc stays nil when disabled — handlers nil-check before
+	// enqueueing.
+	var rc *river.Client[pgx.Tx]
 	if cfg.RecurringEnabled {
-		workers := jobs.RegisterWorkers(pool, queries)
-		rc, err := jobs.New(pool, workers)
+		expo := pushsend.NewExpo(cfg.ExpoAccessToken)
+		workers := jobs.RegisterWorkers(pool, queries, cfg.BaseURL, expo)
+		rc, err = jobs.New(pool, workers)
 		if err != nil {
 			slog.Error("recurring: river client init failed", "error", err)
 			os.Exit(1)
@@ -112,7 +119,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:         cfg.Addr,
-		Handler:      server.New(cfg, pool, queries, jwtSvc, store),
+		Handler:      server.New(cfg, pool, queries, jwtSvc, store, rc),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  60 * time.Second,

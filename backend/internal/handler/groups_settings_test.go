@@ -33,7 +33,7 @@ type settingsEnv struct {
 func setupSettingsEnv(t *testing.T) settingsEnv {
 	t.Helper()
 	env := testutil.NewEnv(t)
-	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil)
+	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil, nil)
 	aliceU := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "owner"), "Alice")
 	bobU := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "member"), "Bob")
 	group, aliceMem := testutil.CreateGroup(t, env.Pool, "Trip", "SEK", aliceU.ID, "Alice")

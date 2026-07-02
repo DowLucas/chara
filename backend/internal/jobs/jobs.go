@@ -54,12 +54,13 @@ func New(pool *pgxpool.Pool, workers *river.Workers) (*river.Client[pgx.Tx], err
 	return client, nil
 }
 
-// RegisterWorkers attaches the two recurring workers to a fresh Workers
+// RegisterWorkers attaches the recurring + push workers to a fresh Workers
 // bundle. Split out so tests can build the bundle independently.
-func RegisterWorkers(pool *pgxpool.Pool, queries *db.Queries) *river.Workers {
+func RegisterWorkers(pool *pgxpool.Pool, queries *db.Queries, baseURL string, expo expoSender) *river.Workers {
 	workers := river.NewWorkers()
 	river.AddWorker(workers, &RecurringTickWorker{Pool: pool, Queries: queries})
 	river.AddWorker(workers, &RecurringFireWorker{Pool: pool, Queries: queries})
+	river.AddWorker(workers, &PushNotifyWorker{Pool: pool, Queries: queries, Expo: expo, BaseURL: baseURL})
 	return workers
 }
 

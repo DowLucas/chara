@@ -139,6 +139,17 @@ export default function RootLayout() {
     // Cold-launch deep link (e.g. tapped an invite while the app was killed).
     void Linking.getInitialURL().then((url) => handleDeepLink(url));
 
+    // Cold-launch notification tap: addNotificationResponseReceivedListener
+    // (below) only fires for taps that happen while JS is already running —
+    // a tap that launches the app from killed doesn't replay through it.
+    // getLastNotificationResponseAsync recovers that one response.
+    void Notifications.getLastNotificationResponseAsync().then((response) => {
+      const data = response?.notification.request.content.data as
+        | { url?: unknown }
+        | undefined;
+      if (data && typeof data.url === 'string') handleDeepLink(data.url);
+    });
+
     const appStateSub = AppState.addEventListener('change', (next: AppStateStatus) => {
       if (next !== 'active') return;
       // retryPendingRegistrations has its own internal REFRESH_FLOOR_MS

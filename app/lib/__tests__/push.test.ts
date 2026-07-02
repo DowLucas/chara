@@ -36,6 +36,9 @@ jest.mock('expo-notifications', () => ({
   requestPermissionsAsync: jest.fn(),
   getExpoPushTokenAsync: jest.fn(),
   addPushTokenListener: jest.fn(() => ({ remove: () => {} })),
+  setNotificationHandler: jest.fn(),
+  setNotificationChannelAsync: jest.fn(),
+  AndroidImportance: { DEFAULT: 3 },
 }));
 jest.mock('expo-device', () => ({
   isDevice: true,
@@ -49,6 +52,7 @@ jest.mock('react-native', () => ({
   },
 }));
 
+import * as Notifications from 'expo-notifications';
 import type { MigrationStorage } from '../migrate-legacy-auth';
 import {
   __resetForTests as resetStore,
@@ -163,6 +167,7 @@ describe('push driver', () => {
     resetPush();
     resetStore();
     mockPlatformOS.OS = 'ios';
+    (Notifications.setNotificationChannelAsync as jest.Mock).mockClear();
     configure(makeStorage());
     await load();
   });
@@ -394,5 +399,44 @@ describe('push driver', () => {
     await bootstrapPush(deps);
 
     expect(fakeApi.registers).toHaveLength(1);
+  });
+
+  it('registers a notification handler at module load that suppresses foreground display', async () => {
+    expect(Notifications.setNotificationHandler).toHaveBeenCalledTimes(1);
+    const handler = (Notifications.setNotificationHandler as jest.Mock).mock.calls[0][0];
+    await expect(handler.handleNotification()).resolves.toEqual({
+      shouldShowBanner: false,
+      shouldShowList: false,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    });
+  });
+
+  it('bootstrapPush creates the Android notification channel via the default token driver', async () => {
+    mockPlatformOS.OS = 'android';
+    (Notifications.getPermissionsAsync as jest.Mock).mockResolvedValue({ granted: true });
+    (Notifications.getExpoPushTokenAsync as jest.Mock).mockResolvedValue({
+      data: 'ExpoPushToken[android]',
+    });
+
+    // No deps override — exercises the real defaultGetOrAcquireToken path.
+    await bootstrapPush();
+
+    expect(Notifications.setNotificationChannelAsync).toHaveBeenCalledWith('default', {
+      name: 'Default',
+      importance: Notifications.AndroidImportance.DEFAULT,
+    });
+  });
+
+  it('bootstrapPush does not create an Android channel on iOS', async () => {
+    mockPlatformOS.OS = 'ios';
+    (Notifications.getPermissionsAsync as jest.Mock).mockResolvedValue({ granted: true });
+    (Notifications.getExpoPushTokenAsync as jest.Mock).mockResolvedValue({
+      data: 'ExpoPushToken[ios]',
+    });
+
+    await bootstrapPush();
+
+    expect(Notifications.setNotificationChannelAsync).not.toHaveBeenCalled();
   });
 });

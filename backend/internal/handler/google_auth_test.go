@@ -108,7 +108,7 @@ func newGoogleEnv(t *testing.T, audience string) (*testutil.Env, *googleTestRig)
 
 	rig := newGoogleTestRig(t, audience)
 
-	base := server.New(env.Config, env.Pool, env.Queries, env.JWT, nil)
+	base := server.New(env.Config, env.Pool, env.Queries, env.JWT, nil, nil)
 	googleH := handler.NewGoogleAuthHandlerWithVerifier(env.Pool, env.Queries, env.Config, env.JWT, rig.verifier)
 
 	mux := http.NewServeMux()
@@ -295,7 +295,7 @@ func TestGoogleNative_NotMountedOnSelfhost(t *testing.T) {
 	env.Config.InstanceMode = "selfhost"
 	env.Config.GoogleClientID = testGoogleClientID
 	env.Config.GoogleClientSecret = "test-secret"
-	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil)
+	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil, nil)
 
 	req, err := http.NewRequest("POST", "/api/auth/google/native", strings.NewReader(`{"identity_token":"x","nonce":"y"}`))
 	require.NoError(t, err)

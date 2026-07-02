@@ -2,7 +2,7 @@
 
 Track what has been built so far. Update this file whenever a milestone is completed.
 
-Last updated: 2026-05-13 (auth endpoints + dev-mode mock login)
+Last updated: 2026-07-02 (push notifications: Expo send-side)
 
 ## Auth endpoints (Week 9, in progress)
 
@@ -203,6 +203,73 @@ Plan:  `docs/superpowers/plans/2026-05-24-recurring-expenses.md`
 - Mobile: dedicated screen family at `/groups/[server]/[id]/recurring/*`, entered from Group Settings → Automation.
 - TDD: shared JSON fixture between Go `internal/recurring` and Jest `app/lib/__tests__/next-fire.test.ts`; integration tests for happy path, catch-up within cap, catch-up overflow, lock/leave pause, idempotency, hard-delete mid-tick, currency immutability, start_date immutability.
 - Protocol bumped additively (v1 → v2). `MIN_APP_PROTOCOL` unchanged.
+
+### Push notifications: Expo send-side ✅
+
+Registration (push_tokens table, `POST/DELETE /api/me/push-token`, mobile
+`app/lib/push.ts` fan-out) shipped earlier as part of Multi-server accounts.
+This adds the missing send half:
+
+- `internal/pushsend` — Expo Push API client (`ExpoClient.Send`), batches
+  ≤100 messages/request, omits the `Authorization` header when
+  `EXPO_ACCESS_TOKEN` is unset (Expo's public API works without one), logs
+  per-message ticket errors (e.g. `DeviceNotRegistered`) without failing the
+  batch. No receipt-polling in v1.
+- `internal/jobs.PushNotifyWorker` — new River worker/job (`push_notify`
+  kind) triggered on `expense_added` / `settlement_recorded`. Looks up
+  recipients via the existing `ListPushTokensByGroup` query (excludes the
+  actor), builds English-only title/body copy, deep-links to
+  `chara://groups/<serverUrl>/<groupId>` (group-level only — no
+  expense-specific deep link yet). Fire-and-forget: send failures never fail
+  the job.
+- `ExpenseHandler.Create` and `BalancesHandler.Settle` enqueue a
+  `PushNotifyArgs` job after their transaction commits. Both handlers take
+  an optional `*river.Client[pgx.Tx]` (nil when `RECURRING_ENABLED=false`);
+  enqueue failures are logged and swallowed, never fail the request.
+- `RegisterWorkers` gained `baseURL`/`expo` params; no new `PUSH_ENABLED`
+  flag — push piggybacks on `RECURRING_ENABLED` since that's what starts the
+  job queue at all.
+- `/.well-known/chara-instance` gained `features.push`, tied to
+  `cfg.RecurringEnabled` (deliberately **not** `cfg.HasExpo()` — Expo push
+  works without a token, so that would undercount capability on self-hosted
+  servers). `config.HasExpo()` added for documentation purposes.
+- Tests: `internal/pushsend` (httptest-mocked Expo API), `internal/jobs`
+  (integration, fake Expo sender + pure unit tests for copy/deep-link
+  builders), `internal/handler` (integration, `rivertest.RequireInserted`
+  assertions on real expense-create/settle requests + nil-client no-op
+  case), `internal/config`/`internal/wellknown` (HasExpo, Features.Push
+  regression pinning it to RecurringEnabled).
+
+**Explicitly deferred**: mentions/@-comments (feature doesn't exist), APNs/FCM
+direct-key self-host bypass, Expo receipt-polling / delivery confirmation /
+automatic `push_tokens` cleanup on `DeviceNotRegistered`, locale-aware
+notification copy, per-expense deep links.
+
+**Mobile display readiness (follow-up, same milestone):**
+
+- `app/app.config.ts` — added the `expo-notifications` config plugin (tray
+  icon tint only; no custom small icon supplied).
+- `app/lib/push.ts` — registers `Notifications.setNotificationHandler` at
+  module load, deliberately returning `shouldShowBanner/List/PlaySound:
+  false` — a push for something in a group the user might already be
+  looking at shouldn't interrupt with an OS banner while the app is open;
+  this only governs foreground display, background/killed-app pushes still
+  show normally via the OS tray. Also creates the Android `default`
+  notification channel before token acquisition (required on Android 8+, or
+  notifications don't display at all, foreground or not). Both covered by
+  new tests in `app/lib/__tests__/push.test.ts`.
+- `app/app/_layout.tsx` — added a cold-launch notification-tap handler
+  (`Notifications.getLastNotificationResponseAsync()`) alongside the
+  existing warm-tap listener (`addNotificationResponseReceivedListener`).
+  The warm listener only fires for taps while JS is already running; a tap
+  that launches the app from killed doesn't replay through it, so without
+  this a cold-launch tap silently drops the deep link. Both funnel through
+  the same `handleDeepLink` → `classifyGroupDeepLink` path (already
+  unit-tested in `lib/__tests__/deep-link.test.ts`).
+- One-time account/build setup required before push works on a real device
+  (EAS APNs provisioning, dev-build-not-Expo-Go, etc.) is documented in
+  `docs/03-technical-architecture.md`'s Push notification architecture
+  section.
 
 ### Week 10 — Web client (Expo for Web) 🔲
 

@@ -25,7 +25,7 @@ import (
 func setupRecurringEnv(t *testing.T) (env *testutil.Env, alice, bob testUserEnv, groupID, aliceMID, bobMID string) {
 	t.Helper()
 	env = testutil.NewEnv(t)
-	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil)
+	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil, nil)
 	aliceU := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice"), "Alice")
 	bobU := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "bob"), "Bob")
 	group, aliceMem := testutil.CreateGroup(t, env.Pool, "Recurring trip", "SEK", aliceU.ID, "Alice")

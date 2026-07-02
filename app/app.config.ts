@@ -222,6 +222,14 @@ const config: ExpoConfig = {
         photosPermission: 'Allow Chara to access your photo library to upload a profile picture.',
       },
     ],
+    [
+      'expo-notifications',
+      {
+        // Android notification-tray icon tint. iOS ignores this. No custom
+        // small icon is supplied — Expo falls back to the app icon.
+        color: '#2D1F1A',
+      },
+    ],
     'expo-localization',
     '@react-native-community/datetimepicker',
     'expo-apple-authentication',

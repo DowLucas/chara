@@ -69,6 +69,16 @@ func TestHasGoogle_FalseWhenEmpty(t *testing.T) {
 	assert.False(t, c.HasGoogle())
 }
 
+func TestHasExpo_TrueWhenTokenSet(t *testing.T) {
+	c := &Config{ExpoAccessToken: "expo-token"}
+	assert.True(t, c.HasExpo())
+}
+
+func TestHasExpo_FalseWhenEmpty(t *testing.T) {
+	c := &Config{}
+	assert.False(t, c.HasExpo())
+}
+
 func TestParseEmailList(t *testing.T) {
 	assert.Nil(t, parseEmailList(""))
 	assert.Nil(t, parseEmailList("   "))

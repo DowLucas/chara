@@ -22,7 +22,9 @@ import (
 	"github.com/DowLucas/chara/internal/receipt"
 	"github.com/DowLucas/chara/internal/storage"
 	"github.com/DowLucas/chara/internal/wellknown"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/riverqueue/river"
 )
 
 const version = "0.1.0"
@@ -32,7 +34,7 @@ const version = "0.1.0"
 // tier-aware lookup once paid Chara Hosted launches.
 const FreeOCRCap = 3
 
-func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *auth.JWTService, store *storage.Client) http.Handler {
+func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *auth.JWTService, store *storage.Client, rc *river.Client[pgx.Tx]) http.Handler {
 	// The import extractor is only available when a vision provider is
 	// configured. Commit works regardless (it never calls the extractor).
 	var importExtractor importer.Extractor
@@ -40,17 +42,17 @@ func New(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *au
 		importExtractor = importer.NewGeminiExtractor(cfg.GeminiAPIKey)
 	}
 	importH := handler.NewImportHandler(pool, queries, importExtractor)
-	return newRouter(cfg, pool, queries, jwtSvc, store, importH)
+	return newRouter(cfg, pool, queries, jwtSvc, store, importH, rc)
 }
 
 // NewWithImport is a test seam: it lets integration tests inject a fake
 // importer.Extractor so the import handlers can be exercised without a real
 // vision provider.
-func NewWithImport(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *auth.JWTService, store *storage.Client, importH *handler.ImportHandler) http.Handler {
-	return newRouter(cfg, pool, queries, jwtSvc, store, importH)
+func NewWithImport(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *auth.JWTService, store *storage.Client, importH *handler.ImportHandler, rc *river.Client[pgx.Tx]) http.Handler {
+	return newRouter(cfg, pool, queries, jwtSvc, store, importH, rc)
 }
 
-func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *auth.JWTService, store *storage.Client, importH *handler.ImportHandler) http.Handler {
+func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtSvc *auth.JWTService, store *storage.Client, importH *handler.ImportHandler, rc *river.Client[pgx.Tx]) http.Handler {
 	r := chi.NewRouter()
 
 	// RealIP: only honor X-Forwarded-For / X-Real-IP when the immediate
@@ -128,11 +130,11 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 	if store != nil {
 		groupH = groupH.WithStorage(store)
 	}
-	expenseH := handler.NewExpenseHandler(pool, queries)
+	expenseH := handler.NewExpenseHandler(pool, queries, rc)
 	if store != nil {
 		expenseH = expenseH.WithStorage(store)
 	}
-	balancesH := handler.NewBalancesHandler(pool, queries)
+	balancesH := handler.NewBalancesHandler(pool, queries, rc)
 	activityH := handler.NewActivityHandler(pool, queries)
 	fxH := handler.NewFxHandler(queries)
 
