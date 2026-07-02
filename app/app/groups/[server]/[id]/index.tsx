@@ -675,7 +675,9 @@ export default function GroupDetailScreen() {
           <>
         {/* Expenses header */}
         <View style={styles.listHeader}>
-          <Text style={styles.listHeaderLabel}>{t('groupDetail.expensesTotal', { count: visibleExpenses.length })}</Text>
+          <Text style={styles.listHeaderLabel} numberOfLines={1}>
+            {t('groupDetail.expensesTotal', { count: visibleExpenses.length })}
+          </Text>
           <View style={styles.listHeaderActions}>
             {members.length > 1 && expenses.length > 0 && (
               <TouchableOpacity
@@ -684,10 +686,14 @@ export default function GroupDetailScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t('groupDetail.filterTitle')}
                 hitSlop={8}
-                style={styles.sortBtn}
+                style={styles.filterBtn}
               >
                 <Feather name="filter" size={13} color={filterPayerId ? colors.graphite : colors.lead} />
-                <Text style={[styles.listHeaderRight, filterPayerId && { color: colors.graphite }]}>
+                <Text
+                  style={[styles.listHeaderRight, styles.filterLabel, filterPayerId && { color: colors.graphite }]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
                   {filterLabel()}
                 </Text>
               </TouchableOpacity>
@@ -700,7 +706,7 @@ export default function GroupDetailScreen() {
               hitSlop={8}
               style={styles.sortBtn}
             >
-              <Text style={styles.listHeaderRight}>{sortLabel(sortBy)}</Text>
+              <Text style={styles.listHeaderRight} numberOfLines={1}>{sortLabel(sortBy)}</Text>
               <Feather name="chevron-down" size={14} color={colors.lead} />
             </TouchableOpacity>
           </View>
@@ -1194,8 +1200,10 @@ const styles = StyleSheet.create({
   },
   listHeader: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: 'baseline',
+    rowGap: spacing.s1,
     paddingHorizontal: spacing.s5,
     paddingTop: spacing.s3,
     paddingBottom: 6,
@@ -1207,11 +1215,18 @@ const styles = StyleSheet.create({
     fontFamily: fontMono,
     fontSize: fontSize.bodyS,
     color: colors.lead,
+    flexShrink: 1,
   },
   listHeaderActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
+    flexShrink: 1,
+    // Actions can be the only thing on a wrapped second line — anchor
+    // them to the right edge like the sort chip currently is, instead of
+    // drifting to wherever wrap leaves them.
+    justifyContent: 'flex-end',
+    minWidth: 0,
   },
   listHeaderRight: {
     fontFamily: fontMono,
@@ -1234,6 +1249,27 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 6,
     backgroundColor: colors.bone,
+    // Never shrinks: the sort chip's own label is one of a handful of
+    // known-short i18n strings, so it never needs to give up space. The
+    // filter chip below is the one with unbounded-length content (a
+    // member's display name) and cedes space to this one instead.
+    flexShrink: 0,
+  },
+  filterBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: colors.bone,
+    // Shrinks first, down to fitting just the icon + a sliver of label —
+    // the label itself truncates with an ellipsis (see filterLabel).
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  filterLabel: {
+    flexShrink: 1,
   },
   listRule: {
     height: 1,
