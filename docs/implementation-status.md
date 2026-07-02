@@ -321,6 +321,11 @@ notification copy, per-expense deep links.
   unlike web CSS). The sort chip is now explicitly non-shrinking, the
   filter chip shrinks first and truncates its label with an ellipsis, and
   the header row gains `flexWrap` as a fallback on very narrow screens.
+- `expo-haptics` added (new dependency, no config plugin required). Wired
+  into the same screen's merge-expenses hold-and-select flow: a medium
+  impact when long-pressing a row enters select mode
+  (`enterSelect`), a selection tick on every subsequent row tap that
+  toggles the selection (`toggleSelect`).
 
 ### Week 10 — Web client (Expo for Web) 🔲
 

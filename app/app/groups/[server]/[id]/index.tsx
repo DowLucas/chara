@@ -9,6 +9,7 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { showAlert } from '@/lib/app-alert';
 import { ActionSheet, openNativeActionSheet } from '@/components/ActionSheet';
 import { Feather } from '@expo/vector-icons';
@@ -81,6 +82,7 @@ export default function GroupDetailScreen() {
     setSelectedIds([]);
   }
   function toggleSelect(expenseId: string) {
+    void Haptics.selectionAsync();
     setSelectedIds((prev) =>
       prev.includes(expenseId)
         ? prev.filter((x) => x !== expenseId)
@@ -88,6 +90,7 @@ export default function GroupDetailScreen() {
     );
   }
   function enterSelect(expenseId: string) {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSelectMode(true);
     setSelectedIds([expenseId]);
   }
