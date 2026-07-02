@@ -333,11 +333,6 @@ export default function GroupDetailScreen() {
               label={t('groupDetail.statsLabel')}
             />
             <IconButton
-              icon="bell"
-              onPress={() => router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/activity`)}
-              label={t('groupDetail.activity')}
-            />
-            <IconButton
               icon="settings"
               onPress={() => router.push(`/groups/${encodeURIComponent(serverUrl)}/${id}/settings`)}
               label={t('groupSettings.settings')}

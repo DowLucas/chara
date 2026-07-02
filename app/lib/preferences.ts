@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
+import { sha256 } from 'js-sha256';
 import { isValidSecurityCode, normalizeSecurityCode } from './security-code';
 
 const KEY_PIN = 'chara.securityCode';
@@ -7,16 +8,31 @@ const KEY_FACE_ID = 'chara.confirmWithFaceId';
 const KEY_LANGUAGE = 'chara.language';
 const KEY_SWISH_PHONE_PROMPT_DISMISSED = 'chara.swishPhonePromptDismissed';
 
-// PBKDF2-lite: many SHA-256 rounds over salt||PIN, slows brute force
-// against the disclosed-keychain case (device unlock is the first line of
-// defense; the iteration count is the second).
-const PIN_HASH_ITERATIONS = 100_000;
+// PBKDF2-lite: SHA-256 rounds over salt||PIN, to slow brute force against the
+// disclosed-keychain case. Device unlock + the hardware Keychain/Keystore are
+// the real defense; against an attacker who has the stored blob, a 4-6 digit
+// numeric PIN (keyspace 10^4-10^6) falls in seconds on a GPU regardless of the
+// round count, so the stretching is defense-in-depth only. We therefore keep
+// it cheap enough to stay snappy on the device JS engine (Hermes), where each
+// round costs far more than on V8.
+//
+// The round count lives *in* the stored blob (v2), so it can be retuned later
+// without a new format version. v1 blobs predate that and use a fixed 100k.
+const PIN_HASH_ITERATIONS = 25_000;
+const PIN_HASH_ITERATIONS_V1 = 100_000;
 const PIN_SALT_BYTES = 16;
-const PIN_STORED_VERSION = 1;
+const PIN_STORED_VERSION = 2;
 
 interface StoredPinV1 {
   v: 1;
   salt: string; // base64
+  hash: string; // hex
+}
+
+interface StoredPinV2 {
+  v: 2;
+  salt: string; // base64
+  iters: number;
   hash: string; // hex
 }
 
@@ -26,6 +42,17 @@ function isStoredPinV1(v: unknown): v is StoredPinV1 {
     v !== null &&
     (v as { v?: unknown }).v === 1 &&
     typeof (v as { salt?: unknown }).salt === 'string' &&
+    typeof (v as { hash?: unknown }).hash === 'string'
+  );
+}
+
+function isStoredPinV2(v: unknown): v is StoredPinV2 {
+  return (
+    typeof v === 'object' &&
+    v !== null &&
+    (v as { v?: unknown }).v === 2 &&
+    typeof (v as { salt?: unknown }).salt === 'string' &&
+    typeof (v as { iters?: unknown }).iters === 'number' &&
     typeof (v as { hash?: unknown }).hash === 'string'
   );
 }
@@ -43,14 +70,17 @@ function bytesToBase64(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString('base64');
 }
 
-async function hashPin(pin: string, salt: string): Promise<string> {
+// Iterated SHA-256 done in-JS rather than via `expo-crypto`
+// `digestStringAsync` round-trips — each of those crosses the native bridge,
+// so tens of thousands serially took seconds. `js-sha256` is standard SHA-256
+// over the UTF-8 bytes of the input, producing the exact same hex digest as
+// expo-crypto (input here is pure ASCII `salt:pin`), so any hash previously
+// written by the expo-crypto path still verifies. Hex-string chaining is the
+// fastest shape for this lib (byte-array chaining benchmarks slower).
+function hashPin(pin: string, salt: string, iters: number): string {
   let current = `${salt}:${pin}`;
-  for (let i = 0; i < PIN_HASH_ITERATIONS; i++) {
-    current = await Crypto.digestStringAsync(
-      Crypto.CryptoDigestAlgorithm.SHA256,
-      current,
-      { encoding: Crypto.CryptoEncoding.HEX },
-    );
+  for (let i = 0; i < iters; i++) {
+    current = sha256(current);
   }
   return current;
 }
@@ -62,8 +92,9 @@ async function generateSaltB64(): Promise<string> {
 
 async function persistHashedPin(pin: string): Promise<void> {
   const salt = await generateSaltB64();
-  const hash = await hashPin(pin, salt);
-  const payload: StoredPinV1 = { v: PIN_STORED_VERSION, salt, hash };
+  const iters = PIN_HASH_ITERATIONS;
+  const hash = hashPin(pin, salt, iters);
+  const payload: StoredPinV2 = { v: PIN_STORED_VERSION, salt, iters, hash };
   await SecureStore.setItemAsync(KEY_PIN, JSON.stringify(payload), {
     keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
     requireAuthentication: false,
@@ -109,16 +140,28 @@ export async function verifySecurityCode(input: string): Promise<boolean> {
   if (!stored) return false;
   const normalized = normalizeSecurityCode(input);
 
-  // Try v1 (hashed) format first.
+  // Try the hashed formats first.
   let parsed: unknown = null;
   try {
     parsed = JSON.parse(stored);
   } catch {
     /* not JSON — treat as legacy plaintext */
   }
-  if (isStoredPinV1(parsed)) {
-    const candidate = await hashPin(normalized, parsed.salt);
+  if (isStoredPinV2(parsed)) {
+    const candidate = hashPin(normalized, parsed.salt, parsed.iters);
     return constantTimeEqual(candidate, parsed.hash);
+  }
+  if (isStoredPinV1(parsed)) {
+    // v1 used a fixed 100k rounds. Verify against that, then transparently
+    // re-hash to the current (v2) format so the next unlock is fast.
+    const candidate = hashPin(normalized, parsed.salt, PIN_HASH_ITERATIONS_V1);
+    if (!constantTimeEqual(candidate, parsed.hash)) return false;
+    try {
+      await persistHashedPin(normalized);
+    } catch {
+      /* upgrade is best-effort; v1 entry stays valid if it fails */
+    }
+    return true;
   }
 
   // Legacy plaintext path (pre-hash migration). Accept once, then upgrade.
