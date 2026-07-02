@@ -222,6 +222,7 @@
   "categories": {
     "drinks": "boissons",
     "food": "resto",
+    "general": "général",
     "groceries": "courses",
     "other": "autre",
     "rent": "loyer",
@@ -347,6 +348,8 @@
     "custom": "Couleur personnalisée",
     "reset": "Réinitialiser",
     "row": "Couleur du groupe",
+    "saveErrorBody": "Une erreur s'est produite pendant l'enregistrement de la couleur. Réessaie.",
+    "saveErrorTitle": "Impossible d'enregistrer la couleur",
     "swatch": {
       "black": "Noir encre",
       "blue": "Bleu",
@@ -390,6 +393,10 @@
     "expensesTotal_one": "total : {{count}}",
     "expensesTotal_other": "total : {{count}}",
     "eyebrow": "groupe",
+    "filterAll": "Tout le monde",
+    "filterEmpty": "Aucune dépense ne correspond à ce filtre.",
+    "filterMine": "Seulement les miennes",
+    "filterTitle": "Filtrer par qui a payé",
     "infoCreatedLabel": "Créé le",
     "infoCurrencyLabel": "Devise",
     "infoMembersLabel": "Membres",
@@ -402,6 +409,20 @@
     "membersLabel_one": "Voir {{count}} membre",
     "membersLabel_other": "Voir {{count}} membres",
     "menuLabel": "Menu du groupe",
+    "merge": {
+      "action": "Fusionner",
+      "actionCount": "Fusionner {{count}}",
+      "actionCount_one": "Fusionner {{count}}",
+      "actionCount_other": "Fusionner {{count}}",
+      "cantTitle": "Fusion impossible",
+      "confirmBody": "Combine {{count}} dépenses en une seule. Les dépenses d'origine seront supprimées.",
+      "confirmBody_one": "Combine {{count}} dépense en une seule. La dépense d'origine sera supprimée.",
+      "confirmBody_other": "Combine {{count}} dépenses en une seule. Les dépenses d'origine seront supprimées.",
+      "confirmTitle": "Fusionner ces dépenses ?",
+      "differentCurrencies": "Toutes les dépenses sélectionnées doivent être dans la même devise.",
+      "differentPayers": "Toutes les dépenses sélectionnées doivent avoir été payées par la même personne.",
+      "errorTitle": "Échec de la fusion"
+    },
     "namePaid": "{{name}} a payé",
     "openInfoLabel": "Détails du groupe",
     "owedByGroup": "dû par le groupe",
@@ -440,6 +461,7 @@
     "standingsCount": "membres · {{count}}",
     "standingsEmptyBody": "Ajoute une dépense pour voir qui doit quoi.",
     "standingsEmptyTitle": "Pas encore de bilan",
+    "statsLabel": "Statistiques",
     "suggestionRow": "{{from}} → {{to}}",
     "suggestionSettleCta": "Payer",
     "suggestionsEmpty": "Tout est réglé",
@@ -544,6 +566,12 @@
     "newGroupLabel": "Nouveau groupe",
     "scanQrLabel": "Scanner un QR pour rejoindre un groupe"
   },
+  "groupStats": {
+    "byCategory": "par catégorie",
+    "emptyBody": "Ajoute des dépenses et une répartition par catégorie apparaîtra ici.",
+    "emptyTitle": "Pas encore de dépenses",
+    "title": "Statistiques"
+  },
   "home": {
     "balancesAcrossCurrencies": "{{count}} devises",
     "balancesEmpty": "Aucun solde pour l'instant.",
@@ -570,6 +598,8 @@
     "noGroupsBody": "Crée un groupe pour commencer à partager des dépenses.",
     "noGroupsCta": "Créer ton premier groupe",
     "noGroupsTitle": "Pas encore de groupes",
+    "pinGroup": "Épingler en haut",
+    "pinnedLabel": "Épinglé",
     "recentCount": "récent · {{count}}",
     "recentCount_many": "récents · {{count}}",
     "recentCount_one": "récent · {{count}}",
@@ -581,6 +611,7 @@
     "statusNew": "pas encore de dépenses",
     "statusReauthShort": "reconnexion requise",
     "statusSettled": "réglé",
+    "unpinGroup": "Désépingler",
     "youOweStamp": "tu dois",
     "youreOwedStamp": "on te doit"
   },
