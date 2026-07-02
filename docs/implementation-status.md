@@ -266,6 +266,34 @@ notification copy, per-expense deep links.
   this a cold-launch tap silently drops the deep link. Both funnel through
   the same `handleDeepLink` → `classifyGroupDeepLink` path (already
   unit-tested in `lib/__tests__/deep-link.test.ts`).
+- **Fixed during review**: the cold-launch tap handler above raced the
+  accounts blob load — `getLastNotificationResponseAsync()` resolves from
+  the root layout's mount effect, which fires before `AccountsProvider`'s
+  async SecureStore load completes (and, on the very first render, before
+  `AccountsProvider` even mounts). `classifyGroupDeepLink` returned
+  `not_loaded` in that window and the tap was silently dropped. Fixed with
+  `retryDeepLinkOnceLoaded` (`app/app/_layout.tsx`), which subscribes to
+  the accounts store and replays the link once `isLoaded()` flips true.
+  This bug pre-dated this PR (it also affected cold-launch universal
+  links via `Linking.getInitialURL()`) but push made it load-bearing.
+- **Fixed during review**: `ensureAndroidChannel` set its ready flag before
+  awaiting `setNotificationChannelAsync`, and the call was unguarded —  a
+  rejection would propagate out of the unguarded `void bootstrapPush()` in
+  `_layout.tsx` and permanently abort token acquisition for the session.
+  Now wrapped in try/catch; the flag only flips on success, so a future
+  call retries.
+- **Fixed during review**: `internal/handler/balances.go`'s `Settle`
+  enqueue mixed identities — `ActorUserID` (used to exclude from
+  recipients) was the recorder (`claims.UserID`), but `ActorName` (used in
+  the notification copy) was the payer (`fromM.Name`); when someone
+  records a settlement between two other members, the copy misattributed
+  the action. Now both come from the recorder's own group-member record,
+  matching the pattern already used in `expenses.go`.
+- **Fixed during review**: `buildGroupDeepLink` used `url.QueryEscape`,
+  which encodes spaces as `+` — the mobile side's `decodeURIComponent`
+  doesn't unescape `+` to a space. Switched to `url.PathEscape` (correct
+  for a path segment; verified it still round-trips through
+  `decodeURIComponent` including the un-encoded `:`).
 - One-time account/build setup required before push works on a real device
   (EAS APNs provisioning, dev-build-not-Expo-Go, etc.) is documented in
   `docs/03-technical-architecture.md`'s Push notification architecture

@@ -4,7 +4,10 @@ import "testing"
 
 func TestBuildGroupDeepLink_MatchesMobileFormat(t *testing.T) {
 	got := buildGroupDeepLink("https://chara.example.com", "grp_123")
-	want := "chara://groups/https%3A%2F%2Fchara.example.com/grp_123"
+	// PathEscape doesn't encode ':' (allowed in a path segment) — decoded by
+	// the mobile side's decodeURIComponent, which leaves it untouched either
+	// way, so this still round-trips to "https://chara.example.com".
+	want := "chara://groups/https:%2F%2Fchara.example.com/grp_123"
 	if got != want {
 		t.Errorf("buildGroupDeepLink = %q, want %q", got, want)
 	}

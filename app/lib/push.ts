@@ -106,13 +106,24 @@ let androidChannelReady = false;
 // Android 8+ (API 26+) requires a notification channel before a push will
 // display — without one, delivery either shows nothing or falls back to an
 // unconfigured default channel. Idempotent; safe to call every time.
+//
+// Failure here must never propagate: this is called from
+// defaultGetOrAcquireToken, which bootstrapPush awaits unguarded
+// (`void bootstrapPush()` in app/_layout.tsx) — an uncaught rejection here
+// would abort token acquisition entirely for the session. Leave the ready
+// flag false on failure so a later call (e.g. the next cold launch) retries
+// instead of silently giving up forever.
 async function ensureAndroidChannel(): Promise<void> {
   if (androidChannelReady) return;
-  androidChannelReady = true;
-  await Notifications.setNotificationChannelAsync('default', {
-    name: 'Default',
-    importance: Notifications.AndroidImportance.DEFAULT,
-  });
+  try {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'Default',
+      importance: Notifications.AndroidImportance.DEFAULT,
+    });
+    androidChannelReady = true;
+  } catch (e) {
+    console.warn('[chara] android notification channel setup failed', e);
+  }
 }
 
 async function defaultGetOrAcquireToken(): Promise<string | null> {

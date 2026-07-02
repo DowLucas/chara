@@ -283,7 +283,8 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "groupID")
 	claims := middleware.ClaimsFromContext(r.Context())
 
-	if _, ok := h.requireMember(w, r, groupID); !ok {
+	actorMember, ok := h.requireMember(w, r, groupID)
+	if !ok {
 		return
 	}
 
@@ -396,18 +397,19 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.rc != nil {
-		if group, gerr := h.queries.GetGroupByID(r.Context(), groupID); gerr == nil {
-			if _, err := h.rc.Insert(r.Context(), jobs.PushNotifyArgs{
-				EventKind:   "settlement_recorded",
-				GroupID:     groupID,
-				GroupName:   group.Name,
-				ActorUserID: claims.UserID,
-				ActorName:   fromM.Name,
-				AmountMinor: settlement.Amount,
-				Currency:    settlement.Currency,
-			}, nil); err != nil {
-				slog.Warn("balances: enqueue push notification failed", "error", err, "group_id", groupID)
-			}
+		group, gerr := h.queries.GetGroupByID(r.Context(), groupID)
+		if gerr != nil {
+			slog.Warn("balances: enqueue push notification failed", "error", gerr, "group_id", groupID)
+		} else if _, err := h.rc.Insert(r.Context(), jobs.PushNotifyArgs{
+			EventKind:   "settlement_recorded",
+			GroupID:     groupID,
+			GroupName:   group.Name,
+			ActorUserID: claims.UserID,
+			ActorName:   actorMember.Name,
+			AmountMinor: settlement.Amount,
+			Currency:    settlement.Currency,
+		}, nil); err != nil {
+			slog.Warn("balances: enqueue push notification failed", "error", err, "group_id", groupID)
 		}
 	}
 

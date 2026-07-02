@@ -96,8 +96,11 @@ func (w *PushNotifyWorker) notify(ctx context.Context, args PushNotifyArgs) erro
 
 // buildGroupDeepLink matches the shape the mobile app's
 // classifyGroupDeepLink expects: chara://groups/<encoded serverUrl>/<groupId>.
+// PathEscape (not QueryEscape) — the mobile side decodes with
+// decodeURIComponent, which does not treat '+' as a space the way
+// QueryEscape's encoding would imply.
 func buildGroupDeepLink(baseURL, groupID string) string {
-	return "chara://groups/" + url.QueryEscape(baseURL) + "/" + groupID
+	return "chara://groups/" + url.PathEscape(baseURL) + "/" + groupID
 }
 
 // buildCopy generates plain-English notification title/body. No locale

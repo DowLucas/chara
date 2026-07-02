@@ -71,6 +71,8 @@ func TestExpenses_Create_NoPushWhenRiverClientNil(t *testing.T) {
 
 	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", body, alice.Token))
 	require.Equal(t, http.StatusCreated, rr.Code)
+
+	rivertest.RequireNotInserted(context.Background(), t, riverpgxv5.New(env.Pool), &jobs.PushNotifyArgs{}, nil)
 }
 
 func TestBalances_Settle_EnqueuesPushNotification(t *testing.T) {

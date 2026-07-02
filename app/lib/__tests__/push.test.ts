@@ -439,4 +439,22 @@ describe('push driver', () => {
 
     expect(Notifications.setNotificationChannelAsync).not.toHaveBeenCalled();
   });
+
+  it('a rejected Android channel setup does not abort token acquisition', async () => {
+    mockPlatformOS.OS = 'android';
+    (Notifications.setNotificationChannelAsync as jest.Mock).mockRejectedValueOnce(
+      new Error('channel setup failed'),
+    );
+    (Notifications.getPermissionsAsync as jest.Mock).mockResolvedValue({ granted: true });
+    (Notifications.getExpoPushTokenAsync as jest.Mock).mockResolvedValue({
+      data: 'ExpoPushToken[android]',
+    });
+
+    // Must not throw / reject despite the channel setup failure above —
+    // exercises the real defaultGetOrAcquireToken path (no deps override),
+    // same as the channel-creation tests above.
+    await expect(bootstrapPush()).resolves.toBeUndefined();
+
+    expect(__getInternalsForTests().token).toBe('ExpoPushToken[android]');
+  });
 });

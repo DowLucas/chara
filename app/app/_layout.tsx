@@ -17,7 +17,11 @@ import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AccountsProvider } from '@/lib/accounts';
-import { isLoaded as accountsIsLoaded, snapshot as accountsSnapshot } from '@/lib/accounts-store';
+import {
+  isLoaded as accountsIsLoaded,
+  snapshot as accountsSnapshot,
+  subscribe as subscribeAccounts,
+} from '@/lib/accounts-store';
 import { AppAlertHost } from '@/components/AppAlert/AppAlertHost';
 import { showAlert } from '@/lib/app-alert';
 import * as analytics from '@/lib/analytics';
@@ -83,6 +87,12 @@ function handleDeepLink(url: string | null | undefined): void {
         });
         return;
       case 'not_loaded':
+        // Cold launch: this handler can run before the accounts blob has
+        // finished loading (SecureStore reads are async and this fires
+        // from the root layout's mount effect, ahead of AccountsProvider).
+        // Retry once loading completes instead of dropping the link.
+        retryDeepLinkOnceLoaded(url);
+        return;
       case 'malformed':
       case 'ignore':
       default:
@@ -91,6 +101,25 @@ function handleDeepLink(url: string | null | undefined): void {
   }
 
   // Anything else: ignore.
+}
+
+/**
+ * Re-attempts a group deep link once the accounts blob finishes loading.
+ * Self-cleaning: unsubscribes after the first load-completion notification,
+ * whether or not that retry actually navigates (e.g. it could still resolve
+ * to `unknown_server`).
+ */
+function retryDeepLinkOnceLoaded(url: string): void {
+  if (accountsIsLoaded()) {
+    // Loaded between the original call and this one — retry immediately.
+    handleDeepLink(url);
+    return;
+  }
+  const unsub = subscribeAccounts(() => {
+    if (!accountsIsLoaded()) return;
+    unsub();
+    handleDeepLink(url);
+  });
 }
 
 // Fast Refresh re-runs this module after the splash has already hidden, at

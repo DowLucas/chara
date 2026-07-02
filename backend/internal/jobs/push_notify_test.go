@@ -54,7 +54,7 @@ func TestPushNotify_HappyPath(t *testing.T) {
 		tokens[m.To] = true
 		require.Contains(t, m.Body, "45.00 SEK")
 		require.Equal(t, group.Name, m.Title)
-		require.Equal(t, "chara://groups/https%3A%2F%2Fchara.example.com/"+group.ID, m.Data["url"])
+		require.Equal(t, "chara://groups/https:%2F%2Fchara.example.com/"+group.ID, m.Data["url"])
 	}
 	require.True(t, tokens["ExponentPushToken[other1]"])
 	require.True(t, tokens["ExponentPushToken[other2]"])
