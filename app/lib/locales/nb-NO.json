@@ -217,6 +217,7 @@
   "categories": {
     "drinks": "drikke",
     "food": "mat",
+    "general": "generelt",
     "groceries": "dagligvarer",
     "other": "annet",
     "rent": "leie",
@@ -342,6 +343,8 @@
     "custom": "Egendefinert farge",
     "reset": "Tilbakestill til standard",
     "row": "Gruppefarge",
+    "saveErrorBody": "Noe gikk galt da fargen skulle lagres. Prøv igjen.",
+    "saveErrorTitle": "Kunne ikke lagre farge",
     "swatch": {
       "black": "Blekksvart",
       "blue": "Blå",
@@ -383,6 +386,10 @@
     "expensesTotal_one": "totalt: {{count}}",
     "expensesTotal_other": "totalt: {{count}}",
     "eyebrow": "gruppe",
+    "filterAll": "Alle",
+    "filterEmpty": "Ingen utgifter passer med dette filteret.",
+    "filterMine": "Bare mine",
+    "filterTitle": "Filtrer etter hvem som betalte",
     "infoCreatedLabel": "Opprettet",
     "infoCurrencyLabel": "Valuta",
     "infoMembersLabel": "Medlemmer",
@@ -394,6 +401,20 @@
     "membersLabel_one": "Se 1 medlem",
     "membersLabel_other": "Se {{count}} medlemmer",
     "menuLabel": "Gruppemeny",
+    "merge": {
+      "action": "Slå sammen",
+      "actionCount": "Slå sammen {{count}}",
+      "actionCount_one": "Slå sammen {{count}}",
+      "actionCount_other": "Slå sammen {{count}}",
+      "cantTitle": "Kan ikke slå sammen",
+      "confirmBody": "Slå sammen {{count}} utgifter til én. Originalene fjernes.",
+      "confirmBody_one": "Slå sammen {{count}} utgift til én. Originalen fjernes.",
+      "confirmBody_other": "Slå sammen {{count}} utgifter til én. Originalene fjernes.",
+      "confirmTitle": "Slå sammen utgifter?",
+      "differentCurrencies": "Alle valgte utgifter må være i samme valuta.",
+      "differentPayers": "Alle valgte utgifter må ha samme betaler.",
+      "errorTitle": "Kunne ikke slå sammen"
+    },
     "namePaid": "{{name}} betalte",
     "openInfoLabel": "Gruppedetaljer",
     "owedByGroup": "gruppen skylder",
@@ -429,6 +450,7 @@
     "standingsCount": "medlemmer · {{count}}",
     "standingsEmptyBody": "Legg til en utgift for å se hvem som skylder hva.",
     "standingsEmptyTitle": "Ingen status ennå",
+    "statsLabel": "Statistikk",
     "suggestionRow": "{{from}} → {{to}}",
     "suggestionSettleCta": "Betal",
     "suggestionsEmpty": "Alt er gjort opp",
@@ -531,6 +553,12 @@
     "newGroupLabel": "Ny gruppe",
     "scanQrLabel": "Skann QR for å bli med i gruppe"
   },
+  "groupStats": {
+    "byCategory": "etter kategori",
+    "emptyBody": "Legg til utgifter, så dukker en fordeling per kategori opp her.",
+    "emptyTitle": "Ingen utgifter ennå",
+    "title": "Statistikk"
+  },
   "home": {
     "balancesAcrossCurrencies": "{{count}} valutaer",
     "balancesEmpty": "Ingenting gjort opp eller skyldig ennå.",
@@ -555,6 +583,8 @@
     "noGroupsBody": "Lag en gruppe for å begynne å dele utgifter.",
     "noGroupsCta": "Lag din første gruppe",
     "noGroupsTitle": "Ingen grupper ennå",
+    "pinGroup": "Fest øverst",
+    "pinnedLabel": "Festet",
     "recentCount": "nylig · {{count}}",
     "recentCount_one": "nylig · {{count}}",
     "recentCount_other": "nylig · {{count}}",
@@ -565,6 +595,7 @@
     "statusNew": "ingen utgifter ennå",
     "statusReauthShort": "ny innlogging trengs",
     "statusSettled": "gjort opp",
+    "unpinGroup": "Løsne",
     "youOweStamp": "du skylder",
     "youreOwedStamp": "du har til gode"
   },
