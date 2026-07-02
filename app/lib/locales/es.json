@@ -222,6 +222,7 @@
   "categories": {
     "drinks": "bebidas",
     "food": "comida",
+    "general": "general",
     "groceries": "supermercado",
     "other": "otros",
     "rent": "alquiler",
@@ -347,6 +348,8 @@
     "custom": "Color personalizado",
     "reset": "Restablecer al predeterminado",
     "row": "Color del grupo",
+    "saveErrorBody": "Algo salió mal al guardar tu color. Inténtalo de nuevo.",
+    "saveErrorTitle": "No se pudo guardar el color",
     "swatch": {
       "black": "Negro tinta",
       "blue": "Azul",
@@ -390,6 +393,10 @@
     "expensesTotal_one": "total: {{count}}",
     "expensesTotal_other": "total: {{count}}",
     "eyebrow": "grupo",
+    "filterAll": "Todos",
+    "filterEmpty": "Ningún gasto coincide con este filtro.",
+    "filterMine": "Solo los míos",
+    "filterTitle": "Filtrar por quién pagó",
     "infoCreatedLabel": "Creado",
     "infoCurrencyLabel": "Moneda",
     "infoMembersLabel": "Miembros",
@@ -402,6 +409,20 @@
     "membersLabel_one": "Ver 1 miembro",
     "membersLabel_other": "Ver {{count}} miembros",
     "menuLabel": "Menú del grupo",
+    "merge": {
+      "action": "Combinar",
+      "actionCount": "Combinar {{count}}",
+      "actionCount_one": "Combinar {{count}}",
+      "actionCount_other": "Combinar {{count}}",
+      "cantTitle": "No se puede combinar",
+      "confirmBody": "Combina {{count}} gastos en uno. Los originales se eliminarán.",
+      "confirmBody_one": "Combina {{count}} gasto en uno. El original se eliminará.",
+      "confirmBody_other": "Combina {{count}} gastos en uno. Los originales se eliminarán.",
+      "confirmTitle": "¿Combinar gastos?",
+      "differentCurrencies": "Todos los gastos seleccionados deben estar en la misma moneda.",
+      "differentPayers": "Todos los gastos seleccionados deben tener a la misma persona como pagador.",
+      "errorTitle": "Error al combinar"
+    },
     "namePaid": "{{name}} pagó",
     "openInfoLabel": "Detalles del grupo",
     "owedByGroup": "el grupo te debe",
@@ -440,6 +461,7 @@
     "standingsCount": "miembros · {{count}}",
     "standingsEmptyBody": "Añade un gasto para ver quién debe qué.",
     "standingsEmptyTitle": "Aún no hay balances",
+    "statsLabel": "Estadísticas",
     "suggestionRow": "{{from}} → {{to}}",
     "suggestionSettleCta": "Pagar",
     "suggestionsEmpty": "Todo saldado",
@@ -544,6 +566,12 @@
     "newGroupLabel": "Nuevo grupo",
     "scanQrLabel": "Escanea QR para unirte al grupo"
   },
+  "groupStats": {
+    "byCategory": "por categoría",
+    "emptyBody": "Añade gastos y aquí aparecerá un desglose por categoría.",
+    "emptyTitle": "Aún no hay gastos",
+    "title": "Estadísticas"
+  },
   "home": {
     "balancesAcrossCurrencies": "{{count}} monedas",
     "balancesEmpty": "Nada saldado ni pendiente todavía.",
@@ -570,6 +598,8 @@
     "noGroupsBody": "Crea un grupo para empezar a dividir gastos.",
     "noGroupsCta": "Crea tu primer grupo",
     "noGroupsTitle": "Aún no hay grupos",
+    "pinGroup": "Fijar arriba",
+    "pinnedLabel": "Fijado",
     "recentCount": "recientes · {{count}}",
     "recentCount_many": "recientes · {{count}}",
     "recentCount_one": "recientes · {{count}}",
@@ -581,6 +611,7 @@
     "statusNew": "aún sin gastos",
     "statusReauthShort": "se requiere reautenticación",
     "statusSettled": "saldado",
+    "unpinGroup": "Dejar de fijar",
     "youOweStamp": "debes",
     "youreOwedStamp": "te deben"
   },
