@@ -581,6 +581,8 @@
     "noGroupsBody": "Create a group to start splitting expenses.",
     "noGroupsCta": "Create your first group",
     "noGroupsTitle": "No groups yet",
+    "pinGroup": "Pin to top",
+    "pinnedLabel": "Pinned",
     "recentCount": "recent · {{count}}",
     "recentCount_one": "recent · {{count}}",
     "recentCount_other": "recent · {{count}}",
@@ -591,6 +593,7 @@
     "statusNew": "no expenses yet",
     "statusReauthShort": "re-auth needed",
     "statusSettled": "settled",
+    "unpinGroup": "Unpin",
     "youOweStamp": "you owe",
     "youreOwedStamp": "you're owed"
   },

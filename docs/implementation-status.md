@@ -299,6 +299,29 @@ notification copy, per-expense deep links.
   `docs/03-technical-architecture.md`'s Push notification architecture
   section.
 
+### Home screen: pin groups to top + expenses filter/sort overflow fix (follow-up, same PR) ✅
+
+- `app/lib/pinned-groups.ts` — new local (per-device, SecureStore-backed)
+  preference module mirroring `preferences.ts`'s pattern: pin state is
+  never synced to any server. Groups are keyed by the same
+  `${serverUrl}::${groupId}` composite used for row keys elsewhere.
+  `getPinnedGroupKeys`/`pinGroup`/`unpinGroup`/`isGroupPinned`/
+  `togglePinnedGroup`. 11 unit tests in
+  `lib/__tests__/pinned-groups.test.ts`.
+- `app/app/(tabs)/index.tsx` — long-pressing a group row opens an
+  ActionSheet with "Pin to top" / "Unpin"; pinned groups sort before
+  unpinned ones (stable secondary sort by `created_at` desc, unchanged),
+  and show a small bookmark icon next to the group name. Pin state loads
+  once on mount and updates local React state immediately on toggle (no
+  round trip).
+- `app/app/groups/[server]/[id]/index.tsx` — fixed a UI bug where the
+  expenses screen's Filter chip (payer name, unbounded length) could grow
+  wide enough to push the Sort chip off-screen entirely, since neither had
+  `flexShrink` set (React Native's Yoga layout defaults to no shrink,
+  unlike web CSS). The sort chip is now explicitly non-shrinking, the
+  filter chip shrinks first and truncates its label with an ellipsis, and
+  the header row gains `flexWrap` as a fallback on very narrow screens.
+
 ### Week 10 — Web client (Expo for Web) 🔲
 
 - [ ] Sign-in flow with magic link
