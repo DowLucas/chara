@@ -5,13 +5,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { TopBar } from '@/components/TopBar';
 import { ContentContainer } from '@/components/ContentContainer';
+import { ActionSheet, openNativeActionSheet } from '@/components/ActionSheet';
 import { GroupAvatar } from '@/components/GroupAvatar';
 import { AvatarStack } from '@/components/Avatar';
 import { Stamp } from '@/components/Stamp';
 import { EmptyState } from '@/components/EmptyState';
 import { MoneyText } from '@/components/MoneyText';
 import { useTranslation } from 'react-i18next';
-import { apiFor, Group, GroupMember, MyBalance } from '@/lib/api';
+import { apiFor, avatarImageSourceOn, Group, GroupMember, MyBalance } from '@/lib/api';
 import { useAccounts } from '@/lib/accounts';
 import { readCache, writeCache } from '@/lib/cache';
 import { initialsOf } from '@/lib/name';
@@ -23,6 +24,8 @@ import {
   // useAggregatedActivity, // re-enable with the recent-activity section
 } from '@/lib/aggregated-reads';
 import { showAlert } from '@/lib/app-alert';
+import { hapticLongPress, hapticSelect } from '@/lib/haptics';
+import { getPinnedGroupKeys, groupKey, togglePinnedGroup } from '@/lib/pinned-groups';
 import { useHomeCurrency } from '@/lib/use-home-currency';
 import { aggregateMyNetReads } from '@/lib/aggregate-mynet';
 import { formatMinorUnits, formatMinorUnitsCompact, decimalToMinor } from '@/lib/i18n';
@@ -92,6 +95,57 @@ export default function HomeScreen() {
   // feedback even on a fast network.
   const [refreshing, setRefreshing] = useState(false);
 
+  // Pinned groups: a pure local (per-device, per-app-install) preference —
+  // never synced to any server. Loaded once on mount; mutated locally on
+  // toggle so the list re-sorts without waiting on a round trip.
+  const [pinnedKeys, setPinnedKeys] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    let cancelled = false;
+    void getPinnedGroupKeys().then((keys) => {
+      if (!cancelled) setPinnedKeys(new Set(keys));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const [groupActionsFor, setGroupActionsFor] = useState<{
+    serverUrl: string;
+    groupId: string;
+    groupName: string;
+  } | null>(null);
+
+  function togglePin(serverUrl: string, groupId: string) {
+    hapticSelect();
+    void togglePinnedGroup(serverUrl, groupId).then((nowPinned) => {
+      setPinnedKeys((prev) => {
+        const next = new Set(prev);
+        const key = groupKey(serverUrl, groupId);
+        if (nowPinned) next.add(key);
+        else next.delete(key);
+        return next;
+      });
+    });
+  }
+
+  function groupActionOptions(target: { serverUrl: string; groupId: string } | null) {
+    if (!target) return [];
+    const pinned = pinnedKeys.has(groupKey(target.serverUrl, target.groupId));
+    return [
+      {
+        label: pinned ? t('home.unpinGroup') : t('home.pinGroup'),
+        onPress: () => togglePin(target.serverUrl, target.groupId),
+      },
+    ];
+  }
+
+  function openGroupActionsMenu(serverUrl: string, groupId: string, groupName: string) {
+    if (isPopupJustClosed()) return;
+    hapticLongPress();
+    if (openNativeActionSheet(groupName, groupActionOptions({ serverUrl, groupId }))) return;
+    setGroupActionsFor({ serverUrl, groupId, groupName });
+  }
+
   // Merge: concatenate all groups, attach every per-currency balance row for
   // that group. We keep the full list (not just one row) so the card can
   // detect mixed-sign positions across currencies — e.g. you're owed €100
@@ -117,10 +171,16 @@ export default function HomeScreen() {
         });
       }
     }
-    // Sort by created_at desc (Group type lacks last_activity_at today).
-    rows.sort((a, b) => (b.group.created_at ?? '').localeCompare(a.group.created_at ?? ''));
+    // Pinned groups float to the top; within each partition, sort by
+    // created_at desc (Group type lacks last_activity_at today).
+    rows.sort((a, b) => {
+      const aPinned = pinnedKeys.has(groupKey(a.serverUrl, a.group.id));
+      const bPinned = pinnedKeys.has(groupKey(b.serverUrl, b.group.id));
+      if (aPinned !== bPinned) return aPinned ? -1 : 1;
+      return (b.group.created_at ?? '').localeCompare(a.group.created_at ?? '');
+    });
     return rows;
-  }, [groupReads, balanceReads]);
+  }, [groupReads, balanceReads, pinnedKeys]);
 
   // Per-currency net totals across all accounts.
   const netByCurrency = useMemo(() => {
@@ -366,6 +426,7 @@ export default function HomeScreen() {
                 const hasPositive = balances.some((b) => decimalToMinor(b.net_balance) > 0);
                 const hasNegative = balances.some((b) => decimalToMinor(b.net_balance) < 0);
                 const mixedSigns = hasPositive && hasNegative;
+                const isPinned = pinnedKeys.has(groupKey(serverUrl, g.id));
                 return (
                   <TouchableOpacity
                     key={`${serverUrl}::${g.id}`}
@@ -376,28 +437,31 @@ export default function HomeScreen() {
                       if (isPopupJustClosed()) return;
                       router.push(`/groups/${encodeURIComponent(serverUrl)}/${g.id}`);
                     }}
+                    onLongPress={() => openGroupActionsMenu(serverUrl, g.id, g.name)}
                     activeOpacity={0.7}
                   >
                     <GroupAvatar serverUrl={serverUrl} groupId={g.id} />
                     <View style={styles.groupMid}>
-                      <Text style={styles.groupTitle} numberOfLines={1}>
-                        {g.name}
-                      </Text>
-                      <View style={styles.groupMetaRow}>
-                        {/* No icon for the "active" state — that's the
-                            default and an icon there would just add noise.
-                            Show a marker only when the state is worth
-                            calling out: settled (positive) or new (no
-                            activity yet). */}
-                        {hasActivity && settled ? (
+                      <View style={styles.groupTitleRow}>
+                        {isPinned && (
                           <Feather
-                            name="check-circle"
-                            size={12}
-                            color={colors.moss}
-                            strokeWidth={1.8}
-                            accessibilityLabel={t('home.statusSettled')}
+                            name="bookmark"
+                            size={11}
+                            color={colors.citrine}
+                            strokeWidth={2}
+                            accessibilityLabel={t('home.pinnedLabel')}
                           />
-                        ) : !hasActivity ? (
+                        )}
+                        <Text style={styles.groupTitle} numberOfLines={1}>
+                          {g.name}
+                        </Text>
+                      </View>
+                      <View style={styles.groupMetaRow}>
+                        {/* No icon for active or settled state — the amount
+                            column already carries that signal. Mark only the
+                            "new" (no activity yet) group, where there's no
+                            amount to speak for it. */}
+                        {!hasActivity ? (
                           <Feather
                             name="feather"
                             size={12}
@@ -459,6 +523,18 @@ export default function HomeScreen() {
                         </>
                       )}
                     </View>
+                    <TouchableOpacity
+                      style={styles.groupMore}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        openGroupActionsMenu(serverUrl, g.id, g.name);
+                      }}
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('home.groupActions')}
+                    >
+                      <Feather name="more-horizontal" size={18} color={colors.lead} strokeWidth={2} />
+                    </TouchableOpacity>
                   </TouchableOpacity>
                 );
               })}
@@ -548,6 +624,12 @@ export default function HomeScreen() {
         */}
         </ContentContainer>
       </ScrollView>
+      <ActionSheet
+        visible={!!groupActionsFor}
+        onClose={() => setGroupActionsFor(null)}
+        title={groupActionsFor?.groupName}
+        options={groupActionOptions(groupActionsFor)}
+      />
     </View>
   );
 }
@@ -689,7 +771,10 @@ function GroupMemberStrip({ serverUrl, groupId }: { serverUrl: string; groupId: 
   }, [serverUrl, groupId, cacheEndpoint]);
 
   if (!members || members.length === 0) return null;
-  const people = members.map((m) => ({ initials: initialsOf(m.name) }));
+  const people = members.map((m) => ({
+    initials: initialsOf(m.name),
+    source: avatarImageSourceOn(serverUrl, m),
+  }));
   return <AvatarStack people={people} max={MEMBER_STRIP_MAX} overflow="ellipsis" tone="paper" />;
 }
 
@@ -814,12 +899,19 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
+  groupTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    minWidth: 0,
+  },
   groupTitle: {
     fontFamily: fontDisplay,
     fontSize: fontSize.displayS,
     letterSpacing: -0.3,
     color: colors.graphite,
     lineHeight: 26,
+    flexShrink: 1,
   },
   groupAmtMuted: {
     fontFamily: fontMono,
@@ -848,6 +940,12 @@ const styles = StyleSheet.create({
   groupRight: {
     alignItems: 'flex-end',
     minWidth: 104,
+  },
+  groupMore: {
+    marginLeft: spacing.s1,
+    marginRight: -spacing.s1,
+    padding: 2,
+    alignSelf: 'center',
   },
   groupEyebrowRow: {
     flexDirection: 'row',

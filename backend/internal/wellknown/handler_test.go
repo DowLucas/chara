@@ -71,3 +71,45 @@ func TestProtocolVersion_IsOne(t *testing.T) {
 		t.Errorf("ProtocolVersion: want 1, got %d", ProtocolVersion)
 	}
 }
+
+// TestFeatures_PushReflectsRecurringEnabled pins Features.Push to
+// RecurringEnabled, NOT HasExpo() — Expo's push API works without an access
+// token, so gating on HasExpo() would wrongly report false on a working
+// low-volume self-hosted server. This guards against "fixing" it back to
+// HasExpo() by reflexively copying the OCR/HasGemini() pattern.
+func TestFeatures_PushReflectsRecurringEnabled(t *testing.T) {
+	cases := []struct {
+		name             string
+		recurringEnabled bool
+		expoAccessToken  string
+		wantPush         bool
+	}{
+		{"enabled queue, no expo token", true, "", true},
+		{"enabled queue, with expo token", true, "expo-token", true},
+		{"disabled queue, with expo token", false, "expo-token", false},
+		{"disabled queue, no expo token", false, "", false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := &config.Config{
+				InstanceMode:     "selfhost",
+				RecurringEnabled: tc.recurringEnabled,
+				ExpoAccessToken:  tc.expoAccessToken,
+			}
+			h := Handler(cfg, "0.1.0")
+
+			rr := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "/.well-known/chara-instance", nil)
+			h.ServeHTTP(rr, req)
+
+			var got map[string]any
+			if err := json.NewDecoder(rr.Body).Decode(&got); err != nil {
+				t.Fatalf("decode: %v", err)
+			}
+			features, _ := got["features"].(map[string]any)
+			if features["push"] != tc.wantPush {
+				t.Errorf("features.push: want %v, got %v", tc.wantPush, features["push"])
+			}
+		})
+	}
+}

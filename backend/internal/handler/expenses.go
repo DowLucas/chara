@@ -16,11 +16,13 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/riverqueue/river"
 
 	"github.com/DowLucas/chara/internal/currency"
 	"github.com/DowLucas/chara/internal/db"
 	"github.com/DowLucas/chara/internal/expense"
 	"github.com/DowLucas/chara/internal/fx"
+	"github.com/DowLucas/chara/internal/jobs"
 	"github.com/DowLucas/chara/internal/middleware"
 	"github.com/DowLucas/chara/internal/money"
 	"github.com/DowLucas/chara/internal/split"
@@ -34,10 +36,13 @@ type ExpenseHandler struct {
 	// store is optional — nil on instances without object storage. When
 	// present it's used to clean attachment bucket objects on delete.
 	store *storage.Client
+	// rc is optional — nil when the job queue (RECURRING_ENABLED) is off.
+	// When present, Create enqueues a push notification after commit.
+	rc *river.Client[pgx.Tx]
 }
 
-func NewExpenseHandler(pool *pgxpool.Pool, queries *db.Queries) *ExpenseHandler {
-	return &ExpenseHandler{queries: queries, pool: pool}
+func NewExpenseHandler(pool *pgxpool.Pool, queries *db.Queries, rc *river.Client[pgx.Tx]) *ExpenseHandler {
+	return &ExpenseHandler{queries: queries, pool: pool, rc: rc}
 }
 
 // WithStorage returns an ExpenseHandler that will best-effort delete
@@ -364,7 +369,8 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "groupID")
 	claims := middleware.ClaimsFromContext(r.Context())
 
-	if _, ok := h.requireGroupMember(w, r, groupID); !ok {
+	actorMember, ok := h.requireGroupMember(w, r, groupID)
+	if !ok {
 		return
 	}
 
@@ -554,6 +560,21 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if err := tx.Commit(r.Context()); err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error")
 		return
+	}
+
+	if h.rc != nil {
+		if _, err := h.rc.Insert(r.Context(), jobs.PushNotifyArgs{
+			EventKind:   "expense_added",
+			GroupID:     groupID,
+			GroupName:   group.Name,
+			ActorUserID: claims.UserID,
+			ActorName:   actorMember.Name,
+			Title:       req.Title,
+			AmountMinor: canonicalAmount,
+			Currency:    canonicalCurrency,
+		}, nil); err != nil {
+			slog.Warn("expenses: enqueue push notification failed", "error", err, "group_id", groupID)
+		}
 	}
 
 	row := created.Row

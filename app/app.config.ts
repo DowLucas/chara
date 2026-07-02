@@ -17,11 +17,16 @@ const HOSTED_API_HOST = (HOSTED_FROM_ENV ?? 'http://localhost:8080')
   .replace(/^https?:\/\//i, '')
   .replace(/\/.*$/, '');
 
+// APP_VARIANT=dev builds a side-by-side "Chara Dev" app with its own bundle
+// id / package / scheme so it can be installed alongside the production app on
+// the same device without clobbering it or its stored accounts.
+const IS_DEV_VARIANT = process.env.APP_VARIANT === 'dev';
+
 const config: ExpoConfig = {
-  name: 'Chara',
+  name: IS_DEV_VARIANT ? 'Chara Dev' : 'Chara',
   slug: 'chara',
-  version: '1.0.9',
-  scheme: 'chara',
+  version: '1.0.11',
+  scheme: IS_DEV_VARIANT ? 'charadev' : 'chara',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'automatic',
@@ -30,7 +35,7 @@ const config: ExpoConfig = {
     // column (see lib/responsive.ts + components/ContentContainer.tsx) so it
     // reads as a single column on iPad instead of stretching edge to edge.
     supportsTablet: true,
-    bundleIdentifier: 'app.chara',
+    bundleIdentifier: IS_DEV_VARIANT ? 'app.chara.dev' : 'app.chara',
     usesAppleSignIn: true,
     // Universal Links — the system fetches
     // https://<HOSTED_API_HOST>/.well-known/apple-app-site-association
@@ -134,7 +139,7 @@ const config: ExpoConfig = {
       foregroundImage: './assets/adaptive-icon.png',
       backgroundColor: '#F0E5CC',
     },
-    package: 'chara.app',
+    package: IS_DEV_VARIANT ? 'chara.app.dev' : 'chara.app',
     // Android App Links — the system fetches
     // https://<HOSTED_API_HOST>/.well-known/assetlinks.json and, when it
     // verifies the app's signing cert, routes matching https /i/* URLs straight
@@ -220,6 +225,14 @@ const config: ExpoConfig = {
       'expo-image-picker',
       {
         photosPermission: 'Allow Chara to access your photo library to upload a profile picture.',
+      },
+    ],
+    [
+      'expo-notifications',
+      {
+        // Android notification-tray icon tint. iOS ignores this. No custom
+        // small icon is supplied — Expo falls back to the app icon.
+        color: '#2D1F1A',
       },
     ],
     'expo-localization',

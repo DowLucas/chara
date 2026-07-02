@@ -80,6 +80,32 @@ describe('preferences security code', () => {
     await expect(setSecurityCode('abcd')).rejects.toThrow();
   });
 
+  it('verifies a v1 hash produced by standard SHA-256 (cross-version compat)', async () => {
+    // Guards the migration-free swap from 100k expo-crypto bridge digests to
+    // in-JS js-sha256. Both are standard SHA-256, so a v1 blob written by the
+    // old code path must still verify. This hash was computed independently
+    // (node crypto) as 100k iterations of sha256 over `${salt}:123456`. If the
+    // KDF (iteration count / chaining / algorithm) ever changes, this fails —
+    // which is exactly the signal that every stored PIN would stop working.
+    store.set(
+      KEY_PIN,
+      JSON.stringify({
+        v: 1,
+        salt: 'AAECAwQFBgcICQoLDA0ODw==',
+        hash: 'de5e177e203d164150ea433dd249c5ad03a2caea3c65501c3c87bfddfbf4e86b',
+      }),
+    );
+    expect(await verifySecurityCode('123456')).toBe(true);
+
+    // A successful v1 verify transparently upgrades the blob to v2 (cheaper
+    // rounds, stored inline) so the next unlock is fast — and still verifies.
+    const upgraded = JSON.parse(store.get(KEY_PIN)!);
+    expect(upgraded.v).toBe(2);
+    expect(typeof upgraded.iters).toBe('number');
+    expect(await verifySecurityCode('123456')).toBe(true);
+    expect(await verifySecurityCode('000000')).toBe(false);
+  });
+
   it('accepts a legacy plaintext value once, then re-hashes it', async () => {
     // Simulate a pre-migration plaintext entry.
     store.set(KEY_PIN, '5678');

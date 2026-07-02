@@ -1064,6 +1064,71 @@ export function listExpenseAttachments(groupId: string, expenseId: string) {
   );
 }
 
+/**
+ * Upload a receipt attachment with progress reporting. `fetch` can't report
+ * upload progress in React Native, so this uses XMLHttpRequest over the same
+ * base64-JSON body the backend already accepts (no backend change). It:
+ *  - reports 0..1 progress via `onProgress`,
+ *  - times out (so a stalled upload surfaces an error instead of hanging on
+ *    "uploading" forever — the original bug), and
+ *  - retries once after a silent token refresh on 401.
+ */
+export function uploadExpenseAttachmentWithProgress(
+  serverUrl: string,
+  groupId: string,
+  expenseId: string,
+  imageBase64: string,
+  mimeType: string,
+  onProgress?: (fraction: number) => void,
+): Promise<ExpenseAttachment> {
+  const url = `${serverUrl}/api/groups/${groupId}/expenses/${expenseId}/attachments`;
+  const body = JSON.stringify({ image_base64: imageBase64, mime_type: mimeType });
+
+  const send = (token: string | null) =>
+    new Promise<{ status: number; text: string }>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader(PROTOCOL_HEADER, String(APP_PROTOCOL_VERSION));
+      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      xhr.timeout = 60000;
+      if (onProgress && xhr.upload) {
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) onProgress(e.loaded / e.total);
+        };
+      }
+      xhr.onload = () => resolve({ status: xhr.status, text: xhr.responseText });
+      xhr.onerror = () => reject(new ApiError(0, 'network error during upload'));
+      xhr.ontimeout = () => reject(new ApiError(0, 'upload timed out'));
+      xhr.send(body);
+    });
+
+  return (async () => {
+    let token = accountFor(serverUrl)?.token ?? null;
+    let res = await send(token);
+    if (res.status === 401) {
+      const refreshed = await attemptRefresh(serverUrl);
+      if (refreshed) {
+        token = refreshed;
+        res = await send(token);
+      }
+    }
+    if (res.status < 200 || res.status >= 300) {
+      let parsed: unknown = null;
+      let msg = `upload failed (${res.status})`;
+      try {
+        parsed = JSON.parse(res.text);
+        const e = (parsed as { error?: string })?.error;
+        if (e) msg = e;
+      } catch {
+        /* non-JSON error body */
+      }
+      throw new ApiError(res.status, msg, parsed);
+    }
+    return JSON.parse(res.text) as ExpenseAttachment;
+  })();
+}
+
 // Avatars
 export type AvatarMimeType = 'image/jpeg' | 'image/png' | 'image/webp';
 
@@ -1092,11 +1157,14 @@ export function deleteAvatar() {
  *  doesn't need auth headers. The cache-buster (`?v=<updated_at>`) only
  *  applies to the server avatar so a fresh upload invalidates the RN
  *  image cache. */
-export function avatarImageSource(
-  input:
-    | { avatar_object_url?: string | null; avatar_url?: string | null; avatar_updated_at?: string | null }
-    | null
-    | undefined,
+type AvatarInput =
+  | { avatar_object_url?: string | null; avatar_url?: string | null; avatar_updated_at?: string | null }
+  | null
+  | undefined;
+
+function buildAvatarSource(
+  base: string,
+  input: AvatarInput,
   token: string | null,
 ): { uri: string; headers?: Record<string, string> } | null {
   if (!input) return null;
@@ -1108,13 +1176,26 @@ export function avatarImageSource(
     const bust = input.avatar_updated_at
       ? `${sep}v=${encodeURIComponent(input.avatar_updated_at)}`
       : '';
-    const uri = `${BASE_URL}${path}${bust}`;
+    const uri = `${base}${path}${bust}`;
     return token ? { uri, headers: { Authorization: `Bearer ${token}` } } : { uri };
   }
   if (input.avatar_url) {
     return { uri: input.avatar_url };
   }
   return null;
+}
+
+export function avatarImageSource(input: AvatarInput, token: string | null) {
+  return buildAvatarSource(BASE_URL, input, token);
+}
+
+/** Per-server variant: builds the avatar source against `serverUrl` (not the
+ *  default `BASE_URL`) and pulls that account's token. Use this on any
+ *  multi-server surface — e.g. the home groups list, whose member avatars can
+ *  live on any linked server. Relative `avatar_object_url`s would otherwise
+ *  resolve against the wrong host. */
+export function avatarImageSourceOn(serverUrl: string, input: AvatarInput) {
+  return buildAvatarSource(serverUrl, input, accountFor(serverUrl)?.token ?? null);
 }
 
 // FX
@@ -1317,6 +1398,21 @@ export function apiFor(serverUrl: string) {
           method: 'POST',
           body: JSON.stringify({ image_base64: imageBase64, mime_type: mimeType }),
         },
+      ),
+    uploadExpenseAttachmentWithProgress: (
+      groupId: string,
+      expenseId: string,
+      imageBase64: string,
+      mimeType: string,
+      onProgress?: (fraction: number) => void,
+    ) =>
+      uploadExpenseAttachmentWithProgress(
+        serverUrl,
+        groupId,
+        expenseId,
+        imageBase64,
+        mimeType,
+        onProgress,
       ),
     listExpenseAttachments: (groupId: string, expenseId: string) =>
       requestOn<ExpenseAttachment[]>(

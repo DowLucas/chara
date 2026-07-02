@@ -11,6 +11,7 @@ import {
   Switch,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
+import { hapticSelect } from '@/lib/haptics';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -680,7 +681,10 @@ function ToggleRow({
       </View>
       <Switch
         value={value}
-        onValueChange={onValueChange}
+        onValueChange={(next) => {
+          hapticSelect();
+          onValueChange(next);
+        }}
         disabled={disabled}
         trackColor={{ false: colors.bone, true: colors.vermillion }}
         thumbColor={colors.paper}

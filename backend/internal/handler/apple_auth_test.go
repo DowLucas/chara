@@ -129,7 +129,7 @@ func newAppleEnv(t *testing.T, audience string) (*testutil.Env, *appleTestRig) {
 	// In practice the simplest reliable thing is: call server.New (so all
 	// other routes exist), then wrap with a handler that intercepts the
 	// Apple path. That's what we do here.
-	base := server.New(env.Config, env.Pool, env.Queries, env.JWT, nil)
+	base := server.New(env.Config, env.Pool, env.Queries, env.JWT, nil, nil)
 	appleH := handler.NewAppleAuthHandlerWithVerifier(env.Pool, env.Queries, env.Config, env.JWT, rig.verifier)
 
 	mux := http.NewServeMux()
@@ -288,7 +288,7 @@ func TestAppleNative_NotMountedOnSelfhost(t *testing.T) {
 	env := testutil.NewEnv(t)
 	env.Config.InstanceMode = "selfhost"
 	env.Config.AppleBundleID = testAppleBundleID
-	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil)
+	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil, nil)
 
 	req, err := http.NewRequest("POST", "/api/auth/apple/native", strings.NewReader(`{"identity_token":"x","nonce":"y"}`))
 	require.NoError(t, err)

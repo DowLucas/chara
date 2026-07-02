@@ -12,6 +12,7 @@ import { ActionSheet, ActionSheetOption, openNativeActionSheet } from '@/compone
 import { MoneyText } from '@/components/MoneyText';
 import { SettlementImpactSheet } from '@/components/SettlementImpactSheet';
 import { showAlert } from '@/lib/app-alert';
+import { hapticWarning } from '@/lib/haptics';
 import { Trans, useTranslation } from 'react-i18next';
 import {
   apiFor,
@@ -53,6 +54,7 @@ export default function ExpenseDetailScreen() {
   const [actionSheetVisible, setActionSheetVisible] = useState(false);
   const [receiptSheetVisible, setReceiptSheetVisible] = useState(false);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
   const [deleteSheetVisible, setDeleteSheetVisible] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -108,10 +110,28 @@ export default function ExpenseDetailScreen() {
 
   async function uploadReceiptAsset(asset: ImagePicker.ImagePickerAsset | undefined) {
     if (!asset?.base64 || !groupId || !id) return;
+    // base64 decodes to ~3/4 of its length; the server caps attachments at
+    // 6 MB. Reject oversized images up front with a clear message rather than
+    // letting the upload stall (the original "stuck uploading" bug).
+    const approxBytes = Math.floor(asset.base64.length * 0.75);
+    if (approxBytes > 6 * 1024 * 1024) {
+      showAlert({
+        title: t('expenseDetail.receiptTooLargeTitle'),
+        message: t('expenseDetail.receiptTooLargeBody'),
+      });
+      return;
+    }
     setUploadingReceipt(true);
+    setUploadPct(0);
     try {
       const mime = inferReceiptMime(asset);
-      await api.uploadExpenseAttachment(groupId, id, asset.base64, mime);
+      await api.uploadExpenseAttachmentWithProgress(
+        groupId,
+        id,
+        asset.base64,
+        mime,
+        (f) => setUploadPct(Math.min(100, Math.round(f * 100))),
+      );
       const refreshed = await api.listExpenseAttachments(groupId, id);
       setAttachments(refreshed);
     } catch (e) {
@@ -121,6 +141,7 @@ export default function ExpenseDetailScreen() {
       });
     } finally {
       setUploadingReceipt(false);
+      setUploadPct(0);
     }
   }
 
@@ -133,7 +154,7 @@ export default function ExpenseDetailScreen() {
     const picked = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: false,
-      quality: 0.9,
+      quality: 0.5,
       base64: true,
       exif: false,
     });
@@ -150,7 +171,7 @@ export default function ExpenseDetailScreen() {
     const picked = await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
       allowsEditing: false,
-      quality: 0.9,
+      quality: 0.5,
       base64: true,
       exif: false,
     });
@@ -231,6 +252,7 @@ export default function ExpenseDetailScreen() {
     setDeleteError(null);
     try {
       await api.deleteExpense(groupId, id);
+      hapticWarning();
       setDeleteSheetVisible(false);
       router.back();
     } catch (e: any) {
@@ -394,23 +416,33 @@ export default function ExpenseDetailScreen() {
             until the user actually has something to look at. */}
         <View style={styles.receiptWrap}>
           {attachments.length === 0 ? (
-            <TouchableOpacity
-              style={styles.receiptEmpty}
-              activeOpacity={isAuthor ? 0.7 : 1}
-              onPress={isAuthor ? openReceiptSheet : undefined}
-              disabled={!isAuthor || uploadingReceipt}
-              accessibilityRole={isAuthor ? 'button' : undefined}
-              accessibilityLabel={isAuthor ? t('expenseDetail.receiptSheetTitle') : undefined}
-            >
-              <Feather name={isAuthor ? 'plus-circle' : 'image'} size={14} color={colors.lead} />
-              <Text style={styles.receiptEmptyText}>
-                {uploadingReceipt
-                  ? t('expenseDetail.receiptUploading')
-                  : isAuthor
-                    ? t('expenseDetail.addReceipt')
-                    : t('expenseDetail.noReceipt')}
-              </Text>
-            </TouchableOpacity>
+            uploadingReceipt ? (
+              <View style={[styles.receiptEmpty, styles.receiptUploading]}>
+                <Feather name="upload" size={14} color={colors.lead} />
+                <View style={styles.uploadCol}>
+                  <Text style={styles.receiptEmptyText}>
+                    {t('expenseDetail.receiptUploadingPct', { pct: uploadPct })}
+                  </Text>
+                  <View style={styles.uploadTrack}>
+                    <View style={[styles.uploadFill, { width: `${Math.max(6, uploadPct)}%` }]} />
+                  </View>
+                </View>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.receiptEmpty}
+                activeOpacity={isAuthor ? 0.7 : 1}
+                onPress={isAuthor ? openReceiptSheet : undefined}
+                disabled={!isAuthor}
+                accessibilityRole={isAuthor ? 'button' : undefined}
+                accessibilityLabel={isAuthor ? t('expenseDetail.receiptSheetTitle') : undefined}
+              >
+                <Feather name={isAuthor ? 'plus-circle' : 'image'} size={14} color={colors.lead} />
+                <Text style={styles.receiptEmptyText}>
+                  {isAuthor ? t('expenseDetail.addReceipt') : t('expenseDetail.noReceipt')}
+                </Text>
+              </TouchableOpacity>
+            )
           ) : (
             attachments.map((a) => (
               <TouchableOpacity
@@ -713,6 +745,19 @@ const styles = StyleSheet.create({
     fontFamily: fontMono,
     fontSize: fontSize.bodyS,
     color: colors.lead,
+  },
+  receiptUploading: { alignItems: 'center' },
+  uploadCol: { flex: 1, gap: 6 },
+  uploadTrack: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.bone,
+    overflow: 'hidden',
+  },
+  uploadFill: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.graphite,
   },
   receiptText: {
     fontFamily: fontBody,

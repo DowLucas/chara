@@ -19,7 +19,7 @@ import (
 func setupEnv(t *testing.T) *testutil.Env {
 	t.Helper()
 	env := testutil.NewEnv(t)
-	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil)
+	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil, nil)
 	return env
 }
 

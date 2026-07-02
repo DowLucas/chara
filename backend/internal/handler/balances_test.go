@@ -655,7 +655,7 @@ func TestMyNet_MixedCurrencyAcrossTwoGroups(t *testing.T) {
 	//   EUR group (same-currency identity): +2000 + (-1000) = +1000
 	//   Total = 1398 minor EUR → "13.98".
 	env := testutil.NewEnv(t)
-	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil)
+	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil, nil)
 
 	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_mn"), "Alice")
 	bob := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "bob_mn"), "Bob")
@@ -697,7 +697,7 @@ func TestMyNet_ThreeDifferentCurrencyGroups(t *testing.T) {
 	//   Total = 1898 → "18.98". (Picked rates that divide cleanly so
 	//   big.Float precision can't nudge a round-to-nearest edge case.)
 	env := testutil.NewEnv(t)
-	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil)
+	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil, nil)
 
 	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_3c"), "Alice")
 	bob := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "bob_3c"), "Bob")
@@ -796,7 +796,7 @@ func TestMyNet_EmptyUserReturnsZero(t *testing.T) {
 	// A user with no group membership has no legs at all. The endpoint
 	// must still 200 with a clean zero aggregate (not error, not 404).
 	env := testutil.NewEnv(t)
-	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil)
+	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil, nil)
 	loner := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "loner"), "Loner")
 	tok := env.MintToken(t, loner.ID, loner.Email)
 

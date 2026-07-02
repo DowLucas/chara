@@ -19,7 +19,7 @@ import (
 // river migrations applied.
 func TestRecurringClientStarts(t *testing.T) {
 	env := testutil.NewEnv(t)
-	workers := jobs.RegisterWorkers(env.Pool, env.Queries)
+	workers := jobs.RegisterWorkers(env.Pool, env.Queries, "https://chara.example.com", nil)
 	rc, err := jobs.New(env.Pool, workers)
 	require.NoError(t, err)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -52,7 +52,7 @@ func TestRecurringTick_EnqueuesDueRules(t *testing.T) {
 		testutil.RecurringSeed{Title: "Future", NextFireAt: time.Now().UTC().Add(time.Hour)})
 
 	// Build a real River client + workers and drive the tick.
-	workers := jobs.RegisterWorkers(env.Pool, env.Queries)
+	workers := jobs.RegisterWorkers(env.Pool, env.Queries, "https://chara.example.com", nil)
 	rc, err := jobs.New(env.Pool, workers)
 	require.NoError(t, err)
 	ctx, cancel := context.WithCancel(context.Background())

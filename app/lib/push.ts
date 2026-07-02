@@ -43,6 +43,23 @@ export interface PushDeviceInfo {
   platform: 'ios' | 'android' | 'web';
 }
 
+// Foreground presentation. Deliberately suppressed — a push for something
+// that happened inside a group the user might already be looking at
+// shouldn't interrupt with an OS banner while the app is open; the relevant
+// screen picks up the change through its own data refresh instead. This
+// handler only governs foreground display: background/killed-app pushes
+// still show normally via the OS notification tray regardless of this
+// config. Registered once at module load — this file is imported eagerly
+// from app/app/_layout.tsx.
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: false,
+    shouldShowList: false,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
+
 // --- injectable deps (test seam) -----------------------------------------
 //
 // The default driver wires straight to expo-notifications / expo-device /
@@ -84,9 +101,36 @@ function getPlatform(): 'ios' | 'android' | 'web' {
   return 'web';
 }
 
+let androidChannelReady = false;
+
+// Android 8+ (API 26+) requires a notification channel before a push will
+// display — without one, delivery either shows nothing or falls back to an
+// unconfigured default channel. Idempotent; safe to call every time.
+//
+// Failure here must never propagate: this is called from
+// defaultGetOrAcquireToken, which bootstrapPush awaits unguarded
+// (`void bootstrapPush()` in app/_layout.tsx) — an uncaught rejection here
+// would abort token acquisition entirely for the session. Leave the ready
+// flag false on failure so a later call (e.g. the next cold launch) retries
+// instead of silently giving up forever.
+async function ensureAndroidChannel(): Promise<void> {
+  if (androidChannelReady) return;
+  try {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'Default',
+      importance: Notifications.AndroidImportance.DEFAULT,
+    });
+    androidChannelReady = true;
+  } catch (e) {
+    console.warn('[chara] android notification channel setup failed', e);
+  }
+}
+
 async function defaultGetOrAcquireToken(): Promise<string | null> {
   // Web: Expo Push doesn't ship a token on web; skip silently.
   if (Platform.OS === 'web') return null;
+
+  if (Platform.OS === 'android') await ensureAndroidChannel();
 
   // Simulator / non-physical device: Expo push tokens require a real device.
   if (!Device.isDevice) return null;
@@ -274,6 +318,7 @@ export function __resetForTests(): void {
   lastRetryAt = 0;
   permissionDenied = false;
   bootstrapped = false;
+  androidChannelReady = false;
   activeDeps = null;
   if (accountsUnsub) accountsUnsub();
   accountsUnsub = null;

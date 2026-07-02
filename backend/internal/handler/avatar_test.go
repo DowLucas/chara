@@ -37,7 +37,7 @@ func setupAvatarEnv(t *testing.T) avatarEnv {
 	t.Helper()
 	env := testutil.NewEnv(t)
 	store := testutil.SharedStorage(t)
-	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, store)
+	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, store, nil)
 
 	a := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice"), "Alice")
 	b := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "bob"), "Bob")

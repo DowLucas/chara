@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Linking, Platform, Image } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
+import { hapticError, hapticSuccess } from '@/lib/haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TopBar } from '@/components/TopBar';
@@ -13,6 +14,7 @@ import { Stamp } from '@/components/Stamp';
 import { useTranslation } from 'react-i18next';
 import {
   apiFor,
+  avatarImageSourceOn,
   GroupDetail,
   GroupMember,
 } from '@/lib/api';
@@ -147,8 +149,10 @@ export default function SettleMethodScreen() {
       });
       setCompletedAt(new Date());
       setStage('done');
+      hapticSuccess();
       return true;
     } catch (e: any) {
+      hapticError();
       showAlert({ title: t('settleMethod.errorTitle'), message: e?.message || t('settleMethod.errorBody') });
       return false;
     } finally {
@@ -254,7 +258,7 @@ export default function SettleMethodScreen() {
         <ScrollView style={styles.scroll} contentContainerStyle={styles.awaitingScroll}>
           <ContentContainer>
             <View style={styles.counterRow}>
-              <Avatar initials={initialsOf(counter?.name)} />
+              <Avatar initials={initialsOf(counter?.name)} source={avatarImageSourceOn(serverUrl, counter)} />
               <View style={styles.counterTextWrap}>
                 <Text style={styles.counterName} numberOfLines={1}>
                   {t('settleMethod.to', { name: counter?.name ?? '' })}
@@ -406,7 +410,7 @@ export default function SettleMethodScreen() {
         <ContentContainer>
         {/* Counterparty + amount */}
         <View style={styles.counterRow}>
-          <Avatar initials={initialsOf(counter?.name)} />
+          <Avatar initials={initialsOf(counter?.name)} source={avatarImageSourceOn(serverUrl, counter)} />
           <View style={styles.counterTextWrap}>
             <Text style={styles.counterName} numberOfLines={1}>
               {isOutgoing

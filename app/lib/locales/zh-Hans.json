@@ -217,6 +217,7 @@
   "categories": {
     "drinks": "饮品",
     "food": "餐饮",
+    "general": "综合",
     "groceries": "超市",
     "other": "其他",
     "rent": "房租",
@@ -342,6 +343,8 @@
     "custom": "自定义颜色",
     "reset": "恢复默认",
     "row": "群组颜色",
+    "saveErrorBody": "保存颜色时出错，请重试。",
+    "saveErrorTitle": "颜色保存失败",
     "swatch": {
       "black": "墨黑",
       "blue": "蓝色",
@@ -383,6 +386,10 @@
     "expensesTotal_one": "合计 {{count}}",
     "expensesTotal_other": "合计 {{count}}",
     "eyebrow": "群组",
+    "filterAll": "所有人",
+    "filterEmpty": "没有符合条件的支出。",
+    "filterMine": "只看我的",
+    "filterTitle": "按付款人筛选",
     "infoCreatedLabel": "创建于",
     "infoCurrencyLabel": "币种",
     "infoMembersLabel": "成员",
@@ -394,6 +401,20 @@
     "membersLabel_one": "查看 1 位成员",
     "membersLabel_other": "查看 {{count}} 位成员",
     "menuLabel": "群组菜单",
+    "merge": {
+      "action": "合并",
+      "actionCount": "合并 {{count}} 笔",
+      "actionCount_one": "合并 {{count}} 笔",
+      "actionCount_other": "合并 {{count}} 笔",
+      "cantTitle": "无法合并",
+      "confirmBody": "将 {{count}} 笔支出合并为一笔，原支出记录将被删除。",
+      "confirmBody_one": "将 {{count}} 笔支出合并为一笔，原支出记录将被删除。",
+      "confirmBody_other": "将 {{count}} 笔支出合并为一笔，原支出记录将被删除。",
+      "confirmTitle": "合并支出？",
+      "differentCurrencies": "所选支出必须为同一币种。",
+      "differentPayers": "所选支出必须由同一人付款。",
+      "errorTitle": "合并失败"
+    },
     "namePaid": "{{name}} 付款",
     "openInfoLabel": "群组信息",
     "owedByGroup": "群组应付",
@@ -429,6 +450,7 @@
     "standingsCount": "成员 · {{count}} 位",
     "standingsEmptyBody": "记一笔后，就能看到谁欠谁多少。",
     "standingsEmptyTitle": "暂无余额",
+    "statsLabel": "统计",
     "suggestionRow": "{{from}} → {{to}}",
     "suggestionSettleCta": "去支付",
     "suggestionsEmpty": "全员两清",
@@ -531,10 +553,17 @@
     "newGroupLabel": "新建群组",
     "scanQrLabel": "扫码加入群组"
   },
+  "groupStats": {
+    "byCategory": "按分类",
+    "emptyBody": "记一笔支出后，这里会显示按分类统计的明细。",
+    "emptyTitle": "暂无消费",
+    "title": "统计"
+  },
   "home": {
     "balancesAcrossCurrencies": "{{count}} 种币种",
     "balancesEmpty": "暂无结算或欠款。",
     "errorStrip": "{{host}} 不可用",
+    "groupActions": "群组操作",
     "groupsCount": "我的群组 · {{count}}",
     "groupsCount_one": "我的群组 · {{count}}",
     "groupsCount_other": "我的群组 · {{count}}",
@@ -555,6 +584,8 @@
     "noGroupsBody": "新建一个群组，开始分账。",
     "noGroupsCta": "新建第一个群组",
     "noGroupsTitle": "还没有群组",
+    "pinGroup": "置顶",
+    "pinnedLabel": "已置顶",
     "recentCount": "最近 · {{count}}",
     "recentCount_one": "最近 · {{count}}",
     "recentCount_other": "最近 · {{count}}",
@@ -565,6 +596,7 @@
     "statusNew": "暂无支出",
     "statusReauthShort": "需要重新登录",
     "statusSettled": "已结清",
+    "unpinGroup": "取消置顶",
     "youOweStamp": "我欠",
     "youreOwedStamp": "我应收"
   },
@@ -686,6 +718,7 @@
       "body": "导入前请核对每笔余额。我们会为每个人创建一笔初始余额，之后你可以结算或修改。",
       "currencyMismatch": "这些余额以 {{extracted}} 计价，但群组使用 {{group}}。不支持跨币种导入。",
       "import": "导入 {{count}} 笔余额",
+      "import_one": "导入 1 笔余额",
       "import_other": "导入 {{count}} 笔余额",
       "owedToYouTotal": "应收",
       "owesYou": "{{name}} 欠你",
@@ -700,12 +733,14 @@
     },
     "success": {
       "body": "已在群组中建立 {{count}} 笔初始余额。",
+      "body_one": "已在群组中建立 1 笔初始余额。",
       "body_other": "已在群组中建立 {{count}} 笔初始余额。",
       "title": "导入完成"
     },
     "tray": {
       "add": "添加截图",
       "count": "{{count}} / {{max}} 张截图",
+      "count_one": "{{count}} / {{max}} 张截图",
       "count_other": "{{count}} / {{max}} 张截图",
       "eyebrow": "截图",
       "remove": "移除截图"
@@ -733,6 +768,7 @@
     "joining": "加入中……",
     "loading": "正在加载邀请……",
     "lockedNote": "此群组已锁定——加入后将获得只读访问权限，直至群主解锁。",
+    "memberCount_one": "1 位成员",
     "memberCount_other": "{{count}} 位成员",
     "onServer": "于 {{host}}",
     "reauthToJoin": "重新登录以加入",
@@ -1133,6 +1169,7 @@
   },
   "you": {
     "about": "关于",
+    "accountsRowCount_one": "1 个账户",
     "accountsRowCount_other": "{{count}} 个账户",
     "accountsRowMany": "账户 · {{count}}",
     "accountsRowMany_one": "账户 · {{count}}",

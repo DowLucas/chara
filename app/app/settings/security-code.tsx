@@ -6,6 +6,8 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
+  Keyboard,
+  ActivityIndicator,
   Platform,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
@@ -61,6 +63,10 @@ export default function SecurityCodeScreen() {
     setSubmitting(true);
     try {
       if (stage === 'current') {
+        // Verifying/hashing takes a beat (key-stretching). Close the keyboard
+        // now so it can't sit open — and blur so no more digits land — while
+        // the async work runs. On success the stage change re-focuses.
+        Keyboard.dismiss();
         const ok = await verifySecurityCode(value);
         if (!ok) {
           showAlert({ title: t('securityCode.errorTitle'), message: t('securityCode.errorWrong') });
@@ -74,6 +80,9 @@ export default function SecurityCodeScreen() {
         setCode('');
         setStage('confirm');
       } else if (stage === 'confirm') {
+        // Saving hashes the code (slow key-stretching). Dismiss the keyboard
+        // up front so it doesn't linger over the save + confirmation alert.
+        Keyboard.dismiss();
         if (value !== newCode) {
           showAlert({ title: t('securityCode.errorTitle'), message: t('securityCode.errorMismatch') });
           setCode('');
@@ -153,6 +162,7 @@ export default function SecurityCodeScreen() {
             keyboardType="number-pad"
             maxLength={6}
             secureTextEntry
+            editable={!submitting}
             style={styles.input}
             placeholder="••••"
             placeholderTextColor={colors.lead}
@@ -169,8 +179,14 @@ export default function SecurityCodeScreen() {
               onPress={handleSubmit}
               activeOpacity={0.85}
             >
-              <Text style={styles.ctaLabel}>{t('securityCode.continue')}</Text>
-              <Feather name="arrow-right" size={18} color={colors.fgOnAccent} />
+              {submitting ? (
+                <ActivityIndicator color={colors.fgOnAccent} />
+              ) : (
+                <>
+                  <Text style={styles.ctaLabel}>{t('securityCode.continue')}</Text>
+                  <Feather name="arrow-right" size={18} color={colors.fgOnAccent} />
+                </>
+              )}
             </TouchableOpacity>
 
             {exists && stage === 'current' && (

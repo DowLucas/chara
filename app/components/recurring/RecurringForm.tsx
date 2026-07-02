@@ -56,6 +56,7 @@ import type {
   UpdateRecurringInput,
 } from '@/lib/api-types-recurring';
 import { showAlert } from '@/lib/app-alert';
+import { hapticSelect, hapticWarning } from '@/lib/haptics';
 import { formatDate, formatMinorUnits, formatTime } from '@/lib/i18n';
 import { isPopupJustClosed, markPopupClosed } from '@/lib/popup-guard';
 import { nextFire } from '@/lib/recurring/next-fire';
@@ -343,6 +344,7 @@ export function RecurringForm({
     if (r !== 'delete') return;
     try {
       await api.recurring.delete(groupId, initialValue.id);
+      hapticWarning();
       router.back();
     } catch (e: any) {
       showAlert({ title: t('common.error'), message: e?.message || String(e) });
@@ -520,6 +522,7 @@ export function RecurringForm({
             <Switch
               value={hasEnd}
               onValueChange={(next) => {
+                hapticSelect();
                 setHasEnd(next);
                 if (next && !endDate) setEndDate(startDate);
               }}

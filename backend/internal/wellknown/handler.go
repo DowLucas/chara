@@ -28,6 +28,7 @@ type Features struct {
 	GoogleAuth bool `json:"google_auth"`
 	AppleAuth  bool `json:"apple_auth"`
 	OCR        bool `json:"ocr"`
+	Push       bool `json:"push"`
 }
 
 func Handler(cfg *config.Config, version string) http.HandlerFunc {
@@ -64,6 +65,12 @@ func buildInfo(cfg *config.Config, version string) InstanceInfo {
 			GoogleAuth: cfg.IsHosted() && cfg.HasGoogle(),
 			AppleAuth:  cfg.IsHosted() && cfg.HasApple(),
 			OCR:        cfg.HasGemini(),
+			// Deliberately NOT cfg.HasExpo() — Expo's push API works without
+			// an access token, so that would wrongly report false on a
+			// working low-volume self-hosted server. The job queue must be
+			// running to enqueue notifications at all. See config.HasExpo's
+			// doc comment.
+			Push: cfg.RecurringEnabled,
 		},
 	}
 }

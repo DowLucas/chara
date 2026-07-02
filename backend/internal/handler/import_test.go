@@ -42,7 +42,7 @@ func setupImportEnv(t *testing.T, ex importer.Extractor) (env *testutil.Env, ali
 	t.Helper()
 	env = testutil.NewEnv(t)
 	importH := handler.NewImportHandler(env.Pool, env.Queries, ex)
-	env.Router = server.NewWithImport(env.Config, env.Pool, env.Queries, env.JWT, nil, importH)
+	env.Router = server.NewWithImport(env.Config, env.Pool, env.Queries, env.JWT, nil, importH, nil)
 
 	aliceU := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice"), "Alice")
 	bobU := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "bob"), "Bob")

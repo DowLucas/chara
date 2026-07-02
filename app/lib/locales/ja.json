@@ -217,6 +217,7 @@
   "categories": {
     "drinks": "飲み物",
     "food": "食事",
+    "general": "一般",
     "groceries": "食料品",
     "other": "その他",
     "rent": "家賃",
@@ -342,6 +343,8 @@
     "custom": "カスタムカラー",
     "reset": "デフォルトに戻す",
     "row": "グループカラー",
+    "saveErrorBody": "カラーの保存中に問題が発生しました。もう一度お試しください。",
+    "saveErrorTitle": "カラーを保存できませんでした",
     "swatch": {
       "black": "インクブラック",
       "blue": "ブルー",
@@ -383,6 +386,10 @@
     "expensesTotal_one": "合計: {{count}}",
     "expensesTotal_other": "合計: {{count}}",
     "eyebrow": "グループ",
+    "filterAll": "全員",
+    "filterEmpty": "この条件に一致する支出はありません。",
+    "filterMine": "自分のみ",
+    "filterTitle": "支払者で絞り込み",
     "infoCreatedLabel": "作成日",
     "infoCurrencyLabel": "通貨",
     "infoMembersLabel": "メンバー",
@@ -394,6 +401,20 @@
     "membersLabel_one": "メンバー{{count}}人を表示",
     "membersLabel_other": "メンバー{{count}}人を表示",
     "menuLabel": "グループメニュー",
+    "merge": {
+      "action": "統合",
+      "actionCount": "{{count}}件を統合",
+      "actionCount_one": "{{count}}件を統合",
+      "actionCount_other": "{{count}}件を統合",
+      "cantTitle": "統合できません",
+      "confirmBody": "{{count}}件の支出を1件にまとめます。元の支出は削除されます。",
+      "confirmBody_one": "{{count}}件の支出を1件にまとめます。元の支出は削除されます。",
+      "confirmBody_other": "{{count}}件の支出を1件にまとめます。元の支出は削除されます。",
+      "confirmTitle": "支出を統合しますか？",
+      "differentCurrencies": "選択したすべての支出は同じ通貨である必要があります。",
+      "differentPayers": "選択したすべての支出は支払者が同じである必要があります。",
+      "errorTitle": "統合に失敗しました"
+    },
     "namePaid": "{{name}}が立て替え",
     "openInfoLabel": "グループ詳細",
     "owedByGroup": "受取",
@@ -429,6 +450,7 @@
     "standingsCount": "メンバー・{{count}}人",
     "standingsEmptyBody": "支出を追加すると、誰が誰にいくら払うかが表示されます。",
     "standingsEmptyTitle": "残高なし",
+    "statsLabel": "統計",
     "suggestionRow": "{{from}} → {{to}}",
     "suggestionSettleCta": "支払う",
     "suggestionsEmpty": "すべて精算済み",
@@ -525,6 +547,12 @@
     },
     "title": "設定"
   },
+  "groupStats": {
+    "byCategory": "カテゴリ別",
+    "emptyBody": "支出を追加すると、カテゴリ別の内訳がここに表示されます。",
+    "emptyTitle": "まだ支出がありません",
+    "title": "統計"
+  },
   "groupsTab": {
     "joinGroup": "グループに参加",
     "newGroup": "新しいグループ",
@@ -535,6 +563,7 @@
     "balancesAcrossCurrencies": "{{count}}通貨",
     "balancesEmpty": "精算・貸し借りなし。",
     "errorStrip": "{{host}}に接続できません",
+    "groupActions": "グループの操作",
     "groupsCount": "グループ・{{count}}件",
     "groupsCount_one": "グループ・{{count}}件",
     "groupsCount_other": "グループ・{{count}}件",
@@ -555,6 +584,8 @@
     "noGroupsBody": "グループを作成して割り勘を始めましょう。",
     "noGroupsCta": "最初のグループを作成",
     "noGroupsTitle": "グループなし",
+    "pinGroup": "上部に固定",
+    "pinnedLabel": "固定済み",
     "recentCount": "最近・{{count}}件",
     "recentCount_one": "最近・{{count}}件",
     "recentCount_other": "最近・{{count}}件",
@@ -565,6 +596,7 @@
     "statusNew": "まだ費用はかかっていません",
     "statusReauthShort": "再認証が必要です",
     "statusSettled": "精算済み",
+    "unpinGroup": "固定を解除",
     "youOweStamp": "あなたは支払う義務がある",
     "youreOwedStamp": "あなたは受け取るべきものがある"
   },
@@ -686,6 +718,7 @@
       "body": "インポートする前に各残高を確認してください。1人につき開始残高を1件作成します。あとから精算・編集できます。",
       "currencyMismatch": "これらの残高は{{extracted}}ですが、グループの通貨は{{group}}です。異なる通貨間のインポートには対応していません。",
       "import": "{{count}}件の残高をインポート",
+      "import_one": "{{count}}件の残高をインポート",
       "import_other": "{{count}}件の残高をインポート",
       "owedToYouTotal": "受取",
       "owesYou": "{{name}}から受取",
@@ -700,12 +733,14 @@
     },
     "success": {
       "body": "グループに{{count}}件の開始残高を設定しました。",
+      "body_one": "グループに{{count}}件の開始残高を設定しました。",
       "body_other": "グループに{{count}}件の開始残高を設定しました。",
       "title": "インポート完了"
     },
     "tray": {
       "add": "スクリーンショットを追加",
       "count": "{{max}}件中{{count}}件のスクリーンショット",
+      "count_one": "{{max}}件中{{count}}件のスクリーンショット",
       "count_other": "{{max}}件中{{count}}件のスクリーンショット",
       "eyebrow": "スクリーンショット",
       "remove": "スクリーンショットを削除"
@@ -733,6 +768,7 @@
     "joining": "参加中…",
     "loading": "招待を読み込み中…",
     "lockedNote": "このグループはロック中です。参加すると、オーナーがロックを解除するまで閲覧のみのアクセスになります。",
+    "memberCount_one": "メンバー1人",
     "memberCount_other": "メンバー{{count}}人",
     "onServer": "{{host}}",
     "reauthToJoin": "参加するには再度サインイン",
@@ -1133,6 +1169,7 @@
   },
   "you": {
     "about": "アプリについて",
+    "accountsRowCount_one": "アカウント{{count}}件",
     "accountsRowCount_other": "アカウント{{count}}件",
     "accountsRowMany": "アカウント・{{count}}件",
     "accountsRowMany_one": "アカウント・{{count}}件",

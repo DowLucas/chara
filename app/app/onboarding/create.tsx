@@ -9,6 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
+import { hapticSuccess } from '@/lib/haptics';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -64,6 +65,7 @@ export default function CreateGroupScreen() {
         }
       }
       analytics.track('group_created');
+      hapticSuccess();
       router.replace(`/onboarding/created?groupId=${group.id}`);
     } catch (e: any) {
       const status = typeof e?.status === 'number' ? e.status : undefined;

@@ -284,11 +284,23 @@ Image processing (thumbnails, EXIF stripping for privacy) happens in a backgroun
 
 **Expo Push Service** is the default. It is free, requires no Apple/Google keys for the user, and works for self-hosted instances. The flow:
 
-1. Mobile app on first login registers its Expo push token with the Chara API
-2. When an event occurs (new expense, settlement, mention), the API calls Expo's push API with the token
+1. Mobile app on first login registers its Expo push token with the Chara API (`POST /api/me/push-token`, `app/lib/push.ts`)
+2. When an event occurs (new expense, settlement — mentions not yet implemented), the API enqueues a River job (`internal/jobs.PushNotifyWorker`) that calls Expo's push API (`internal/pushsend`) with every group member's token except the actor's
 3. Expo delivers via APNs / FCM to the device
 
-For self-hosters who want to bypass Expo entirely (a minority but vocal subset of the audience), provide a config flag to point at direct APNs / FCM with their own keys.
+Gated by `RECURRING_ENABLED` (shared with the recurring-expense job queue — push has no queue to enqueue into without it), not by whether `EXPO_ACCESS_TOKEN` is set — Expo's push API works without an access token at reasonable volume; the token only raises rate limits. `/.well-known/chara-instance`'s `features.push` reflects this.
+
+For self-hosters who want to bypass Expo entirely (a minority but vocal subset of the audience), provide a config flag to point at direct APNs / FCM with their own keys. **Not implemented yet.**
+
+### One-time setup to receive push on a real device
+
+None of this is code — it's account/build configuration required once per Expo/EAS project before push notifications work on physical devices. Skipping any step means tokens register successfully but no notification ever arrives.
+
+1. **Build with a development or EAS build, not Expo Go.** Expo Go dropped remote push notification support at SDK 53; this project is on SDK 54. Run `eas build --profile development` (or `preview`/`production`) and install that build on the device.
+2. **iOS: let EAS provision an APNs key.** The first `eas build --platform ios` prompts to let Expo manage push notification credentials — accept it. This is a separate credential from the existing `usesAppleSignIn` entitlement. No manual Apple Developer portal steps needed unless you want to manage your own APNs key.
+3. **Android: no action needed for the default path.** Expo's push service uses its own shared FCM v1 project unless the app supplies its own `google-services.json` (it doesn't, and the direct-FCM bypass above is unimplemented). EAS build handles this automatically.
+4. **Backend `EXPO_ACCESS_TOKEN` is optional.** Unset works at low volume; set it once traffic grows to raise Expo's rate limits (`internal/config.Config.ExpoAccessToken`).
+5. **Grant OS notification permission on first launch.** The app requests once (`app/lib/push.ts`) and never re-prompts after a hard deny — a denied permission requires the user to re-enable it from OS Settings.
 
 ## Payment rail integration
 

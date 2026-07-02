@@ -91,9 +91,11 @@ type Config struct {
 	// or to your proxy's private CIDR. See internal/middleware/real_ip.go.
 	TrustedProxies string
 
-	// RecurringEnabled gates the River-backed recurring-expense queue.
-	// Default off so the API still boots without the River tables present;
-	// flipped on in Phase 4 once the schema has rolled out everywhere.
+	// RecurringEnabled gates the River-backed job queue in general — both
+	// recurring expenses and push notifications (internal/jobs.PushNotifyWorker)
+	// run behind this flag, since push has no queue to enqueue into without
+	// it. Default on; set to "false"/"0" so the API can still boot on
+	// instances without the River tables present.
 	RecurringEnabled bool
 }
 
@@ -204,6 +206,12 @@ func (c *Config) HasGoogle() bool { return c.GoogleClientID != "" }
 func (c *Config) HasApple() bool  { return c.AppleBundleID != "" }
 func (c *Config) HasOIDC() bool   { return c.OIDCIssuerURL != "" && c.OIDCClientID != "" }
 func (c *Config) HasGemini() bool { return c.GeminiAPIKey != "" }
+
+// HasExpo reports whether an Expo access token is configured. Note: this is
+// NOT the right signal for "can this server send push" — Expo's push API
+// works without a token for reasonable volume; a token only raises rate
+// limits. See wellknown.Features.Push, which uses RecurringEnabled instead.
+func (c *Config) HasExpo() bool { return c.ExpoAccessToken != "" }
 
 // IsDemoLogin reports whether addr is on the demo-login allowlist (case
 // insensitive). addr is expected already trimmed; comparison lowercases both

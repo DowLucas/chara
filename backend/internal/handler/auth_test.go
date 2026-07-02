@@ -30,7 +30,7 @@ func newAuthEnv(t *testing.T) *testutil.Env {
 	env := testutil.NewEnv(t)
 	env.Config.DevMode = true // surface magic-link token in response
 	env.Config.MagicLinkTTL = 15 * time.Minute
-	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil)
+	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil, nil)
 	return env
 }
 

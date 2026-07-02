@@ -7,6 +7,7 @@ import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { ContentContainer } from '@/components/ContentContainer';
 import * as analytics from '@/lib/analytics';
+import { hapticSelect } from '@/lib/haptics';
 import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
 
 export default function PrivacyScreen() {
@@ -38,6 +39,7 @@ export default function PrivacyScreen() {
   }, []);
 
   async function handleToggle(next: boolean) {
+    hapticSelect();
     // Optimistic update — analytics writes are best-effort.
     setOptedIn(next);
     try {

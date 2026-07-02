@@ -1,10 +1,16 @@
 // Mock expo-secure-store with an in-memory map so the module can be exercised
-// without touching the device keychain.
+// without touching the device keychain. `failNextWrite` lets tests simulate
+// a Keychain/Keystore write failure (e.g. storage full, per-item size cap).
 const store = new Map<string, string>();
+let failNextWrite = false;
 jest.mock('expo-secure-store', () => ({
   __esModule: true,
   getItemAsync: async (k: string) => store.get(k) ?? null,
   setItemAsync: async (k: string, v: string) => {
+    if (failNextWrite) {
+      failNextWrite = false;
+      throw new Error('SecureStore write failed');
+    }
     store.set(k, v);
   },
   deleteItemAsync: async (k: string) => {
@@ -19,6 +25,7 @@ import {
   clearOverride,
   fnv1a32,
   groupColorFor,
+  hasOverride,
   hashSwatch,
   loadOverrides,
   overrideKey,
@@ -28,6 +35,7 @@ import {
 
 beforeEach(async () => {
   store.clear();
+  failNextWrite = false;
   __resetForTests();
 });
 
@@ -143,5 +151,51 @@ describe('persistence', () => {
     if (raw) {
       expect(JSON.parse(raw)).toEqual({});
     }
+  });
+});
+
+// A failed SecureStore write must not leave in-memory state ahead of disk —
+// otherwise the picked color "sticks" for the rest of this session (the
+// tap looked like it worked) but silently reverts on the next cold launch
+// when loadOverrides() re-reads the stale blob. This is the mechanism
+// behind "I picked a color but it's not there" reports.
+describe('write-failure rollback', () => {
+  it('setOverride rethrows and leaves no in-memory trace when persist fails', async () => {
+    await loadOverrides();
+    failNextWrite = true;
+
+    await expect(setOverride('https://srv', 'g', '#abcdef')).rejects.toThrow();
+
+    expect(groupColorFor('https://srv', 'g')).toBe(hashSwatch('g'));
+    expect(hasOverride('https://srv', 'g')).toBe(false);
+  });
+
+  it('setOverride rolls back to the previous override when persist fails on an update', async () => {
+    await setOverride('https://srv', 'g', '#111111');
+    failNextWrite = true;
+
+    await expect(setOverride('https://srv', 'g', '#222222')).rejects.toThrow();
+
+    expect(groupColorFor('https://srv', 'g')).toBe('#111111');
+  });
+
+  it('clearOverride rolls back when persist fails, leaving the override intact', async () => {
+    await setOverride('https://srv', 'g', '#abcdef');
+    failNextWrite = true;
+
+    await expect(clearOverride('https://srv', 'g')).rejects.toThrow();
+
+    expect(groupColorFor('https://srv', 'g')).toBe('#abcdef');
+  });
+
+  it('a subsequent successful write after a failed one persists correctly', async () => {
+    failNextWrite = true;
+    await expect(setOverride('https://srv', 'g', '#111111')).rejects.toThrow();
+
+    await setOverride('https://srv', 'g', '#222222');
+
+    expect(groupColorFor('https://srv', 'g')).toBe('#222222');
+    const raw = store.get(GROUP_COLORS_KEY);
+    expect(JSON.parse(raw!)).toEqual({ 'https://srv::g': '#222222' });
   });
 });

@@ -2,7 +2,7 @@
 
 Track what has been built so far. Update this file whenever a milestone is completed.
 
-Last updated: 2026-05-13 (auth endpoints + dev-mode mock login)
+Last updated: 2026-07-02 (push notifications: Expo send-side)
 
 ## Auth endpoints (Week 9, in progress)
 
@@ -203,6 +203,166 @@ Plan:  `docs/superpowers/plans/2026-05-24-recurring-expenses.md`
 - Mobile: dedicated screen family at `/groups/[server]/[id]/recurring/*`, entered from Group Settings → Automation.
 - TDD: shared JSON fixture between Go `internal/recurring` and Jest `app/lib/__tests__/next-fire.test.ts`; integration tests for happy path, catch-up within cap, catch-up overflow, lock/leave pause, idempotency, hard-delete mid-tick, currency immutability, start_date immutability.
 - Protocol bumped additively (v1 → v2). `MIN_APP_PROTOCOL` unchanged.
+
+### Push notifications: Expo send-side ✅
+
+Registration (push_tokens table, `POST/DELETE /api/me/push-token`, mobile
+`app/lib/push.ts` fan-out) shipped earlier as part of Multi-server accounts.
+This adds the missing send half:
+
+- `internal/pushsend` — Expo Push API client (`ExpoClient.Send`), batches
+  ≤100 messages/request, omits the `Authorization` header when
+  `EXPO_ACCESS_TOKEN` is unset (Expo's public API works without one), logs
+  per-message ticket errors (e.g. `DeviceNotRegistered`) without failing the
+  batch. No receipt-polling in v1.
+- `internal/jobs.PushNotifyWorker` — new River worker/job (`push_notify`
+  kind) triggered on `expense_added` / `settlement_recorded`. Looks up
+  recipients via the existing `ListPushTokensByGroup` query (excludes the
+  actor), builds English-only title/body copy, deep-links to
+  `chara://groups/<serverUrl>/<groupId>` (group-level only — no
+  expense-specific deep link yet). Fire-and-forget: send failures never fail
+  the job.
+- `ExpenseHandler.Create` and `BalancesHandler.Settle` enqueue a
+  `PushNotifyArgs` job after their transaction commits. Both handlers take
+  an optional `*river.Client[pgx.Tx]` (nil when `RECURRING_ENABLED=false`);
+  enqueue failures are logged and swallowed, never fail the request.
+- `RegisterWorkers` gained `baseURL`/`expo` params; no new `PUSH_ENABLED`
+  flag — push piggybacks on `RECURRING_ENABLED` since that's what starts the
+  job queue at all.
+- `/.well-known/chara-instance` gained `features.push`, tied to
+  `cfg.RecurringEnabled` (deliberately **not** `cfg.HasExpo()` — Expo push
+  works without a token, so that would undercount capability on self-hosted
+  servers). `config.HasExpo()` added for documentation purposes.
+- Tests: `internal/pushsend` (httptest-mocked Expo API), `internal/jobs`
+  (integration, fake Expo sender + pure unit tests for copy/deep-link
+  builders), `internal/handler` (integration, `rivertest.RequireInserted`
+  assertions on real expense-create/settle requests + nil-client no-op
+  case), `internal/config`/`internal/wellknown` (HasExpo, Features.Push
+  regression pinning it to RecurringEnabled).
+
+**Explicitly deferred**: mentions/@-comments (feature doesn't exist), APNs/FCM
+direct-key self-host bypass, Expo receipt-polling / delivery confirmation /
+automatic `push_tokens` cleanup on `DeviceNotRegistered`, locale-aware
+notification copy, per-expense deep links.
+
+**Mobile display readiness (follow-up, same milestone):**
+
+- `app/app.config.ts` — added the `expo-notifications` config plugin (tray
+  icon tint only; no custom small icon supplied).
+- `app/lib/push.ts` — registers `Notifications.setNotificationHandler` at
+  module load, deliberately returning `shouldShowBanner/List/PlaySound:
+  false` — a push for something in a group the user might already be
+  looking at shouldn't interrupt with an OS banner while the app is open;
+  this only governs foreground display, background/killed-app pushes still
+  show normally via the OS tray. Also creates the Android `default`
+  notification channel before token acquisition (required on Android 8+, or
+  notifications don't display at all, foreground or not). Both covered by
+  new tests in `app/lib/__tests__/push.test.ts`.
+- `app/app/_layout.tsx` — added a cold-launch notification-tap handler
+  (`Notifications.getLastNotificationResponseAsync()`) alongside the
+  existing warm-tap listener (`addNotificationResponseReceivedListener`).
+  The warm listener only fires for taps while JS is already running; a tap
+  that launches the app from killed doesn't replay through it, so without
+  this a cold-launch tap silently drops the deep link. Both funnel through
+  the same `handleDeepLink` → `classifyGroupDeepLink` path (already
+  unit-tested in `lib/__tests__/deep-link.test.ts`).
+- **Fixed during review**: the cold-launch tap handler above raced the
+  accounts blob load — `getLastNotificationResponseAsync()` resolves from
+  the root layout's mount effect, which fires before `AccountsProvider`'s
+  async SecureStore load completes (and, on the very first render, before
+  `AccountsProvider` even mounts). `classifyGroupDeepLink` returned
+  `not_loaded` in that window and the tap was silently dropped. Fixed with
+  `retryDeepLinkOnceLoaded` (`app/app/_layout.tsx`), which subscribes to
+  the accounts store and replays the link once `isLoaded()` flips true.
+  This bug pre-dated this PR (it also affected cold-launch universal
+  links via `Linking.getInitialURL()`) but push made it load-bearing.
+- **Fixed during review**: `ensureAndroidChannel` set its ready flag before
+  awaiting `setNotificationChannelAsync`, and the call was unguarded —  a
+  rejection would propagate out of the unguarded `void bootstrapPush()` in
+  `_layout.tsx` and permanently abort token acquisition for the session.
+  Now wrapped in try/catch; the flag only flips on success, so a future
+  call retries.
+- **Fixed during review**: `internal/handler/balances.go`'s `Settle`
+  enqueue mixed identities — `ActorUserID` (used to exclude from
+  recipients) was the recorder (`claims.UserID`), but `ActorName` (used in
+  the notification copy) was the payer (`fromM.Name`); when someone
+  records a settlement between two other members, the copy misattributed
+  the action. Now both come from the recorder's own group-member record,
+  matching the pattern already used in `expenses.go`.
+- **Fixed during review**: `buildGroupDeepLink` used `url.QueryEscape`,
+  which encodes spaces as `+` — the mobile side's `decodeURIComponent`
+  doesn't unescape `+` to a space. Switched to `url.PathEscape` (correct
+  for a path segment; verified it still round-trips through
+  `decodeURIComponent` including the un-encoded `:`).
+- One-time account/build setup required before push works on a real device
+  (EAS APNs provisioning, dev-build-not-Expo-Go, etc.) is documented in
+  `docs/03-technical-architecture.md`'s Push notification architecture
+  section.
+
+### Home screen: pin groups to top + expenses filter/sort overflow fix (follow-up, same PR) ✅
+
+- `app/lib/pinned-groups.ts` — new local (per-device, SecureStore-backed)
+  preference module mirroring `preferences.ts`'s pattern: pin state is
+  never synced to any server. Groups are keyed by the same
+  `${serverUrl}::${groupId}` composite used for row keys elsewhere.
+  `getPinnedGroupKeys`/`pinGroup`/`unpinGroup`/`isGroupPinned`/
+  `togglePinnedGroup`. 11 unit tests in
+  `lib/__tests__/pinned-groups.test.ts`.
+- `app/app/(tabs)/index.tsx` — long-pressing a group row opens an
+  ActionSheet with "Pin to top" / "Unpin"; pinned groups sort before
+  unpinned ones (stable secondary sort by `created_at` desc, unchanged),
+  and show a small bookmark icon next to the group name. Pin state loads
+  once on mount and updates local React state immediately on toggle (no
+  round trip).
+- `app/app/groups/[server]/[id]/index.tsx` — fixed a UI bug where the
+  expenses screen's Filter chip (payer name, unbounded length) could grow
+  wide enough to push the Sort chip off-screen entirely, since neither had
+  `flexShrink` set (React Native's Yoga layout defaults to no shrink,
+  unlike web CSS). The sort chip is now explicitly non-shrinking, the
+  filter chip shrinks first and truncates its label with an ellipsis, and
+  the header row gains `flexWrap` as a fallback on very narrow screens.
+- `expo-haptics` added (new dependency, no config plugin required).
+  `app/lib/haptics.ts` centralizes 5 named wrappers
+  (`hapticLongPress`/`hapticSelect`/`hapticWarning`/`hapticSuccess`/
+  `hapticError`) so call sites read as intent rather than raw enum values.
+  Wired into: merge-expenses hold-and-select (medium impact entering
+  select mode, selection tick per toggle), the home screen's group
+  long-press action menu and pin/unpin toggle, three `Switch` toggles
+  (Face ID confirm, analytics opt-in, recurring end-date), and the
+  execution point (not the confirmation dialog) of every destructive
+  action that has one: delete group, leave group, kick member, delete
+  expense, revert settlement, delete recurring rule. Settle-up fires
+  success/error notification haptics; group creation fires success.
+
+### Group color: fixed silent write failures ✅
+
+Investigated a report of "some users can't see the group color they
+selected." Root cause: `app/lib/group-color.ts` mutated its in-memory
+override map *before* awaiting the SecureStore write — if that write
+failed (Keychain/Keystore error, storage pressure), the exception
+propagated up through `GroupColorPicker`'s unguarded `await`, which
+skipped both the re-render (`notify()` never ran) and the sheet-close
+call. The tap looked like a complete no-op in the moment, and even the
+"successful until reload" illusion didn't hold: the next cold launch
+re-reads the stale on-disk blob and reverts to the default color with no
+error ever shown in between.
+
+Fixed:
+- `setOverride`/`clearOverride` now roll the in-memory mutation back if
+  `persist()` throws, keeping memory and disk consistent, and rethrow so
+  callers know the write failed. 4 new tests in
+  `lib/__tests__/group-color.test.ts` covering fresh-write failure,
+  update-failure rollback, clear-failure rollback, and recovery on a
+  subsequent successful write (31 tests total, up from 27).
+- `GroupColorPicker`'s three write paths (`pickSwatch`/`resetToAuto`/
+  `submitCustom`) now catch that rethrow and surface a `showAlert` error
+  instead of silently leaving the sheet open with no feedback.
+
+**Explicitly out of scope** (per user direction — keep this local-only,
+just make local edits reliable): group color remains a pure per-device
+preference, never synced to the backend or other group members. Two
+users looking at the same group can still see different colors by
+design; that's not what this fix addresses.
 
 ### Week 10 — Web client (Expo for Web) 🔲
 

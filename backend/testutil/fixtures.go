@@ -102,6 +102,20 @@ func formatFloatFixed(f float64) string {
 	return strconv.FormatFloat(f, 'f', 10, 64)
 }
 
+// SeedPushToken registers an Expo push token for userID.
+func SeedPushToken(t *testing.T, pool *pgxpool.Pool, userID, token string) db.PushToken {
+	t.Helper()
+	q := db.New(pool)
+	pt, err := q.UpsertPushToken(context.Background(), db.UpsertPushTokenParams{
+		ID:       ulid.New(),
+		UserID:   userID,
+		Token:    token,
+		Platform: "ios",
+	})
+	require.NoError(t, err)
+	return pt
+}
+
 // CreateExpense inserts an expense with equal splits across memberIDs directly in the DB.
 // Use this to set up state for List/Get/Update/Delete tests.
 func CreateExpense(t *testing.T, pool *pgxpool.Pool, groupID, title string, amountMinorUnits int64, currency, paidByMemberID, createdByUserID string, memberIDs []string) ExpenseFixture {
