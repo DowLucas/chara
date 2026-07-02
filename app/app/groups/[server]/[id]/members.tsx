@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Share } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
+import { hapticWarning } from '@/lib/haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TopBar } from '@/components/TopBar';
@@ -93,6 +94,7 @@ export default function GroupMembersScreen() {
     if (result === 'remove') {
       try {
         await api.removeMember(group.id, target.id);
+        hapticWarning();
         reload();
       } catch (e: any) {
         showAlert({ title: t('kickMember.error'), message: e?.message || String(e) });

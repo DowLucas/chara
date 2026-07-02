@@ -9,7 +9,7 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import { hapticLongPress, hapticSelect, hapticWarning } from '@/lib/haptics';
 import { showAlert } from '@/lib/app-alert';
 import { ActionSheet, openNativeActionSheet } from '@/components/ActionSheet';
 import { Feather } from '@expo/vector-icons';
@@ -82,7 +82,7 @@ export default function GroupDetailScreen() {
     setSelectedIds([]);
   }
   function toggleSelect(expenseId: string) {
-    void Haptics.selectionAsync();
+    hapticSelect();
     setSelectedIds((prev) =>
       prev.includes(expenseId)
         ? prev.filter((x) => x !== expenseId)
@@ -90,7 +90,7 @@ export default function GroupDetailScreen() {
     );
   }
   function enterSelect(expenseId: string) {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    hapticLongPress();
     setSelectMode(true);
     setSelectedIds([expenseId]);
   }
@@ -506,6 +506,7 @@ export default function GroupDetailScreen() {
                     try {
                       if (!id) return;
                       await api.revertSettlement(id, s.id);
+                      hapticWarning();
                       await load();
                     } catch (e: any) {
                       showAlert({ title: t('groupDetail.paymentRevertError'), message: e?.message || String(e) });

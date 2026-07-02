@@ -12,6 +12,7 @@ import { ActionSheet, ActionSheetOption, openNativeActionSheet } from '@/compone
 import { MoneyText } from '@/components/MoneyText';
 import { SettlementImpactSheet } from '@/components/SettlementImpactSheet';
 import { showAlert } from '@/lib/app-alert';
+import { hapticWarning } from '@/lib/haptics';
 import { Trans, useTranslation } from 'react-i18next';
 import {
   apiFor,
@@ -231,6 +232,7 @@ export default function ExpenseDetailScreen() {
     setDeleteError(null);
     try {
       await api.deleteExpense(groupId, id);
+      hapticWarning();
       setDeleteSheetVisible(false);
       router.back();
     } catch (e: any) {

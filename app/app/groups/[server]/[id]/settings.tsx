@@ -21,6 +21,7 @@ import {
   View,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
+import { hapticWarning } from '@/lib/haptics';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -190,6 +191,7 @@ export default function GroupSettingsScreen() {
     setDeleteSubmitting(true);
     try {
       await api.permanentDeleteGroup(group.id, typedName);
+      hapticWarning();
       setDeleteOpen(false);
       router.replace('/(tabs)');
     } catch (e: unknown) {
@@ -223,6 +225,7 @@ export default function GroupSettingsScreen() {
     if (result === 'leave') {
       try {
         await api.removeMember(group.id, myMember.id);
+        hapticWarning();
         router.replace('/(tabs)');
       } catch (e: any) {
         showAlert({ title: t('groupSettings.members.leaveError'), message: e?.message || String(e) });

@@ -24,6 +24,7 @@ import {
   // useAggregatedActivity, // re-enable with the recent-activity section
 } from '@/lib/aggregated-reads';
 import { showAlert } from '@/lib/app-alert';
+import { hapticLongPress, hapticSelect } from '@/lib/haptics';
 import { getPinnedGroupKeys, groupKey, togglePinnedGroup } from '@/lib/pinned-groups';
 import { useHomeCurrency } from '@/lib/use-home-currency';
 import { aggregateMyNetReads } from '@/lib/aggregate-mynet';
@@ -115,6 +116,7 @@ export default function HomeScreen() {
   } | null>(null);
 
   function togglePin(serverUrl: string, groupId: string) {
+    hapticSelect();
     void togglePinnedGroup(serverUrl, groupId).then((nowPinned) => {
       setPinnedKeys((prev) => {
         const next = new Set(prev);
@@ -139,6 +141,7 @@ export default function HomeScreen() {
 
   function openGroupActionsMenu(serverUrl: string, groupId: string, groupName: string) {
     if (isPopupJustClosed()) return;
+    hapticLongPress();
     if (openNativeActionSheet(groupName, groupActionOptions({ serverUrl, groupId }))) return;
     setGroupActionsFor({ serverUrl, groupId, groupName });
   }

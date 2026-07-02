@@ -321,11 +321,48 @@ notification copy, per-expense deep links.
   unlike web CSS). The sort chip is now explicitly non-shrinking, the
   filter chip shrinks first and truncates its label with an ellipsis, and
   the header row gains `flexWrap` as a fallback on very narrow screens.
-- `expo-haptics` added (new dependency, no config plugin required). Wired
-  into the same screen's merge-expenses hold-and-select flow: a medium
-  impact when long-pressing a row enters select mode
-  (`enterSelect`), a selection tick on every subsequent row tap that
-  toggles the selection (`toggleSelect`).
+- `expo-haptics` added (new dependency, no config plugin required).
+  `app/lib/haptics.ts` centralizes 5 named wrappers
+  (`hapticLongPress`/`hapticSelect`/`hapticWarning`/`hapticSuccess`/
+  `hapticError`) so call sites read as intent rather than raw enum values.
+  Wired into: merge-expenses hold-and-select (medium impact entering
+  select mode, selection tick per toggle), the home screen's group
+  long-press action menu and pin/unpin toggle, three `Switch` toggles
+  (Face ID confirm, analytics opt-in, recurring end-date), and the
+  execution point (not the confirmation dialog) of every destructive
+  action that has one: delete group, leave group, kick member, delete
+  expense, revert settlement, delete recurring rule. Settle-up fires
+  success/error notification haptics; group creation fires success.
+
+### Group color: fixed silent write failures ✅
+
+Investigated a report of "some users can't see the group color they
+selected." Root cause: `app/lib/group-color.ts` mutated its in-memory
+override map *before* awaiting the SecureStore write — if that write
+failed (Keychain/Keystore error, storage pressure), the exception
+propagated up through `GroupColorPicker`'s unguarded `await`, which
+skipped both the re-render (`notify()` never ran) and the sheet-close
+call. The tap looked like a complete no-op in the moment, and even the
+"successful until reload" illusion didn't hold: the next cold launch
+re-reads the stale on-disk blob and reverts to the default color with no
+error ever shown in between.
+
+Fixed:
+- `setOverride`/`clearOverride` now roll the in-memory mutation back if
+  `persist()` throws, keeping memory and disk consistent, and rethrow so
+  callers know the write failed. 4 new tests in
+  `lib/__tests__/group-color.test.ts` covering fresh-write failure,
+  update-failure rollback, clear-failure rollback, and recovery on a
+  subsequent successful write (31 tests total, up from 27).
+- `GroupColorPicker`'s three write paths (`pickSwatch`/`resetToAuto`/
+  `submitCustom`) now catch that rethrow and surface a `showAlert` error
+  instead of silently leaving the sheet open with no feedback.
+
+**Explicitly out of scope** (per user direction — keep this local-only,
+just make local edits reliable): group color remains a pure per-device
+preference, never synced to the backend or other group members. Two
+users looking at the same group can still see different colors by
+design; that's not what this fix addresses.
 
 ### Week 10 — Web client (Expo for Web) 🔲
 
