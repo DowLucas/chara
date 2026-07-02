@@ -343,6 +343,8 @@
     "custom": "Custom color",
     "reset": "Reset to default",
     "row": "Group color",
+    "saveErrorBody": "Something went wrong saving your color. Please try again.",
+    "saveErrorTitle": "Couldn't save color",
     "swatch": {
       "black": "Ink black",
       "blue": "Blue",

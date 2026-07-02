@@ -76,8 +76,20 @@ export async function setOverride(
 ): Promise<void> {
   if (!validateHex(hex)) throw new Error('invalid hex');
   await loadOverrides();
-  overrides[overrideKey(serverUrl, groupId)] = hex;
-  await persist();
+  const key = overrideKey(serverUrl, groupId);
+  const previous = overrides[key];
+  overrides[key] = hex;
+  try {
+    await persist();
+  } catch (e) {
+    // Roll back the in-memory mutation so a failed write doesn't leave this
+    // session showing a color that isn't actually on disk — without this,
+    // the pick looks like it worked until the next cold launch re-reads the
+    // stale blob and reverts it, with no error ever shown in between.
+    if (previous === undefined) delete overrides[key];
+    else overrides[key] = previous;
+    throw e;
+  }
   notify();
 }
 
@@ -86,8 +98,15 @@ export async function clearOverride(
   groupId: string,
 ): Promise<void> {
   await loadOverrides();
-  delete overrides[overrideKey(serverUrl, groupId)];
-  await persist();
+  const key = overrideKey(serverUrl, groupId);
+  const previous = overrides[key];
+  delete overrides[key];
+  try {
+    await persist();
+  } catch (e) {
+    if (previous !== undefined) overrides[key] = previous;
+    throw e;
+  }
   notify();
 }
 

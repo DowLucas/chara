@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import ReactNativeColorPicker from 'react-native-wheel-color-picker';
+import { showAlert } from '@/lib/app-alert';
 import { markPopupClosed } from '@/lib/popup-guard';
 import { useResponsive } from '@/lib/use-responsive';
 import {
@@ -111,11 +112,28 @@ export function GroupColorPicker(props: Props) {
     props.onClose();
   }, [props]);
 
+  // Persisted-mode writes go to SecureStore and can fail (Keychain/Keystore
+  // write errors, storage pressure). Without this, a failed write left the
+  // tap looking like a no-op — the sheet didn't close, the color didn't
+  // change, and nothing told the user why. Ephemeral mode has no I/O to fail.
+  async function reportSaveFailure() {
+    await showAlert({
+      title: t('groupColor.saveErrorTitle'),
+      message: t('groupColor.saveErrorBody'),
+      buttons: [{ key: 'ok', label: t('common.ok') }],
+    });
+  }
+
   async function pickSwatch(hex: string) {
     if (ephemeral) {
       props.onChange(hex);
     } else {
-      await setOverride(props.serverUrl, props.groupId, hex);
+      try {
+        await setOverride(props.serverUrl, props.groupId, hex);
+      } catch {
+        await reportSaveFailure();
+        return;
+      }
     }
     close();
   }
@@ -124,7 +142,12 @@ export function GroupColorPicker(props: Props) {
     if (ephemeral) {
       props.onChange(null);
     } else {
-      await clearOverride(props.serverUrl, props.groupId);
+      try {
+        await clearOverride(props.serverUrl, props.groupId);
+      } catch {
+        await reportSaveFailure();
+        return;
+      }
     }
     close();
   }
@@ -134,7 +157,12 @@ export function GroupColorPicker(props: Props) {
     if (ephemeral) {
       props.onChange(hex);
     } else {
-      await setOverride(props.serverUrl, props.groupId, hex);
+      try {
+        await setOverride(props.serverUrl, props.groupId, hex);
+      } catch {
+        await reportSaveFailure();
+        return;
+      }
     }
     close();
   }
