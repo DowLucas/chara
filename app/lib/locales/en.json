@@ -113,6 +113,10 @@
     "you": "You"
   },
   "addExpense": {
+    "addCategory": "Add category…",
+    "addCategoryPlaceholder": "e.g. Souvenirs",
+    "addCategorySubmit": "Add",
+    "addCategoryTitle": "New category",
     "amount": "amount",
     "amountPlaceholder": "0",
     "amountsLabel": "amounts",
@@ -319,7 +323,10 @@
     "receiptPermissionTitle": "Permission needed",
     "receiptSheetTitle": "Add receipt",
     "receiptTakePhoto": "Take a photo",
+    "receiptTooLargeBody": "That image is too large to upload. Try a smaller photo.",
+    "receiptTooLargeTitle": "Image too large",
     "receiptUploading": "Uploading…",
+    "receiptUploadingPct": "Uploading… {{pct}}%",
     "reload": "Reload",
     "savedToast": "Changes saved.",
     "staleBanner": "This expense changed since you opened it. Reload to see the latest.",

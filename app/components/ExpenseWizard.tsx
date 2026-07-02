@@ -40,7 +40,15 @@ import { AmountKeypad } from '@/components/AmountKeypad';
 import { AmountField } from '@/components/AmountField';
 import { CurrencyPicker } from '@/components/CurrencyPicker';
 import { ActionSheet } from '@/components/ActionSheet';
-import { EXPENSE_CATEGORIES, DEFAULT_CATEGORY, categoryLabelKey } from '@/lib/categories';
+import {
+  EXPENSE_CATEGORIES,
+  DEFAULT_CATEGORY,
+  categoryLabel,
+  categoryLabelKey,
+  loadCustomCategories,
+  addCustomCategory,
+} from '@/lib/categories';
+import { TextPromptModal } from '@/components/TextPromptModal';
 import { loadDraft, saveDraft, clearDraft } from '@/lib/expense-draft';
 import {
   FxConversionSection,
@@ -244,6 +252,18 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       initialValue?.category ?? DEFAULT_CATEGORY,
     );
     const [categorySheetOpen, setCategorySheetOpen] = useState(false);
+    const [customCategories, setCustomCategories] = useState<string[]>([]);
+    const [categoryInputOpen, setCategoryInputOpen] = useState(false);
+
+    useEffect(() => {
+      let cancelled = false;
+      loadCustomCategories().then((c) => {
+        if (!cancelled) setCustomCategories(c);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, []);
 
     const [method, setMethod] = useState<SplitMethod>(
       initialValue?.splitMethod ?? 'equal',
@@ -721,7 +741,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
                 groupName={groupName}
                 payerLabel={payerLabel}
                 onOpenPayerPicker={() => setPayerSheetOpen(true)}
-                categoryLabel={t(categoryLabelKey(category))}
+                categoryLabel={categoryLabel(category, t)}
                 onOpenCategoryPicker={() => setCategorySheetOpen(true)}
                 onOpenKeypad={() => setKeypadTarget({ kind: 'amount' })}
                 topSlot={topSlot}
@@ -836,10 +856,30 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
           visible={categorySheetOpen}
           onClose={() => setCategorySheetOpen(false)}
           title={t('addExpense.categoryLabel')}
-          options={EXPENSE_CATEGORIES.map((key) => ({
-            label: t(categoryLabelKey(key)),
-            onPress: () => setCategory(key),
-          }))}
+          options={[
+            ...EXPENSE_CATEGORIES.map((key) => ({
+              label: t(categoryLabelKey(key)),
+              onPress: () => setCategory(key),
+            })),
+            ...customCategories.map((c) => ({
+              label: c,
+              onPress: () => setCategory(c),
+            })),
+            { label: t('addExpense.addCategory'), onPress: () => setCategoryInputOpen(true) },
+          ]}
+        />
+
+        <TextPromptModal
+          visible={categoryInputOpen}
+          title={t('addExpense.addCategoryTitle')}
+          placeholder={t('addExpense.addCategoryPlaceholder')}
+          submitLabel={t('addExpense.addCategorySubmit')}
+          onClose={() => setCategoryInputOpen(false)}
+          onSubmit={(name) => {
+            setCategoryInputOpen(false);
+            addCustomCategory(name).then(setCustomCategories);
+            setCategory(name.trim());
+          }}
         />
       </KeyboardAvoidingView>
     );
