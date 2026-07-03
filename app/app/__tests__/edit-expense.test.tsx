@@ -14,7 +14,9 @@ import {
   decideConfirmFlow,
   decideDeleteFlow,
   expenseInputCurrencyAmount,
+  newSplitsForImpact,
   nonShareFieldsDiffer,
+  pctByMemberFromExpense,
   projectExpenseToInputCurrency,
   splitShareInInputCurrency,
 } from '../../lib/edit-expense-flow';
@@ -343,5 +345,99 @@ describe('edit-expense — FX prefill (regression: data corruption on FX-snapsho
       splits: [{ id: 's', member_id: 'm', share: '100.00' }],
     } as Expense;
     expect(projectExpenseToInputCurrency(exp)).toBe(exp);
+  });
+});
+
+describe('edit-expense — percentage split prefill (regression: reset to 50/50)', () => {
+  // Bug: opening the split editor on an existing percentage-split expense
+  // (e.g. 2 people, 100/0) showed an auto-computed even split instead of the
+  // stored one, because `pctByMember` was hardcoded to `{}` regardless of
+  // split_method.
+
+  it('derives percentages from share/amount for a percentage-split expense', () => {
+    const expense = {
+      amount: '200.00',
+      split_method: 'percentage',
+      splits: [
+        { id: 's1', member_id: 'm1', share: '200.00' },
+        { id: 's2', member_id: 'm2', share: '0.00' },
+      ],
+    } as Expense;
+    expect(pctByMemberFromExpense(expense)).toEqual({
+      m1: '100.00',
+      m2: '0.00',
+    });
+  });
+
+  it('returns an empty map for non-percentage split methods', () => {
+    const expense = {
+      amount: '200.00',
+      split_method: 'equal',
+      splits: [{ id: 's1', member_id: 'm1', share: '100.00' }],
+    } as Expense;
+    expect(pctByMemberFromExpense(expense)).toEqual({});
+  });
+
+  it('is safe against a zero or non-finite amount', () => {
+    const expense = {
+      amount: '0.00',
+      split_method: 'percentage',
+      splits: [{ id: 's1', member_id: 'm1', share: '0.00' }],
+    } as Expense;
+    expect(pctByMemberFromExpense(expense)).toEqual({});
+  });
+
+  it('handles uneven three-way percentage splits', () => {
+    const expense = {
+      amount: '100.00',
+      split_method: 'percentage',
+      splits: [
+        { id: 's1', member_id: 'm1', share: '33.34' },
+        { id: 's2', member_id: 'm2', share: '33.33' },
+        { id: 's3', member_id: 'm3', share: '33.33' },
+      ],
+    } as Expense;
+    expect(pctByMemberFromExpense(expense)).toEqual({
+      m1: '33.34',
+      m2: '33.33',
+      m3: '33.33',
+    });
+  });
+});
+
+describe('edit-expense — buildImpact splits input (regression: percentage save silently no-ops)', () => {
+  // Bug: `buildImpact` only populated `newSplits` for `split_method === 'exact'`,
+  // so saving a percentage-method edit threw synchronously inside
+  // `computeSplits` ("percentage method requires splits") with nothing
+  // catching it — the Save button appeared to do nothing.
+
+  it('builds amountMinor splits for the exact method', () => {
+    const got = newSplitsForImpact('exact', [
+      { member_id: 'm1', share: '12.34' },
+      { member_id: 'm2', share: '0.00' },
+    ]);
+    expect(got).toEqual([
+      { memberId: 'm1', amountMinor: 1234n },
+      { memberId: 'm2', amountMinor: 0n },
+    ]);
+  });
+
+  it('builds percentage splits for the percentage method', () => {
+    const got = newSplitsForImpact('percentage', [
+      { member_id: 'm1', basis_points: 10000 },
+      { member_id: 'm2', basis_points: 0 },
+    ]);
+    expect(got).toEqual([
+      { memberId: 'm1', percentage: 100 },
+      { memberId: 'm2', percentage: 0 },
+    ]);
+  });
+
+  it('returns undefined for the equal method', () => {
+    expect(newSplitsForImpact('equal', [{ member_id: 'm1' }])).toBeUndefined();
+  });
+
+  it('returns undefined when splits are not provided', () => {
+    expect(newSplitsForImpact('exact', undefined)).toBeUndefined();
   });
 });

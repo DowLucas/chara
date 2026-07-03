@@ -44,8 +44,10 @@ import { computeBalanceImpact, MemberDelta } from '@/lib/balance-impact';
 import {
   decideConfirmFlow,
   expenseInputCurrencyAmount,
+  newSplitsForImpact,
   nonShareFieldsDiffer,
   NonShareFieldsSnapshot,
+  pctByMemberFromExpense,
   projectExpenseToInputCurrency,
   splitShareInInputCurrency,
 } from '@/lib/edit-expense-flow';
@@ -81,7 +83,7 @@ function expenseToInitialValue(expense: Expense): ExpenseWizardInitialValue {
       (expense.split_method as 'equal' | 'exact' | 'percentage') || 'equal',
     included: splits.length > 0 ? included : undefined,
     exactByMember,
-    pctByMember: {},
+    pctByMember: pctByMemberFromExpense(expense),
   };
 }
 
@@ -232,13 +234,7 @@ export default function EditExpenseScreen() {
       };
     }
     const amountMinor = BigInt(Math.round(parseFloat(payload.amount || '0') * 100));
-    let newSplits: { memberId: string; amountMinor: bigint }[] | undefined;
-    if (payload.split_method === 'exact' && payload.splits) {
-      newSplits = payload.splits.map((s) => ({
-        memberId: s.member_id,
-        amountMinor: BigInt(Math.round(parseFloat(s.share ?? '0') * 100)),
-      }));
-    }
+    const newSplits = newSplitsForImpact(payload.split_method, payload.splits);
     const participants =
       payload.participants ?? payload.splits?.map((s) => s.member_id) ?? [];
     const projected = projectExpenseToInputCurrency(expense);
@@ -257,7 +253,13 @@ export default function EditExpenseScreen() {
 
   async function handleSubmit(payload: ExpenseWizardSubmitPayload) {
     if (!expense) return;
-    const impact = buildImpact(payload);
+    let impact: ReturnType<typeof buildImpact>;
+    try {
+      impact = buildImpact(payload);
+    } catch (e: any) {
+      setSubmitError(e?.message || t('impactSheet.errorGeneric'));
+      return;
+    }
     const flow = decideConfirmFlow({
       nonShareFieldsChanged: nonShareFieldsDiffer(
         snapshotFromPayload(payload, expense),
