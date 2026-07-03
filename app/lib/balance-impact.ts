@@ -33,8 +33,8 @@ export type ImpactInput = {
   newPayerId: string;
   newSplitMethod: 'equal' | 'exact' | 'percentage';
   newParticipants: string[];
-  /** Required when `newSplitMethod` is `exact`. */
-  newSplits?: { memberId: string; amountMinor: bigint }[];
+  /** Required when `newSplitMethod` is `exact` or `percentage`. */
+  newSplits?: { memberId: string; amountMinor?: bigint; percentage?: number }[];
   /** All members of the group (used to resolve display names). */
   members: GroupMember[];
   /** All settlements for the group, including reverted ones. */
