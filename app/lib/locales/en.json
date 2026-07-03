@@ -219,13 +219,28 @@
     "title": "Archived groups"
   },
   "categories": {
+    "charity": "charity",
     "drinks": "drinks",
+    "electronics": "electronics",
+    "entertainment": "entertainment",
     "food": "food",
     "general": "general",
+    "gifts": "gifts",
     "groceries": "groceries",
+    "health": "health",
+    "home": "home",
+    "insurance": "insurance",
+    "kids": "kids",
     "other": "other",
+    "personal_care": "personal care",
+    "pets": "pets",
     "rent": "rent",
-    "transport": "transport"
+    "shopping": "shopping",
+    "sports": "sports",
+    "subscriptions": "subscriptions",
+    "transport": "transport",
+    "travel": "travel",
+    "utilities": "utilities"
   },
   "common": {
     "back": "Back",
@@ -373,6 +388,14 @@
     "open": "Open group",
     "share": "Share invite link",
     "shareMessage": "Join \"{{name}}\" on Chara: {{link}}"
+  },
+  "groupCategories": {
+    "editorHint": "Only enabled categories show up when adding an expense and in the receipt-scan suggestion. At least one must stay enabled.",
+    "errorTitle": "Couldn't save categories",
+    "loadError": "Couldn't load categories.",
+    "saveCta": "Save",
+    "saving": "Saving…",
+    "title": "Categories"
   },
   "groupDetail": {
     "activity": "Activity",
@@ -537,6 +560,10 @@
       "leaveError": "Couldn't leave",
       "manageCta": "Manage members",
       "title": "Members"
+    },
+    "preferences": {
+      "categories": "Categories",
+      "eyebrow": "PREFERENCES"
     },
     "quickActions": {
       "eyebrow": "INVITE",

@@ -215,13 +215,28 @@
     "title": "已归档群组"
   },
   "categories": {
+    "charity": "慈善",
     "drinks": "饮品",
+    "electronics": "电子产品",
+    "entertainment": "娱乐",
     "food": "餐饮",
     "general": "综合",
+    "gifts": "礼物",
     "groceries": "超市",
+    "health": "健康",
+    "home": "家居",
+    "insurance": "保险",
+    "kids": "孩子",
     "other": "其他",
+    "personal_care": "个人护理",
+    "pets": "宠物",
     "rent": "房租",
-    "transport": "交通"
+    "shopping": "购物",
+    "sports": "运动",
+    "subscriptions": "订阅",
+    "transport": "交通",
+    "travel": "旅行",
+    "utilities": "水电费"
   },
   "common": {
     "back": "返回",
@@ -366,6 +381,14 @@
     "open": "打开群组",
     "share": "分享邀请链接",
     "shareMessage": "来加入“{{name}}”：{{link}}"
+  },
+  "groupCategories": {
+    "editorHint": "只有已启用的分类会在添加支出和收据扫描建议中显示。至少需保留一个分类处于启用状态。",
+    "errorTitle": "无法保存分类",
+    "loadError": "无法加载分类。",
+    "saveCta": "保存",
+    "saving": "保存中…",
+    "title": "分类"
   },
   "groupDetail": {
     "activity": "动态",
@@ -530,6 +553,10 @@
       "leaveError": "退出失败",
       "manageCta": "管理成员",
       "title": "成员"
+    },
+    "preferences": {
+      "categories": "分类",
+      "eyebrow": "偏好设置"
     },
     "quickActions": {
       "eyebrow": "邀请",

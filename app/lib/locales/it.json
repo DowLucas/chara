@@ -220,13 +220,28 @@
     "title": "Gruppi archiviati"
   },
   "categories": {
+    "charity": "beneficenza",
     "drinks": "drink",
+    "electronics": "elettronica",
+    "entertainment": "intrattenimento",
     "food": "ristorante",
     "general": "generale",
+    "gifts": "regali",
     "groceries": "spesa",
+    "health": "salute",
+    "home": "casa",
+    "insurance": "assicurazione",
+    "kids": "bambini",
     "other": "altro",
+    "personal_care": "cura personale",
+    "pets": "animali",
     "rent": "affitto",
-    "transport": "trasporti"
+    "shopping": "shopping",
+    "sports": "sport",
+    "subscriptions": "abbonamenti",
+    "transport": "trasporti",
+    "travel": "viaggi",
+    "utilities": "utenze"
   },
   "common": {
     "back": "Indietro",
@@ -371,6 +386,14 @@
     "open": "Apri gruppo",
     "share": "Condividi link di invito",
     "shareMessage": "Vieni nel gruppo \"{{name}}\" su Chara: {{link}}"
+  },
+  "groupCategories": {
+    "editorHint": "Solo le categorie attivate compaiono quando aggiungi una spesa e nel suggerimento della scansione dello scontrino. Almeno una deve restare attivata.",
+    "errorTitle": "Impossibile salvare le categorie",
+    "loadError": "Impossibile caricare le categorie.",
+    "saveCta": "Salva",
+    "saving": "Salvataggio…",
+    "title": "Categorie"
   },
   "groupDetail": {
     "activity": "Attività",
@@ -543,6 +566,10 @@
       "leaveError": "Non sono riuscito a farti uscire",
       "manageCta": "Gestisci membri",
       "title": "Membri"
+    },
+    "preferences": {
+      "categories": "Categorie",
+      "eyebrow": "PREFERENZE"
     },
     "quickActions": {
       "eyebrow": "INVITA",

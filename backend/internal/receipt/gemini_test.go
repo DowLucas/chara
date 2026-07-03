@@ -51,7 +51,7 @@ func TestGeminiScanner_Scan_HappyPath(t *testing.T) {
 	s := NewGemini("test-key", WithGeminiBaseURL(srv.URL))
 
 	imgBytes := []byte{0xff, 0xd8, 0xff, 0xe0} // first bytes of a JPEG
-	got, err := s.Scan(context.Background(), imgBytes, "image/jpeg", "")
+	got, err := s.Scan(context.Background(), imgBytes, "image/jpeg", "", nil)
 	require.NoError(t, err)
 
 	assert.Equal(t, "Groceries at ICA Maxi", got.Title)
@@ -84,7 +84,7 @@ func TestGeminiScanner_Scan_StripsCodeFence(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/png", "")
+	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/png", "", nil)
 	require.NoError(t, err)
 	assert.EqualValues(t, 500, got.TotalMinor) // "5" → 5.00 → 500 minor
 	assert.Equal(t, "EUR", got.Currency)
@@ -103,7 +103,7 @@ func TestGeminiScanner_Scan_ParsesItems(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "")
+	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "", nil)
 	require.NoError(t, err)
 	require.Len(t, got.Items, 3)
 	assert.Equal(t, "Burger", got.Items[0].Description)
@@ -125,7 +125,7 @@ func TestGeminiScanner_Scan_ItemsOptional(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "")
+	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "", nil)
 	require.NoError(t, err)
 	assert.Empty(t, got.Items)
 }
@@ -141,12 +141,172 @@ func TestGeminiScanner_Scan_ItemDefaults(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "")
+	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "", nil)
 	require.NoError(t, err)
 	require.Len(t, got.Items, 1)
 	assert.EqualValues(t, 1, got.Items[0].Qty)
 	assert.EqualValues(t, 3000, got.Items[0].TotalMinor)
 	assert.EqualValues(t, 3000, got.Items[0].UnitPriceMinor)
+}
+
+func TestGeminiScanner_Scan_ParsesValidCategory(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(geminiTextResponse(t,
+			`{"merchant":"ICA Maxi","date":"","currency":"SEK","total":"50.00","subtotal":"","tax":"","tip":"","category":"groceries"}`,
+		))
+	}))
+	defer srv.Close()
+
+	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "", nil)
+	require.NoError(t, err)
+	assert.Equal(t, "groceries", got.Category)
+}
+
+func TestGeminiScanner_Scan_DropsUnknownCategory(t *testing.T) {
+	// A category the model hallucinates outside the entire catalog should be
+	// dropped rather than passed through — the mobile category list is
+	// closed, and an unrecognised value would just fail to render an icon.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(geminiTextResponse(t,
+			`{"merchant":"X","date":"","currency":"SEK","total":"50.00","subtotal":"","tax":"","tip":"","category":"spaceship-fuel"}`,
+		))
+	}))
+	defer srv.Close()
+
+	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "", nil)
+	require.NoError(t, err)
+	assert.Empty(t, got.Category)
+}
+
+func TestGeminiScanner_Scan_CategoryOptional(t *testing.T) {
+	// Older/absent category field parses fine with an empty Category —
+	// mobile clients already tolerate this and fall back to the default.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(geminiTextResponse(t,
+			`{"merchant":"X","date":"","currency":"SEK","total":"50.00","subtotal":"","tax":"","tip":""}`,
+		))
+	}))
+	defer srv.Close()
+
+	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "", nil)
+	require.NoError(t, err)
+	assert.Empty(t, got.Category)
+}
+
+func TestGeminiScanner_Scan_CategoryCaseInsensitive(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(geminiTextResponse(t,
+			`{"merchant":"X","date":"","currency":"SEK","total":"50.00","subtotal":"","tax":"","tip":"","category":"  Food "}`,
+		))
+	}))
+	defer srv.Close()
+
+	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "", nil)
+	require.NoError(t, err)
+	assert.Equal(t, "food", got.Category)
+}
+
+func TestGeminiScanner_Scan_RestrictsCategoryToAllowedList(t *testing.T) {
+	// A group that only enabled "food" and "drinks" shouldn't get a
+	// "groceries" suggestion back, even though it's a globally valid slug.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(geminiTextResponse(t,
+			`{"merchant":"X","date":"","currency":"SEK","total":"50.00","subtotal":"","tax":"","tip":"","category":"groceries"}`,
+		))
+	}))
+	defer srv.Close()
+
+	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).
+		Scan(context.Background(), []byte{1}, "image/jpeg", "", []string{"food", "drinks"})
+	require.NoError(t, err)
+	assert.Empty(t, got.Category)
+}
+
+func TestGeminiScanner_Scan_AllowsCategoryInAllowedList(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(geminiTextResponse(t,
+			`{"merchant":"X","date":"","currency":"SEK","total":"50.00","subtotal":"","tax":"","tip":"","category":"food"}`,
+		))
+	}))
+	defer srv.Close()
+
+	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).
+		Scan(context.Background(), []byte{1}, "image/jpeg", "", []string{"food", "drinks"})
+	require.NoError(t, err)
+	assert.Equal(t, "food", got.Category)
+}
+
+func TestGeminiScanner_Scan_EmptyAllowedListUsesFullDefaultCatalog(t *testing.T) {
+	// nil/empty allowedCategories means "group has no configuration" — falls
+	// back to the full default catalog, not the old narrow 5-value set.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(geminiTextResponse(t,
+			`{"merchant":"X","date":"","currency":"SEK","total":"50.00","subtotal":"","tax":"","tip":"","category":"electronics"}`,
+		))
+	}))
+	defer srv.Close()
+
+	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).
+		Scan(context.Background(), []byte{1}, "image/jpeg", "", nil)
+	require.NoError(t, err)
+	assert.Equal(t, "electronics", got.Category)
+}
+
+func TestGeminiScanner_Scan_CatchAllOnlyAllowedListFallsBackToFullCatalog(t *testing.T) {
+	// A group whose category_slugs is exactly ["general","other"] passes
+	// category.Validate (non-empty, known slugs) but has nothing specific
+	// to restrict AI guesses to. Rather than a degenerate empty prompt/
+	// allowlist that permanently disables suggestions for that group,
+	// this should fall back to the full default catalog.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(geminiTextResponse(t,
+			`{"merchant":"X","date":"","currency":"SEK","total":"50.00","subtotal":"","tax":"","tip":"","category":"electronics"}`,
+		))
+	}))
+	defer srv.Close()
+
+	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).
+		Scan(context.Background(), []byte{1}, "image/jpeg", "", []string{"general", "other"})
+	require.NoError(t, err)
+	assert.Equal(t, "electronics", got.Category)
+}
+
+func TestGeminiScanner_Scan_NeverAllowsGeneralOrOtherCatchAlls(t *testing.T) {
+	// Catch-alls are never something the AI should guess, even if a caller
+	// mistakenly includes them in the allowed list.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(geminiTextResponse(t,
+			`{"merchant":"X","date":"","currency":"SEK","total":"50.00","subtotal":"","tax":"","tip":"","category":"general"}`,
+		))
+	}))
+	defer srv.Close()
+
+	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).
+		Scan(context.Background(), []byte{1}, "image/jpeg", "", []string{"general", "food"})
+	require.NoError(t, err)
+	assert.Empty(t, got.Category)
+}
+
+func TestGeminiScanner_Scan_PromptListsOnlyAllowedCategories(t *testing.T) {
+	var capturedReq geminiRequest
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		require.NoError(t, err)
+		require.NoError(t, json.Unmarshal(body, &capturedReq))
+		_, _ = w.Write(geminiTextResponse(t,
+			`{"merchant":"X","date":"","currency":"SEK","total":"50.00","subtotal":"","tax":"","tip":""}`,
+		))
+	}))
+	defer srv.Close()
+
+	_, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).
+		Scan(context.Background(), []byte{1}, "image/jpeg", "", []string{"food", "drinks"})
+	require.NoError(t, err)
+
+	promptText := capturedReq.Contents[0].Parts[0].Text
+	assert.Contains(t, promptText, "food")
+	assert.Contains(t, promptText, "drinks")
+	assert.NotContains(t, promptText, "insurance")
 }
 
 func TestGeminiScanner_Scan_TitleFallsBackToMerchant(t *testing.T) {
@@ -159,7 +319,7 @@ func TestGeminiScanner_Scan_TitleFallsBackToMerchant(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "")
+	got, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "", nil)
 	require.NoError(t, err)
 	assert.Equal(t, "Pressbyrån", got.Title)
 }
@@ -170,7 +330,7 @@ func TestGeminiScanner_Scan_UnreadableErrorPayload(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	_, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "")
+	_, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "", nil)
 	assert.ErrorIs(t, err, ErrUnreadable)
 }
 
@@ -182,7 +342,7 @@ func TestGeminiScanner_Scan_UnknownCurrency(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	_, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "")
+	_, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "", nil)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "unsupported currency")
 }
@@ -195,7 +355,7 @@ func TestGeminiScanner_Scan_TotalZeroIsUnreadable(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	_, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "")
+	_, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "", nil)
 	assert.ErrorIs(t, err, ErrUnreadable)
 }
 
@@ -206,13 +366,13 @@ func TestGeminiScanner_Scan_PropagatesUpstreamError(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	_, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "")
+	_, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "", nil)
 	require.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "400"), "want HTTP status in error, got %v", err)
 }
 
 func TestGeminiScanner_Scan_EmptyImageRejected(t *testing.T) {
-	_, err := NewGemini("k").Scan(context.Background(), nil, "image/jpeg", "")
+	_, err := NewGemini("k").Scan(context.Background(), nil, "image/jpeg", "", nil)
 	require.Error(t, err)
 	assert.False(t, errors.Is(err, ErrUnreadable))
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -12,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/DowLucas/chara/internal/category"
 	"github.com/DowLucas/chara/internal/config"
 	"github.com/DowLucas/chara/internal/currency"
 	"github.com/DowLucas/chara/internal/db"
@@ -84,6 +86,11 @@ type GroupResponse struct {
 	// can disable currency pickers proactively instead of learning at save
 	// time via 409 {"code":"group_currency_locked"}.
 	CurrencyLocked bool      `json:"currency_locked"`
+	// CategorySlugs is the group's enabled expense-category ids, in display
+	// order — always resolved (falls back to category.Default() when the
+	// group has no explicit configuration), so clients never need their own
+	// default-fallback logic.
+	CategorySlugs []string  `json:"category_slugs"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -104,9 +111,20 @@ func groupToResponse(g db.Group, currencyLocked bool) GroupResponse {
 		IsArchived:     g.IsArchived,
 		IsLocked:       g.IsLocked,
 		CurrencyLocked: currencyLocked,
+		CategorySlugs:  resolveCategorySlugs(g.CategorySlugs),
 		CreatedAt:      g.CreatedAt.Time,
 		UpdatedAt:      g.UpdatedAt.Time,
 	}
+}
+
+// resolveCategorySlugs returns the group's configured category slugs, or
+// the full default catalog when the group hasn't configured any (NULL in
+// the DB, which sqlc surfaces as a nil/empty slice).
+func resolveCategorySlugs(stored []string) []string {
+	if len(stored) == 0 {
+		return category.Default()
+	}
+	return stored
 }
 
 // isCurrencyLocked returns true when the group has at least one active
@@ -398,9 +416,10 @@ func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Name     *string `json:"name"`
-		Currency *string `json:"currency"`
-		Language *string `json:"language"`
+		Name          *string  `json:"name"`
+		Currency      *string  `json:"currency"`
+		Language      *string  `json:"language"`
+		CategorySlugs []string `json:"category_slugs"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -467,6 +486,17 @@ func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) {
 			snapshot.Changed = append(snapshot.Changed, "language")
 			snapshot.Language = *req.Language
 			snapshot.OldLanguage = prev.Language
+		}
+	}
+	if req.CategorySlugs != nil {
+		validated, err := category.Validate(req.CategorySlugs)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if !slices.Equal(validated, resolveCategorySlugs(prev.CategorySlugs)) {
+			params.CategorySlugs = validated
+			snapshot.Changed = append(snapshot.Changed, "category_slugs")
 		}
 	}
 

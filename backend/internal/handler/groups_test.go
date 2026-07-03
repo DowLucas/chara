@@ -241,6 +241,106 @@ func TestGroups_Update_OwnerCanRename(t *testing.T) {
 	assert.Equal(t, "New Name", updated.Name)
 }
 
+// ── Update: category_slugs ───────────────────────────────────────────────────
+
+func TestGroups_Create_DefaultsToFullCategoryCatalog(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_catdefault"), "Alice")
+	token := env.MintToken(t, alice.ID, alice.Email)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups", `{"name":"Trip","currency":"SEK"}`, token))
+	require.Equal(t, http.StatusCreated, rr.Code)
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&body))
+	slugs, ok := body["category_slugs"].([]any)
+	require.True(t, ok, "category_slugs should be present and an array")
+	assert.NotEmpty(t, slugs)
+	assert.Equal(t, "general", slugs[0])
+}
+
+func TestGroups_Update_SetsCategorySlugs(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_catset"), "Alice")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Trip", "SEK", alice.ID, "Alice")
+	token := env.MintToken(t, alice.ID, alice.Email)
+
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+group.ID,
+		`{"category_slugs":["food","transport","rent"]}`, token))
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&body))
+	slugs := body["category_slugs"].([]any)
+	assert.Equal(t, []any{"food", "transport", "rent"}, slugs)
+
+	updated, err := env.Queries.GetGroupByID(context.Background(), group.ID)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"food", "transport", "rent"}, updated.CategorySlugs)
+}
+
+func TestGroups_Update_RejectsUnknownCategorySlug(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_catbad"), "Alice")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Trip", "SEK", alice.ID, "Alice")
+	token := env.MintToken(t, alice.ID, alice.Email)
+
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+group.ID,
+		`{"category_slugs":["food","spaceship-fuel"]}`, token))
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestGroups_Update_RejectsEmptyCategorySlugs(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_catempty"), "Alice")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Trip", "SEK", alice.ID, "Alice")
+	token := env.MintToken(t, alice.ID, alice.Email)
+
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+group.ID,
+		`{"category_slugs":[]}`, token))
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestGroups_Update_MemberCannotSetCategorySlugs(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_catmember"), "Alice")
+	bob := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "bob_catmember"), "Bob")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Trip", "SEK", alice.ID, "Alice")
+	testutil.AddMember(t, env.Pool, group.ID, bob.ID, "Bob")
+	bobToken := env.MintToken(t, bob.ID, bob.Email)
+
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+group.ID,
+		`{"category_slugs":["food"]}`, bobToken))
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+}
+
+func TestGroups_Update_UnchangedCategorySlugsWritesNoActivity(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_catnochange"), "Alice")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Trip", "SEK", alice.ID, "Alice")
+	token := env.MintToken(t, alice.ID, alice.Email)
+
+	// Set once.
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+group.ID,
+		`{"category_slugs":["food","rent"]}`, token))
+	require.Equal(t, http.StatusOK, rr.Code)
+
+	// Re-send the same set — should be a no-op, not a fresh "changed" entry.
+	rr2 := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+group.ID,
+		`{"category_slugs":["food","rent"]}`, token))
+	require.Equal(t, http.StatusOK, rr2.Code)
+
+	activity, err := env.Queries.ListActivityByGroup(context.Background(), db.ListActivityByGroupParams{
+		GroupID: group.ID, Limit: 10, Offset: 0,
+	})
+	require.NoError(t, err)
+	count := 0
+	for _, a := range activity {
+		if a.EventType == "group_updated" {
+			count++
+		}
+	}
+	assert.Equal(t, 1, count, "second identical PATCH should not write another activity row")
+}
+
 func TestGroups_Update_MemberCannotUpdate(t *testing.T) {
 	env := setupEnv(t)
 	alice := testutil.CreateUser(t, env.Pool, "alice11@example.com", "Alice")

@@ -11,9 +11,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/DowLucas/chara/internal/auth"
+	"github.com/DowLucas/chara/internal/middleware"
 	"github.com/DowLucas/chara/internal/receipt"
 )
 
@@ -24,16 +27,44 @@ type fakeScanner struct {
 	resp *receipt.Receipt
 	err  error
 	// captured inputs for assertions
-	gotBytes []byte
-	gotMIME  string
-	gotLang  string
+	gotBytes      []byte
+	gotMIME       string
+	gotLang       string
+	gotCategories []string
 }
 
-func (f *fakeScanner) Scan(_ context.Context, imageData []byte, mimeType, language string) (*receipt.Receipt, error) {
+func (f *fakeScanner) Scan(_ context.Context, imageData []byte, mimeType, language string, allowedCategories []string) (*receipt.Receipt, error) {
 	f.gotBytes = append([]byte(nil), imageData...)
 	f.gotMIME = mimeType
 	f.gotLang = language
+	f.gotCategories = allowedCategories
 	return f.resp, f.err
+}
+
+// fakeGroupCategories is a hand-rolled stub for GroupCategoriesLookup. A
+// missing groupID entry simulates either "unknown group" or "caller isn't a
+// member" — both are ErrNoRows in the real adapter and both fail open the
+// same way, so the fake doesn't need to model them separately.
+type fakeGroupCategories struct {
+	slugs      map[string][]string // groupID -> category_slugs
+	gotGroupID string
+	gotUserID  string
+}
+
+func (f *fakeGroupCategories) GetGroupCategorySlugs(_ context.Context, groupID, userID string) ([]string, error) {
+	f.gotGroupID = groupID
+	f.gotUserID = userID
+	slugs, ok := f.slugs[groupID]
+	if !ok {
+		return nil, pgx.ErrNoRows
+	}
+	return slugs, nil
+}
+
+// authedRequest builds a claims-bearing context.Context, mirroring what
+// middleware.Authenticate injects in production.
+func authedContext(userID string) context.Context {
+	return context.WithValue(context.Background(), middleware.ClaimsKey, &auth.Claims{UserID: userID})
 }
 
 func newReceiptsRouter(scanner receipt.Scanner) http.Handler {
@@ -45,9 +76,16 @@ func newReceiptsRouter(scanner receipt.Scanner) http.Handler {
 
 func postScan(t *testing.T, router http.Handler, body any) *httptest.ResponseRecorder {
 	t.Helper()
+	return postScanWithContext(t, router, body, context.Background())
+}
+
+func postScanWithContext(
+	t *testing.T, router http.Handler, body any, ctx context.Context,
+) *httptest.ResponseRecorder {
+	t.Helper()
 	var buf bytes.Buffer
 	require.NoError(t, json.NewEncoder(&buf).Encode(body))
-	req := httptest.NewRequest(http.MethodPost, "/api/receipts/scan", &buf)
+	req := httptest.NewRequest(http.MethodPost, "/api/receipts/scan", &buf).WithContext(ctx)
 	req.Header.Set("Content-Type", "application/json")
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, req)
@@ -80,6 +118,117 @@ func TestReceiptScan_HappyPath(t *testing.T) {
 	// The handler should have decoded base64 before calling the scanner.
 	assert.Equal(t, imgBytes, fake.gotBytes)
 	assert.Equal(t, "image/jpeg", fake.gotMIME)
+}
+
+func TestReceiptScan_IncludesCategory(t *testing.T) {
+	fake := &fakeScanner{resp: &receipt.Receipt{
+		Merchant: "ICA Maxi", Currency: "SEK", TotalMinor: 100, Category: "groceries",
+	}}
+	rr := postScan(t, newReceiptsRouter(fake), map[string]string{
+		"image_base64": base64.StdEncoding.EncodeToString([]byte{1, 2}),
+		"mime_type":    "image/jpeg",
+	})
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+	var got scanResponse
+	require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &got))
+	assert.Equal(t, "groceries", got.Category)
+}
+
+func TestReceiptScan_OmitsEmptyCategory(t *testing.T) {
+	fake := &fakeScanner{resp: &receipt.Receipt{Merchant: "X", Currency: "USD", TotalMinor: 100}}
+	rr := postScan(t, newReceiptsRouter(fake), map[string]string{
+		"image_base64": base64.StdEncoding.EncodeToString([]byte{1, 2}),
+		"mime_type":    "image/jpeg",
+	})
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+	assert.NotContains(t, rr.Body.String(), `"category"`)
+}
+
+func TestReceiptScan_ResolvesGroupCategorySlugs(t *testing.T) {
+	fake := &fakeScanner{resp: &receipt.Receipt{Merchant: "X", Currency: "SEK", TotalMinor: 100}}
+	groups := &fakeGroupCategories{slugs: map[string][]string{"g1": {"food", "drinks"}}}
+	h := NewReceiptHandler(fake).WithGroupCategories(groups)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/receipts/scan", h.Scan)
+
+	rr := postScanWithContext(t, mux, map[string]string{
+		"image_base64": base64.StdEncoding.EncodeToString([]byte{1, 2}),
+		"mime_type":    "image/jpeg",
+		"group_id":     "g1",
+	}, authedContext("alice"))
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+	assert.Equal(t, []string{"food", "drinks"}, fake.gotCategories)
+
+	// The authenticated caller's id must reach the lookup — this is what
+	// lets a real GroupCategoriesLookup implementation verify membership.
+	assert.Equal(t, "g1", groups.gotGroupID)
+	assert.Equal(t, "alice", groups.gotUserID)
+}
+
+func TestReceiptScan_UnauthenticatedRequestSkipsGroupLookup(t *testing.T) {
+	// No claims in context (shouldn't happen in production — this route is
+	// always behind middleware.Authenticate — but must not panic, and must
+	// not attempt a lookup with an empty caller id).
+	fake := &fakeScanner{resp: &receipt.Receipt{Merchant: "X", Currency: "SEK", TotalMinor: 100}}
+	groups := &fakeGroupCategories{slugs: map[string][]string{"g1": {"food", "drinks"}}}
+	h := NewReceiptHandler(fake).WithGroupCategories(groups)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/receipts/scan", h.Scan)
+
+	rr := postScan(t, mux, map[string]string{
+		"image_base64": base64.StdEncoding.EncodeToString([]byte{1, 2}),
+		"mime_type":    "image/jpeg",
+		"group_id":     "g1",
+	})
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+	assert.Empty(t, fake.gotCategories)
+	assert.Empty(t, groups.gotGroupID, "lookup should never be attempted without an authenticated caller")
+}
+
+func TestReceiptScan_NoGroupIDMeansNoAllowlistRestriction(t *testing.T) {
+	fake := &fakeScanner{resp: &receipt.Receipt{Merchant: "X", Currency: "SEK", TotalMinor: 100}}
+	h := NewReceiptHandler(fake).WithGroupCategories(&fakeGroupCategories{
+		slugs: map[string][]string{"g1": {"food", "drinks"}},
+	})
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/receipts/scan", h.Scan)
+
+	rr := postScan(t, mux, map[string]string{
+		"image_base64": base64.StdEncoding.EncodeToString([]byte{1, 2}),
+		"mime_type":    "image/jpeg",
+	})
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+	assert.Empty(t, fake.gotCategories)
+}
+
+func TestReceiptScan_UnknownGroupIDFailsOpenToNoRestriction(t *testing.T) {
+	// A stale/deleted group_id shouldn't fail the whole scan — the category
+	// suggestion is advisory, not load-bearing.
+	fake := &fakeScanner{resp: &receipt.Receipt{Merchant: "X", Currency: "SEK", TotalMinor: 100}}
+	h := NewReceiptHandler(fake).WithGroupCategories(&fakeGroupCategories{slugs: map[string][]string{}})
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/receipts/scan", h.Scan)
+
+	rr := postScanWithContext(t, mux, map[string]string{
+		"image_base64": base64.StdEncoding.EncodeToString([]byte{1, 2}),
+		"mime_type":    "image/jpeg",
+		"group_id":     "nonexistent",
+	}, authedContext("alice"))
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+	assert.Empty(t, fake.gotCategories)
+}
+
+func TestReceiptScan_GroupIDWithoutLookupConfiguredIsHarmless(t *testing.T) {
+	// Self-host / test wiring that never calls WithGroupCategories shouldn't
+	// panic just because a client sent a group_id.
+	fake := &fakeScanner{resp: &receipt.Receipt{Merchant: "X", Currency: "SEK", TotalMinor: 100}}
+	rr := postScan(t, newReceiptsRouter(fake), map[string]string{
+		"image_base64": base64.StdEncoding.EncodeToString([]byte{1, 2}),
+		"mime_type":    "image/jpeg",
+		"group_id":     "g1",
+	})
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+	assert.Empty(t, fake.gotCategories)
 }
 
 func TestReceiptScan_ForwardsLanguageToScanner(t *testing.T) {

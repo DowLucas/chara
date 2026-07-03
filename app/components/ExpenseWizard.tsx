@@ -41,12 +41,14 @@ import { AmountField } from '@/components/AmountField';
 import { CurrencyPicker } from '@/components/CurrencyPicker';
 import { ActionSheet } from '@/components/ActionSheet';
 import {
-  EXPENSE_CATEGORIES,
   DEFAULT_CATEGORY,
   categoryLabel,
   categoryLabelKey,
+  categoryPickerOptions,
+  inferCategoryFromTitle,
   loadCustomCategories,
   addCustomCategory,
+  resolveGroupCategorySlugs,
 } from '@/lib/categories';
 import { TextPromptModal } from '@/components/TextPromptModal';
 import { loadDraft, saveDraft, clearDraft } from '@/lib/expense-draft';
@@ -112,6 +114,7 @@ export interface ExpenseWizardHandle {
     amount?: string;
     currency?: string;
     title?: string;
+    category?: string;
     date?: Date;
   }): void;
   applyScanItemsAssignment(perMemberMinor: Record<string, number>): void;
@@ -121,6 +124,9 @@ export interface ExpenseWizardProps {
   mode: 'create' | 'edit';
   groupName: string;
   groupCurrency: string;
+  /** The group's enabled category ids (Group.category_slugs). Omitted/empty
+   *  falls back to the full default catalog (see resolveGroupCategorySlugs). */
+  groupCategorySlugs?: string[];
   members: GroupMember[];
   /** Member id whose user_id === current user. Used as the default payer in
    *  create mode and to render "You" in the split list. The wizard compares
@@ -214,6 +220,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       mode,
       groupName,
       groupCurrency: groupCurrencyProp,
+      groupCategorySlugs,
       members,
       currentUserMemberId,
       initialValue,
@@ -251,9 +258,39 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
     const [category, setCategory] = useState<string>(
       initialValue?.category ?? DEFAULT_CATEGORY,
     );
+    // True once the category was set explicitly (user tap or a receipt-scan
+    // suggestion) — blocks the title-based auto-suggestion from clobbering
+    // it. Create mode only; edit mode never runs the heuristic at all.
+    const [categoryTouched, setCategoryTouched] = useState(false);
     const [categorySheetOpen, setCategorySheetOpen] = useState(false);
     const [customCategories, setCustomCategories] = useState<string[]>([]);
     const [categoryInputOpen, setCategoryInputOpen] = useState(false);
+
+    const enabledCategories = useMemo(
+      () => resolveGroupCategorySlugs(groupCategorySlugs),
+      [groupCategorySlugs],
+    );
+
+    // Live keyword-based category suggestion from the title, offline and
+    // free — only while the user hasn't picked (or been suggested) a
+    // category explicitly, and only for a brand-new expense.
+    //
+    // `enabledCategories` is in the deps deliberately: groupCategorySlugs
+    // typically arrives after mount (the host screen fetches the group), so
+    // this can first run against the full default catalog fallback, suggest
+    // a category, then need to re-check once the group's real (narrower)
+    // catalog loads — correcting a suggestion that's no longer valid for
+    // this group rather than leaving a stale one to reach submit.
+    useEffect(() => {
+      if (mode !== 'create' || categoryTouched) return;
+      const suggested = inferCategoryFromTitle(title);
+      if (suggested && (enabledCategories as readonly string[]).includes(suggested)) {
+        setCategory(suggested);
+      } else if (!(enabledCategories as readonly string[]).includes(category)) {
+        setCategory(enabledCategories[0] ?? DEFAULT_CATEGORY);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [title, mode, categoryTouched, enabledCategories]);
 
     useEffect(() => {
       let cancelled = false;
@@ -304,6 +341,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
         initialValue?.paidByMemberId ?? currentUserMemberId ?? '',
       );
       setCategory(initialValue?.category ?? DEFAULT_CATEGORY);
+      setCategoryTouched(!!initialValue?.category);
       setMethod(initialValue?.splitMethod ?? 'equal');
       setIncluded(buildInitialIncluded(members, initialValue));
       setExactByMember(initialValue?.exactByMember ?? {});
@@ -341,7 +379,10 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
           if (d.dateMs != null) setDate(new Date(d.dateMs));
           if (d.currency != null) setSelectedCurrency(d.currency);
           if (d.payerMemberId != null) setPayerMemberId(d.payerMemberId);
-          if (d.category != null) setCategory(d.category);
+          if (d.category != null) {
+            setCategory(d.category);
+            setCategoryTouched(true);
+          }
           if (d.method != null) setMethod(d.method);
           if (d.included != null) setIncluded(d.included);
           if (d.exactByMember != null) setExactByMember(d.exactByMember);
@@ -610,6 +651,10 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
           if (input.currency) setSelectedCurrency(input.currency);
           if (input.title) setTitle(input.title);
           if (input.date) setDate(input.date);
+          if (input.category && (enabledCategories as readonly string[]).includes(input.category)) {
+            setCategory(input.category);
+            setCategoryTouched(true);
+          }
         },
         applyScanItemsAssignment(perMemberMinor) {
           if (Object.keys(perMemberMinor).length === 0) return;
@@ -857,13 +902,19 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
           onClose={() => setCategorySheetOpen(false)}
           title={t('addExpense.categoryLabel')}
           options={[
-            ...EXPENSE_CATEGORIES.map((key) => ({
+            ...categoryPickerOptions(enabledCategories, category).map((key) => ({
               label: t(categoryLabelKey(key)),
-              onPress: () => setCategory(key),
+              onPress: () => {
+                setCategory(key);
+                setCategoryTouched(true);
+              },
             })),
             ...customCategories.map((c) => ({
               label: c,
-              onPress: () => setCategory(c),
+              onPress: () => {
+                setCategory(c);
+                setCategoryTouched(true);
+              },
             })),
             { label: t('addExpense.addCategory'), onPress: () => setCategoryInputOpen(true) },
           ]}
@@ -879,6 +930,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
             setCategoryInputOpen(false);
             addCustomCategory(name).then(setCustomCategories);
             setCategory(name.trim());
+            setCategoryTouched(true);
           }}
         />
       </KeyboardAvoidingView>

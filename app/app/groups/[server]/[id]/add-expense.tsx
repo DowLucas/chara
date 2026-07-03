@@ -137,6 +137,7 @@ export default function AddExpenseScreen() {
       amount: applied.amount_minor > 0 ? (applied.amount_minor / 100).toFixed(2) : undefined,
       currency: applied.currency,
       title: receipt.title || receipt.merchant || undefined,
+      category: receipt.category || undefined,
       date: receipt.date
         ? (() => {
             const parsed = new Date(receipt.date + 'T00:00:00');
@@ -283,6 +284,7 @@ export default function AddExpenseScreen() {
         onCancel={() => router.back()}
         groupName={group?.name ?? '—'}
         groupCurrency={group?.currency ?? 'SEK'}
+        groupCategorySlugs={group?.category_slugs}
         members={members}
         currentUserMemberId={currentUserMemberId}
         convertFx={api.convertFx}
@@ -304,6 +306,7 @@ export default function AddExpenseScreen() {
         <ReceiptScanner
           groupCurrency={group?.currency ?? 'SEK'}
           groupLanguage={group?.language}
+          groupId={id}
           onScanned={handleReceiptScanned}
           onCancel={() => setScannerOpen(false)}
         />

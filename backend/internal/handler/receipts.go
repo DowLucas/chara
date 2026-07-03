@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/DowLucas/chara/internal/billing"
+	"github.com/DowLucas/chara/internal/db"
 	"github.com/DowLucas/chara/internal/middleware"
 	"github.com/DowLucas/chara/internal/receipt"
 	"github.com/jackc/pgx/v5"
@@ -32,6 +33,7 @@ type ReceiptHandler struct {
 	counter   *billing.Counter
 	freeCap   int
 	overrides CapOverrides
+	groups    GroupCategoriesLookup
 }
 
 // CapOverrides resolves a per-user OCR cap override. The billing counter
@@ -39,6 +41,38 @@ type ReceiptHandler struct {
 // the global FreeOCRCap always anticipated. *db.Queries satisfies it.
 type CapOverrides interface {
 	GetOCRCapOverride(ctx context.Context, userID string) (pgtype.Int4, error)
+}
+
+// GroupCategoriesLookup resolves a group's configured (or default) category
+// catalog, used to restrict the AI's category guess to categories the group
+// actually has enabled. userID must be a member of groupID — implementations
+// reject (and callers should fail open, not 403) otherwise, so a client can't
+// probe another group's category configuration via group_id. Use
+// [NewGroupCategoriesLookup] to adapt *db.Queries.
+type GroupCategoriesLookup interface {
+	GetGroupCategorySlugs(ctx context.Context, groupID, userID string) ([]string, error)
+}
+
+// dbGroupCategories adapts *db.Queries to GroupCategoriesLookup.
+type dbGroupCategories struct{ queries *db.Queries }
+
+// NewGroupCategoriesLookup wires the real DB-backed lookup for production use.
+func NewGroupCategoriesLookup(queries *db.Queries) GroupCategoriesLookup {
+	return dbGroupCategories{queries: queries}
+}
+
+func (d dbGroupCategories) GetGroupCategorySlugs(ctx context.Context, groupID, userID string) ([]string, error) {
+	if _, err := d.queries.GetGroupMemberByUserAndGroup(ctx, db.GetGroupMemberByUserAndGroupParams{
+		GroupID: groupID,
+		UserID:  pgtype.Text{String: userID, Valid: true},
+	}); err != nil {
+		return nil, err
+	}
+	g, err := d.queries.GetGroupByID(ctx, groupID)
+	if err != nil {
+		return nil, err
+	}
+	return resolveCategorySlugs(g.CategorySlugs), nil
 }
 
 func NewReceiptHandler(scanner receipt.Scanner) *ReceiptHandler {
@@ -61,6 +95,15 @@ func (h *ReceiptHandler) WithCapOverrides(o CapOverrides) *ReceiptHandler {
 	return h
 }
 
+// WithGroupCategories wires the group-category lookup used to restrict the
+// AI's category guess to the requesting group's configured catalog. Optional
+// — without it (or without a group_id on the request), the scanner falls
+// back to the full default catalog. Returns the receiver for chaining.
+func (h *ReceiptHandler) WithGroupCategories(g GroupCategoriesLookup) *ReceiptHandler {
+	h.groups = g
+	return h
+}
+
 type scanRequest struct {
 	ImageBase64 string `json:"image_base64"`
 	MIMEType    string `json:"mime_type"`
@@ -69,6 +112,10 @@ type scanRequest struct {
 	// (typically the mobile app) pass the active group's language so all
 	// members see the same title regardless of who scanned the receipt.
 	Language string `json:"language"`
+	// GroupID scopes the AI's category guess to that group's configured
+	// category_slugs. Optional — omitted/unknown falls back to the full
+	// default catalog rather than failing the scan.
+	GroupID string `json:"group_id"`
 }
 
 type scanResponse struct {
@@ -76,6 +123,9 @@ type scanResponse struct {
 	Merchant      string             `json:"merchant"`
 	Date          string             `json:"date,omitempty"`
 	Currency      string             `json:"currency"`
+	// Category is one of the fixed EXPENSE_CATEGORIES ids the mobile app
+	// renders, or omitted when the scanner had no confident guess.
+	Category      string             `json:"category,omitempty"`
 	TotalMinor    int64              `json:"total_minor"`
 	SubtotalMinor int64              `json:"subtotal_minor,omitempty"`
 	TaxMinor      int64              `json:"tax_minor,omitempty"`
@@ -161,6 +211,11 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Extracted unconditionally: billing (below) only needs it when a
+	// counter is configured, but the group-category lookup needs it
+	// regardless of billing mode, to verify group membership.
+	claims := middleware.ClaimsFromContext(r.Context())
+
 	// Reserve a slot before invoking Gemini. Without a counter (selfhost
 	// or unit tests), the reservation is nil and there's nothing to refund.
 	// `metered` tracks whether this request actually consumed a slot — an
@@ -170,7 +225,6 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 	var meterResult billing.Result
 	var metered bool
 	if h.counter != nil {
-		claims := middleware.ClaimsFromContext(r.Context())
 		if claims == nil || claims.UserID == "" {
 			writeError(w, http.StatusUnauthorized, "missing user context")
 			return
@@ -209,7 +263,21 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	res, scanErr := h.scanner.Scan(r.Context(), imgData, req.MIMEType, req.Language)
+	var allowedCategories []string
+	if req.GroupID != "" && h.groups != nil && claims != nil && claims.UserID != "" {
+		if slugs, err := h.groups.GetGroupCategorySlugs(r.Context(), req.GroupID, claims.UserID); err == nil {
+			allowedCategories = slugs
+		}
+		// A lookup failure — unknown/deleted group, the caller isn't a
+		// member (GetGroupMemberByUserAndGroup returns ErrNoRows), or a
+		// transient DB error — falls back to the full default catalog
+		// rather than failing the scan. The category guess is advisory,
+		// not load-bearing, and this keeps "not a member" indistinguishable
+		// from "unknown group" so group_id can't be used to probe another
+		// group's category configuration.
+	}
+
+	res, scanErr := h.scanner.Scan(r.Context(), imgData, req.MIMEType, req.Language, allowedCategories)
 	if scanErr != nil {
 		// Free the slot we reserved so the user isn't billed for a failure.
 		if reservation != nil {
@@ -243,6 +311,7 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 		Merchant:      res.Merchant,
 		Date:          res.Date,
 		Currency:      res.Currency,
+		Category:      res.Category,
 		TotalMinor:    int64(res.TotalMinor),
 		SubtotalMinor: int64(res.SubtotalMinor),
 		TaxMinor:      int64(res.TaxMinor),

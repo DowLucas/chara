@@ -429,6 +429,12 @@ export interface Group {
    *  group_currency_locked). Frontend uses this to disable the chips
    *  proactively. Optional for backward compat with old servers. */
   currency_locked?: boolean;
+  /** Enabled expense-category ids, in display order — always resolved
+   *  server-side (falls back to the full default catalog when the group
+   *  has no explicit configuration). Optional for backward compat with old
+   *  servers, which callers should treat the same as "full default catalog"
+   *  (see DEFAULT_CATEGORY_SLUGS_FALLBACK in lib/categories.ts). */
+  category_slugs?: string[];
 }
 
 /** Per-currency total for the group's stats card. */
@@ -510,6 +516,9 @@ export interface UpdateGroupInput {
   name?: string;
   currency?: string;
   language?: string;
+  /** Non-empty subset of EXPENSE_CATEGORIES to enable for the group, in
+   *  display order. Omit to leave unchanged. */
+  category_slugs?: string[];
 }
 
 export function updateGroup(id: string, input: UpdateGroupInput) {
@@ -954,6 +963,9 @@ export interface ScannedReceipt {
   merchant: string;
   date?: string;
   currency: string;
+  /** Best-guess expense category id (one of EXPENSE_CATEGORIES in
+   *  lib/categories.ts), or absent when the scanner had no confident guess. */
+  category?: string;
   total_minor: number;
   subtotal_minor?: number;
   tax_minor?: number;
@@ -978,13 +990,19 @@ export interface ScannedReceiptItem {
   total_minor: number;
 }
 
-export function scanReceipt(imageBase64: string, mimeType: string, language?: string) {
+export function scanReceipt(
+  imageBase64: string,
+  mimeType: string,
+  language?: string,
+  groupId?: string,
+) {
   return request<ScannedReceipt>('/api/receipts/scan', {
     method: 'POST',
     body: JSON.stringify({
       image_base64: imageBase64,
       mime_type: mimeType,
       ...(language ? { language } : {}),
+      ...(groupId ? { group_id: groupId } : {}),
     }),
   });
 }
@@ -1499,13 +1517,14 @@ export function apiFor(serverUrl: string) {
     },
 
     // Receipt OCR (group-scoped — uses the group's home server)
-    scanReceipt: (imageBase64: string, mimeType: string, language?: string) =>
+    scanReceipt: (imageBase64: string, mimeType: string, language?: string, groupId?: string) =>
       requestOn<ScannedReceipt>(serverUrl, '/api/receipts/scan', {
         method: 'POST',
         body: JSON.stringify({
           image_base64: imageBase64,
           mime_type: mimeType,
           ...(language ? { language } : {}),
+          ...(groupId ? { group_id: groupId } : {}),
         }),
       }),
 
