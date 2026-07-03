@@ -215,13 +215,28 @@
     "title": "アーカイブ済みグループ"
   },
   "categories": {
+    "charity": "寄付",
     "drinks": "飲み物",
+    "electronics": "家電",
+    "entertainment": "娯楽",
     "food": "食事",
     "general": "一般",
+    "gifts": "プレゼント",
     "groceries": "食料品",
+    "health": "健康",
+    "home": "生活用品",
+    "insurance": "保険",
+    "kids": "子ども",
     "other": "その他",
+    "personal_care": "身だしなみ",
+    "pets": "ペット",
     "rent": "家賃",
-    "transport": "交通費"
+    "shopping": "買い物",
+    "sports": "スポーツ",
+    "subscriptions": "サブスク",
+    "transport": "交通費",
+    "travel": "旅行",
+    "utilities": "光熱費"
   },
   "common": {
     "back": "戻る",
@@ -366,6 +381,14 @@
     "open": "グループを開く",
     "share": "招待リンクを共有",
     "shareMessage": "Charaで「{{name}}」に参加: {{link}}"
+  },
+  "groupCategories": {
+    "editorHint": "有効なカテゴリーのみが、支出の追加時やレシートスキャンの提案に表示されます。少なくとも1つは有効にしておく必要があります。",
+    "errorTitle": "カテゴリーを保存できませんでした",
+    "loadError": "カテゴリーを読み込めませんでした。",
+    "saveCta": "保存",
+    "saving": "保存中…",
+    "title": "カテゴリー"
   },
   "groupDetail": {
     "activity": "アクティビティ",
@@ -530,6 +553,10 @@
       "leaveError": "退出できませんでした",
       "manageCta": "メンバーを管理",
       "title": "メンバー"
+    },
+    "preferences": {
+      "categories": "カテゴリー",
+      "eyebrow": "設定"
     },
     "quickActions": {
       "eyebrow": "招待",

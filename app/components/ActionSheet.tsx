@@ -5,8 +5,10 @@ import {
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  ScrollView,
   StyleSheet,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import i18n from '@/lib/i18n';
@@ -30,8 +32,13 @@ interface Props {
 /** Bottom sheet on Android / Web, native iOS sheet on iOS. */
 export function ActionSheet({ visible, onClose, title, options }: Props) {
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const { sheetMaxWidth } = useResponsive();
   const cancelLabel = i18n.t('common.cancel');
+  // Cap the scrollable options area so a long list (e.g. the ~20-category
+  // picker) never pushes the sheet past the top of the screen — the rest
+  // scrolls instead. Leaves room for the title row, Cancel row, and insets.
+  const optionsMaxHeight = windowHeight * 0.6;
 
   // Pending option callback. We dismiss the Modal first, then fire the
   // callback only after the Modal has fully torn down its underlying view
@@ -82,33 +89,39 @@ export function ActionSheet({ visible, onClose, title, options }: Props) {
             <Text style={styles.title}>{title}</Text>
           </View>
         )}
-        {options.map((opt, i) => (
-          <TouchableOpacity
-            key={`${opt.label}-${i}`}
-            style={[styles.row, i === 0 && !title && styles.rowFirst]}
-            onPress={() => {
-              // Queue the action and dismiss. On iOS the Modal fires
-              // onDismiss after its presentation animation completes, which
-              // is the only safe moment to launch another view controller
-              // (camera, image picker, share sheet). onDismiss does not
-              // fire on Android, so we fall back to a setTimeout there.
-              pendingActionRef.current = opt.onPress;
-              closeWithGuard();
-              if (Platform.OS !== 'ios') {
-                setTimeout(() => {
-                  const action = pendingActionRef.current;
-                  pendingActionRef.current = null;
-                  if (action) action();
-                }, 80);
-              }
-            }}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.rowLabel, opt.destructive && styles.rowLabelDestructive]}>
-              {opt.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        <ScrollView
+          style={{ maxHeight: optionsMaxHeight }}
+          bounces={false}
+          showsVerticalScrollIndicator
+        >
+          {options.map((opt, i) => (
+            <TouchableOpacity
+              key={`${opt.label}-${i}`}
+              style={[styles.row, i === 0 && !title && styles.rowFirst]}
+              onPress={() => {
+                // Queue the action and dismiss. On iOS the Modal fires
+                // onDismiss after its presentation animation completes, which
+                // is the only safe moment to launch another view controller
+                // (camera, image picker, share sheet). onDismiss does not
+                // fire on Android, so we fall back to a setTimeout there.
+                pendingActionRef.current = opt.onPress;
+                closeWithGuard();
+                if (Platform.OS !== 'ios') {
+                  setTimeout(() => {
+                    const action = pendingActionRef.current;
+                    pendingActionRef.current = null;
+                    if (action) action();
+                  }, 80);
+                }
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.rowLabel, opt.destructive && styles.rowLabelDestructive]}>
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
         <TouchableOpacity style={[styles.row, styles.cancelRow]} onPress={closeWithGuard} activeOpacity={0.7}>
           <Text style={[styles.rowLabel, styles.cancelLabel]}>{cancelLabel}</Text>
         </TouchableOpacity>

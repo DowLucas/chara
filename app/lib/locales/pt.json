@@ -220,13 +220,28 @@
     "title": "Grupos arquivados"
   },
   "categories": {
+    "charity": "caridade",
     "drinks": "bebidas",
+    "electronics": "eletrônicos",
+    "entertainment": "entretenimento",
     "food": "comida",
     "general": "geral",
+    "gifts": "presentes",
     "groceries": "mercado",
+    "health": "saúde",
+    "home": "casa",
+    "insurance": "seguro",
+    "kids": "crianças",
     "other": "outros",
+    "personal_care": "cuidados pessoais",
+    "pets": "animais de estimação",
     "rent": "aluguel",
-    "transport": "transporte"
+    "shopping": "compras",
+    "sports": "esporte",
+    "subscriptions": "assinaturas",
+    "transport": "transporte",
+    "travel": "viagens",
+    "utilities": "contas"
   },
   "common": {
     "back": "Voltar",
@@ -371,6 +386,14 @@
     "open": "Abrir grupo",
     "share": "Compartilhar link de convite",
     "shareMessage": "Entre em \"{{name}}\" no Chara: {{link}}"
+  },
+  "groupCategories": {
+    "editorHint": "Somente categorias ativadas aparecem ao adicionar uma despesa e na sugestão da leitura de recibo. Pelo menos uma deve permanecer ativada.",
+    "errorTitle": "Não foi possível salvar as categorias",
+    "loadError": "Não foi possível carregar as categorias.",
+    "saveCta": "Salvar",
+    "saving": "Salvando…",
+    "title": "Categorias"
   },
   "groupDetail": {
     "activity": "Atividade",
@@ -543,6 +566,10 @@
       "leaveError": "Não foi possível sair",
       "manageCta": "Gerenciar membros",
       "title": "Membros"
+    },
+    "preferences": {
+      "categories": "Categorias",
+      "eyebrow": "PREFERÊNCIAS"
     },
     "quickActions": {
       "eyebrow": "CONVIDAR",

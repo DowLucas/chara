@@ -35,7 +35,7 @@ type fakeReceiptScanner struct {
 	callCount atomic.Int32
 }
 
-func (f *fakeReceiptScanner) Scan(_ context.Context, _ []byte, _, _ string) (*receipt.Receipt, error) {
+func (f *fakeReceiptScanner) Scan(_ context.Context, _ []byte, _, _ string, _ []string) (*receipt.Receipt, error) {
 	f.callCount.Add(1)
 	f.mu.Lock()
 	defer f.mu.Unlock()

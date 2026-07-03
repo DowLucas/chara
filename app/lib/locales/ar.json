@@ -235,13 +235,28 @@
     "title": "المجموعات المؤرشفة"
   },
   "categories": {
+    "charity": "تبرعات",
     "drinks": "مشروبات",
+    "electronics": "إلكترونيات",
+    "entertainment": "ترفيه",
     "food": "طعام",
     "general": "عام",
+    "gifts": "هدايا",
     "groceries": "بقالة",
+    "health": "صحة",
+    "home": "منزل",
+    "insurance": "تأمين",
+    "kids": "أطفال",
     "other": "أخرى",
+    "personal_care": "عناية شخصية",
+    "pets": "حيوانات أليفة",
     "rent": "إيجار",
-    "transport": "مواصلات"
+    "shopping": "تسوق",
+    "sports": "رياضة",
+    "subscriptions": "اشتراكات",
+    "transport": "مواصلات",
+    "travel": "سفر",
+    "utilities": "فواتير"
   },
   "common": {
     "back": "رجوع",
@@ -386,6 +401,14 @@
     "open": "فتح المجموعة",
     "share": "مشاركة رابط الدعوة",
     "shareMessage": "انضم إلى \"{{name}}\" على Chara: {{link}}"
+  },
+  "groupCategories": {
+    "editorHint": "تظهر فقط الفئات المفعّلة عند إضافة مصروف وفي اقتراح مسح الإيصال. يجب أن تبقى فئة واحدة على الأقل مفعّلة.",
+    "errorTitle": "تعذّر حفظ الفئات",
+    "loadError": "تعذّر تحميل الفئات.",
+    "saveCta": "حفظ",
+    "saving": "جارٍ الحفظ…",
+    "title": "الفئات"
   },
   "groupDetail": {
     "activity": "النشاط",
@@ -590,6 +613,10 @@
       "leaveError": "تعذرت المغادرة",
       "manageCta": "إدارة الأعضاء",
       "title": "الأعضاء"
+    },
+    "preferences": {
+      "categories": "الفئات",
+      "eyebrow": "التفضيلات"
     },
     "quickActions": {
       "eyebrow": "دعوة",

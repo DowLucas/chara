@@ -215,13 +215,28 @@
     "title": "Arkiverte grupper"
   },
   "categories": {
+    "charity": "veldedighet",
     "drinks": "drikke",
+    "electronics": "elektronikk",
+    "entertainment": "underholdning",
     "food": "mat",
     "general": "generelt",
+    "gifts": "gaver",
     "groceries": "dagligvarer",
+    "health": "helse",
+    "home": "hjem",
+    "insurance": "forsikring",
+    "kids": "barn",
     "other": "annet",
+    "personal_care": "personlig pleie",
+    "pets": "kjæledyr",
     "rent": "leie",
-    "transport": "transport"
+    "shopping": "shopping",
+    "sports": "sport",
+    "subscriptions": "abonnementer",
+    "transport": "transport",
+    "travel": "reise",
+    "utilities": "forsyning"
   },
   "common": {
     "back": "Tilbake",
@@ -366,6 +381,14 @@
     "open": "Åpne gruppe",
     "share": "Del invitasjonslenke",
     "shareMessage": "Bli med i «{{name}}» på Chara: {{link}}"
+  },
+  "groupCategories": {
+    "editorHint": "Bare aktiverte kategorier vises når du legger til en utgift, og i kvitteringsskanningens forslag. Minst én må forbli aktivert.",
+    "errorTitle": "Kunne ikke lagre kategorier",
+    "loadError": "Kunne ikke laste kategorier.",
+    "saveCta": "Lagre",
+    "saving": "Lagrer…",
+    "title": "Kategorier"
   },
   "groupDetail": {
     "activity": "Aktivitet",
@@ -530,6 +553,10 @@
       "leaveError": "Kunne ikke forlate",
       "manageCta": "Administrer medlemmer",
       "title": "Medlemmer"
+    },
+    "preferences": {
+      "categories": "Kategorier",
+      "eyebrow": "PREFERANSER"
     },
     "quickActions": {
       "eyebrow": "INVITER",

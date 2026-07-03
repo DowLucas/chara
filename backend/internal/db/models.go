@@ -135,6 +135,7 @@ type Group struct {
 	Language                   string             `db:"language" json:"language"`
 	IsLocked                   bool               `db:"is_locked" json:"is_locked"`
 	InviteTokenCreatedByUserID pgtype.Text        `db:"invite_token_created_by_user_id" json:"invite_token_created_by_user_id"`
+	CategorySlugs              []string           `db:"category_slugs" json:"category_slugs"`
 }
 
 type GroupMember struct {

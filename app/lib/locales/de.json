@@ -215,13 +215,28 @@
     "title": "Archivierte Gruppen"
   },
   "categories": {
+    "charity": "Wohltätigkeit",
     "drinks": "Getränke",
+    "electronics": "Elektronik",
+    "entertainment": "Unterhaltung",
     "food": "Essen",
     "general": "Allgemein",
+    "gifts": "Geschenke",
     "groceries": "Lebensmittel",
+    "health": "Gesundheit",
+    "home": "Zuhause",
+    "insurance": "Versicherung",
+    "kids": "Kinder",
     "other": "Sonstiges",
+    "personal_care": "Körperpflege",
+    "pets": "Haustiere",
     "rent": "Miete",
-    "transport": "Transport"
+    "shopping": "Einkaufen",
+    "sports": "Sport",
+    "subscriptions": "Abonnements",
+    "transport": "Transport",
+    "travel": "Reisen",
+    "utilities": "Nebenkosten"
   },
   "common": {
     "back": "Zurück",
@@ -366,6 +381,14 @@
     "open": "Gruppe öffnen",
     "share": "Einladungslink teilen",
     "shareMessage": "Tritt „{{name}}“ auf Chara bei: {{link}}"
+  },
+  "groupCategories": {
+    "editorHint": "Nur aktivierte Kategorien erscheinen beim Hinzufügen einer Ausgabe und im Beleg-Scan-Vorschlag. Mindestens eine muss aktiviert bleiben.",
+    "errorTitle": "Kategorien konnten nicht gespeichert werden",
+    "loadError": "Kategorien konnten nicht geladen werden.",
+    "saveCta": "Speichern",
+    "saving": "Wird gespeichert…",
+    "title": "Kategorien"
   },
   "groupDetail": {
     "activity": "Aktivität",
@@ -530,6 +553,10 @@
       "leaveError": "Verlassen fehlgeschlagen",
       "manageCta": "Mitglieder verwalten",
       "title": "Mitglieder"
+    },
+    "preferences": {
+      "categories": "Kategorien",
+      "eyebrow": "EINSTELLUNGEN"
     },
     "quickActions": {
       "eyebrow": "EINLADEN",

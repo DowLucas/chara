@@ -39,11 +39,12 @@ ORDER BY g.updated_at DESC;
 
 -- name: UpdateGroup :one
 UPDATE groups
-SET name        = COALESCE(sqlc.narg(name), name),
-    currency    = COALESCE(sqlc.narg(currency), currency),
-    language    = COALESCE(sqlc.narg(language), language),
-    is_archived = COALESCE(sqlc.narg(is_archived), is_archived),
-    updated_at  = NOW()
+SET name           = COALESCE(sqlc.narg(name), name),
+    currency       = COALESCE(sqlc.narg(currency), currency),
+    language       = COALESCE(sqlc.narg(language), language),
+    is_archived    = COALESCE(sqlc.narg(is_archived), is_archived),
+    category_slugs = COALESCE(sqlc.narg(category_slugs), category_slugs),
+    updated_at     = NOW()
 WHERE id = $1
 RETURNING *;
 

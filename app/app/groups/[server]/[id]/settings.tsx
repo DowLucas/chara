@@ -387,6 +387,21 @@ export default function GroupSettingsScreen() {
         </View>
 
 
+        {/* PREFERENCES — category configuration, visible to everyone
+            (owner edits, members view read-only). */}
+        <View style={styles.section}>
+          <Text style={styles.sectionEyebrow}>{t('groupSettings.preferences.eyebrow')}</Text>
+          <View style={styles.list}>
+            <NavRow
+              label={t('groupSettings.preferences.categories')}
+              onPress={() =>
+                group &&
+                router.push(`/groups/${encodeURIComponent(serverUrl)}/${group.id}/categories`)
+              }
+            />
+          </View>
+        </View>
+
         {/* AUTOMATION — recurring bills entry, visible to everyone */}
         <View style={styles.section}>
           <Text style={styles.sectionEyebrow}>{t('recurring.eyebrow')}</Text>

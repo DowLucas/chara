@@ -237,7 +237,8 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 		// (FreeOCRCap = 3/month, v1.0 anti-abuse). Self-hosters pay the
 		// Gemini bill themselves, so no metering: pass a nil counter.
 		if cfg.HasGemini() {
-			receiptH := handler.NewReceiptHandler(receipt.NewGemini(cfg.GeminiAPIKey))
+			receiptH := handler.NewReceiptHandler(receipt.NewGemini(cfg.GeminiAPIKey)).
+				WithGroupCategories(handler.NewGroupCategoriesLookup(queries))
 			if cfg.IsHosted() {
 				receiptH = receiptH.
 					WithCounter(billing.NewCounter(queries), FreeOCRCap).

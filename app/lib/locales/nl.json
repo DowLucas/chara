@@ -215,13 +215,28 @@
     "title": "Gearchiveerde groepen"
   },
   "categories": {
+    "charity": "liefdadigheid",
     "drinks": "drankjes",
+    "electronics": "elektronica",
+    "entertainment": "entertainment",
     "food": "eten",
     "general": "algemeen",
+    "gifts": "cadeaus",
     "groceries": "boodschappen",
+    "health": "gezondheid",
+    "home": "huis",
+    "insurance": "verzekering",
+    "kids": "kinderen",
     "other": "overig",
+    "personal_care": "persoonlijke verzorging",
+    "pets": "huisdieren",
     "rent": "huur",
-    "transport": "vervoer"
+    "shopping": "winkelen",
+    "sports": "sport",
+    "subscriptions": "abonnementen",
+    "transport": "vervoer",
+    "travel": "reizen",
+    "utilities": "nutsvoorzieningen"
   },
   "common": {
     "back": "Terug",
@@ -366,6 +381,14 @@
     "open": "Groep openen",
     "share": "Uitnodigingslink delen",
     "shareMessage": "Word lid van \"{{name}}\" op Chara: {{link}}"
+  },
+  "groupCategories": {
+    "editorHint": "Alleen ingeschakelde categorieën verschijnen bij het toevoegen van een uitgave en in de suggestie van de bonscan. Minstens één moet ingeschakeld blijven.",
+    "errorTitle": "Kon categorieën niet opslaan",
+    "loadError": "Kon categorieën niet laden.",
+    "saveCta": "Opslaan",
+    "saving": "Opslaan…",
+    "title": "Categorieën"
   },
   "groupDetail": {
     "activity": "Activiteit",
@@ -530,6 +553,10 @@
       "leaveError": "Kon niet verlaten",
       "manageCta": "Leden beheren",
       "title": "Leden"
+    },
+    "preferences": {
+      "categories": "Categorieën",
+      "eyebrow": "VOORKEUREN"
     },
     "quickActions": {
       "eyebrow": "UITNODIGEN",
