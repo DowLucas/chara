@@ -196,57 +196,6 @@ export function splitShareInInputCurrency(
  * user's input currency. Used so `computeBalanceImpact` compares like-for-like
  * against new values (which are always in input currency from the form).
  */
-/**
- * Derives `pctByMember` seed values for the split editor from an existing
- * percentage-split expense's stored shares (`share / amount * 100`).
- *
- * Returns `{}` for non-percentage split methods, or when the amount is zero
- * / non-finite (nothing sane to divide by) — callers fall back to the
- * split editor's own even-split default in that case.
- */
-export function pctByMemberFromExpense(
-  expense: Pick<Expense, 'split_method' | 'amount' | 'splits'>,
-): Record<string, string> {
-  if (expense.split_method !== 'percentage') return {};
-  const amount = parseFloat(expense.amount);
-  const splits = expense.splits ?? [];
-  if (!isFinite(amount) || amount === 0 || splits.length === 0) return {};
-  const result: Record<string, string> = {};
-  for (const s of splits) {
-    const share = parseFloat(s.share);
-    result[s.member_id] = (isFinite(share) ? (share / amount) * 100 : 0).toFixed(2);
-  }
-  return result;
-}
-
-/**
- * Translates the wizard's submit-payload `splits` (which carry `share` for
- * exact and `basis_points` for percentage) into the `{ memberId, amountMinor?,
- * percentage? }` shape `computeBalanceImpact`/`computeSplits` expect.
- *
- * Returns `undefined` for `equal` (participants alone are enough) or when
- * `splits` wasn't provided.
- */
-export function newSplitsForImpact(
-  splitMethod: 'equal' | 'exact' | 'percentage',
-  splits: Array<{ member_id: string; share?: string; basis_points?: number }> | undefined,
-): Array<{ memberId: string; amountMinor?: bigint; percentage?: number }> | undefined {
-  if (!splits) return undefined;
-  if (splitMethod === 'exact') {
-    return splits.map((s) => ({
-      memberId: s.member_id,
-      amountMinor: BigInt(Math.round(parseFloat(s.share ?? '0') * 100)),
-    }));
-  }
-  if (splitMethod === 'percentage') {
-    return splits.map((s) => ({
-      memberId: s.member_id,
-      percentage: (s.basis_points ?? 0) / 100,
-    }));
-  }
-  return undefined;
-}
-
 export function projectExpenseToInputCurrency(expense: Expense): Expense {
   if (!expense.original_amount || !expense.original_currency) return expense;
   return {
