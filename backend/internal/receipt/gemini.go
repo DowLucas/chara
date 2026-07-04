@@ -41,6 +41,7 @@ const extractionPrompt = `You are a receipt parser. Look at the attached receipt
     • Mixed items, unclear category     → use the merchant name alone, e.g. "Pressbyrån"
   Prefer "<thing> at <merchant>" when one or two item categories dominate; fall back to just the merchant name if items are too varied to summarise. WRITE THIS FIELD IN {{LANGUAGE}} regardless of what language the receipt itself is in — translate item names and connectors but keep the merchant name as printed on the receipt (do not transliterate proper nouns).
 - merchant: the business name as it appears on the receipt (string).
+- category: your best guess at the expense category, as ONE of these exact lowercase strings: {{CATEGORIES}}. If nothing fits confidently, return "" (empty string) — do not guess.
 - date: the transaction date in YYYY-MM-DD form. If the year is missing, infer the current year. Empty string if unreadable.
 - currency: the ISO 4217 currency code (e.g. "SEK", "EUR", "USD"). Infer from the currency symbol or country if not explicit.
 - total: the final amount paid as a decimal string (e.g. "123.45"). This is the field the user owes.
@@ -61,7 +62,7 @@ const extractionPrompt = `You are a receipt parser. Look at the attached receipt
     • Keep item descriptions in the receipt's original language (do NOT translate item names).
 
 Respond with a single JSON object and no other text. Example:
-{"title":"Groceries at ICA Maxi","merchant":"ICA Maxi","date":"2026-05-20","currency":"SEK","total":"284.50","subtotal":"227.60","tax":"56.90","tip":"","items":[{"description":"Mjölk 1L","qty":2,"unit_price":"15.90","total":"31.80"},{"description":"Bröd","qty":1,"unit_price":"32.50","total":"32.50"}]}
+{"title":"Groceries at ICA Maxi","merchant":"ICA Maxi","date":"2026-05-20","currency":"SEK","total":"284.50","subtotal":"227.60","tax":"56.90","tip":"","category":"groceries","items":[{"description":"Mjölk 1L","qty":2,"unit_price":"15.90","total":"31.80"},{"description":"Bröd","qty":1,"unit_price":"32.50","total":"32.50"}]}
 
 If the image is not a receipt or you cannot read a total, respond with {"error":"unreadable"}.`
 
@@ -156,6 +157,7 @@ type geminiExtracted struct {
 	Subtotal string                `json:"subtotal"`
 	Tax      string                `json:"tax"`
 	Tip      string                `json:"tip"`
+	Category string                `json:"category"`
 	Items    []geminiExtractedItem `json:"items"`
 	Error    string                `json:"error"`
 }
@@ -168,7 +170,7 @@ type geminiExtractedItem struct {
 }
 
 // Scan implements [Scanner].
-func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType string, langCode string) (*Receipt, error) {
+func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType string, langCode string, allowedCategories []string) (*Receipt, error) {
 	if len(imageData) == 0 {
 		return nil, errors.New("receipt: empty image data")
 	}
@@ -184,6 +186,12 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 		langLabel = language.Name(langCode)
 	}
 	prompt := strings.Replace(extractionPrompt, "{{LANGUAGE}}", langLabel, 1)
+
+	// The catalog the model is allowed to guess from — the requesting
+	// group's configured category_slugs, or the full default catalog.
+	categoryCatalog := specificCategoryCatalog(allowedCategories)
+	prompt = strings.Replace(prompt, "{{CATEGORIES}}",
+		strings.Join(quoteAll(categoryCatalog), ", "), 1)
 
 	reqBody := geminiRequest{
 		Contents: []geminiContent{{
@@ -322,6 +330,7 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 		Merchant:      merchant,
 		Date:          strings.TrimSpace(extracted.Date),
 		Currency:      curCode,
+		Category:      normaliseCategory(extracted.Category, categoryCatalog),
 		TotalMinor:    total,
 		SubtotalMinor: subtotal,
 		TaxMinor:      tax,
@@ -340,6 +349,16 @@ func stripCodeFence(s string) string {
 	s = strings.TrimPrefix(s, "```")
 	s = strings.TrimSuffix(s, "```")
 	return strings.TrimSpace(s)
+}
+
+// quoteAll wraps each string in double quotes, for interpolating a category
+// catalog into the extraction prompt as a human-readable quoted list.
+func quoteAll(ss []string) []string {
+	out := make([]string, len(ss))
+	for i, s := range ss {
+		out[i] = `"` + s + `"`
+	}
+	return out
 }
 
 func truncate(s string, n int) string {

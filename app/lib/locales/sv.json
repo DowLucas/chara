@@ -215,13 +215,28 @@
     "title": "Arkiverade grupper"
   },
   "categories": {
+    "charity": "välgörenhet",
     "drinks": "dryck",
+    "electronics": "elektronik",
+    "entertainment": "nöje",
     "food": "mat",
     "general": "allmänt",
+    "gifts": "presenter",
     "groceries": "matvaror",
+    "health": "hälsa",
+    "home": "hem",
+    "insurance": "försäkring",
+    "kids": "barn",
     "other": "övrigt",
+    "personal_care": "personlig vård",
+    "pets": "husdjur",
     "rent": "hyra",
-    "transport": "transport"
+    "shopping": "shopping",
+    "sports": "sport",
+    "subscriptions": "prenumerationer",
+    "transport": "transport",
+    "travel": "resor",
+    "utilities": "räkningar"
   },
   "common": {
     "back": "Tillbaka",
@@ -366,6 +381,14 @@
     "open": "Öppna grupp",
     "share": "Dela inbjudningslänk",
     "shareMessage": "Gå med i ”{{name}}” på Chara: {{link}}"
+  },
+  "groupCategories": {
+    "editorHint": "Endast aktiverade kategorier visas när du lägger till en utgift och i kvittoskanningens förslag. Minst en måste förbli aktiverad.",
+    "errorTitle": "Det gick inte att spara kategorier",
+    "loadError": "Det gick inte att läsa in kategorier.",
+    "saveCta": "Spara",
+    "saving": "Sparar…",
+    "title": "Kategorier"
   },
   "groupDetail": {
     "activity": "Aktivitet",
@@ -530,6 +553,10 @@
       "leaveError": "Kunde inte lämna",
       "manageCta": "Hantera medlemmar",
       "title": "Medlemmar"
+    },
+    "preferences": {
+      "categories": "Kategorier",
+      "eyebrow": "INSTÄLLNINGAR"
     },
     "quickActions": {
       "eyebrow": "BJUD IN",

@@ -215,13 +215,28 @@
     "title": "Arkistoidut ryhmät"
   },
   "categories": {
+    "charity": "hyväntekeväisyys",
     "drinks": "juomat",
+    "electronics": "elektroniikka",
+    "entertainment": "viihde",
     "food": "ruoka",
     "general": "yleinen",
+    "gifts": "lahjat",
     "groceries": "ruokaostokset",
+    "health": "terveys",
+    "home": "koti",
+    "insurance": "vakuutus",
+    "kids": "lapset",
     "other": "muu",
+    "personal_care": "henkilökohtainen hoito",
+    "pets": "lemmikit",
     "rent": "vuokra",
-    "transport": "matkat"
+    "shopping": "ostokset",
+    "sports": "urheilu",
+    "subscriptions": "tilaukset",
+    "transport": "matkat",
+    "travel": "matkailu",
+    "utilities": "laskut"
   },
   "common": {
     "back": "Takaisin",
@@ -366,6 +381,14 @@
     "open": "Avaa ryhmä",
     "share": "Jaa kutsulinkki",
     "shareMessage": "Liity ryhmään ”{{name}}” Charassa: {{link}}"
+  },
+  "groupCategories": {
+    "editorHint": "Vain käytössä olevat kategoriat näkyvät kulua lisättäessä ja kuittiskannauksen ehdotuksessa. Vähintään yhden on pysyttävä käytössä.",
+    "errorTitle": "Kategorioiden tallennus epäonnistui",
+    "loadError": "Kategorioiden lataus epäonnistui.",
+    "saveCta": "Tallenna",
+    "saving": "Tallennetaan…",
+    "title": "Kategoriat"
   },
   "groupDetail": {
     "activity": "Tapahtumat",
@@ -530,6 +553,10 @@
       "leaveError": "Poistuminen ei onnistunut",
       "manageCta": "Hallitse jäseniä",
       "title": "Jäsenet"
+    },
+    "preferences": {
+      "categories": "Kategoriat",
+      "eyebrow": "ASETUKSET"
     },
     "quickActions": {
       "eyebrow": "KUTSU",

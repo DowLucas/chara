@@ -220,13 +220,28 @@
     "title": "Grupos archivados"
   },
   "categories": {
+    "charity": "caridad",
     "drinks": "bebidas",
+    "electronics": "electrónica",
+    "entertainment": "entretenimiento",
     "food": "comida",
     "general": "general",
+    "gifts": "regalos",
     "groceries": "supermercado",
+    "health": "salud",
+    "home": "hogar",
+    "insurance": "seguro",
+    "kids": "niños",
     "other": "otros",
+    "personal_care": "cuidado personal",
+    "pets": "mascotas",
     "rent": "alquiler",
-    "transport": "transporte"
+    "shopping": "compras",
+    "sports": "deporte",
+    "subscriptions": "suscripciones",
+    "transport": "transporte",
+    "travel": "viajes",
+    "utilities": "servicios"
   },
   "common": {
     "back": "Atrás",
@@ -371,6 +386,14 @@
     "open": "Abrir grupo",
     "share": "Compartir enlace de invitación",
     "shareMessage": "Únete a \"{{name}}\" en Chara: {{link}}"
+  },
+  "groupCategories": {
+    "editorHint": "Solo las categorías activadas aparecen al añadir un gasto y en la sugerencia del escaneo de recibos. Debe quedar al menos una activada.",
+    "errorTitle": "No se pudieron guardar las categorías",
+    "loadError": "No se pudieron cargar las categorías.",
+    "saveCta": "Guardar",
+    "saving": "Guardando…",
+    "title": "Categorías"
   },
   "groupDetail": {
     "activity": "Actividad",
@@ -543,6 +566,10 @@
       "leaveError": "No se pudo salir",
       "manageCta": "Gestionar miembros",
       "title": "Miembros"
+    },
+    "preferences": {
+      "categories": "Categorías",
+      "eyebrow": "PREFERENCIAS"
     },
     "quickActions": {
       "eyebrow": "INVITAR",

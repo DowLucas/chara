@@ -220,13 +220,28 @@
     "title": "Groupes archivés"
   },
   "categories": {
+    "charity": "caritatif",
     "drinks": "boissons",
+    "electronics": "électronique",
+    "entertainment": "divertissement",
     "food": "resto",
     "general": "général",
+    "gifts": "cadeaux",
     "groceries": "courses",
+    "health": "santé",
+    "home": "maison",
+    "insurance": "assurance",
+    "kids": "enfants",
     "other": "autre",
+    "personal_care": "soins personnels",
+    "pets": "animaux",
     "rent": "loyer",
-    "transport": "transport"
+    "shopping": "shopping",
+    "sports": "sport",
+    "subscriptions": "abonnements",
+    "transport": "transport",
+    "travel": "voyage",
+    "utilities": "charges"
   },
   "common": {
     "back": "Retour",
@@ -371,6 +386,14 @@
     "open": "Ouvrir le groupe",
     "share": "Partager le lien d'invitation",
     "shareMessage": "Rejoins « {{name}} » sur Chara : {{link}}"
+  },
+  "groupCategories": {
+    "editorHint": "Seules les catégories activées apparaissent lors de l'ajout d'une dépense et dans la suggestion du scan de reçu. Au moins une doit rester activée.",
+    "errorTitle": "Impossible d'enregistrer les catégories",
+    "loadError": "Impossible de charger les catégories.",
+    "saveCta": "Enregistrer",
+    "saving": "Enregistrement…",
+    "title": "Catégories"
   },
   "groupDetail": {
     "activity": "Activité",
@@ -543,6 +566,10 @@
       "leaveError": "Impossible de quitter",
       "manageCta": "Gérer les membres",
       "title": "Membres"
+    },
+    "preferences": {
+      "categories": "Catégories",
+      "eyebrow": "PRÉFÉRENCES"
     },
     "quickActions": {
       "eyebrow": "INVITER",

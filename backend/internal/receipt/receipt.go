@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/DowLucas/chara/internal/category"
 	"github.com/DowLucas/chara/internal/currency"
 	"github.com/DowLucas/chara/internal/money"
 )
@@ -27,10 +28,16 @@ type Receipt struct {
 	// the expense is for, combining merchant + line items, e.g. "Groceries
 	// at ICA Maxi" or "Lunch at Café Husaren". This is what the mobile app
 	// prefills into the expense "what was this for" field.
-	Title         string       `json:"title"`
-	Merchant      string       `json:"merchant"`
-	Date          string       `json:"date"` // YYYY-MM-DD, empty if not detected
-	Currency      string       `json:"currency"`
+	Title    string `json:"title"`
+	Merchant string `json:"merchant"`
+	Date     string `json:"date"` // YYYY-MM-DD, empty if not detected
+	Currency string `json:"currency"`
+	// Category is one of the fixed expense-category ids the mobile app
+	// renders (see app/lib/categories.ts EXPENSE_CATEGORIES — keep the two
+	// lists in sync). Empty when the model didn't return a confident guess
+	// or returned a value outside the allowlist; callers should treat an
+	// empty Category as "no suggestion, leave the default."
+	Category      string       `json:"category"`
 	TotalMinor    money.Amount `json:"total_minor"`
 	SubtotalMinor money.Amount `json:"subtotal_minor,omitempty"`
 	TaxMinor      money.Amount `json:"tax_minor,omitempty"`
@@ -54,6 +61,52 @@ type Item struct {
 	TotalMinor     money.Amount `json:"total_minor"`
 }
 
+// specificCategoryCatalog returns the AI-guessable category catalog: the
+// group's allowed slugs when provided (from groups.category_slugs), or the
+// full default catalog otherwise — always minus "general"/"other", the
+// catch-all defaults that are never worth the model guessing at.
+//
+// A group can validly configure category_slugs as exactly ["general",
+// "other"] (category.Validate only requires non-empty known slugs). That
+// would otherwise strip to an empty catalog here, degenerating the prompt
+// and permanently disabling category suggestions for that group with no
+// error anywhere — so an empty result after filtering falls back to the
+// full default catalog instead.
+func specificCategoryCatalog(allowed []string) []string {
+	base := allowed
+	if len(base) == 0 {
+		base = category.Default()
+	}
+	out := make([]string, 0, len(base))
+	for _, c := range base {
+		if c == "general" || c == "other" {
+			continue
+		}
+		out = append(out, c)
+	}
+	if len(out) == 0 {
+		return specificCategoryCatalog(nil)
+	}
+	return out
+}
+
+// normaliseCategory lowercases/trims s and validates it against allowed
+// (case-normalised). Returns "" for anything outside that set, so an
+// unrecognised, hallucinated, or out-of-scope-for-this-group category never
+// reaches the client.
+func normaliseCategory(s string, allowed []string) string {
+	c := strings.ToLower(strings.TrimSpace(s))
+	if c == "" {
+		return ""
+	}
+	for _, a := range allowed {
+		if a == c {
+			return c
+		}
+	}
+	return ""
+}
+
 // Scanner takes a raw image and returns a structured receipt.
 //
 // imageData is the decoded image bytes (not base64). mimeType is the MIME
@@ -61,8 +114,11 @@ type Item struct {
 // language is an ISO 639-1 code naming the language the AI should generate
 // the `title` field in (e.g. "en", "sv"). Empty means "use the receipt's
 // own language", which is the historical behaviour.
+// allowedCategories restricts the AI's Receipt.Category guess to that set
+// (typically the requesting group's configured category_slugs). Empty/nil
+// falls back to the full default catalog (see category.Default).
 type Scanner interface {
-	Scan(ctx context.Context, imageData []byte, mimeType string, language string) (*Receipt, error)
+	Scan(ctx context.Context, imageData []byte, mimeType string, language string, allowedCategories []string) (*Receipt, error)
 }
 
 // ErrUnreadable indicates the model could not extract a usable total —

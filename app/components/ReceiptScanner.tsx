@@ -59,6 +59,9 @@ interface Props {
    *  the title in. Passed to /api/receipts/scan as `language`. Empty/
    *  omitted falls back to the receipt's own language on the backend. */
   groupLanguage?: string;
+  /** Scopes the AI's category guess to this group's configured
+   *  category_slugs. Omitted falls back to the full default catalog. */
+  groupId?: string;
   onScanned: (result: ReceiptScanResult) => void;
   onCancel: () => void;
 }
@@ -96,7 +99,7 @@ type Phase =
  *
  * Only mount this when the server reports `features.ocr === true`.
  */
-export function ReceiptScanner({ groupCurrency, groupLanguage, onScanned, onCancel }: Props) {
+export function ReceiptScanner({ groupCurrency, groupLanguage, groupId, onScanned, onCancel }: Props) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
@@ -172,7 +175,7 @@ export function ReceiptScanner({ groupCurrency, groupLanguage, onScanned, onCanc
     // network call runs.
     setPhase({ kind: 'analyzing', photoUri });
     try {
-      const receipt = await scanReceipt(base64, mimeType, groupLanguage);
+      const receipt = await scanReceipt(base64, mimeType, groupLanguage, groupId);
       setPhase({ kind: 'result', photoUri, receipt, imageBase64: base64, imageMime: mimeType });
     } catch (e) {
       // Hosted free-tier cap hit. Don't render the generic error state — open

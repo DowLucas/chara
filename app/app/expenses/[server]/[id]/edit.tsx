@@ -354,6 +354,7 @@ export default function EditExpenseScreen() {
           mode="edit"
           groupName={group.name}
           groupCurrency={group.currency}
+          groupCategorySlugs={group.category_slugs}
           members={group.members}
           currentUserMemberId={currentUserMemberId}
           initialValue={initialValue}
