@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
 import { hapticSuccess } from '@/lib/haptics';
@@ -87,6 +88,7 @@ export default function CreateGroupScreen() {
       style={[styles.container, { paddingTop: insets.top + spacing.s2 }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
       <ContentContainer>
       <TouchableOpacity style={styles.back} onPress={() => router.back()} accessibilityLabel={t('common.back')}>
         <Feather name="chevron-left" size={22} color={colors.graphite} />
@@ -203,8 +205,7 @@ export default function CreateGroupScreen() {
         onSelect={setCurrency}
       />
       </ContentContainer>
-
-      <View style={{ flex: 1 }} />
+      </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
         <ContentContainer>
@@ -225,6 +226,7 @@ export default function CreateGroupScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper, paddingHorizontal: spacing.s5 },
+  scroll: { flex: 1 },
   back: { paddingVertical: spacing.s2, marginLeft: -spacing.s2, alignSelf: 'flex-start' },
   header: { gap: spacing.s2, marginTop: spacing.s4, marginBottom: spacing.s5 },
   eyebrow: {

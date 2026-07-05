@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
 import { router } from 'expo-router';
@@ -80,7 +81,8 @@ export default function OnboardingNameScreen() {
       style={[styles.container, { paddingTop: insets.top + spacing.s2 }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ContentContainer style={{ flex: 1 }}>
+      <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
+      <ContentContainer>
       <View style={styles.header}>
         <Text style={styles.eyebrow}>{t('onboardingName.eyebrow')}</Text>
         <Text style={styles.headline}>{t('onboardingName.headline')}</Text>
@@ -127,9 +129,10 @@ export default function OnboardingNameScreen() {
           style={styles.input}
         />
       </View>
+      </ContentContainer>
+      </ScrollView>
 
-      <View style={{ flex: 1 }} />
-
+      <ContentContainer>
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
         <TouchableOpacity
           style={[styles.cta, !canSubmit && styles.ctaDisabled]}
@@ -161,6 +164,7 @@ export default function OnboardingNameScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper, paddingHorizontal: spacing.s5 },
+  scroll: { flex: 1 },
   header: { gap: spacing.s2, marginTop: spacing.s4, marginBottom: spacing.s5 },
   eyebrow: {
     fontFamily: fontMono,

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Share } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Share, ScrollView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -65,22 +65,26 @@ export default function GroupCreatedScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.s4 }]}>
-      <ContentContainer style={styles.column}>
-        <View style={styles.header}>
-          <Text style={styles.eyebrow}>{t('groupCreated.eyebrow')}</Text>
-          <Text style={styles.headline}>{group.name}</Text>
-          <Text style={styles.body}>{t('groupCreated.body')}</Text>
-        </View>
-
-        <View style={styles.qrWrap}>
-          <View style={styles.qrCard}>
-            <QRCode value={link} size={220} backgroundColor={colors.paper} color={colors.graphite} />
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+        <ContentContainer style={styles.column}>
+          <View style={styles.header}>
+            <Text style={styles.eyebrow}>{t('groupCreated.eyebrow')}</Text>
+            <Text style={styles.headline}>{group.name}</Text>
+            <Text style={styles.body}>{t('groupCreated.body')}</Text>
           </View>
-          <Text style={styles.token} selectable>
-            {group.invite_token}
-          </Text>
-        </View>
 
+          <View style={styles.qrWrap}>
+            <View style={styles.qrCard}>
+              <QRCode value={link} size={220} backgroundColor={colors.paper} color={colors.graphite} />
+            </View>
+            <Text style={styles.token} selectable>
+              {group.invite_token}
+            </Text>
+          </View>
+        </ContentContainer>
+      </ScrollView>
+
+      <ContentContainer>
         <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
           <TouchableOpacity style={styles.cta} onPress={shareLink} activeOpacity={0.85}>
             <Feather name="share-2" size={18} color={colors.fgOnAccent} />
@@ -108,6 +112,8 @@ export default function GroupCreatedScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper, paddingHorizontal: spacing.s5 },
+  scroll: { flex: 1 },
+  scrollContent: { flexGrow: 1 },
   column: { flex: 1 },
   center: { alignItems: 'center', justifyContent: 'center', gap: spacing.s3 },
   header: { gap: spacing.s2, marginBottom: spacing.s5 },
