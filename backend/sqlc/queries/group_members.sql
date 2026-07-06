@@ -4,6 +4,14 @@ VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
 -- name: GetGroupMember :one
+-- Active members only — validators use this to reject removed members as
+-- payers, split participants, or settlement parties. Use
+-- GetGroupMemberIncludingRemoved to resolve historical references.
+SELECT * FROM group_members WHERE id = $1 AND removed_at IS NULL;
+
+-- name: GetGroupMemberIncludingRemoved :one
+-- Historical lookup: resolves soft-deleted members too, e.g. the counterparty
+-- of an existing settlement who has since left the group.
 SELECT * FROM group_members WHERE id = $1;
 
 -- name: GetGroupMemberByUserAndGroup :one

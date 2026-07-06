@@ -213,12 +213,16 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 		return nil, fmt.Errorf("receipt: marshal request: %w", err)
 	}
 
-	url := fmt.Sprintf("%s/models/%s:generateContent?key=%s", s.baseURL, s.model, s.apiKey)
+	url := fmt.Sprintf("%s/models/%s:generateContent", s.baseURL, s.model)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("receipt: build request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	// The key travels in a header, never the URL: a transport-level
+	// *url.Error embeds the full request URL in err.Error(), which must
+	// stay safe to log or surface.
+	req.Header.Set("x-goog-api-key", s.apiKey)
 
 	resp, err := s.client.Do(req)
 	if err != nil {

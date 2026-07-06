@@ -91,9 +91,12 @@ func (q *Queries) DeleteGroupMember(ctx context.Context, id string) error {
 }
 
 const getGroupMember = `-- name: GetGroupMember :one
-SELECT id, group_id, user_id, name, role, is_ghost, joined_at, removed_at FROM group_members WHERE id = $1
+SELECT id, group_id, user_id, name, role, is_ghost, joined_at, removed_at FROM group_members WHERE id = $1 AND removed_at IS NULL
 `
 
+// Active members only — validators use this to reject removed members as
+// payers, split participants, or settlement parties. Use
+// GetGroupMemberIncludingRemoved to resolve historical references.
 func (q *Queries) GetGroupMember(ctx context.Context, id string) (GroupMember, error) {
 	row := q.db.QueryRow(ctx, getGroupMember, id)
 	var i GroupMember
@@ -124,6 +127,28 @@ type GetGroupMemberByUserAndGroupParams struct {
 // access checks (requireMember) and re-join must treat them as absent.
 func (q *Queries) GetGroupMemberByUserAndGroup(ctx context.Context, arg GetGroupMemberByUserAndGroupParams) (GroupMember, error) {
 	row := q.db.QueryRow(ctx, getGroupMemberByUserAndGroup, arg.GroupID, arg.UserID)
+	var i GroupMember
+	err := row.Scan(
+		&i.ID,
+		&i.GroupID,
+		&i.UserID,
+		&i.Name,
+		&i.Role,
+		&i.IsGhost,
+		&i.JoinedAt,
+		&i.RemovedAt,
+	)
+	return i, err
+}
+
+const getGroupMemberIncludingRemoved = `-- name: GetGroupMemberIncludingRemoved :one
+SELECT id, group_id, user_id, name, role, is_ghost, joined_at, removed_at FROM group_members WHERE id = $1
+`
+
+// Historical lookup: resolves soft-deleted members too, e.g. the counterparty
+// of an existing settlement who has since left the group.
+func (q *Queries) GetGroupMemberIncludingRemoved(ctx context.Context, id string) (GroupMember, error) {
+	row := q.db.QueryRow(ctx, getGroupMemberIncludingRemoved, id)
 	var i GroupMember
 	err := row.Scan(
 		&i.ID,

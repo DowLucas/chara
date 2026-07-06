@@ -994,24 +994,20 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 		method := updated.SplitMethod
 		shares, err := computeSplits(money.Amount(updated.Amount), method, participants, nil)
 		if err != nil {
-			// Non-equal old method without explicit splits — leave splits
-			// untouched and let the caller resend if needed.
-			dbSplits, listErr := h.queries.ListSplitsByExpense(r.Context(), expenseID)
-			if listErr != nil {
-				writeError(w, http.StatusInternalServerError, "internal error")
-				return
-			}
-			splitResp = dbSplitsToResponse(dbSplits)
-		} else {
-			if err := q.DeleteSplitsByExpense(r.Context(), expenseID); err != nil {
-				writeError(w, http.StatusInternalServerError, "internal error")
-				return
-			}
-			splitResp, err = writeSplits(r.Context(), q, expenseID, shares)
-			if err != nil {
-				writeError(w, http.StatusInternalServerError, "could not create expense splits")
-				return
-			}
+			// Non-equal old method without explicit splits — the old rows
+			// can't be rescaled, and keeping them would silently break the
+			// sum(splits) == amount invariant. The caller must resend splits.
+			writeError(w, http.StatusBadRequest, "splits required when changing the amount of an exact or percentage expense")
+			return
+		}
+		if err := q.DeleteSplitsByExpense(r.Context(), expenseID); err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+		splitResp, err = writeSplits(r.Context(), q, expenseID, shares)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "could not create expense splits")
+			return
 		}
 	} else {
 		dbSplits, err := h.queries.ListSplitsByExpense(r.Context(), expenseID)

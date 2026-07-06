@@ -510,6 +510,83 @@ func TestSettle_Create_RejectsMalformedFxFields(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, rr.Code, rr.Body.String())
 }
 
+// TestSettle_Create_RejectsMismatchedCurrency guards the balance invariant:
+// member_balances joins settlements against expense currencies, so a
+// settlement in any other currency is invisible to the view and the debt
+// would stay open forever.
+func TestSettle_Create_RejectsMismatchedCurrency(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+
+	body := fmt.Sprintf(`{"from_member_id":%q,"to_member_id":%q,"amount":"10.00","currency":"EUR"}`, bobMemberID, aliceMemberID)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, alice.Token))
+	assert.Equal(t, http.StatusBadRequest, rr.Code, rr.Body.String())
+}
+
+func TestSettle_Create_RejectsUnknownCurrency(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+
+	body := fmt.Sprintf(`{"from_member_id":%q,"to_member_id":%q,"amount":"10.00","currency":"NOPE"}`, bobMemberID, aliceMemberID)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, alice.Token))
+	assert.Equal(t, http.StatusBadRequest, rr.Code, rr.Body.String())
+}
+
+// TestSettle_Create_NormalizesLowercaseCurrency mirrors expense Create:
+// "sek" is normalized to "SEK" before the group-currency check, so the
+// stored settlement is visible to the member_balances view.
+func TestSettle_Create_NormalizesLowercaseCurrency(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	body := fmt.Sprintf(`{"from_member_id":%q,"to_member_id":%q,"amount":"45.00","currency":"sek"}`, bobMemberID, aliceMemberID)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, bob.Token))
+	require.Equal(t, http.StatusCreated, rr.Code, rr.Body.String())
+
+	var resp map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	assert.Equal(t, "SEK", resp["currency"])
+
+	// The normalized settlement must actually zero the balance.
+	rr = env.Do(t, env.AuthRequest(t, "GET", "/api/groups/"+groupID+"/balances", "", alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code)
+	var balances []map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&balances))
+	for _, b := range balances {
+		assert.Equal(t, "0.00", b["net_balance"])
+	}
+}
+
+func TestSettle_Create_RejectsUnknownOriginalCurrency(t *testing.T) {
+	env, _, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	body := fmt.Sprintf(
+		`{"from_member_id":%q,"to_member_id":%q,"amount":"45.00","currency":"SEK","original_amount":"4.20","original_currency":"NOPE","fx_rate":"10.7142857","fx_as_of":"2026-05-21"}`,
+		bobMemberID, aliceMemberID,
+	)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, bob.Token))
+	assert.Equal(t, http.StatusBadRequest, rr.Code, rr.Body.String())
+}
+
+func TestSettle_Create_RejectsSelfSettlement(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, _ := setupExpenseEnv(t)
+
+	body := fmt.Sprintf(`{"from_member_id":%q,"to_member_id":%q,"amount":"10.00","currency":"SEK"}`, aliceMemberID, aliceMemberID)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, alice.Token))
+	assert.Equal(t, http.StatusBadRequest, rr.Code, rr.Body.String())
+}
+
+// TestSettle_Create_RejectsRemovedMember: a soft-deleted member is filtered
+// out of the member_balances view, so a settlement referencing them would
+// move money that can never be seen or settled.
+func TestSettle_Create_RejectsRemovedMember(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+
+	rr := env.Do(t, env.AuthRequest(t, "DELETE", "/api/groups/"+groupID+"/members/"+bobMemberID, "", alice.Token))
+	require.Equal(t, http.StatusNoContent, rr.Code, rr.Body.String())
+
+	body := fmt.Sprintf(`{"from_member_id":%q,"to_member_id":%q,"amount":"10.00","currency":"SEK"}`, bobMemberID, aliceMemberID)
+	rr = env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, alice.Token))
+	assert.Equal(t, http.StatusBadRequest, rr.Code, rr.Body.String())
+}
+
 // ── /api/me/net (home-currency aggregate) ─────────────────────────────────────
 
 func TestMyNet_RequiresInQueryParam(t *testing.T) {
