@@ -8,14 +8,11 @@ import {
   Linking,
   ScrollView,
   Platform,
-  Switch,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
-import { hapticSelect } from '@/lib/haptics';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import * as LocalAuthentication from 'expo-local-authentication';
 import * as Application from 'expo-application';
 import Constants from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
@@ -53,10 +50,7 @@ import { displayHostFor } from '@/lib/server-url';
 
 import {
   clearPreferredLanguage,
-  getConfirmWithFaceId,
   getPreferredLanguage,
-  hasSecurityCode,
-  setConfirmWithFaceId,
   setPreferredLanguage,
 } from '@/lib/preferences';
 import { storeReviewUrl, type StorePlatform } from '@/lib/store-url';
@@ -87,9 +81,6 @@ export default function YouScreen() {
   const { homeCurrency, isExplicit: homeCurrencyExplicit } = useHomeCurrency();
   const accountCount = accounts.length;
   const hasMultipleAccounts = accountCount >= 2;
-  const [pinSet, setPinSet] = useState(false);
-  const [faceIdEnabled, setFaceIdEnabled] = useState(false);
-  const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [avatarSheetVisible, setAvatarSheetVisible] = useState(false);
   const [languageSheetVisible, setLanguageSheetVisible] = useState(false);
   const [currencySheetVisible, setCurrencySheetVisible] = useState(false);
@@ -108,16 +99,7 @@ export default function YouScreen() {
   }, [user?.id]);
 
   const refresh = useCallback(async () => {
-    const [has, fid, compat, enrolled, lang] = await Promise.all([
-      hasSecurityCode(),
-      getConfirmWithFaceId(),
-      LocalAuthentication.hasHardwareAsync(),
-      LocalAuthentication.isEnrolledAsync(),
-      getPreferredLanguage(),
-    ]);
-    setPinSet(has);
-    setFaceIdEnabled(fid);
-    setBiometricAvailable(compat && enrolled);
+    const lang = await getPreferredLanguage();
     setStoredLanguage(lang);
   }, []);
 
@@ -274,21 +256,6 @@ export default function YouScreen() {
     await setPreferredLanguage(code);
     setStoredLanguage(code);
     i18n.changeLanguage(code);
-  }
-
-  async function toggleFaceId(next: boolean) {
-    if (next) {
-      if (!biometricAvailable) {
-        showAlert({ title: t('you.faceIdUnavailableTitle'), message: t('you.faceIdUnavailableBody') });
-        return;
-      }
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: t('you.faceIdPrompt'),
-      });
-      if (!result.success) return;
-    }
-    await setConfirmWithFaceId(next);
-    setFaceIdEnabled(next);
   }
 
   function handleAccountsRowPress() {
@@ -538,11 +505,6 @@ export default function YouScreen() {
             onPress={() => router.push('/settings/archived-groups')}
           />
           <NavRow
-            label={pinSet ? t('you.changeSecurityCode') : t('you.createSecurityCode')}
-            value={pinSet ? t('you.codeOn') : t('you.codeOff')}
-            onPress={() => router.push('/settings/security-code')}
-          />
-          <NavRow
             label={t('you.language')}
             value={languageRowValue}
             onPress={() => setLanguageSheetVisible(true)}
@@ -679,39 +641,6 @@ function NavRow({
   );
 }
 
-function ToggleRow({
-  label,
-  value,
-  onValueChange,
-  disabled,
-  hint,
-}: {
-  label: string;
-  value: boolean;
-  onValueChange: (next: boolean) => void;
-  disabled?: boolean;
-  hint?: string;
-}) {
-  return (
-    <View style={styles.row}>
-      <View style={{ flex: 1 }}>
-        <Text style={[styles.rowLabel, disabled && { color: colors.lead }]}>{label}</Text>
-        {hint && <Text style={styles.rowHint}>{hint}</Text>}
-      </View>
-      <Switch
-        value={value}
-        onValueChange={(next) => {
-          hapticSelect();
-          onValueChange(next);
-        }}
-        disabled={disabled}
-        trackColor={{ false: colors.bone, true: colors.vermillion }}
-        thumbColor={colors.paper}
-      />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper },
   versionText: {
@@ -798,12 +727,5 @@ const styles = StyleSheet.create({
     fontSize: fontSize.bodyS,
     color: colors.lead,
     letterSpacing: 0.3,
-  },
-  rowHint: {
-    fontFamily: fontMono,
-    fontSize: fontSize.bodyS,
-    color: colors.lead,
-    letterSpacing: 0.3,
-    marginTop: 2,
   },
 });

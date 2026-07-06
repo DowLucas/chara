@@ -204,12 +204,7 @@ const config: ExpoConfig = {
         ],
       },
     ],
-    [
-      'expo-secure-store',
-      {
-        faceIDPermission: 'Allow Chara to access Face ID.',
-      },
-    ],
+    'expo-secure-store',
     [
       'expo-camera',
       {
