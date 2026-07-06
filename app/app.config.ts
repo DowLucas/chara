@@ -25,7 +25,7 @@ const IS_DEV_VARIANT = process.env.APP_VARIANT === 'dev';
 const config: ExpoConfig = {
   name: IS_DEV_VARIANT ? 'Chara Dev' : 'Chara',
   slug: 'chara',
-  version: '1.0.13',
+  version: '1.1.0',
   scheme: IS_DEV_VARIANT ? 'charadev' : 'chara',
   orientation: 'portrait',
   icon: './assets/icon.png',
