@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -29,6 +29,7 @@ export default function OnboardingHome() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.s4 }]}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
       <ContentContainer style={{ flex: 1 }}>
       <View style={styles.header}>
         <Text style={styles.eyebrow}>{t('onboarding.eyebrow')}</Text>
@@ -73,6 +74,10 @@ export default function OnboardingHome() {
         </TouchableOpacity>
       </View>
 
+      </ContentContainer>
+      </ScrollView>
+
+      <ContentContainer>
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
         <Text style={styles.footerHint}>{t('onboarding.footerHint')}</Text>
       </View>
@@ -117,6 +122,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.paper,
     paddingHorizontal: spacing.s5,
   },
+  scroll: { flex: 1 },
+  scrollContent: { flexGrow: 1 },
   header: { gap: spacing.s3, marginTop: spacing.s4 },
   eyebrow: {
     fontFamily: fontMono,
