@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -289,7 +290,11 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusUnprocessableEntity, "could not read a receipt from this image")
 			return
 		}
-		writeError(w, http.StatusBadGateway, "receipt scanner failed: "+scanErr.Error())
+		// Log the detail server-side only: a transport error can embed the
+		// request URL (and anything it carries) in its message, which must
+		// never reach the client.
+		slog.Error("receipts: scan failed", "error", scanErr)
+		writeError(w, http.StatusBadGateway, "receipt scanner failed")
 		return
 	}
 

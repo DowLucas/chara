@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
+import { isPopupJustClosed } from '@/lib/popup-guard';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -30,6 +31,7 @@ export default function AccountsScreen() {
   );
 
   async function handleRemove(account: Account) {
+    if (isPopupJustClosed()) return;
     // Block removal when the user has open balances on this server — we don't
     // want someone to accidentally drop an account they still owe money on /
     // are owed money in. The check fetches /api/me/balances; on network
@@ -78,6 +80,7 @@ export default function AccountsScreen() {
   }
 
   async function handleDeleteForever(account: Account) {
+    if (isPopupJustClosed()) return;
     const host = displayHostFor(account.serverUrl, t('common.mainServerLabel'));
     const result = await showAlert({
       title: t('account.deleteFromServer.confirmTitle'),

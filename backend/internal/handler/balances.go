@@ -15,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 
+	"github.com/DowLucas/chara/internal/currency"
 	"github.com/DowLucas/chara/internal/db"
 	"github.com/DowLucas/chara/internal/fx"
 	"github.com/DowLucas/chara/internal/jobs"
@@ -202,6 +203,11 @@ func parseSettlementFx(req settleReq) (pgtype.Int8, pgtype.Text, pgtype.Numeric,
 		return pgtype.Int8{}, pgtype.Text{}, pgtype.Numeric{}, pgtype.Date{},
 			errors.New("original_currency is required when fx snapshot is set")
 	}
+	origCcy, ok := currency.Normalize(*req.OriginalCurrency)
+	if !ok {
+		return pgtype.Int8{}, pgtype.Text{}, pgtype.Numeric{}, pgtype.Date{},
+			errors.New("unknown original_currency code")
+	}
 	var n pgtype.Numeric
 	if err := n.Scan(*req.FxRate); err != nil {
 		return pgtype.Int8{}, pgtype.Text{}, pgtype.Numeric{}, pgtype.Date{},
@@ -213,7 +219,7 @@ func parseSettlementFx(req settleReq) (pgtype.Int8, pgtype.Text, pgtype.Numeric,
 			errors.New("fx_as_of must be YYYY-MM-DD")
 	}
 	return pgtype.Int8{Int64: int64(*req.OriginalAmount), Valid: true},
-		pgtype.Text{String: *req.OriginalCurrency, Valid: true},
+		pgtype.Text{String: origCcy, Valid: true},
 		n,
 		pgtype.Date{Time: t, Valid: true},
 		nil
@@ -307,12 +313,35 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "from_member_id and to_member_id are required")
 		return
 	}
+	if req.FromMemberID == req.ToMemberID {
+		writeError(w, http.StatusBadRequest, "from_member_id and to_member_id must differ")
+		return
+	}
 	if req.Amount <= 0 {
 		writeError(w, http.StatusBadRequest, "amount must be positive")
 		return
 	}
 	if req.Currency == "" {
 		writeError(w, http.StatusBadRequest, "currency is required")
+		return
+	}
+	normalized, ok := currency.Normalize(req.Currency)
+	if !ok {
+		writeError(w, http.StatusBadRequest, "unknown currency code")
+		return
+	}
+	req.Currency = normalized
+
+	group, err := h.queries.GetGroupByID(r.Context(), groupID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not load group")
+		return
+	}
+	// The member_balances view joins settlements against expense currencies,
+	// so a settlement in any other currency would be invisible to it — the
+	// debt would stay open forever. Mirrors expense Create.
+	if req.Currency != group.Currency {
+		writeError(w, http.StatusBadRequest, "currency must equal group currency")
 		return
 	}
 
@@ -397,10 +426,7 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.rc != nil {
-		group, gerr := h.queries.GetGroupByID(r.Context(), groupID)
-		if gerr != nil {
-			slog.Warn("balances: enqueue push notification failed", "error", gerr, "group_id", groupID)
-		} else if _, err := h.rc.Insert(r.Context(), jobs.PushNotifyArgs{
+		if _, err := h.rc.Insert(r.Context(), jobs.PushNotifyArgs{
 			EventKind:   "settlement_recorded",
 			GroupID:     groupID,
 			GroupName:   group.Name,
@@ -640,12 +666,14 @@ func (h *BalancesHandler) RevertSettlement(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Authorize: caller must be the user behind from_member or to_member.
-	fromM, err := h.queries.GetGroupMember(r.Context(), settlement.FromMember)
+	// IncludingRemoved: the counterparty may have left the group since the
+	// settlement was recorded; the remaining party can still revert.
+	fromM, err := h.queries.GetGroupMemberIncludingRemoved(r.Context(), settlement.FromMember)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
-	toM, err := h.queries.GetGroupMember(r.Context(), settlement.ToMember)
+	toM, err := h.queries.GetGroupMemberIncludingRemoved(r.Context(), settlement.ToMember)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error")
 		return

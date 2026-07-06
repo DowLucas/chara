@@ -35,7 +35,7 @@ func TestGeminiScanner_Scan_HappyPath(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodPost, r.Method)
 		assert.Contains(t, r.URL.Path, "/models/gemini-3.5-flash:generateContent")
-		assert.Equal(t, "test-key", r.URL.Query().Get("key"))
+		assert.Equal(t, "test-key", r.Header.Get("x-goog-api-key"))
 
 		body, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
@@ -369,6 +369,26 @@ func TestGeminiScanner_Scan_PropagatesUpstreamError(t *testing.T) {
 	_, err := NewGemini("k", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "", nil)
 	require.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "400"), "want HTTP status in error, got %v", err)
+}
+
+// TestGeminiScanner_Scan_APIKeySentViaHeaderNotURL guards against the API
+// key leaking: a transport-level *url.Error embeds the full request URL in
+// err.Error(), so a `?key=` query param would end up in logs and error
+// responses. The key must travel in the x-goog-api-key header instead.
+func TestGeminiScanner_Scan_APIKeySentViaHeaderNotURL(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.NotContains(t, r.URL.String(), "test-key", "API key must not appear in the URL")
+		assert.Empty(t, r.URL.Query().Get("key"))
+		assert.Equal(t, "test-key", r.Header.Get("x-goog-api-key"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(geminiTextResponse(t,
+			`{"title":"T","merchant":"M","date":"2026-05-20","currency":"SEK","total":"10.00"}`,
+		))
+	}))
+	defer srv.Close()
+
+	_, err := NewGemini("test-key", WithGeminiBaseURL(srv.URL)).Scan(context.Background(), []byte{1}, "image/jpeg", "", nil)
+	require.NoError(t, err)
 }
 
 func TestGeminiScanner_Scan_EmptyImageRejected(t *testing.T) {

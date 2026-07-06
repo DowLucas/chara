@@ -650,6 +650,98 @@ func TestExpenses_Update_NewPaidByID_NotInGroup(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 }
 
+// TestExpenses_Create_RejectsRemovedPaidBy: a soft-deleted member is filtered
+// out of the member_balances view, so an expense paid by them would move
+// money that never shows up in anyone's balance.
+func TestExpenses_Create_RejectsRemovedPaidBy(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+
+	// Kick Bob (zero balance) so his member row is soft-deleted.
+	rr := env.Do(t, env.AuthRequest(t, "DELETE", "/api/groups/"+groupID+"/members/"+bobMemberID, "", alice.Token))
+	require.Equal(t, http.StatusNoContent, rr.Code, rr.Body.String())
+
+	body := fmt.Sprintf(`{"title":"X","amount":"10.00","currency":"SEK","paid_by_id":%q,"split_method":"equal","participants":[%q]}`,
+		bobMemberID, aliceMemberID)
+	rr = env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", body, alice.Token))
+	assert.Equal(t, http.StatusBadRequest, rr.Code, rr.Body.String())
+}
+
+// createPercentageExpense posts a 100.00 SEK percentage expense (70/30) via
+// the API and returns its id.
+func createPercentageExpense(t *testing.T, env *testutil.Env, token, groupID, aliceMemberID, bobMemberID string) string {
+	t.Helper()
+	body := fmt.Sprintf(`{
+		"title":"Taxi","amount":"100.00","currency":"SEK","paid_by_id":%q,
+		"split_method":"percentage",
+		"splits":[{"member_id":%q,"basis_points":7000},{"member_id":%q,"basis_points":3000}]
+	}`, aliceMemberID, aliceMemberID, bobMemberID)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", body, token))
+	require.Equal(t, http.StatusCreated, rr.Code, rr.Body.String())
+	var resp map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	return resp["id"].(string)
+}
+
+// TestExpenses_Update_AmountOnly_PercentageRequiresSplits: PATCHing only the
+// amount of a percentage expense must 400 — the old split rows can't be
+// rescaled without explicit splits, and keeping them would silently break
+// the sum(splits) == amount invariant.
+func TestExpenses_Update_AmountOnly_PercentageRequiresSplits(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	expenseID := createPercentageExpense(t, env, alice.Token, groupID, aliceMemberID, bobMemberID)
+
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+groupID+"/expenses/"+expenseID, `{"amount":"120.00"}`, alice.Token))
+	assert.Equal(t, http.StatusBadRequest, rr.Code, rr.Body.String())
+
+	// Amount and splits are untouched.
+	dbSplits, err := env.Queries.ListSplitsByExpense(context.Background(), expenseID)
+	require.NoError(t, err)
+	var sum int64
+	for _, s := range dbSplits {
+		sum += s.Share
+	}
+	assert.Equal(t, int64(10000), sum)
+}
+
+func TestExpenses_Update_AmountWithSplits_Percentage_OK(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	expenseID := createPercentageExpense(t, env, alice.Token, groupID, aliceMemberID, bobMemberID)
+
+	body := fmt.Sprintf(`{
+		"amount":"120.00",
+		"splits":[{"member_id":%q,"basis_points":7000},{"member_id":%q,"basis_points":3000}]
+	}`, aliceMemberID, bobMemberID)
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+groupID+"/expenses/"+expenseID, body, alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+
+	dbSplits, err := env.Queries.ListSplitsByExpense(context.Background(), expenseID)
+	require.NoError(t, err)
+	shareByMember := map[string]int64{}
+	for _, s := range dbSplits {
+		shareByMember[s.MemberID] = s.Share
+	}
+	assert.Equal(t, int64(8400), shareByMember[aliceMemberID])
+	assert.Equal(t, int64(3600), shareByMember[bobMemberID])
+}
+
+// TestExpenses_Update_AmountOnly_EqualRescales pins the existing equal-split
+// behavior: an amount-only PATCH rescales the splits proportionally.
+func TestExpenses_Update_AmountOnly_EqualRescales(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	fix := testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+groupID+"/expenses/"+fix.Expense.ID, `{"amount":"120.00"}`, alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+
+	dbSplits, err := env.Queries.ListSplitsByExpense(context.Background(), fix.Expense.ID)
+	require.NoError(t, err)
+	var sum int64
+	for _, s := range dbSplits {
+		sum += s.Share
+	}
+	assert.Equal(t, int64(12000), sum)
+}
+
 // ── Update: FX recomputation ─────────────────────────────────────────────────
 
 // createFxExpenseFixture builds a SEK group with an EUR expense whose canonical

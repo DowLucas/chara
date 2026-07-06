@@ -113,6 +113,10 @@
     "you": "自分"
   },
   "addExpense": {
+    "addCategory": "カテゴリを追加…",
+    "addCategoryPlaceholder": "例: お土産",
+    "addCategorySubmit": "追加",
+    "addCategoryTitle": "新しいカテゴリ",
     "amount": "金額",
     "amountPlaceholder": "0",
     "amountsLabel": "金額",
@@ -334,7 +338,10 @@
     "receiptPermissionTitle": "アクセス許可が必要",
     "receiptSheetTitle": "レシートを追加",
     "receiptTakePhoto": "写真を撮る",
+    "receiptTooLargeBody": "画像が大きすぎてアップロードできません。小さい写真をお試しください。",
+    "receiptTooLargeTitle": "画像が大きすぎます",
     "receiptUploading": "アップロード中…",
+    "receiptUploadingPct": "アップロード中… {{pct}}%",
     "reload": "再読み込み",
     "savedToast": "変更を保存しました。",
     "staleBanner": "開いたあとに変更されています。再読み込みで最新の状態になります。",

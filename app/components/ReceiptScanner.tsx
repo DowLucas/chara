@@ -18,8 +18,8 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
-import { scanReceipt, convertFx, ScannedReceipt, ApiError, isOcrCapReached, submitWaitlist } from '@/lib/api';
-import { useDefaultAccount } from '@/lib/accounts';
+import { apiFor, ScannedReceipt, ApiError, isOcrCapReached } from '@/lib/api';
+import { useAccount } from '@/lib/accounts';
 import { WaitlistModal } from '@/components/WaitlistModal';
 import { formatMinorUnits } from '@/lib/i18n';
 import {
@@ -54,6 +54,9 @@ export interface ReceiptScanResult {
 }
 
 interface Props {
+  /** Home server of the group being scanned for — all API calls (scan,
+   *  FX conversion, waitlist) go to this server, not the default account. */
+  serverUrl: string;
   groupCurrency: string;
   /** ISO 639-1 code (en, sv, ja, …) — the language Gemini should generate
    *  the title in. Passed to /api/receipts/scan as `language`. Empty/
@@ -99,7 +102,7 @@ type Phase =
  *
  * Only mount this when the server reports `features.ocr === true`.
  */
-export function ReceiptScanner({ groupCurrency, groupLanguage, groupId, onScanned, onCancel }: Props) {
+export function ReceiptScanner({ serverUrl, groupCurrency, groupLanguage, groupId, onScanned, onCancel }: Props) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
@@ -109,7 +112,7 @@ export function ReceiptScanner({ groupCurrency, groupLanguage, groupId, onScanne
   // floats over whichever phase the scanner happens to be in (we drop back
   // to 'camera' on cap-hit so the analyzing animation isn't stuck behind it).
   const [waitlistState, setWaitlistState] = useState<{ resetsAt?: string } | null>(null);
-  const defaultAccount = useDefaultAccount();
+  const account = useAccount(serverUrl);
 
   useEffect(() => {
     if (permission && !permission.granted && permission.canAskAgain) {
@@ -175,7 +178,7 @@ export function ReceiptScanner({ groupCurrency, groupLanguage, groupId, onScanne
     // network call runs.
     setPhase({ kind: 'analyzing', photoUri });
     try {
-      const receipt = await scanReceipt(base64, mimeType, groupLanguage, groupId);
+      const receipt = await apiFor(serverUrl).scanReceipt(base64, mimeType, groupLanguage, groupId);
       setPhase({ kind: 'result', photoUri, receipt, imageBase64: base64, imageMime: mimeType });
     } catch (e) {
       // Hosted free-tier cap hit. Don't render the generic error state — open
@@ -206,12 +209,12 @@ export function ReceiptScanner({ groupCurrency, groupLanguage, groupId, onScanne
   }, []);
 
   const handleWaitlistSubmit = React.useCallback(async (email: string) => {
-    await submitWaitlist({
+    await apiFor(serverUrl).submitWaitlist({
       email,
       trigger: 'ocr_cap',
       source: 'mobile',
     });
-  }, []);
+  }, [serverUrl]);
 
   if (!permission) {
     return (
@@ -287,7 +290,7 @@ export function ReceiptScanner({ groupCurrency, groupLanguage, groupId, onScanne
           visible={waitlistState !== null}
           cap={3}
           periodResetsAt={waitlistState?.resetsAt}
-          defaultEmail={defaultAccount?.user.email}
+          defaultEmail={account?.user.email}
           onSubmit={handleWaitlistSubmit}
           onDismiss={() => setWaitlistState(null)}
           onSelfHostPressed={openSelfHostDocs}
@@ -337,6 +340,7 @@ export function ReceiptScanner({ groupCurrency, groupLanguage, groupId, onScanne
   return (
     <View style={styles.container}>
       <ResultView
+        serverUrl={serverUrl}
         photoUri={phase.photoUri}
         receipt={phase.receipt}
         groupCurrency={groupCurrency}
@@ -444,6 +448,7 @@ function AnalyzingView({ photoUri }: { photoUri: string }) {
 
 // ─── Result phase ─────────────────────────────────────────────────────────────
 interface ResultViewProps {
+  serverUrl: string;
   photoUri: string;
   receipt: ScannedReceipt;
   groupCurrency: string;
@@ -458,6 +463,7 @@ type FxState =
   | SharedFxState;
 
 function ResultView({
+  serverUrl,
   photoUri,
   receipt,
   groupCurrency,
@@ -479,7 +485,7 @@ function ResultView({
   useEffect(() => {
     if (!needsConversion) return;
     let cancelled = false;
-    convertFx({
+    apiFor(serverUrl).convertFx({
       from: receipt.currency,
       to: groupCurrency,
       amountMinor: receipt.total_minor,
@@ -498,7 +504,7 @@ function ResultView({
     return () => {
       cancelled = true;
     };
-  }, [needsConversion, receipt.currency, receipt.total_minor, receipt.date, groupCurrency]);
+  }, [needsConversion, receipt.currency, receipt.total_minor, receipt.date, groupCurrency, serverUrl]);
 
   // Parse the user-edited rate into a positive finite number, or null if
   // empty / invalid. Commas tolerated for European locales.

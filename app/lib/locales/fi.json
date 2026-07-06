@@ -113,6 +113,10 @@
     "you": "Sinä"
   },
   "addExpense": {
+    "addCategory": "Lisää kategoria…",
+    "addCategoryPlaceholder": "esim. Matkamuistot",
+    "addCategorySubmit": "Lisää",
+    "addCategoryTitle": "Uusi kategoria",
     "amount": "summa",
     "amountPlaceholder": "0",
     "amountsLabel": "summat",
@@ -334,7 +338,10 @@
     "receiptPermissionTitle": "Lupa tarvitaan",
     "receiptSheetTitle": "Lisää kuitti",
     "receiptTakePhoto": "Ota kuva",
+    "receiptTooLargeBody": "Kuva on liian suuri ladattavaksi. Kokeile pienempää kuvaa.",
+    "receiptTooLargeTitle": "Kuva on liian suuri",
     "receiptUploading": "Ladataan…",
+    "receiptUploadingPct": "Ladataan… {{pct}} %",
     "reload": "Lataa uudelleen",
     "savedToast": "Muutokset tallennettu.",
     "staleBanner": "Kulu on muuttunut sen jälkeen, kun avasit sen. Lataa uudelleen nähdäksesi uusimman version.",

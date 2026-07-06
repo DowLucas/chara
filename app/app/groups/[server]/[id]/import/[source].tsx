@@ -240,7 +240,7 @@ export default function ImportSourceScreen() {
       <View style={[styles.screen, { paddingTop: insets.top }]}>
         <TopBar
           title={t('import.picker.title')}
-          left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
+          left={<IconButton icon="arrow-left" onPress={() => router.back()} label={t('common.back')} />}
         />
         <Text style={styles.intro}>{t('import.unknownApp')}</Text>
       </View>
@@ -251,7 +251,7 @@ export default function ImportSourceScreen() {
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <TopBar
         title={t(app.labelKey)}
-        left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
+        left={<IconButton icon="arrow-left" onPress={() => router.back()} label={t('common.back')} />}
       />
       <ScrollView
         style={styles.scroll}

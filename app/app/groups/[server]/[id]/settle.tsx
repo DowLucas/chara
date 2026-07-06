@@ -17,7 +17,7 @@ import {
   Balance,
   SettlementSuggestion,
 } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
+import { useAccount } from '@/lib/accounts';
 import { computeSuggestions } from '@/lib/settle';
 import { decimalToMinor, formatMinorUnits } from '@/lib/i18n';
 import { initialsOf } from '@/lib/name';
@@ -36,7 +36,8 @@ export default function SettleScreen() {
   const api = apiFor(serverUrl);
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  // "You" must resolve to this server's account, not the default account.
+  const user = useAccount(serverUrl)?.user ?? null;
 
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [balances, setBalances] = useState<Balance[]>([]);
@@ -147,7 +148,7 @@ export default function SettleScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <TopBar
         title={t('settle.title')}
-        left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
+        left={<IconButton icon="arrow-left" onPress={() => router.back()} label={t('common.back')} />}
       />
       <ScrollView
         style={styles.scroll}

@@ -113,6 +113,10 @@
     "you": "Jij"
   },
   "addExpense": {
+    "addCategory": "Categorie toevoegen…",
+    "addCategoryPlaceholder": "bijv. Souvenirs",
+    "addCategorySubmit": "Toevoegen",
+    "addCategoryTitle": "Nieuwe categorie",
     "amount": "bedrag",
     "amountPlaceholder": "0",
     "amountsLabel": "bedragen",
@@ -334,7 +338,10 @@
     "receiptPermissionTitle": "Toestemming vereist",
     "receiptSheetTitle": "Bon toevoegen",
     "receiptTakePhoto": "Maak een foto",
+    "receiptTooLargeBody": "Die afbeelding is te groot om te uploaden. Probeer een kleinere foto.",
+    "receiptTooLargeTitle": "Afbeelding te groot",
     "receiptUploading": "Uploaden…",
+    "receiptUploadingPct": "Uploaden… {{pct}}%",
     "reload": "Opnieuw laden",
     "savedToast": "Wijzigingen opgeslagen.",
     "staleBanner": "Deze uitgave is gewijzigd sinds je hem opende. Herlaad om de laatste versie te zien.",

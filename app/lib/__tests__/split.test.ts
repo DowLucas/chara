@@ -179,6 +179,16 @@ describe('previewApportion', () => {
   it('reflects a zero-weight member as a zero share', () => {
     expect(previewApportion(100, [10000, 0])).toEqual([100, 0]);
   });
+
+  it('sums exactly for 10.01 / 3 auto-split (ExpenseWizard Save-gate regression)', () => {
+    // The wizard's auto percentage split for 3 members is [3334, 3333, 3333]
+    // bp. Independent Math.round per member gives 334+334+334 = 1002 ≠ 1001,
+    // which left `offBy` permanently non-zero and Save disabled. The wizard
+    // must use this apportionment, whose shares sum to exactly the total.
+    const shares = previewApportion(1001, [3334, 3333, 3333]);
+    expect(shares.reduce((a, b) => a + b, 0)).toBe(1001);
+    expect(shares).toEqual([334, 334, 333]);
+  });
 });
 
 describe('computeSplits', () => {

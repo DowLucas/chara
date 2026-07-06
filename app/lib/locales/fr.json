@@ -117,6 +117,10 @@
     "you": "Moi"
   },
   "addExpense": {
+    "addCategory": "Ajouter une catégorie…",
+    "addCategoryPlaceholder": "p. ex. Souvenirs",
+    "addCategorySubmit": "Ajouter",
+    "addCategoryTitle": "Nouvelle catégorie",
     "amount": "montant",
     "amountPlaceholder": "0",
     "amountsLabel": "montants",
@@ -142,7 +146,6 @@
     "multiplePayers": "Plusieurs payeurs",
     "mustTotal": "doit faire un total de {{amount}}",
     "nWays": "en {{count}} parts",
-    "nWays_many": "en {{count}} parts",
     "nWays_one": "en {{count}} part",
     "nWays_other": "en {{count}} parts",
     "off": "de trop",
@@ -183,7 +186,8 @@
     },
     "whenLabel": "quand",
     "whoPaid": "qui a payé ?",
-    "you": "Moi"
+    "you": "Moi",
+    "nWays_many": "en {{count}} parts"
   },
   "addServer": {
     "appTooNew": "Ce serveur est trop ancien pour cette version de Chara. Demande à l'hébergeur de le mettre à jour.",
@@ -339,7 +343,10 @@
     "receiptPermissionTitle": "Autorisation requise",
     "receiptSheetTitle": "Ajouter un reçu",
     "receiptTakePhoto": "Prendre une photo",
+    "receiptTooLargeBody": "Cette image est trop volumineuse pour être envoyée. Essayez une photo plus petite.",
+    "receiptTooLargeTitle": "Image trop volumineuse",
     "receiptUploading": "Envoi…",
+    "receiptUploadingPct": "Envoi… {{pct}} %",
     "reload": "Recharger",
     "savedToast": "Modifications enregistrées.",
     "staleBanner": "Cette dépense a changé depuis que tu l'as ouverte. Recharge pour voir la dernière version.",

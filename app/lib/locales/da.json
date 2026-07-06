@@ -113,6 +113,10 @@
     "you": "Du"
   },
   "addExpense": {
+    "addCategory": "Tilføj kategori…",
+    "addCategoryPlaceholder": "f.eks. Souvenirs",
+    "addCategorySubmit": "Tilføj",
+    "addCategoryTitle": "Ny kategori",
     "amount": "beløb",
     "amountPlaceholder": "0",
     "amountsLabel": "beløb",
@@ -334,7 +338,10 @@
     "receiptPermissionTitle": "Tilladelse kræves",
     "receiptSheetTitle": "Tilføj kvittering",
     "receiptTakePhoto": "Tag et billede",
+    "receiptTooLargeBody": "Billedet er for stort til at uploade. Prøv et mindre foto.",
+    "receiptTooLargeTitle": "Billedet er for stort",
     "receiptUploading": "Uploader…",
+    "receiptUploadingPct": "Uploader… {{pct}} %",
     "reload": "Hent igen",
     "savedToast": "Ændringer gemt.",
     "staleBanner": "Udgiften er ændret, siden du åbnede den. Hent igen for at se det nyeste.",

@@ -129,6 +129,10 @@
     "you": "أنت"
   },
   "addExpense": {
+    "addCategory": "إضافة فئة…",
+    "addCategoryPlaceholder": "مثال: هدايا تذكارية",
+    "addCategorySubmit": "إضافة",
+    "addCategoryTitle": "فئة جديدة",
     "amount": "المبلغ",
     "amountPlaceholder": "0",
     "amountsLabel": "المبالغ",
@@ -154,12 +158,8 @@
     "multiplePayers": "عدة دافعين",
     "mustTotal": "يجب أن يساوي المجموع {{amount}}",
     "nWays": "بين {{count}} أشخاص",
-    "nWays_few": "بين {{count}} أشخاص",
-    "nWays_many": "بين {{count}} شخصًا",
     "nWays_one": "بين شخص واحد",
     "nWays_other": "بين {{count}} أشخاص",
-    "nWays_two": "بين شخصين",
-    "nWays_zero": "بين {{count}} أشخاص",
     "off": "بفارق",
     "onePerson": "شخص واحد",
     "overBy": "تجاوز بـ",
@@ -198,7 +198,11 @@
     },
     "whenLabel": "متى",
     "whoPaid": "من الذي دفع؟",
-    "you": "أنت"
+    "you": "أنت",
+    "nWays_few": "بين {{count}} أشخاص",
+    "nWays_many": "بين {{count}} شخصًا",
+    "nWays_two": "بين شخصين",
+    "nWays_zero": "بين {{count}} أشخاص"
   },
   "addServer": {
     "appTooNew": "هذا الخادم أقدم مما يدعمه Chara. اطلب من المضيف تحديثه.",
@@ -354,7 +358,10 @@
     "receiptPermissionTitle": "يلزم الإذن",
     "receiptSheetTitle": "إضافة إيصال",
     "receiptTakePhoto": "التقاط صورة",
+    "receiptTooLargeBody": "هذه الصورة كبيرة جدًا للرفع. جرّب صورة أصغر.",
+    "receiptTooLargeTitle": "الصورة كبيرة جدًا",
     "receiptUploading": "جاري الرفع…",
+    "receiptUploadingPct": "جارٍ الرفع… {{pct}}٪",
     "reload": "إعادة التحميل",
     "savedToast": "تم حفظ التغييرات.",
     "staleBanner": "تغيّر هذا المصروف منذ أن فتحته. أعد التحميل لرؤية أحدث المعلومات.",

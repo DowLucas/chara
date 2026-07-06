@@ -333,6 +333,20 @@ func TestReceiptScan_UpstreamFailureMaps502(t *testing.T) {
 	require.Equal(t, http.StatusBadGateway, rr.Code)
 }
 
+// TestReceiptScan_UpstreamFailureDoesNotLeakErrorDetails guards against the
+// GEMINI_API_KEY leaking to clients: a transport-level *url.Error includes
+// the full request URL, so echoing scanErr.Error() into the 502 body would
+// disclose whatever the URL (or any other internal detail) carries.
+func TestReceiptScan_UpstreamFailureDoesNotLeakErrorDetails(t *testing.T) {
+	fake := &fakeScanner{err: errors.New(`Post "https://generativelanguage.googleapis.com/v1beta/models/x:generateContent?key=SUPER-SECRET-KEY": EOF`)}
+	rr := postScan(t, newReceiptsRouter(fake), map[string]string{
+		"image_base64": base64.StdEncoding.EncodeToString([]byte{1}),
+		"mime_type":    "image/jpeg",
+	})
+	require.Equal(t, http.StatusBadGateway, rr.Code)
+	assert.NotContains(t, rr.Body.String(), "SUPER-SECRET-KEY")
+}
+
 func TestReceiptScan_RejectsInvalidJSONBody(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/api/receipts/scan", strings.NewReader("{not json"))
 	rr := httptest.NewRecorder()

@@ -63,6 +63,7 @@ import {
 } from '@/lib/api';
 import { currentLocale } from '@/lib/i18n';
 import { evalExpression, hasOperator } from '@/lib/evalExpression';
+import { previewApportion } from '@/lib/split';
 import {
   colors,
   fontBody,
@@ -139,7 +140,9 @@ export interface ExpenseWizardProps {
     amountMinor: number;
     asOf?: string;
   }) => Promise<FxConvertResponse>;
-  authToken: string | null;
+  /** Home server of the group being edited — avatar thumbnails and their
+   *  auth token must resolve against this server, not the default account. */
+  serverUrl: string;
   submitting?: boolean;
   submitLabel?: string;
   /** Override the back/close icon for step 1. Defaults to 'x'. */
@@ -225,7 +228,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       currentUserMemberId,
       initialValue,
       convertFx,
-      authToken,
+      serverUrl,
       submitting,
       submitLabel,
       step1CancelIcon,
@@ -488,15 +491,26 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
         ? Math.round(effectiveAmountMinor / includedMembers.length)
         : 0;
 
-    // Clear custom split entries when the effective currency changes — amounts
-    // typed in the old currency are meaningless in the new one. Deliberately
-    // NOT keyed on `method`: a user-driven method switch already clears these
-    // in handleSplitChange, and keying on `method` here would also wipe the
-    // amounts that applyScanItemsAssignment() sets together with setMethod('exact'),
-    // collapsing itemized receipt splits back to an equal split.
+    // Clear custom exact-split entries when the effective currency changes —
+    // amounts typed in the old currency are meaningless in the new one.
+    // Deliberately NOT keyed on `method`: a user-driven method switch already
+    // clears these in handleSplitChange, and keying on `method` here would
+    // also wipe the amounts that applyScanItemsAssignment() sets together with
+    // setMethod('exact'), collapsing itemized receipt splits back to an equal
+    // split. Two more constraints:
+    //  - Skip until `effectiveCurrency` actually changes (the ref tracks the
+    //    last-seen value): effects also run on mount, and in edit mode the
+    //    maps are seeded from initialValue — wiping them here regressed #69.
+    //  - `pctByMember` is NOT wiped: percentages are proportions, not
+    //    amounts, so they stay meaningful across a currency change. This also
+    //    preserves seeded percentage splits when editing an FX expense, where
+    //    `effectiveCurrency` flips from the input currency to the group
+    //    currency once the rate resolves shortly after mount.
+    const lastEffectiveCurrency = useRef(effectiveCurrency);
     useEffect(() => {
+      if (lastEffectiveCurrency.current === effectiveCurrency) return;
+      lastEffectiveCurrency.current = effectiveCurrency;
       setExactByMember({});
-      setPctByMember({});
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [effectiveCurrency]);
 
@@ -547,13 +561,29 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       return out;
     }, [method, includedMembers, pctByMember]);
 
+    // Per-member minor shares for the percentage method. Must use the same
+    // exact-sum apportionment SplitEditor previews with (floor + largest
+    // remainder): rounding each member independently can overshoot the total
+    // (e.g. 10.01 / 3 → 334+334+334 = 1002), leaving `offBy` non-zero and
+    // Save permanently disabled even though the editor shows green.
+    const pctMinorByMember = useMemo<Record<string, number>>(() => {
+      if (method !== 'percentage') return {};
+      const bps = includedMembers.map(
+        (m) => lockedPctBp(m.id) ?? autoPctBp[m.id] ?? 0,
+      );
+      const shares = previewApportion(effectiveAmountMinor, bps);
+      const out: Record<string, number> = {};
+      includedMembers.forEach((m, i) => (out[m.id] = shares[i] ?? 0));
+      return out;
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [method, includedMembers, pctByMember, autoPctBp, effectiveAmountMinor]);
+
     function effectiveMinor(memberId: string): number {
       if (method === 'exact') {
         return lockedExactMinor(memberId) ?? autoExactMinor[memberId] ?? 0;
       }
       if (method === 'percentage') {
-        const bp = lockedPctBp(memberId) ?? autoPctBp[memberId] ?? 0;
-        return Math.round((effectiveAmountMinor * bp) / 10000);
+        return pctMinorByMember[memberId] ?? 0;
       }
       return 0;
     }
@@ -562,7 +592,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       if (method === 'equal') return effectiveAmountMinor;
       return includedMembers.reduce((s, m) => s + effectiveMinor(m.id), 0);
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [method, equalShare, includedMembers, exactByMember, pctByMember, effectiveAmountMinor, autoExactMinor, autoPctBp]);
+    }, [method, equalShare, includedMembers, exactByMember, pctByMember, effectiveAmountMinor, autoExactMinor, pctMinorByMember]);
 
     const offBy = totalSplitMinor - effectiveAmountMinor;
 
@@ -759,6 +789,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
                     step === 1 ? (step1CancelIcon ?? 'x') : 'arrow-left'
                   }
                   onPress={() => (step === 1 ? onCancel?.() : setStep((step - 1) as Step))}
+                  label={step === 1 ? t('common.close') : t('common.back')}
                 />
               }
             />
@@ -810,7 +841,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
                 currentUserMemberId={currentUserMemberId}
                 splitValue={splitValue}
                 onSplitChange={handleSplitChange}
-                authToken={authToken}
+                serverUrl={serverUrl}
               />
             )}
             </ContentContainer>
@@ -1113,7 +1144,7 @@ interface Step2Props {
   currentUserMemberId?: string;
   splitValue: SplitValue;
   onSplitChange: (v: SplitValue) => void;
-  authToken: string | null;
+  serverUrl: string;
 }
 function Step2({
   currency,
@@ -1124,7 +1155,7 @@ function Step2({
   currentUserMemberId,
   splitValue,
   onSplitChange,
-  authToken,
+  serverUrl,
 }: Step2Props) {
   return (
     <View>
@@ -1140,7 +1171,7 @@ function Step2({
         value={splitValue}
         onChange={onSplitChange}
         currentUserMemberId={currentUserMemberId}
-        authToken={authToken}
+        serverUrl={serverUrl}
       />
     </View>
   );

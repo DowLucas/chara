@@ -16,7 +16,6 @@ import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import {
   apiFor,
-  authToken,
   Expense,
   GroupDetail,
   GroupMember,
@@ -29,7 +28,7 @@ import { notifyGroupChanged } from '@/lib/group-refresh';
 import { ScanItemsAssign } from '@/components/ScanItemsAssign';
 import { buildScanItemsState } from '@/lib/scan-items';
 import { draftKey } from '@/lib/expense-draft';
-import { useAuth } from '@/lib/auth';
+import { useAccount } from '@/lib/accounts';
 import {
   ExpenseWizard,
   ExpenseWizardHandle,
@@ -54,11 +53,12 @@ export default function AddExpenseScreen() {
   const api = apiFor(serverUrl);
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  // "You" must resolve to this server's account, not the default account.
+  const account = useAccount(serverUrl);
+  const user = account?.user ?? null;
 
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
-  const [token, setToken] = useState<string | null>(null);
 
   const [ocrAvailable, setOcrAvailable] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -85,16 +85,6 @@ export default function AddExpenseScreen() {
   }>({ title: '', amount: '', amountMinor: 0, currency: '' });
 
   const wizardRef = useRef<ExpenseWizardHandle | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    authToken().then((t) => {
-      if (!cancelled) setToken(t);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     if (!id || !serverUrl) return;
@@ -288,7 +278,7 @@ export default function AddExpenseScreen() {
         members={members}
         currentUserMemberId={currentUserMemberId}
         convertFx={api.convertFx}
-        authToken={token}
+        serverUrl={serverUrl}
         submitting={saving}
         onSubmit={handleSubmit}
         draftKey={id ? draftKey(serverUrl, id) : undefined}
@@ -304,6 +294,7 @@ export default function AddExpenseScreen() {
         statusBarTranslucent
       >
         <ReceiptScanner
+          serverUrl={serverUrl}
           groupCurrency={group?.currency ?? 'SEK'}
           groupLanguage={group?.language}
           groupId={id}
@@ -321,7 +312,7 @@ export default function AddExpenseScreen() {
         currency={scanItemsState?.currency ?? group?.currency ?? 'SEK'}
         members={members}
         currentMemberId={currentUserMemberId}
-        authToken={token}
+        serverUrl={serverUrl}
         onCancel={() => setScanItemsState(null)}
         onApply={applyScanItemsAssignment}
       />

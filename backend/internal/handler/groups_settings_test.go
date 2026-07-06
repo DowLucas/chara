@@ -472,7 +472,7 @@ func TestRemoveMember_KickSettledMemberWithHistory_Succeeds(t *testing.T) {
 
 	// But his row is preserved (soft-deleted) so historical expenses still
 	// resolve his name.
-	bob, err := e.env.Queries.GetGroupMember(context.Background(), e.bobMID)
+	bob, err := e.env.Queries.GetGroupMemberIncludingRemoved(context.Background(), e.bobMID)
 	require.NoError(t, err)
 	assert.Equal(t, "Bob", bob.Name)
 	assert.True(t, bob.RemovedAt.Valid, "member should be soft-deleted, not hard-deleted")

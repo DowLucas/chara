@@ -323,7 +323,7 @@ export default function GroupSettingsScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <TopBar
         title={t('groupSettings.title')}
-        left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
+        left={<IconButton icon="arrow-left" onPress={() => router.back()} label={t('common.back')} />}
       />
       <ScrollView
         style={styles.scroll}
