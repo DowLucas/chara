@@ -195,6 +195,7 @@ type updateExpenseReq struct {
 	SplitMethod  *string        `json:"split_method"`
 	Category     *string        `json:"category"`
 	Notes        *string        `json:"notes"`
+	ExpenseDate  *string        `json:"expense_date"`
 	Participants []string       `json:"participants"`
 	Splits       []splitReqItem `json:"splits"`
 
@@ -779,6 +780,14 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.Category != nil {
 		params.Category = pgtype.Text{String: *req.Category, Valid: true}
+	}
+	if req.ExpenseDate != nil {
+		t, err := time.Parse("2006-01-02", *req.ExpenseDate)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid expense_date format, expected YYYY-MM-DD")
+			return
+		}
+		params.ExpenseDate = pgtype.Date{Time: t, Valid: true}
 	}
 
 	// Validate amount/currency up front so we can short-circuit before

@@ -563,6 +563,25 @@ func TestExpenses_Update_Title(t *testing.T) {
 	assert.Equal(t, "90.00", resp["amount"]) // unchanged
 }
 
+func TestExpenses_Update_ExpenseDate(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	fix := testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	body := `{"expense_date":"2026-06-15"}`
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+groupID+"/expenses/"+fix.Expense.ID, body, alice.Token))
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var resp map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	assert.Equal(t, "2026-06-15", resp["expense_date"])
+
+	updated, err := env.Queries.GetExpenseByIDAndGroup(context.Background(), db.GetExpenseByIDAndGroupParams{
+		ID: fix.Expense.ID, GroupID: groupID,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "2026-06-15", updated.ExpenseDate.Time.Format("2006-01-02"))
+}
+
 func TestExpenses_Update_RecalculatesSplits(t *testing.T) {
 	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
 	fix := testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})

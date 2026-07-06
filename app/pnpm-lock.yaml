@@ -62,9 +62,6 @@ importers:
       expo-linking:
         specifier: ~8.0.12
         version: 8.0.12(expo@54.0.35)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
-      expo-local-authentication:
-        specifier: ~17.0.8
-        version: 17.0.8(expo@54.0.35)
       expo-localization:
         specifier: ~17.0.9
         version: 17.0.9(expo@54.0.35)(react@19.1.0)
@@ -89,9 +86,6 @@ importers:
       i18next:
         specifier: ^26.1.0
         version: 26.2.0(typescript@5.9.3)
-      js-sha256:
-        specifier: ^0.11.1
-        version: 0.11.1
       posthog-react-native:
         specifier: ^4.45.14
         version: 4.45.14(@react-native-async-storage/async-storage@2.2.0(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0)))(@react-navigation/native@7.2.4(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(expo-application@7.0.8(expo@54.0.35))(expo-device@8.0.10(expo@54.0.35))(expo-file-system@19.0.23(expo@54.0.35)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0)))(expo-localization@17.0.9(expo@54.0.35)(react@19.1.0))(react-native-safe-area-context@5.6.2(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-svg@15.12.1(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))
@@ -2311,11 +2305,6 @@ packages:
       react: '*'
       react-native: '*'
 
-  expo-local-authentication@17.0.8:
-    resolution: {integrity: sha512-Q5fXHhu6w3pVPlFCibU72SYIAN+9wX7QpFn9h49IUqs0Equ44QgswtGrxeh7fdnDqJrrYGPet5iBzjnE70uolA==}
-    peerDependencies:
-      expo: '*'
-
   expo-localization@17.0.9:
     resolution: {integrity: sha512-k5eYHr7iLMob3M8cHH6bgDrDRmqnZG8xKGLhpx8ST+LsFXmSgYpJ/t0VwWm0gz64C/K669XhObdG3D6QwCGqhw==}
     peerDependencies:
@@ -2981,9 +2970,6 @@ packages:
 
   jimp-compact@0.16.1:
     resolution: {integrity: sha512-dZ6Ra7u1G8c4Letq/B5EzAxj4tLFHL+cGtdpR+PVm4yzPDj+lCk+AbivWt1eOM+ikzkowtyV7qSqX6qr3t71Ww==}
-
-  js-sha256@0.11.1:
-    resolution: {integrity: sha512-o6WSo/LUvY2uC4j7mO50a2ms7E/EAdbP0swigLV+nzHKTTaYnaLIWJ02VdXrsJX0vGedDESQnLsOekr94ryfjg==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -7238,11 +7224,6 @@ snapshots:
       - expo
       - supports-color
 
-  expo-local-authentication@17.0.8(expo@54.0.35):
-    dependencies:
-      expo: 54.0.35(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.24)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(typescript@5.9.3)
-      invariant: 2.2.4
-
   expo-localization@17.0.9(expo@54.0.35)(react@19.1.0):
     dependencies:
       expo: 54.0.35(@babel/core@7.29.0)(@expo/metro-runtime@6.1.2)(expo-router@6.0.24)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(typescript@5.9.3)
@@ -8181,8 +8162,6 @@ snapshots:
       - ts-node
 
   jimp-compact@0.16.1: {}
-
-  js-sha256@0.11.1: {}
 
   js-tokens@4.0.0: {}
 

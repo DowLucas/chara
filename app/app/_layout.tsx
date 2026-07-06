@@ -226,7 +226,6 @@ export default function RootLayout() {
           <Stack.Screen name="groups/scan" options={{ presentation: 'modal' }} />
           <Stack.Screen name="join/[server]/[token]" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="expenses/[server]/[id]" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="settings/security-code" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="settings/about" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="settings/accounts" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="settings/archived-groups" options={{ animation: 'slide_from_right' }} />
