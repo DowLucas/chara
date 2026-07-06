@@ -194,6 +194,18 @@ On this Proxmox host Docker runs inside an unprivileged LXC whose AppArmor profi
 
 The Expo app caches `/.well-known/chara-instance` at module load (`app/lib/api.ts`), so after toggling a backend feature flag (e.g. adding `GEMINI_API_KEY`) you must hard-reload the Expo bundle (`r` in Metro) — restarting only the server isn't enough.
 
+## Release
+
+```
+./release [version]
+```
+
+`./release` (at the repo root) cuts a production release directly off `main` — there is no `development` branch anymore (it was deleted after the 1.0.13 release; recent work lands via feature-branch PRs straight to `main`, and release does the same). It syncs local `main`, creates a short-lived `release/<version>` branch, bumps `app/app.config.ts` version (auto-increments patch if no arg given), commits + pushes that branch, opens a PR into `main` and merges it (`--squash --admin` — `main` is protected: review required, merge commits disallowed), then builds Android **locally** (requires JDK 17 at `/usr/lib/jvm/java-17-openjdk-amd64` — the default JDK on this host is 21, which the Gradle build rejects) and submits it to the Play Store internal track, and builds iOS on **EAS cloud** with `--auto-submit` straight to App Store Connect. `eas build --local` cannot auto-submit, so Android submission is always a separate `eas submit` call after the local build finishes; iOS auto-submits as part of the same `eas build` invocation.
+
+Do not confuse this with `./deploy` — that's an unrelated directory holding self-host Docker deployment config (`docker-compose.yml`, `Dockerfile`, `.env.example`), not an executable.
+
+Android build artifacts land in `build-artifacts/chara-android-<version>.aab` (gitignored).
+
 ## Key architectural docs
 
 - `docs/02-product-strategy.md` — MVP scope, feature priority matrix (P0/P1/P2/P3), target audiences

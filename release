@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+# Cut a production release for both stores, directly off `main`:
+#   1. Create a short-lived release/<version> branch off up-to-date main,
+#      bump app/app.config.ts version on it, commit, push.
+#   2. Open a PR release/<version> -> main and merge it (squash + admin
+#      override, since main is a protected branch: review required, merge
+#      commits disallowed).
+#   3. Build Android locally (needs JDK 17 — the default JDK on this host is
+#      21, which the Gradle build rejects) and submit it to Play Store
+#      internal track. `eas build --local` cannot auto-submit, so submission
+#      is a separate `eas submit` call.
+#   4. Build iOS on EAS's cloud build servers with --auto-submit, which
+#      ships straight to App Store Connect once the cloud build finishes.
+#
+# Usage: ./release [version]
+#   version   Optional explicit version string (e.g. 1.1.0). If omitted,
+#             the patch component of the current app.config.ts version is
+#             incremented automatically.
+#
+# There is no `development` branch anymore — recent work lands via
+# feature-branch PRs straight to main, so release does the same instead of
+# depending on a long-lived integration branch.
+#
+# Idempotent up to the PR step: safe to re-run if a build fails, though
+# re-running after main already merged will just no-op the merge step.
+set -euo pipefail
+
+cd "$(dirname "$0")/app"
+
+MAIN_BRANCH="main"
+JAVA17_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
+
+if [[ ! -d "$JAVA17_HOME" ]]; then
+  echo "error: JDK 17 not found at $JAVA17_HOME — required for the local Android build" >&2
+  exit 1
+fi
+
+echo "==> syncing local $MAIN_BRANCH"
+git -C .. checkout "$MAIN_BRANCH"
+git -C .. pull --ff-only origin "$MAIN_BRANCH"
+
+current_version="$(grep -oP "version: '\K[^']+" app.config.ts)"
+if [[ -n "${1:-}" ]]; then
+  new_version="$1"
+else
+  new_version="$(awk -F. '{printf "%s.%s.%d", $1, $2, $3+1}' <<<"$current_version")"
+fi
+
+REL_BRANCH="release/$new_version"
+
+echo "==> bumping version: $current_version -> $new_version"
+git -C .. checkout -b "$REL_BRANCH"
+sed -i "s/version: '$current_version'/version: '$new_version'/" app.config.ts
+git -C .. add app/app.config.ts
+git -C .. commit -m "chore: bump app version to $new_version"
+git -C .. push -u origin "$REL_BRANCH"
+
+echo "==> opening PR $REL_BRANCH -> $MAIN_BRANCH"
+gh pr create --base "$MAIN_BRANCH" --head "$REL_BRANCH" \
+  --title "Release $new_version" \
+  --body "Automated release PR via ./release. Bumps app version to $new_version." \
+  || true
+pr_number="$(gh pr list --head "$REL_BRANCH" --base "$MAIN_BRANCH" --json number --jq '.[0].number')"
+
+if [[ -z "$pr_number" ]]; then
+  echo "error: could not find/create PR for $REL_BRANCH -> $MAIN_BRANCH" >&2
+  exit 1
+fi
+
+echo "==> merging PR #$pr_number (squash + admin override)"
+gh pr merge "$pr_number" --squash --admin --subject "Release $new_version"
+
+echo "==> syncing local $MAIN_BRANCH"
+git -C .. checkout "$MAIN_BRANCH"
+git -C .. pull --ff-only origin "$MAIN_BRANCH"
+git -C .. branch -d "$REL_BRANCH"
+
+echo "==> building Android locally (JDK 17)"
+mkdir -p ../build-artifacts
+android_output="../build-artifacts/chara-android-$new_version.aab"
+JAVA_HOME="$JAVA17_HOME" PATH="$JAVA17_HOME/bin:$PATH" \
+  eas build --local --platform android --profile production --non-interactive \
+  --output "$android_output"
+
+echo "==> submitting Android build to Play Store (internal track)"
+eas submit --platform android --profile production --non-interactive --path "$android_output"
+
+echo "==> building iOS on EAS cloud with auto-submit"
+eas build --platform ios --profile production --auto-submit --non-interactive
+
+echo "==> done. Android submitted; iOS build+submit running on EAS — check https://expo.dev for status."
