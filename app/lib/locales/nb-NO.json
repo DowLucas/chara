@@ -113,6 +113,10 @@
     "you": "Du"
   },
   "addExpense": {
+    "addCategory": "Legg til kategori…",
+    "addCategoryPlaceholder": "f.eks. Suvenirer",
+    "addCategorySubmit": "Legg til",
+    "addCategoryTitle": "Ny kategori",
     "amount": "beløp",
     "amountPlaceholder": "0",
     "amountsLabel": "beløp",
@@ -334,7 +338,10 @@
     "receiptPermissionTitle": "Tillatelse trengs",
     "receiptSheetTitle": "Legg til kvittering",
     "receiptTakePhoto": "Ta et bilde",
+    "receiptTooLargeBody": "Bildet er for stort til å lastes opp. Prøv et mindre bilde.",
+    "receiptTooLargeTitle": "Bildet er for stort",
     "receiptUploading": "Laster opp …",
+    "receiptUploadingPct": "Laster opp… {{pct}} %",
     "reload": "Last på nytt",
     "savedToast": "Endringer lagret.",
     "staleBanner": "Denne utgiften har endret seg siden du åpnet den. Last på nytt for å se siste versjon.",

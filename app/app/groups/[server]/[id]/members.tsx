@@ -136,7 +136,7 @@ export default function GroupMembersScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <TopBar
-        left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
+        left={<IconButton icon="arrow-left" onPress={() => router.back()} label={t('common.back')} />}
       />
       <ScrollView
         style={styles.scroll}

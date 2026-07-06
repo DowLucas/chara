@@ -21,6 +21,7 @@ import {
   spacing,
 } from '@/lib/theme';
 import { evalExpression, hasOperator } from '@/lib/evalExpression';
+import { markPopupClosed } from '@/lib/popup-guard';
 
 /**
  * Modal math keypad. Slides up over the screen; tapping the scrim or Done closes it.
@@ -131,14 +132,22 @@ export function AmountKeypad({
     onChange(formatResolved(r));
   };
 
+  // Close via scrim tap / hardware back — guard against the dismissal tap
+  // leaking through to whatever sits underneath.
+  const handleClose = () => {
+    markPopupClosed();
+    onClose();
+  };
+
   // Submit + close. Evaluates first so a half-typed expression resolves cleanly.
   const handleDone = () => {
-    if (!value) { onClose(); return; }
-    if (!hasOperator(value)) { onSubmit(value); return; }
+    if (!value) { handleClose(); return; }
+    if (!hasOperator(value)) { markPopupClosed(); onSubmit(value); return; }
     const r = evalExpression(value);
     if (r === null) return;
     const resolved = formatResolved(r);
     onChange(resolved);
+    markPopupClosed();
     onSubmit(resolved);
   };
 
@@ -196,9 +205,9 @@ export function AmountKeypad({
       transparent
       animationType="none"
       statusBarTranslucent
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
-      <Pressable style={styles.scrimPressable} onPress={onClose}>
+      <Pressable style={styles.scrimPressable} onPress={handleClose}>
         <Animated.View
           pointerEvents="none"
           style={[StyleSheet.absoluteFill, styles.scrimBg, { opacity: scrimOpacity }]}

@@ -20,7 +20,7 @@ import { Avatar } from '@/components/Avatar';
 import { AmountKeypad } from '@/components/AmountKeypad';
 import { currentLocale } from '@/lib/i18n';
 import { initialsOf, makeNameShortener } from '@/lib/name';
-import { avatarImageSource, GroupMember, ScannedReceiptItem } from '@/lib/api';
+import { avatarImageSourceOn, GroupMember, ScannedReceiptItem } from '@/lib/api';
 import { decimalToMinor } from '@/lib/money-utils';
 import { markPopupClosed } from '@/lib/popup-guard';
 import {
@@ -59,7 +59,9 @@ export interface ScanItemsAssignProps {
   members: GroupMember[];
   /** ID of the current user's group-member row (for the "you" label). */
   currentMemberId?: string;
-  authToken: string | null;
+  /** Home server of the group — avatar thumbnails (and their auth token)
+   *  resolve against this server, not the default account. */
+  serverUrl: string;
   onCancel: () => void;
   /** Called with the resolved per-member amounts in minor units. The
    *  caller is responsible for flipping the expense to exact split and
@@ -209,7 +211,7 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
   function memberSource(memberId: string) {
     const m = props.members.find((mm) => mm.id === memberId);
     if (!m) return undefined;
-    return avatarImageSource(m, props.authToken);
+    return avatarImageSourceOn(props.serverUrl, m);
   }
 
   return (
@@ -222,7 +224,7 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <TopBar
           title={t('scanItems.title')}
-          left={<IconButton icon="x" onPress={props.onCancel} />}
+          left={<IconButton icon="x" onPress={props.onCancel} label={t('common.cancel')} />}
         />
 
         <ScrollView

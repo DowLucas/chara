@@ -117,6 +117,10 @@
     "you": "tu"
   },
   "addExpense": {
+    "addCategory": "Aggiungi categoria…",
+    "addCategoryPlaceholder": "es. Souvenir",
+    "addCategorySubmit": "Aggiungi",
+    "addCategoryTitle": "Nuova categoria",
     "amount": "importo",
     "amountPlaceholder": "0",
     "amountsLabel": "importi",
@@ -142,7 +146,6 @@
     "multiplePayers": "Più persone",
     "mustTotal": "deve fare {{amount}}",
     "nWays": "{{count}} persone",
-    "nWays_many": "{{count}} persone",
     "nWays_one": "{{count}} persone",
     "nWays_other": "{{count}} persone",
     "off": "in meno",
@@ -183,7 +186,8 @@
     },
     "whenLabel": "quando",
     "whoPaid": "chi ha pagato?",
-    "you": "tu"
+    "you": "tu",
+    "nWays_many": "{{count}} persone"
   },
   "addServer": {
     "appTooNew": "Questo server è troppo vecchio per Chara. Chiedi a chi lo gestisce di aggiornarlo.",
@@ -339,7 +343,10 @@
     "receiptPermissionTitle": "Serve un permesso",
     "receiptSheetTitle": "Aggiungi scontrino",
     "receiptTakePhoto": "Scatta una foto",
+    "receiptTooLargeBody": "L'immagine è troppo grande per essere caricata. Prova con una foto più piccola.",
+    "receiptTooLargeTitle": "Immagine troppo grande",
     "receiptUploading": "Caricamento…",
+    "receiptUploadingPct": "Caricamento… {{pct}}%",
     "reload": "Ricarica",
     "savedToast": "Modifiche salvate.",
     "staleBanner": "Questa spesa è cambiata da quando l'hai aperta. Ricarica per vedere l'ultima versione.",

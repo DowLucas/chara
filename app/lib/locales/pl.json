@@ -121,6 +121,10 @@
     "you": "Ty"
   },
   "addExpense": {
+    "addCategory": "Dodaj kategorię…",
+    "addCategoryPlaceholder": "np. Pamiątki",
+    "addCategorySubmit": "Dodaj",
+    "addCategoryTitle": "Nowa kategoria",
     "amount": "kwota",
     "amountPlaceholder": "0",
     "amountsLabel": "kwoty",
@@ -146,8 +150,6 @@
     "multiplePayers": "Wielu płacących",
     "mustTotal": "musi sumować się do {{amount}}",
     "nWays": "na {{count}}",
-    "nWays_few": "na {{count}}",
-    "nWays_many": "na {{count}}",
     "nWays_one": "na 1",
     "nWays_other": "na {{count}}",
     "off": "za dużo o",
@@ -188,7 +190,9 @@
     },
     "whenLabel": "kiedy",
     "whoPaid": "kto zapłacił?",
-    "you": "Ty"
+    "you": "Ty",
+    "nWays_few": "na {{count}}",
+    "nWays_many": "na {{count}}"
   },
   "addServer": {
     "appTooNew": "Ten serwer jest starszy niż wspiera Chara. Poproś hosta o aktualizację.",
@@ -344,7 +348,10 @@
     "receiptPermissionTitle": "Wymagane uprawnienie",
     "receiptSheetTitle": "Dodaj paragon",
     "receiptTakePhoto": "Zrób zdjęcie",
+    "receiptTooLargeBody": "Ten obraz jest zbyt duży, aby go przesłać. Spróbuj mniejszego zdjęcia.",
+    "receiptTooLargeTitle": "Obraz zbyt duży",
     "receiptUploading": "Przesyłanie…",
+    "receiptUploadingPct": "Przesyłanie… {{pct}}%",
     "reload": "Odśwież",
     "savedToast": "Zmiany zapisane.",
     "staleBanner": "Ten wydatek zmienił się od czasu, gdy go otworzyłeś. Odśwież, aby zobaczyć najnowszą wersję.",

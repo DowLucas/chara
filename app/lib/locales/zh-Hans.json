@@ -113,6 +113,10 @@
     "you": "我"
   },
   "addExpense": {
+    "addCategory": "添加类别…",
+    "addCategoryPlaceholder": "例如：纪念品",
+    "addCategorySubmit": "添加",
+    "addCategoryTitle": "新类别",
     "amount": "金额",
     "amountPlaceholder": "0",
     "amountsLabel": "金额",
@@ -334,7 +338,10 @@
     "receiptPermissionTitle": "需要授权",
     "receiptSheetTitle": "添加小票",
     "receiptTakePhoto": "拍照",
+    "receiptTooLargeBody": "该图片太大，无法上传。请尝试较小的照片。",
+    "receiptTooLargeTitle": "图片太大",
     "receiptUploading": "上传中……",
+    "receiptUploadingPct": "正在上传… {{pct}}%",
     "reload": "重新加载",
     "savedToast": "已保存。",
     "staleBanner": "这笔支出已被修改，请重新加载查看最新内容。",

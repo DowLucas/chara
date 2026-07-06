@@ -28,8 +28,7 @@ import { GroupEmptyState } from '@/components/GroupEmptyState';
 import { addExpenseHref, importHref } from '@/components/GroupEmptyState.helpers';
 import {
   apiFor,
-  authToken,
-  avatarImageSource,
+  avatarImageSourceOn,
   Group,
   Expense,
   Balance,
@@ -38,10 +37,10 @@ import {
   SettlementSuggestion,
 } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/lib/auth';
+import { useAccount } from '@/lib/accounts';
 import { formatMinorUnits, decimalToMinor, formatDate } from '@/lib/i18n';
 import { initialsOf, makeNameShortener } from '@/lib/name';
-import { isPopupJustClosed } from '@/lib/popup-guard';
+import { isPopupJustClosed, markPopupClosed } from '@/lib/popup-guard';
 import { subscribeGroupChanged, notifyGroupChanged } from '@/lib/group-refresh';
 import { computeStandings, expensesInvolvingMember } from '@/lib/standings';
 import { categoryIcon } from '@/lib/categories';
@@ -62,7 +61,8 @@ export default function GroupDetailScreen() {
   const api = apiFor(serverUrl);
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  // "You" must resolve to this server's account, not the default account.
+  const user = useAccount(serverUrl)?.user ?? null;
   const [group, setGroup] = useState<Group | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [balances, setBalances] = useState<Balance[]>([]);
@@ -70,8 +70,11 @@ export default function GroupDetailScreen() {
   const [suggestions, setSuggestions] = useState<SettlementSuggestion[]>([]);
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
+  const closeInfo = () => {
+    markPopupClosed();
+    setInfoOpen(false);
+  };
   // Multi-select merge (expenses/Overview tab). Long-press a row to enter.
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -138,16 +141,6 @@ export default function GroupDetailScreen() {
       setMerging(false);
     }
   }
-
-  useEffect(() => {
-    let cancelled = false;
-    authToken().then((t) => {
-      if (!cancelled) setToken(t);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const load = useCallback(async () => {
     if (!id || !serverUrl) return;
@@ -287,7 +280,7 @@ export default function GroupDetailScreen() {
   const myNet = myBalance ? decimalToMinor(myBalance.net_balance) : 0;
   const memberInitials = members.map((m) => ({
     initials: initialsOf(m.name),
-    source: avatarImageSource(m, token),
+    source: avatarImageSourceOn(serverUrl, m),
   }));
 
 
@@ -304,6 +297,7 @@ export default function GroupDetailScreen() {
                 if (router.canGoBack()) router.back();
                 else router.replace('/(tabs)');
               }}
+              label={t('common.back')}
             />
             <TouchableOpacity
               onPress={() => setInfoOpen(true)}
@@ -582,7 +576,7 @@ export default function GroupDetailScreen() {
                       style={styles.memberCardHeader}
                     >
                       <View style={styles.standingLeft}>
-                        <Avatar initials={initials} source={avatarImageSource(m, token)} />
+                        <Avatar initials={initials} source={avatarImageSourceOn(serverUrl, m)} />
                         <View style={styles.standingTextWrap}>
                           <Text style={styles.rowTitle} numberOfLines={1}>
                             {isYou ? t('expenseDetail.you') : shortenMember(m.name)}
@@ -841,16 +835,16 @@ export default function GroupDetailScreen() {
         visible={infoOpen}
         transparent
         animationType="fade"
-        onRequestClose={() => setInfoOpen(false)}
+        onRequestClose={closeInfo}
       >
-        <Pressable style={styles.infoBackdrop} onPress={() => setInfoOpen(false)}>
+        <Pressable style={styles.infoBackdrop} onPress={closeInfo}>
           <Pressable style={styles.infoCard} onPress={(e) => e.stopPropagation()}>
             <View style={styles.infoHeader}>
               <Text style={styles.infoTitle} numberOfLines={1}>
                 {group?.name ?? t('common.dash')}
               </Text>
               <TouchableOpacity
-                onPress={() => setInfoOpen(false)}
+                onPress={closeInfo}
                 hitSlop={8}
                 accessibilityLabel={t('common.close')}
               >
@@ -872,7 +866,7 @@ export default function GroupDetailScreen() {
                       // touch handling). Dismiss this card first, then queue
                       // the alert on the next frame so its open animation
                       // doesn't collide with our close animation.
-                      setInfoOpen(false);
+                      closeInfo();
                       requestAnimationFrame(() => {
                         showAlert({
                           title: t('common.mainServerLabel'),

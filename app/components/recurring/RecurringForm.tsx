@@ -380,10 +380,10 @@ export function RecurringForm({
         title={
           mode === 'create' ? t('recurring.newButton') : t('recurring.listHeader')
         }
-        left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
+        left={<IconButton icon="arrow-left" onPress={() => router.back()} label={t('common.back')} />}
         right={
           mode === 'edit' ? (
-            <IconButton icon="more-horizontal" onPress={openMoreSheet} />
+            <IconButton icon="more-horizontal" onPress={openMoreSheet} label={t('expenseDetail.actions.menu')} />
           ) : undefined
         }
       />
@@ -436,7 +436,7 @@ export function RecurringForm({
             currency={currency === '—' ? '' : currency}
             value={split}
             onChange={setSplit}
-            authToken={null}
+            serverUrl={serverUrl}
           />
         </Section>
 

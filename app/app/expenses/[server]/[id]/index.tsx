@@ -16,8 +16,7 @@ import { hapticWarning } from '@/lib/haptics';
 import { Trans, useTranslation } from 'react-i18next';
 import {
   apiFor,
-  authToken,
-  avatarImageSource,
+  avatarImageSourceOn,
   Expense,
   ExpenseAttachment,
   GroupDetail,
@@ -50,7 +49,6 @@ export default function ExpenseDetailScreen() {
   const [viewer, setViewer] = useState<{ uri: string; headers: Record<string, string> } | null>(
     null,
   );
-  const [token, setToken] = useState<string | null>(null);
   const [actionSheetVisible, setActionSheetVisible] = useState(false);
   const [receiptSheetVisible, setReceiptSheetVisible] = useState(false);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
@@ -60,16 +58,6 @@ export default function ExpenseDetailScreen() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const isAuthor = !!user && !!expense && user.id === expense.created_by_id;
-
-  useEffect(() => {
-    let cancelled = false;
-    authToken().then((t) => {
-      if (!cancelled) setToken(t);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   // Load on focus so returning from the edit screen reflects fresh data.
   // The project has no SWR/React Query layer — this is the cheapest
@@ -265,7 +253,7 @@ export default function ExpenseDetailScreen() {
   if (!expense) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <TopBar left={<IconButton icon="arrow-left" onPress={() => router.back()} />} />
+        <TopBar left={<IconButton icon="arrow-left" onPress={() => router.back()} label={t('common.back')} />} />
         <View style={styles.loading}>
           <Text style={styles.loadingText}>{t('common.loading')}</Text>
         </View>
@@ -293,7 +281,7 @@ export default function ExpenseDetailScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <TopBar
-        left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
+        left={<IconButton icon="arrow-left" onPress={() => router.back()} label={t('common.back')} />}
         right={
           isAuthor ? (
             <IconButton
@@ -385,7 +373,7 @@ export default function ExpenseDetailScreen() {
                   initials={initialsOf(m.name)}
                   share={String(eachOwes)}
                   currency={expense.currency}
-                  avatarSource={avatarImageSource(m, token)}
+                  avatarSource={avatarImageSourceOn(serverUrl, m)}
                 />
               );
             })
@@ -406,7 +394,7 @@ export default function ExpenseDetailScreen() {
                   initials={member ? initialsOf(member.name) : '??'}
                   share={String(shareMinor)}
                   currency={expense.currency}
-                  avatarSource={avatarImageSource(member, token)}
+                  avatarSource={avatarImageSourceOn(serverUrl, member)}
                 />
               );
             })}
@@ -451,7 +439,9 @@ export default function ExpenseDetailScreen() {
                 activeOpacity={0.7}
                 onPress={async () => {
                   if (!a.url) return;
-                  const token = await authToken();
+                  // Attachment fetch must authenticate against this
+                  // expense's home server, not the default account.
+                  const token = account?.token ?? null;
                   const uri = a.url.startsWith('http') ? a.url : `${serverUrl}${a.url}`;
                   const headers: Record<string, string> = token
                     ? { Authorization: `Bearer ${token}` }

@@ -92,7 +92,7 @@ export default function RecurringListScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <TopBar
         title={t('recurring.listHeader')}
-        left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
+        left={<IconButton icon="arrow-left" onPress={() => router.back()} label={t('common.back')} />}
       />
       <ScrollView
         style={styles.scroll}

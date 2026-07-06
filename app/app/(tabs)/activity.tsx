@@ -33,7 +33,7 @@ import { ContentContainer } from '@/components/ContentContainer';
 import { EmptyState } from '@/components/EmptyState';
 import { Text } from '@/components/Text';
 import { useAggregatedActivity } from '@/lib/aggregated-reads';
-import { useAuth } from '@/lib/auth';
+import { useAccounts } from '@/lib/accounts';
 import {
   formatDate,
   formatTime,
@@ -71,7 +71,15 @@ function isSameDay(a: Date, b: Date) {
 export default function ActivityScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  // Rows are aggregated across servers — "you" must be matched against the
+  // user id of the account each row's event came from, not the default
+  // account's user.
+  const { accounts } = useAccounts();
+  const userIdByServer = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const a of accounts) m[a.serverUrl] = a.user?.id ?? '';
+    return m;
+  }, [accounts]);
   const reads = useAggregatedActivity(50);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -155,7 +163,7 @@ export default function ActivityScreen() {
                 <ActivityRow
                   key={r.event.id}
                   row={r}
-                  youUserId={user?.id ?? ''}
+                  youUserId={userIdByServer[r.serverUrl] ?? ''}
                 />
               ))}
             </View>

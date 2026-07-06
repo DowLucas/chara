@@ -88,7 +88,7 @@ export default function GroupStatsScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <TopBar
         title={t('groupStats.title')}
-        left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
+        left={<IconButton icon="arrow-left" onPress={() => router.back()} label={t('common.back')} />}
       />
       <ScrollView
         style={styles.scroll}

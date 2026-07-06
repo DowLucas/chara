@@ -100,7 +100,7 @@ export default function GroupCategoriesScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <TopBar
         title={t('groupCategories.title')}
-        left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
+        left={<IconButton icon="arrow-left" onPress={() => router.back()} label={t('common.back')} />}
       />
 
       {loadError && (

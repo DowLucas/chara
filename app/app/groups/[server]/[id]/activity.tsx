@@ -23,7 +23,7 @@ import { ContentContainer } from '@/components/ContentContainer';
 import { IconButton } from '@/components/IconButton';
 import { EmptyState } from '@/components/EmptyState';
 import { Text } from '@/components/Text';
-import { useAuth } from '@/lib/auth';
+import { useAccount } from '@/lib/accounts';
 import {
   apiFor,
   ActivityEvent,
@@ -60,7 +60,8 @@ export default function GroupActivityScreen() {
   const groupId = id ?? '';
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  // "You" must resolve to this server's account, not the default account.
+  const user = useAccount(serverUrl)?.user ?? null;
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -117,7 +118,7 @@ export default function GroupActivityScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <TopBar
         title={t('activity.title')}
-        left={<IconButton icon="chevron-left" onPress={() => router.back()} />}
+        left={<IconButton icon="chevron-left" onPress={() => router.back()} label={t('common.back')} />}
       />
       <ScrollView
         style={styles.scroll}

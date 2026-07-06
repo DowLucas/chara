@@ -6,7 +6,7 @@ import { colors } from '@/lib/theme';
 interface Props {
   icon: React.ComponentProps<typeof Feather>['name'];
   onPress?: () => void;
-  label?: string;
+  label: string;
   size?: number;
   color?: string;
 }
@@ -15,6 +15,7 @@ export function IconButton({ icon, onPress, label, size = 22, color = colors.gra
   return (
     <TouchableOpacity
       onPress={onPress}
+      accessibilityRole="button"
       accessibilityLabel={label}
       style={styles.btn}
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}

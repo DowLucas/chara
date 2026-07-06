@@ -32,7 +32,6 @@ import {
 import { SettlementImpactSheet } from '@/components/SettlementImpactSheet';
 import {
   apiFor,
-  authToken,
   Expense,
   GroupDetail,
   Settlement,
@@ -150,23 +149,12 @@ export default function EditExpenseScreen() {
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [staleBannerVisible, setStaleBannerVisible] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pendingPayload, setPendingPayload] =
     useState<ExpenseWizardSubmitPayload | null>(null);
   const [impactSheetVisible, setImpactSheetVisible] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    authToken().then((t) => {
-      if (!cancelled) setToken(t);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     if (!id || !groupId || !serverUrl) return;
@@ -321,7 +309,7 @@ export default function EditExpenseScreen() {
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <TopBar
         title={t('expenseDetail.editTitle')}
-        left={<IconButton icon="x" onPress={() => router.back()} />}
+        left={<IconButton icon="x" onPress={() => router.back()} label={t('common.close')} />}
       />
 
       {staleBannerVisible && (
@@ -359,7 +347,7 @@ export default function EditExpenseScreen() {
           currentUserMemberId={currentUserMemberId}
           initialValue={initialValue}
           convertFx={api.convertFx}
-          authToken={token}
+          serverUrl={serverUrl}
           submitting={submitting}
           submitLabel={t('impactSheet.save')}
           onSubmit={handleSubmit}

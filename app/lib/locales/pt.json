@@ -117,6 +117,10 @@
     "you": "Você"
   },
   "addExpense": {
+    "addCategory": "Adicionar categoria…",
+    "addCategoryPlaceholder": "ex.: Lembranças",
+    "addCategorySubmit": "Adicionar",
+    "addCategoryTitle": "Nova categoria",
     "amount": "valor",
     "amountPlaceholder": "0",
     "amountsLabel": "valores",
@@ -142,7 +146,6 @@
     "multiplePayers": "Vários pagadores",
     "mustTotal": "deve totalizar {{amount}}",
     "nWays": "{{count}} partes",
-    "nWays_many": "{{count}} partes",
     "nWays_one": "1 parte",
     "nWays_other": "{{count}} partes",
     "off": "a menos",
@@ -183,7 +186,8 @@
     },
     "whenLabel": "quando",
     "whoPaid": "quem pagou?",
-    "you": "Você"
+    "you": "Você",
+    "nWays_many": "{{count}} partes"
   },
   "addServer": {
     "appTooNew": "Este servidor é mais antigo do que o Chara suporta. Peça ao administrador para atualizar.",
@@ -339,7 +343,10 @@
     "receiptPermissionTitle": "Permissão necessária",
     "receiptSheetTitle": "Adicionar recibo",
     "receiptTakePhoto": "Tirar uma foto",
+    "receiptTooLargeBody": "Essa imagem é grande demais para enviar. Tente uma foto menor.",
+    "receiptTooLargeTitle": "Imagem grande demais",
     "receiptUploading": "Enviando…",
+    "receiptUploadingPct": "Enviando… {{pct}}%",
     "reload": "Recarregar",
     "savedToast": "Alterações salvas.",
     "staleBanner": "Esta despesa mudou desde que você abriu. Recarregue para ver o mais recente.",

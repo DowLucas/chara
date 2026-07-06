@@ -26,7 +26,7 @@ import { useTranslation } from 'react-i18next';
 
 import { AmountKeypad } from '@/components/AmountKeypad';
 import { Avatar } from '@/components/Avatar';
-import { avatarImageSource, GroupMember } from '@/lib/api';
+import { avatarImageSourceOn, GroupMember } from '@/lib/api';
 import { currentLocale } from '@/lib/i18n';
 import { initialsOf } from '@/lib/name';
 import { previewApportion } from '@/lib/split';
@@ -71,8 +71,9 @@ export interface SplitEditorProps {
   onChange: (next: SplitValue) => void;
   /** Member id whose user_id === current user. Used to render "You". */
   currentUserMemberId?: string;
-  /** Auth token for fetching avatar thumbnails. */
-  authToken: string | null;
+  /** Home server of the group — avatar thumbnails (and their auth token)
+   *  resolve against this server, not the default account. */
+  serverUrl: string;
   /** Restrict the method picker. Defaults to all three. When length === 1
    *  the picker is hidden. */
   allowedMethods?: SplitMethod[];
@@ -108,7 +109,7 @@ export function SplitEditor({
   value,
   onChange,
   currentUserMemberId,
-  authToken,
+  serverUrl,
   allowedMethods = ['equal', 'exact', 'percentage'],
 }: SplitEditorProps) {
   const { t } = useTranslation();
@@ -312,7 +313,7 @@ export function SplitEditor({
                 <Avatar
                   initials={initialsOf(m.name)}
                   size="sm"
-                  source={avatarImageSource(m, authToken)}
+                  source={avatarImageSourceOn(serverUrl, m)}
                 />
                 <Text style={[styles.payerName, !inc && { color: colors.lead }]}>
                   {memberLabel(m)}

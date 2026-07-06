@@ -31,7 +31,7 @@ export default function ImportPickerScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
-      <TopBar left={<IconButton icon="arrow-left" onPress={() => router.back()} />} />
+      <TopBar left={<IconButton icon="arrow-left" onPress={() => router.back()} label={t('common.back')} />} />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={{ paddingBottom: insets.bottom + spacing.s7 }}

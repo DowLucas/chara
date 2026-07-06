@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Linking, Platform, Image } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
+import { isPopupJustClosed } from '@/lib/popup-guard';
 import { hapticError, hapticSuccess } from '@/lib/haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,7 +19,7 @@ import {
   GroupDetail,
   GroupMember,
 } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
+import { useAccount } from '@/lib/accounts';
 import { decimalToMinor, formatMinorUnits, formatDate, formatTime } from '@/lib/i18n';
 import {
   buildSwishLink,
@@ -69,7 +70,9 @@ export default function SettleMethodScreen() {
   const api = apiFor(serverUrl);
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  // "You" (and the Swish phone nudge) must resolve to this server's
+  // account, not the default account.
+  const user = useAccount(serverUrl)?.user ?? null;
 
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [stage, setStage] = useState<'pick' | 'awaiting' | 'done'>('pick');
@@ -178,6 +181,7 @@ export default function SettleMethodScreen() {
   }
 
   async function handleMethod(m: MethodId) {
+    if (isPopupJustClosed()) return;
     if (!m || submitting) return;
     if (m === 'manual') {
       await recordSettlement('manual');
@@ -253,7 +257,7 @@ export default function SettleMethodScreen() {
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <TopBar
           title={t('settleMethod.swishWaitTitle', { amount: formattedSwishAmount })}
-          left={<IconButton icon="arrow-left" onPress={() => { setStage('pick'); setSwishUrl(null); setSwishOpened(false); }} />}
+          left={<IconButton icon="arrow-left" onPress={() => { setStage('pick'); setSwishUrl(null); setSwishOpened(false); }} label={t('common.back')} />}
         />
         <ScrollView style={styles.scroll} contentContainerStyle={styles.awaitingScroll}>
           <ContentContainer>
@@ -365,7 +369,7 @@ export default function SettleMethodScreen() {
           accessibilityIgnoresInvertColors
         />
         <View style={[styles.settledClose, { top: insets.top + 8 }]}>
-          <IconButton icon="x" onPress={() => router.back()} />
+          <IconButton icon="x" onPress={() => router.back()} label={t('common.close')} />
         </View>
 
         {/* Paper card slides up over the image edge; the vermillion
@@ -404,7 +408,7 @@ export default function SettleMethodScreen() {
         title={isOutgoing
           ? t('settleMethod.sendTitle', { amount: formattedAmount })
           : t('settleMethod.requestTitle', { amount: formattedAmount })}
-        left={<IconButton icon="arrow-left" onPress={() => router.back()} />}
+        left={<IconButton icon="arrow-left" onPress={() => router.back()} label={t('common.back')} />}
       />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.pickScroll}>
         <ContentContainer>

@@ -113,6 +113,10 @@
     "you": "Du"
   },
   "addExpense": {
+    "addCategory": "Kategorie hinzufügen…",
+    "addCategoryPlaceholder": "z. B. Souvenirs",
+    "addCategorySubmit": "Hinzufügen",
+    "addCategoryTitle": "Neue Kategorie",
     "amount": "Betrag",
     "amountPlaceholder": "0",
     "amountsLabel": "Beträge",
@@ -334,7 +338,10 @@
     "receiptPermissionTitle": "Berechtigung erforderlich",
     "receiptSheetTitle": "Beleg hinzufügen",
     "receiptTakePhoto": "Foto aufnehmen",
+    "receiptTooLargeBody": "Dieses Bild ist zu groß zum Hochladen. Versuche ein kleineres Foto.",
+    "receiptTooLargeTitle": "Bild zu groß",
     "receiptUploading": "Lädt hoch…",
+    "receiptUploadingPct": "Wird hochgeladen… {{pct}} %",
     "reload": "Neu laden",
     "savedToast": "Änderungen gespeichert.",
     "staleBanner": "Diese Ausgabe wurde inzwischen geändert. Neu laden für den aktuellen Stand.",

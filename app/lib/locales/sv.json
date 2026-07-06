@@ -113,6 +113,10 @@
     "you": "Du"
   },
   "addExpense": {
+    "addCategory": "Lägg till kategori…",
+    "addCategoryPlaceholder": "t.ex. Souvenirer",
+    "addCategorySubmit": "Lägg till",
+    "addCategoryTitle": "Ny kategori",
     "amount": "belopp",
     "amountPlaceholder": "0",
     "amountsLabel": "belopp",
@@ -334,7 +338,10 @@
     "receiptPermissionTitle": "Behörighet krävs",
     "receiptSheetTitle": "Lägg till kvitto",
     "receiptTakePhoto": "Ta en bild",
+    "receiptTooLargeBody": "Bilden är för stor för att laddas upp. Prova ett mindre foto.",
+    "receiptTooLargeTitle": "Bilden är för stor",
     "receiptUploading": "Laddar upp…",
+    "receiptUploadingPct": "Laddar upp… {{pct}} %",
     "reload": "Ladda om",
     "savedToast": "Ändringarna sparades.",
     "staleBanner": "Utgiften har ändrats sedan du öppnade den. Ladda om för att se det senaste.",
