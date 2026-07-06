@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -203,31 +204,31 @@ function UrlStage({
   const canSubmit = urlInput.trim().length > 0;
   return (
     <View style={styles.stage}>
-      <View style={styles.headerBlock}>
-        <Text style={styles.eyebrow}>{t('addServer.eyebrow')}</Text>
-        <Text style={styles.headline}>{t('addServer.headline')}</Text>
-        <Text style={styles.bodyText}>{t('addServer.body')}</Text>
-      </View>
+      <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
+        <View style={styles.headerBlock}>
+          <Text style={styles.eyebrow}>{t('addServer.eyebrow')}</Text>
+          <Text style={styles.headline}>{t('addServer.headline')}</Text>
+          <Text style={styles.bodyText}>{t('addServer.body')}</Text>
+        </View>
 
-      <View style={styles.field}>
-        <Text style={styles.fieldLabel}>{t('addServer.urlLabel')}</Text>
-        <TextInput
-          value={urlInput}
-          onChangeText={setUrlInput}
-          placeholder={t('addServer.urlPlaceholder')}
-          placeholderTextColor={colors.lead}
-          keyboardType="url"
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoComplete="url"
-          returnKeyType="go"
-          onSubmitEditing={canSubmit ? onContinue : undefined}
-          style={styles.input}
-        />
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-      </View>
-
-      <View style={{ flex: 1 }} />
+        <View style={styles.field}>
+          <Text style={styles.fieldLabel}>{t('addServer.urlLabel')}</Text>
+          <TextInput
+            value={urlInput}
+            onChangeText={setUrlInput}
+            placeholder={t('addServer.urlPlaceholder')}
+            placeholderTextColor={colors.lead}
+            keyboardType="url"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="url"
+            returnKeyType="go"
+            onSubmitEditing={canSubmit ? onContinue : undefined}
+            style={styles.input}
+          />
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        </View>
+      </ScrollView>
 
       <TouchableOpacity
         style={[styles.cta, !canSubmit && styles.ctaDisabled]}
@@ -275,26 +276,26 @@ function ConfirmStage({
 
   return (
     <View style={styles.stage}>
-      <View style={styles.headerBlock}>
-        <Text style={styles.eyebrow}>{t('addServer.eyebrow')}</Text>
-        <Text style={styles.headline}>{t('addServer.confirmHeadline', { host })}</Text>
-      </View>
+      <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
+        <View style={styles.headerBlock}>
+          <Text style={styles.eyebrow}>{t('addServer.eyebrow')}</Text>
+          <Text style={styles.headline}>{t('addServer.confirmHeadline', { host })}</Text>
+        </View>
 
-      <View style={styles.card}>
-        <ConfirmRow label={t('addServer.confirmMode')} value={instance.mode} />
-        <ConfirmRow label={t('addServer.confirmVersion')} value={instance.version} />
-        <ConfirmRow
-          label={t('addServer.confirmMethods')}
-          value={instance.auth_methods.join(', ') || '—'}
-        />
-      </View>
+        <View style={styles.card}>
+          <ConfirmRow label={t('addServer.confirmMode')} value={instance.mode} />
+          <ConfirmRow label={t('addServer.confirmVersion')} value={instance.version} />
+          <ConfirmRow
+            label={t('addServer.confirmMethods')}
+            value={instance.auth_methods.join(', ') || '—'}
+          />
+        </View>
 
-      <TouchableOpacity onPress={onEdit} activeOpacity={0.85} style={styles.editRow}>
-        <Feather name="edit-2" size={14} color={colors.lead} />
-        <Text style={styles.editLabel}>{serverUrl}</Text>
-      </TouchableOpacity>
-
-      <View style={{ flex: 1 }} />
+        <TouchableOpacity onPress={onEdit} activeOpacity={0.85} style={styles.editRow}>
+          <Feather name="edit-2" size={14} color={colors.lead} />
+          <Text style={styles.editLabel}>{serverUrl}</Text>
+        </TouchableOpacity>
+      </ScrollView>
 
       <View style={styles.confirmButtons}>
         <TouchableOpacity
@@ -337,6 +338,9 @@ const styles = StyleSheet.create({
     paddingTop: spacing.s4,
   },
   stage: {
+    flex: 1,
+  },
+  scroll: {
     flex: 1,
   },
   centeredStage: {

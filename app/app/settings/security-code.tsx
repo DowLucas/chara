@@ -9,6 +9,7 @@ import {
   Keyboard,
   ActivityIndicator,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
 import { router } from 'expo-router';
@@ -148,7 +149,8 @@ export default function SecurityCodeScreen() {
         style={styles.body}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ContentContainer style={{ flex: 1 }}>
+        <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ContentContainer>
           <View style={styles.header}>
             <Text style={styles.eyebrow}>{t('securityCode.eyebrow')}</Text>
             <Text style={styles.headline}>{headline}</Text>
@@ -169,9 +171,10 @@ export default function SecurityCodeScreen() {
             returnKeyType="done"
             onSubmitEditing={handleSubmit}
           />
+        </ContentContainer>
+        </ScrollView>
 
-          <View style={{ flex: 1 }} />
-
+        <ContentContainer>
           <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
             <TouchableOpacity
               style={[styles.cta, !isValidSecurityCode(code) && styles.ctaDisabled]}
@@ -204,6 +207,7 @@ export default function SecurityCodeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper },
   body: { flex: 1, paddingHorizontal: spacing.s5, paddingTop: spacing.s5 },
+  scroll: { flex: 1 },
   header: { gap: spacing.s2, marginBottom: spacing.s5 },
   eyebrow: {
     fontFamily: fontMono,

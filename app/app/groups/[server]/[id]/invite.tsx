@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Share } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Share, ScrollView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -46,39 +46,47 @@ export default function GroupInviteScreen() {
         </TouchableOpacity>
       </View>
 
-      <ContentContainer style={styles.fill}>
-        {error ? (
+      {error ? (
+        <ContentContainer style={styles.fill}>
           <View style={styles.center}>
             <Text style={styles.body}>{error}</Text>
           </View>
-        ) : !group || !link ? (
+        </ContentContainer>
+      ) : !group || !link ? (
+        <ContentContainer style={styles.fill}>
           <View style={styles.center}>
             <ActivityIndicator color={colors.graphite} />
           </View>
-        ) : (
-          <>
-            <View style={styles.header}>
-              <Text style={styles.eyebrow}>{t('invite.eyebrow')}</Text>
-              <Text style={styles.headline}>{group.name}</Text>
-              <Text style={styles.body}>{t('invite.body')}</Text>
-            </View>
-
-            <View style={styles.qrWrap}>
-              <View style={styles.qrCard}>
-                <QRCode value={link} size={240} backgroundColor={colors.paper} color={colors.graphite} />
+        </ContentContainer>
+      ) : (
+        <>
+          <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+            <ContentContainer>
+              <View style={styles.header}>
+                <Text style={styles.eyebrow}>{t('invite.eyebrow')}</Text>
+                <Text style={styles.headline}>{group.name}</Text>
+                <Text style={styles.body}>{t('invite.body')}</Text>
               </View>
-              <Text style={styles.token} selectable>{group.invite_token}</Text>
-            </View>
 
+              <View style={styles.qrWrap}>
+                <View style={styles.qrCard}>
+                  <QRCode value={link} size={240} backgroundColor={colors.paper} color={colors.graphite} />
+                </View>
+                <Text style={styles.token} selectable>{group.invite_token}</Text>
+              </View>
+            </ContentContainer>
+          </ScrollView>
+
+          <ContentContainer>
             <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
               <TouchableOpacity style={styles.cta} onPress={shareLink} activeOpacity={0.85}>
                 <Feather name="share-2" size={18} color={colors.fgOnAccent} />
                 <Text style={styles.ctaLabel}>{t('invite.share')}</Text>
               </TouchableOpacity>
             </View>
-          </>
-        )}
-      </ContentContainer>
+          </ContentContainer>
+        </>
+      )}
     </View>
   );
 }
@@ -86,6 +94,8 @@ export default function GroupInviteScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper, paddingHorizontal: spacing.s5 },
   fill: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: { flexGrow: 1 },
   topRow: { paddingVertical: spacing.s2 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: { gap: spacing.s2, marginTop: spacing.s2, marginBottom: spacing.s4 },
