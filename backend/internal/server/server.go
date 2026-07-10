@@ -115,6 +115,12 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 	r.Get("/api/health/liveness", healthH.Liveness)
 	r.Get("/api/health/readiness", healthH.Readiness)
 
+	// Operator broadcast — gated by a static admin token inside the handler,
+	// not the app's JWT/protocol middleware (it's called by ops tooling, not
+	// the app). Disabled (404) when ADMIN_API_TOKEN is unset.
+	adminH := handler.NewAdminHandler(rc, cfg.AdminAPIToken)
+	r.Post("/api/admin/notify", adminH.Broadcast)
+
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.AuthRateLimit(30, 5))
 		r.Post("/api/auth/magic-link", authH.MagicLink)

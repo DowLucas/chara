@@ -53,6 +53,10 @@ type Config struct {
 	// Push
 	ExpoAccessToken string // optional
 
+	// AdminAPIToken gates the operator-only broadcast endpoint
+	// (POST /api/admin/notify). Empty = endpoint disabled (404).
+	AdminAPIToken string
+
 	// Social auth — hosted only
 	GoogleClientID     string
 	GoogleClientSecret string
@@ -129,6 +133,8 @@ func Load() (*Config, error) {
 		S3Region:    getEnv("S3_REGION", "us-east-1"),
 
 		ExpoAccessToken: getEnv("EXPO_ACCESS_TOKEN", ""),
+
+		AdminAPIToken: getEnv("ADMIN_API_TOKEN", ""),
 
 		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),

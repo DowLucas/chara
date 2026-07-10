@@ -62,6 +62,7 @@ func RegisterWorkers(pool *pgxpool.Pool, queries *db.Queries, baseURL string, ex
 	river.AddWorker(workers, &RecurringFireWorker{Pool: pool, Queries: queries})
 	river.AddWorker(workers, &PushNotifyWorker{Pool: pool, Queries: queries, Expo: expo, BaseURL: baseURL})
 	river.AddWorker(workers, &SettleReminderWorker{Pool: pool, Queries: queries, Expo: expo, BaseURL: baseURL})
+	river.AddWorker(workers, &BroadcastPushWorker{Pool: pool, Queries: queries, Expo: expo})
 	return workers
 }
 

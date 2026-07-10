@@ -27,3 +27,8 @@ WHERE gm.group_id = $1 AND gm.user_id != $2 AND gm.removed_at IS NULL;
 -- is nudging). Unlike ListPushTokensByGroup this does not exclude an actor —
 -- the caller supplies the exact recipient set.
 SELECT * FROM push_tokens WHERE user_id = ANY($1::text[]);
+
+-- name: ListAllPushTokens :many
+-- Every registered device. Used by the operator broadcast endpoint to fan a
+-- release-note notification out to all users.
+SELECT * FROM push_tokens;
