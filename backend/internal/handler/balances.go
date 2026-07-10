@@ -63,17 +63,17 @@ type SettlementSuggestion struct {
 }
 
 type SettlementResponse struct {
-	ID               string     `json:"id"`
-	GroupID          string     `json:"group_id"`
-	FromMemberID     string     `json:"from_member_id"`
-	ToMemberID       string     `json:"to_member_id"`
-	Amount           string     `json:"amount"`
-	Currency         string     `json:"currency"`
-	Note             *string    `json:"note,omitempty"`
-	Method           string     `json:"method"`
-	CreatedByID      string     `json:"created_by_id"`
-	CreatedAt        time.Time  `json:"created_at"`
-	RevertedAt       *time.Time `json:"reverted_at,omitempty"`
+	ID           string     `json:"id"`
+	GroupID      string     `json:"group_id"`
+	FromMemberID string     `json:"from_member_id"`
+	ToMemberID   string     `json:"to_member_id"`
+	Amount       string     `json:"amount"`
+	Currency     string     `json:"currency"`
+	Note         *string    `json:"note,omitempty"`
+	Method       string     `json:"method"`
+	CreatedByID  string     `json:"created_by_id"`
+	CreatedAt    time.Time  `json:"created_at"`
+	RevertedAt   *time.Time `json:"reverted_at,omitempty"`
 	// FX snapshot — populated only when the user paid in a currency other
 	// than the canonical balance currency. Mirrors the expense FX
 	// snapshot (see migration 000016/000020 + the home-currency
@@ -502,6 +502,116 @@ func (h *BalancesHandler) SuggestSettlements(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// settleReminderCooldown is the server-enforced gap between reminder sends for
+// one creditor in one group. See migration 000053.
+const settleReminderCooldown = 48 * time.Hour
+
+type SettleReminderResponse struct {
+	Reminded      int    `json:"reminded"`
+	NextAllowedAt string `json:"next_allowed_at"` // RFC3339
+}
+
+// SendSettleReminders nudges the members who — per the settle algorithm — owe
+// the caller in this group, via push. Only the caller's debtors are targeted
+// (not the whole group). Rate-limited server-side to one send per group per
+// creditor every 48h (migration 000053).
+func (h *BalancesHandler) SendSettleReminders(w http.ResponseWriter, r *http.Request) {
+	groupID := chi.URLParam(r, "groupID")
+	claims := middleware.ClaimsFromContext(r.Context())
+	me, ok := h.requireMember(w, r, groupID)
+	if !ok {
+		return
+	}
+
+	balances, err := h.queries.ListGroupBalances(r.Context(), groupID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	input := make([]settle.Balance, 0, len(balances))
+	userIDByMember := make(map[string]string, len(balances))
+	for _, b := range balances {
+		input = append(input, settle.Balance{
+			MemberID: b.MemberID,
+			Currency: b.Currency.String,
+			Amount:   b.NetBalance,
+		})
+		if b.UserID.Valid {
+			userIDByMember[b.MemberID] = b.UserID.String
+		}
+	}
+
+	// Debtors the algorithm routes to me — dedup across currency buckets and
+	// skip unclaimed members (no user / no push) and myself.
+	debtorUserIDs := make([]string, 0)
+	seen := make(map[string]struct{})
+	for _, tr := range settle.Suggest(input) {
+		if tr.ToMemberID != me.ID {
+			continue
+		}
+		uid, hasUser := userIDByMember[tr.FromMemberID]
+		if !hasUser || uid == "" || uid == claims.UserID {
+			continue
+		}
+		if _, dup := seen[uid]; dup {
+			continue
+		}
+		seen[uid] = struct{}{}
+		debtorUserIDs = append(debtorUserIDs, uid)
+	}
+
+	if len(debtorUserIDs) == 0 {
+		writeError(w, http.StatusUnprocessableEntity, "no one owes you in this group")
+		return
+	}
+
+	// 48h throttle: no row back means we're still inside the window.
+	if _, err := h.queries.TryRecordSettleReminder(r.Context(), db.TryRecordSettleReminderParams{
+		GroupID:    groupID,
+		FromUserID: claims.UserID,
+	}); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			nextAllowed := ""
+			if existing, gErr := h.queries.GetSettleReminder(r.Context(), db.GetSettleReminderParams{
+				GroupID:    groupID,
+				FromUserID: claims.UserID,
+			}); gErr == nil {
+				nextAllowed = existing.LastRemindedAt.Time.Add(settleReminderCooldown).UTC().Format(time.RFC3339)
+			}
+			writeJSON(w, http.StatusTooManyRequests, map[string]any{
+				"error":           "reminder already sent recently",
+				"next_allowed_at": nextAllowed,
+			})
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	group, err := h.queries.GetGroupByID(r.Context(), groupID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	if h.rc != nil {
+		if _, err := h.rc.Insert(r.Context(), jobs.SettleReminderArgs{
+			GroupID:          groupID,
+			GroupName:        group.Name,
+			CreditorName:     me.Name,
+			RecipientUserIDs: debtorUserIDs,
+		}, nil); err != nil {
+			slog.Warn("balances: enqueue settle reminder failed", "error", err, "group_id", groupID)
+		}
+	}
+
+	writeJSON(w, http.StatusOK, SettleReminderResponse{
+		Reminded:      len(debtorUserIDs),
+		NextAllowedAt: time.Now().Add(settleReminderCooldown).UTC().Format(time.RFC3339),
+	})
+}
+
 func (h *BalancesHandler) ListMyBalances(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.ClaimsFromContext(r.Context())
 
@@ -543,12 +653,12 @@ func (h *BalancesHandler) ListMyBalances(w http.ResponseWriter, r *http.Request)
 // ── /api/me/net?in=<currency> ─────────────────────────────────────────────────
 
 type MyNetResponse struct {
-	HomeCurrency        string `json:"home_currency"`
-	NetMinor            string `json:"net_minor"`
-	TotalLegs           int    `json:"total_legs"`
-	ConvertedLegs       int    `json:"converted_legs"`
-	EstimatedLegs       int    `json:"estimated_legs"`
-	ContributingGroups  int    `json:"contributing_groups"`
+	HomeCurrency       string `json:"home_currency"`
+	NetMinor           string `json:"net_minor"`
+	TotalLegs          int    `json:"total_legs"`
+	ConvertedLegs      int    `json:"converted_legs"`
+	EstimatedLegs      int    `json:"estimated_legs"`
+	ContributingGroups int    `json:"contributing_groups"`
 }
 
 var iso4217 = regexp.MustCompile(`^[A-Z]{3}$`)

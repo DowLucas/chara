@@ -26,6 +26,7 @@ import {
 import { useAccount } from '@/lib/accounts';
 import { currentLocale, formatDate, formatFxRate, formatMinorUnits } from '@/lib/i18n';
 import { computeBalanceImpact } from '@/lib/balance-impact';
+import { expenseToRecurringPrefill } from '@/lib/recurring/from-expense';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import { initialsOf, makeNameShortener } from '@/lib/name';
 import { colors, fontDisplay, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
@@ -178,22 +179,37 @@ export default function ExpenseDetailScreen() {
     setReceiptSheetVisible(true);
   }
 
+  function goEditExpense() {
+    if (!id || !groupId) return;
+    router.push({
+      pathname: '/expenses/[server]/[id]/edit',
+      params: { server: encodeURIComponent(serverUrl), id, groupId },
+    });
+  }
+
+  // Turn this one-off expense into a recurring bill: hand the recurring create
+  // form a prefill of the identity fields (title/amount/split/…). Schedule is
+  // chosen there.
+  function goMakeRecurring() {
+    if (!groupId || !expense) return;
+    router.push({
+      pathname: '/groups/[server]/[id]/recurring/new',
+      params: {
+        server: encodeURIComponent(serverUrl),
+        id: groupId,
+        prefill: JSON.stringify(expenseToRecurringPrefill(expense, members)),
+      },
+    });
+  }
+
   function openMenu() {
     // Don't reopen the action sheet if a popup was just dismissed by
     // tapping near this trigger. See app/lib/popup-guard.ts.
     if (isPopupJustClosed()) return;
     if (!isAuthor) return;
     const options: ActionSheetOption[] = [
-      {
-        label: t('expenseDetail.actions.edit'),
-        onPress: () => {
-          if (!id || !groupId) return;
-          router.push({
-            pathname: '/expenses/[server]/[id]/edit',
-            params: { server: encodeURIComponent(serverUrl), id, groupId },
-          });
-        },
-      },
+      { label: t('expenseDetail.actions.edit'), onPress: goEditExpense },
+      { label: t('expenseDetail.actions.makeRecurring'), onPress: goMakeRecurring },
       {
         label: t('expenseDetail.actions.delete'),
         destructive: true,
@@ -503,16 +519,8 @@ export default function ExpenseDetailScreen() {
         visible={actionSheetVisible}
         onClose={() => setActionSheetVisible(false)}
         options={[
-          {
-            label: t('expenseDetail.actions.edit'),
-            onPress: () => {
-              if (!id || !groupId) return;
-              router.push({
-                pathname: '/expenses/[server]/[id]/edit',
-                params: { server: encodeURIComponent(serverUrl), id, groupId },
-              });
-            },
-          },
+          { label: t('expenseDetail.actions.edit'), onPress: goEditExpense },
+          { label: t('expenseDetail.actions.makeRecurring'), onPress: goMakeRecurring },
           {
             label: t('expenseDetail.actions.delete'),
             destructive: true,

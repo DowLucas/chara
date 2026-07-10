@@ -25,6 +25,39 @@ func (q *Queries) DeletePushToken(ctx context.Context, arg DeletePushTokenParams
 	return err
 }
 
+const listAllPushTokens = `-- name: ListAllPushTokens :many
+SELECT id, user_id, token, platform, created_at, last_used_at FROM push_tokens
+`
+
+// Every registered device. Used by the operator broadcast endpoint to fan a
+// release-note notification out to all users.
+func (q *Queries) ListAllPushTokens(ctx context.Context) ([]PushToken, error) {
+	rows, err := q.db.Query(ctx, listAllPushTokens)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []PushToken{}
+	for rows.Next() {
+		var i PushToken
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Token,
+			&i.Platform,
+			&i.CreatedAt,
+			&i.LastUsedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listPushTokensByGroup = `-- name: ListPushTokensByGroup :many
 SELECT pt.id, pt.user_id, pt.token, pt.platform, pt.created_at, pt.last_used_at FROM push_tokens pt
 JOIN group_members gm ON gm.user_id = pt.user_id
@@ -69,6 +102,40 @@ SELECT id, user_id, token, platform, created_at, last_used_at FROM push_tokens W
 
 func (q *Queries) ListPushTokensByUser(ctx context.Context, userID string) ([]PushToken, error) {
 	rows, err := q.db.Query(ctx, listPushTokensByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []PushToken{}
+	for rows.Next() {
+		var i PushToken
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Token,
+			&i.Platform,
+			&i.CreatedAt,
+			&i.LastUsedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPushTokensByUsers = `-- name: ListPushTokensByUsers :many
+SELECT id, user_id, token, platform, created_at, last_used_at FROM push_tokens WHERE user_id = ANY($1::text[])
+`
+
+// Tokens for an explicit set of recipient users (e.g. the debtors a creditor
+// is nudging). Unlike ListPushTokensByGroup this does not exclude an actor —
+// the caller supplies the exact recipient set.
+func (q *Queries) ListPushTokensByUsers(ctx context.Context, dollar_1 []string) ([]PushToken, error) {
+	rows, err := q.db.Query(ctx, listPushTokensByUsers, dollar_1)
 	if err != nil {
 		return nil, err
 	}

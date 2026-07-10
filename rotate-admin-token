@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+#
+# Generate a fresh ADMIN_API_TOKEN and write it directly into an env file
+# WITHOUT ever printing the value. The secret never touches stdout, so it
+# stays out of your shell history, terminal scrollback, CI logs, and any
+# AI-assistant transcript. The script prints only a one-way SHA-256
+# fingerprint (which cannot be reversed into the token) so you can confirm a
+# rotation actually happened.
+#
+# Usage:
+#   ./rotate-admin-token [env-file]     # default target: deploy/.env
+#   RESTART=1 ./rotate-admin-token      # also restart the self-host chara-api
+#
+# To set the token on a remote production host, run this script ON that host
+# (e.g. over SSH) pointed at that host's env file — the value is generated
+# locally there and never leaves the box.
+#
+set -euo pipefail
+
+ENV_FILE="${1:-deploy/.env}"
+KEY="ADMIN_API_TOKEN"
+
+command -v openssl >/dev/null 2>&1 || {
+  echo "error: openssl is required but not found" >&2
+  exit 1
+}
+
+# Generate straight into a variable — never echoed anywhere.
+token="$(openssl rand -hex 32)"
+
+# Make sure the target exists with tight perms before writing a secret to it.
+mkdir -p "$(dirname "$ENV_FILE")"
+[ -e "$ENV_FILE" ] || touch "$ENV_FILE"
+chmod 600 "$ENV_FILE"
+
+# Upsert KEY=... atomically via a temp file in the same directory. Any prior
+# assignment is dropped; the new one is appended.
+tmp="$(mktemp "${ENV_FILE}.XXXXXX")"
+chmod 600 "$tmp"
+grep -vE "^${KEY}=" "$ENV_FILE" > "$tmp" 2>/dev/null || true
+printf '%s=%s\n' "$KEY" "$token" >> "$tmp"
+mv "$tmp" "$ENV_FILE"
+
+# One-way fingerprint for verification — reveals nothing about the token.
+if command -v sha256sum >/dev/null 2>&1; then
+  fp="$(printf '%s' "$token" | sha256sum | cut -c1-12)"
+elif command -v shasum >/dev/null 2>&1; then
+  fp="$(printf '%s' "$token" | shasum -a 256 | cut -c1-12)"
+else
+  fp="unavailable"
+fi
+unset token
+
+echo "Wrote ${KEY} to ${ENV_FILE}"
+echo "Fingerprint (sha256, non-reversible): ${fp}"
+echo "The token value was not displayed."
+
+if [ "${RESTART:-0}" = "1" ]; then
+  echo "Restarting chara-api to apply…"
+  docker compose -f deploy/docker-compose.yml up -d chara-api
+  echo "Done — endpoint enabled once the container is healthy."
+fi

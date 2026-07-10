@@ -53,6 +53,7 @@ import { apiFor, GroupDetail } from '@/lib/api';
 import type {
   CreateRecurringInput,
   RecurringExpense,
+  RecurringPrefill,
   UpdateRecurringInput,
 } from '@/lib/api-types-recurring';
 import { showAlert } from '@/lib/app-alert';
@@ -77,6 +78,10 @@ interface Props {
   groupId: string;
   mode: 'create' | 'edit';
   initialValue?: RecurringExpense;
+  /** Create-mode seed for the identity fields (title/amount/payer/split/…)
+   *  when turning an existing expense into a recurring bill. Ignored in edit
+   *  mode, where `initialValue` is authoritative. */
+  prefill?: RecurringPrefill;
   onSaved: (rule: RecurringExpense) => void;
 }
 
@@ -120,36 +125,41 @@ export function RecurringForm({
   groupId,
   mode,
   initialValue,
+  prefill,
   onSaved,
 }: Props) {
   const api = apiFor(serverUrl);
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 
+  // Identity fields are seeded from the existing rule (edit) or an expense
+  // prefill (create). Schedule fields below only ever come from initialValue.
+  const seed = initialValue ?? prefill;
+
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [loadError, setLoadError] = useState(false);
 
   // --- form state -------------------------------------------------------
-  const [title, setTitle] = useState(initialValue?.title ?? '');
+  const [title, setTitle] = useState(seed?.title ?? '');
   // amount is stored as a digits-only string we parse to minor units on save.
   const [amountInput, setAmountInput] = useState(
-    initialValue ? String(initialValue.amount_minor / 100) : '',
+    seed ? String(seed.amount_minor / 100) : '',
   );
-  const [category, setCategory] = useState(initialValue?.category ?? 'other');
-  const [payerId, setPayerId] = useState(initialValue?.paid_by_id ?? '');
+  const [category, setCategory] = useState(seed?.category ?? 'other');
+  const [payerId, setPayerId] = useState(seed?.paid_by_id ?? '');
   // Split state matches the wire shape. SplitEditor (shared with the
   // expense wizard) handles equal/exact/percentage in one component.
   const [split, setSplit] = useState<SplitValue>(() => {
-    if (initialValue) {
+    if (seed) {
       return {
-        method: initialValue.split_method,
-        included: initialValue.splits.map((s) => s.member_id),
+        method: seed.split_method,
+        included: seed.splits.map((s) => s.member_id),
         // For 'equal', value is unused; for exact/percentage it is the
         // locked minor / basis-points value the server stored.
         splits:
-          initialValue.split_method === 'equal'
+          seed.split_method === 'equal'
             ? []
-            : initialValue.splits.map((s) => ({
+            : seed.splits.map((s) => ({
                 member_id: s.member_id,
                 value: s.value,
               })),
@@ -209,7 +219,7 @@ export function RecurringForm({
   }, [groupId, serverUrl]);
 
   const currency =
-    initialValue?.currency ?? group?.currency ?? '—';
+    seed?.currency ?? group?.currency ?? '—';
 
   // --- preview ----------------------------------------------------------
   const previewLines = useMemo(() => {

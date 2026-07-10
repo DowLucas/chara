@@ -276,6 +276,7 @@ export default function AddExpenseScreen() {
         groupCurrency={group?.currency ?? 'SEK'}
         groupCategorySlugs={group?.category_slugs}
         members={members}
+        groupId={id}
         currentUserMemberId={currentUserMemberId}
         convertFx={api.convertFx}
         serverUrl={serverUrl}

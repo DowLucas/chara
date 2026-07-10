@@ -29,6 +29,7 @@ import {
   View,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { showAlert } from '@/lib/app-alert';
@@ -64,6 +65,13 @@ import {
 import { currentLocale } from '@/lib/i18n';
 import { evalExpression, hasOperator } from '@/lib/evalExpression';
 import { previewApportion } from '@/lib/split';
+import {
+  loadGroupDefaultSplit,
+  resolvePercentageBasisPoints,
+  saveGroupDefaultSplit,
+  savedSplitToPct,
+  type GroupDefaultSplit,
+} from '@/lib/saved-splits';
 import {
   colors,
   fontBody,
@@ -129,6 +137,9 @@ export interface ExpenseWizardProps {
    *  falls back to the full default catalog (see resolveGroupCategorySlugs). */
   groupCategorySlugs?: string[];
   members: GroupMember[];
+  /** Group id. Enables the personal "default split" feature: auto-prefill on
+   *  create + "Save as group default" in the split step. Omit to disable. */
+  groupId?: string;
   /** Member id whose user_id === current user. Used as the default payer in
    *  create mode and to render "You" in the split list. The wizard compares
    *  on member id directly. */
@@ -225,6 +236,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       groupCurrency: groupCurrencyProp,
       groupCategorySlugs,
       members,
+      groupId,
       currentUserMemberId,
       initialValue,
       convertFx,
@@ -317,6 +329,9 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
     const [pctByMember, setPctByMember] = useState<Record<string, string>>(
       initialValue?.pctByMember ?? {},
     );
+    // A saved default split loaded on mount, awaiting members to be applied.
+    const [pendingSavedSplit, setPendingSavedSplit] =
+      useState<GroupDefaultSplit | null>(null);
 
     type KeypadTarget = { kind: 'amount' };
     const [keypadTarget, setKeypadTarget] = useState<KeypadTarget | null>(null);
@@ -367,37 +382,62 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentUserMemberId]);
 
-    // Restore an auto-saved draft once, on mount (create mode only).
+    // Restore an auto-saved draft once, on mount (create mode only). When
+    // there is no draft to restore, fall back to the personal saved default
+    // split for this group (applied by the effect below once members load).
     useEffect(() => {
-      if (!draftEnabled || !draftKey) {
-        draftHydrated.current = true;
-        return;
-      }
       let cancelled = false;
-      loadDraft(draftKey, Date.now()).then((d) => {
-        if (cancelled) return;
-        if (d) {
-          if (d.amount != null) setAmount(d.amount);
-          if (d.title != null) setTitle(d.title);
-          if (d.dateMs != null) setDate(new Date(d.dateMs));
-          if (d.currency != null) setSelectedCurrency(d.currency);
-          if (d.payerMemberId != null) setPayerMemberId(d.payerMemberId);
-          if (d.category != null) {
-            setCategory(d.category);
-            setCategoryTouched(true);
+      async function hydrate() {
+        let restoredDraft = false;
+        if (draftEnabled && draftKey) {
+          const d = await loadDraft(draftKey, Date.now());
+          if (cancelled) return;
+          if (d) {
+            restoredDraft = true;
+            if (d.amount != null) setAmount(d.amount);
+            if (d.title != null) setTitle(d.title);
+            if (d.dateMs != null) setDate(new Date(d.dateMs));
+            if (d.currency != null) setSelectedCurrency(d.currency);
+            if (d.payerMemberId != null) setPayerMemberId(d.payerMemberId);
+            if (d.category != null) {
+              setCategory(d.category);
+              setCategoryTouched(true);
+            }
+            if (d.method != null) setMethod(d.method);
+            if (d.included != null) setIncluded(d.included);
+            if (d.exactByMember != null) setExactByMember(d.exactByMember);
+            if (d.pctByMember != null) setPctByMember(d.pctByMember);
           }
-          if (d.method != null) setMethod(d.method);
-          if (d.included != null) setIncluded(d.included);
-          if (d.exactByMember != null) setExactByMember(d.exactByMember);
-          if (d.pctByMember != null) setPctByMember(d.pctByMember);
         }
         draftHydrated.current = true;
-      });
+        if (!restoredDraft && mode === 'create' && groupId) {
+          const saved = await loadGroupDefaultSplit(serverUrl, groupId);
+          if (cancelled) return;
+          if (saved) setPendingSavedSplit(saved);
+        }
+      }
+      hydrate();
       return () => {
         cancelled = true;
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Apply a loaded saved default split once members are available. Only
+    // applies when the saved roster still matches (savedSplitToPct → null
+    // otherwise), so a membership change falls back to the equal default.
+    const savedSplitAppliedRef = useRef(false);
+    useEffect(() => {
+      if (!pendingSavedSplit || savedSplitAppliedRef.current) return;
+      if (members.length === 0) return;
+      savedSplitAppliedRef.current = true;
+      const applied = savedSplitToPct(pendingSavedSplit, members);
+      setPendingSavedSplit(null);
+      if (!applied) return;
+      setMethod('percentage');
+      setIncluded(applied.included);
+      setPctByMember(applied.pctByMember);
+    }, [pendingSavedSplit, members.length]);
 
     // Auto-save the in-progress draft (debounced) after hydration, until the
     // form is successfully submitted.
@@ -664,6 +704,28 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       }
     }
 
+    // Persist the current percentage split as this group's personal default,
+    // so future expenses here prefill it. Percentage-only (see saved-splits.ts).
+    async function handleSaveDefaultSplit() {
+      if (!groupId) return;
+      const includedIds = members.filter((m) => included[m.id]).map((m) => m.id);
+      if (includedIds.length === 0) return;
+      const bp = resolvePercentageBasisPoints(includedIds, pctByMember);
+      const sum = Object.values(bp).reduce((s, v) => s + v, 0);
+      if (sum !== 10000) {
+        showAlert({
+          title: t('addExpense.saveDefaultSplitInvalidTitle'),
+          message: t('addExpense.saveDefaultSplitInvalidBody'),
+        });
+        return;
+      }
+      await saveGroupDefaultSplit(serverUrl, groupId, bp);
+      showAlert({
+        title: t('addExpense.saveDefaultSplitDoneTitle'),
+        message: t('addExpense.saveDefaultSplitDoneBody'),
+      });
+    }
+
     const canContinueStep1 = title.trim().length > 0 && amountMinor > 0;
     const canSubmit =
       canContinueStep1 && !!payerMemberId && offBy === 0 && includedMembers.length > 0;
@@ -842,6 +904,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
                 splitValue={splitValue}
                 onSplitChange={handleSplitChange}
                 serverUrl={serverUrl}
+                onSaveDefaultSplit={groupId ? handleSaveDefaultSplit : undefined}
               />
             )}
             </ContentContainer>
@@ -1145,6 +1208,9 @@ interface Step2Props {
   splitValue: SplitValue;
   onSplitChange: (v: SplitValue) => void;
   serverUrl: string;
+  /** When set and the current method is percentage, shows a "Save as group
+   *  default" affordance under the split editor. */
+  onSaveDefaultSplit?: () => void;
 }
 function Step2({
   currency,
@@ -1156,7 +1222,9 @@ function Step2({
   splitValue,
   onSplitChange,
   serverUrl,
+  onSaveDefaultSplit,
 }: Step2Props) {
+  const { t } = useTranslation();
   return (
     <View>
       <Recap
@@ -1173,6 +1241,18 @@ function Step2({
         currentUserMemberId={currentUserMemberId}
         serverUrl={serverUrl}
       />
+      {onSaveDefaultSplit && splitValue.method === 'percentage' && (
+        <TouchableOpacity
+          onPress={onSaveDefaultSplit}
+          style={styles.saveDefaultSplitRow}
+          accessibilityRole="button"
+        >
+          <Feather name="bookmark" size={14} color={colors.lead} />
+          <Text style={styles.saveDefaultSplitLabel}>
+            {t('addExpense.saveDefaultSplit')}
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -1313,6 +1393,21 @@ const styles = StyleSheet.create({
   groupName: { fontFamily: fontBody, fontSize: fontSize.bodyL, color: colors.graphite },
 
   recapWrap: { paddingHorizontal: spacing.s5, paddingTop: 10, paddingBottom: spacing.s4 },
+  saveDefaultSplitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginHorizontal: spacing.s5,
+    marginTop: spacing.s4,
+    paddingVertical: 10,
+  },
+  saveDefaultSplitLabel: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    letterSpacing: 0.3,
+  },
   recapCard: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -29,6 +29,11 @@ type Features struct {
 	AppleAuth  bool `json:"apple_auth"`
 	OCR        bool `json:"ocr"`
 	Push       bool `json:"push"`
+	// SettleReminders advertises the POST /settle-reminders endpoint. Like
+	// Push it requires the job queue to be running to actually deliver the
+	// nudge, so it tracks RecurringEnabled. Absent on older builds → the app
+	// hides the reminder button (version-skew safe).
+	SettleReminders bool `json:"settle_reminders"`
 }
 
 func Handler(cfg *config.Config, version string) http.HandlerFunc {
@@ -70,7 +75,8 @@ func buildInfo(cfg *config.Config, version string) InstanceInfo {
 			// working low-volume self-hosted server. The job queue must be
 			// running to enqueue notifications at all. See config.HasExpo's
 			// doc comment.
-			Push: cfg.RecurringEnabled,
+			Push:            cfg.RecurringEnabled,
+			SettleReminders: cfg.RecurringEnabled,
 		},
 	}
 }

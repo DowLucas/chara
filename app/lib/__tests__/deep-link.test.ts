@@ -48,6 +48,26 @@ describe('classifyGroupDeepLink', () => {
     }
   });
 
+  it('routes to the settle screen when the path ends in /settle', () => {
+    const accounts = [makeAccount('https://api.example.com')];
+    const url = `chara://groups/${encodeURIComponent('https://api.example.com')}/g123/settle`;
+    const intent = classifyGroupDeepLink(url, { accounts, isLoaded: true });
+    expect(intent.kind).toBe('navigate');
+    if (intent.kind === 'navigate') {
+      expect(intent.groupId).toBe('g123');
+      expect(intent.target).toBe('settle');
+    }
+  });
+
+  it('leaves target undefined for a plain group link', () => {
+    const accounts = [makeAccount('https://api.example.com')];
+    const url = `chara://groups/${encodeURIComponent('https://api.example.com')}/g123`;
+    const intent = classifyGroupDeepLink(url, { accounts, isLoaded: true });
+    if (intent.kind === 'navigate') {
+      expect(intent.target).toBeUndefined();
+    }
+  });
+
   it('refuses to navigate to a server the user is not signed into', () => {
     const accounts = [makeAccount('https://api.example.com')];
     const url = `chara://groups/${encodeURIComponent('https://unknown.example.com')}/g1`;

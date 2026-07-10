@@ -280,6 +280,12 @@ type RiverQueue struct {
 	UpdatedAt pgtype.Timestamptz `db:"updated_at" json:"updated_at"`
 }
 
+type SettleReminder struct {
+	GroupID        string             `db:"group_id" json:"group_id"`
+	FromUserID     string             `db:"from_user_id" json:"from_user_id"`
+	LastRemindedAt pgtype.Timestamptz `db:"last_reminded_at" json:"last_reminded_at"`
+}
+
 type Settlement struct {
 	ID               string             `db:"id" json:"id"`
 	GroupID          string             `db:"group_id" json:"group_id"`
