@@ -205,6 +205,7 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 		r.Get("/api/groups/{groupID}/settlements", balancesH.ListSettlements)
 		r.Post("/api/groups/{groupID}/settlements/{settlementID}/revert", balancesH.RevertSettlement)
 		r.Get("/api/groups/{groupID}/settle-suggestions", balancesH.SuggestSettlements)
+		r.Post("/api/groups/{groupID}/settle-reminders", balancesH.SendSettleReminders)
 		r.Get("/api/me/balances", balancesH.ListMyBalances)
 		r.Get("/api/me/net", balancesH.MyNet)
 		r.Get("/api/me/activity", activityH.ListMyActivity)

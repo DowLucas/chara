@@ -94,6 +94,40 @@ func (q *Queries) ListPushTokensByUser(ctx context.Context, userID string) ([]Pu
 	return items, nil
 }
 
+const listPushTokensByUsers = `-- name: ListPushTokensByUsers :many
+SELECT id, user_id, token, platform, created_at, last_used_at FROM push_tokens WHERE user_id = ANY($1::text[])
+`
+
+// Tokens for an explicit set of recipient users (e.g. the debtors a creditor
+// is nudging). Unlike ListPushTokensByGroup this does not exclude an actor —
+// the caller supplies the exact recipient set.
+func (q *Queries) ListPushTokensByUsers(ctx context.Context, dollar_1 []string) ([]PushToken, error) {
+	rows, err := q.db.Query(ctx, listPushTokensByUsers, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []PushToken{}
+	for rows.Next() {
+		var i PushToken
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Token,
+			&i.Platform,
+			&i.CreatedAt,
+			&i.LastUsedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const upsertPushToken = `-- name: UpsertPushToken :one
 INSERT INTO push_tokens (id, user_id, token, platform)
 VALUES ($1, $2, $3, $4)

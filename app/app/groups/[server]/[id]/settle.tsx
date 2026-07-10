@@ -5,18 +5,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TopBar } from '@/components/TopBar';
 import { ContentContainer } from '@/components/ContentContainer';
 import { IconButton } from '@/components/IconButton';
+import { Button } from '@/components/Button';
 import { Avatar } from '@/components/Avatar';
 import { EmptyState } from '@/components/EmptyState';
 import { MoneyText } from '@/components/MoneyText';
 import { useTranslation } from 'react-i18next';
 import {
   apiFor,
+  ApiError,
   avatarImageSourceOn,
   GroupDetail,
   GroupMember,
   Balance,
   SettlementSuggestion,
 } from '@/lib/api';
+import { showAlert } from '@/lib/app-alert';
 import { useAccount } from '@/lib/accounts';
 import { computeSuggestions } from '@/lib/settle';
 import { decimalToMinor, formatMinorUnits } from '@/lib/i18n';
@@ -44,6 +47,10 @@ export default function SettleScreen() {
   const [suggestions, setSuggestions] = useState<SettlementSuggestion[]>([]);
   const [othersOpen, setOthersOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [reminderBusy, setReminderBusy] = useState(false);
+  // Epoch ms until which the reminder button is on cooldown (server-enforced;
+  // reflected here so the button greys out immediately after a send / 429).
+  const [reminderCooldownUntil, setReminderCooldownUntil] = useState<number | null>(null);
 
   // Members live inside the GroupDetail response — there is no separate
   // /members endpoint registered on the backend, so reading from getGroup
@@ -144,6 +151,47 @@ export default function SettleScreen() {
 
   const hasAnything = yours.length > 0 || others.length > 0;
 
+  // Show the reminder button only when you're a pure creditor: someone owes
+  // you (an incoming transfer) and you owe nobody (no outgoing transfers).
+  const owedByOthers = useMemo(
+    () => others.some((s) => s.to_member_id === myMember?.id),
+    [others, myMember?.id],
+  );
+  const canRemind = !!myMember && yours.length === 0 && owedByOthers;
+  const onReminderCooldown =
+    reminderCooldownUntil !== null && reminderCooldownUntil > Date.now();
+
+  const sendReminder = useCallback(async () => {
+    if (!id) return;
+    setReminderBusy(true);
+    try {
+      const res = await api.sendSettleReminders(id);
+      setReminderCooldownUntil(new Date(res.next_allowed_at).getTime());
+      await showAlert({
+        title: t('settle.reminderSentTitle'),
+        message: t('settle.reminderSentBody', { count: res.reminded }),
+      });
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 429) {
+        const body = e.body as { next_allowed_at?: string } | undefined;
+        if (body?.next_allowed_at) {
+          setReminderCooldownUntil(new Date(body.next_allowed_at).getTime());
+        }
+        await showAlert({
+          title: t('settle.reminderCooldownTitle'),
+          message: t('settle.reminderCooldownBody'),
+        });
+      } else {
+        await showAlert({
+          title: t('settle.errorTitle'),
+          message: e instanceof Error ? e.message : t('settle.reminderErrorBody'),
+        });
+      }
+    } finally {
+      setReminderBusy(false);
+    }
+  }, [api, id, t]);
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <TopBar
@@ -171,6 +219,23 @@ export default function SettleScreen() {
             <Text style={styles.caption}>
               {t('settle.transfersCaption', { count: suggestions.length, naive })}
             </Text>
+          )}
+
+          {canRemind && (
+            <View style={styles.reminderWrap}>
+              <Button
+                kind="secondary"
+                onPress={sendReminder}
+                disabled={reminderBusy || onReminderCooldown}
+              >
+                {t('settle.reminderButton')}
+              </Button>
+              {onReminderCooldown && (
+                <Text style={styles.reminderHint}>
+                  {t('settle.reminderCooldownHint')}
+                </Text>
+              )}
+            </View>
           )}
         </View>
 
@@ -310,6 +375,17 @@ const styles = StyleSheet.create({
     color: colors.lead,
     letterSpacing: 0.3,
     marginTop: 12,
+  },
+  reminderWrap: {
+    marginTop: spacing.s4,
+    gap: spacing.s2,
+  },
+  reminderHint: {
+    fontFamily: fontMono,
+    fontSize: fontSize.bodyS,
+    color: colors.lead,
+    letterSpacing: 0.3,
+    textAlign: 'center',
   },
   sectionHeader: {
     paddingHorizontal: spacing.s5,

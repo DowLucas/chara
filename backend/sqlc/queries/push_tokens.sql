@@ -21,3 +21,9 @@ SELECT * FROM push_tokens WHERE user_id = $1;
 SELECT pt.* FROM push_tokens pt
 JOIN group_members gm ON gm.user_id = pt.user_id
 WHERE gm.group_id = $1 AND gm.user_id != $2 AND gm.removed_at IS NULL;
+
+-- name: ListPushTokensByUsers :many
+-- Tokens for an explicit set of recipient users (e.g. the debtors a creditor
+-- is nudging). Unlike ListPushTokensByGroup this does not exclude an actor —
+-- the caller supplies the exact recipient set.
+SELECT * FROM push_tokens WHERE user_id = ANY($1::text[]);

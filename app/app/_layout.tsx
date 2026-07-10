@@ -63,11 +63,11 @@ function handleDeepLink(url: string | null | undefined): void {
       isLoaded: accountsIsLoaded(),
     });
     switch (intent.kind) {
-      case 'navigate':
-        router.push(
-          `/groups/${encodeURIComponent(intent.serverUrl)}/${intent.groupId}`,
-        );
+      case 'navigate': {
+        const base = `/groups/${encodeURIComponent(intent.serverUrl)}/${intent.groupId}`;
+        router.push(intent.target === 'settle' ? `${base}/settle` : base);
         return;
+      }
       case 'unknown_server':
         // i18n: temporary inline strings — i18n agent owns en.json.
         // Suggested keys: `deepLink.unknownServer.title|body`.

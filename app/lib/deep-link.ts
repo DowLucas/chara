@@ -24,8 +24,9 @@ export type GroupDeepLinkIntent =
   | { kind: 'not_loaded' }
   /** Group link points at a server the user isn't signed into. */
   | { kind: 'unknown_server'; serverUrl: string }
-  /** Safe to navigate. */
-  | { kind: 'navigate'; serverUrl: string; groupId: string };
+  /** Safe to navigate. `target` selects a sub-screen (e.g. a settle-up
+   *  reminder deep-links to the group's settle screen); undefined = group home. */
+  | { kind: 'navigate'; serverUrl: string; groupId: string; target?: 'settle' };
 
 interface ClassifyDeps {
   accounts: Account[];
@@ -66,5 +67,8 @@ export function classifyGroupDeepLink(
   const match = deps.accounts.some((a) => a.serverUrl === normalized);
   if (!match) return { kind: 'unknown_server', serverUrl: normalized };
 
-  return { kind: 'navigate', serverUrl: normalized, groupId };
+  // Optional sub-screen: chara://groups/<server>/<groupId>/settle.
+  const target = parts[3] === 'settle' ? ('settle' as const) : undefined;
+
+  return { kind: 'navigate', serverUrl: normalized, groupId, target };
 }

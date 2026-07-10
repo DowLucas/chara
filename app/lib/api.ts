@@ -810,6 +810,13 @@ export interface SettlementSuggestion {
   currency: string;
 }
 
+export interface SettleReminderResult {
+  /** How many debtors were nudged. */
+  reminded: number;
+  /** ISO timestamp the creditor may send again (now + 48h). */
+  next_allowed_at: string;
+}
+
 export function listSettlementSuggestions(groupId: string) {
   return request<SettlementSuggestion[]>(`/api/groups/${groupId}/settle-suggestions`);
 }
@@ -1394,6 +1401,12 @@ export function apiFor(serverUrl: string) {
       requestOn<Settlement>(serverUrl, `/api/groups/${groupId}/settle`, {
         method: 'POST',
         body: JSON.stringify(input),
+      }),
+    // Nudge the members who owe you in this group to settle up. Throws
+    // ApiError(429, { next_allowed_at }) when within the 48h cooldown.
+    sendSettleReminders: (groupId: string) =>
+      requestOn<SettleReminderResult>(serverUrl, `/api/groups/${groupId}/settle-reminders`, {
+        method: 'POST',
       }),
     listSettlements: (groupId: string) =>
       requestOn<Settlement[]>(serverUrl, `/api/groups/${groupId}/settlements`),

@@ -51,3 +51,18 @@ export interface CreateRecurringInput {
 }
 
 export type UpdateRecurringInput = Omit<CreateRecurringInput, 'start_date'>;
+
+/**
+ * Identity fields carried over when turning an existing one-off expense into
+ * a recurring bill. Schedule fields are intentionally absent — they have no
+ * source on a one-off expense and fall back to RecurringForm defaults.
+ */
+export interface RecurringPrefill {
+  title: string;
+  amount_minor: number;
+  currency: string;
+  category: string;
+  paid_by_id: string;
+  split_method: RecurringExpense['split_method'];
+  splits: RecurringExpense['splits'];
+}
