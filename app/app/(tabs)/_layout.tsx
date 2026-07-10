@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth';
 import { useDefaultAccount } from '@/lib/accounts';
 import { TabBar } from '@/components/TabBar';
 import { useAggregatedGroups } from '@/lib/aggregated-reads';
-import { decideGroupsGate } from '@/lib/onboarding-gate';
+import { decideGroupsGate, needsNameStep } from '@/lib/onboarding-gate';
 import { getFlag, FLAG_ONBOARDING_SKIPPED } from '@/lib/storage';
 import { colors } from '@/lib/theme';
 
@@ -54,8 +54,10 @@ export default function TabsLayout() {
   if (isPlaceholder) {
     return <View style={{ flex: 1, backgroundColor: colors.paper }} />;
   }
-  // Full name and phone are required before the user can see the app.
-  if (user && (!user.name.trim() || !user.phone?.trim())) {
+  // A name is required before the user can see the app; phone is optional
+  // (Swish/Vipps only). Requiring phone here trapped users who entered only
+  // a name and skipped group creation in an onboarding→name→onboarding loop.
+  if (user && needsNameStep(user)) {
     return <Redirect href="/onboarding/name" />;
   }
   if (user && (groupsGate === 'pending' || skipped === null)) {

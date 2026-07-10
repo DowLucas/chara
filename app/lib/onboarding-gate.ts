@@ -12,6 +12,21 @@ export interface GroupsGateRead {
 
 export type GroupsGateDecision = 'pending' | 'tabs' | 'onboarding';
 
+/**
+ * Whether a signed-in user must still complete the name step before entering
+ * the app. Name is the only required profile field — phone is optional (it
+ * only powers Swish/Vipps settle deep-links; Apple 5.1.1(v): don't gate on
+ * info the core app doesn't need). Kept consistent with `onboarding/name.tsx`
+ * (`canSubmit`) and `onboarding/_layout.tsx` (`missingName`).
+ */
+export function needsNameStep(user: {
+  name?: string | null;
+  // Accepted but intentionally ignored — phone never gates entry.
+  phone?: string | null;
+}): boolean {
+  return !user.name?.trim();
+}
+
 export function decideGroupsGate(reads: GroupsGateRead[]): GroupsGateDecision {
   // Any account with groups (live or cached/stale) → straight to tabs.
   if (reads.some((r) => (r.data?.length ?? 0) > 0)) return 'tabs';
