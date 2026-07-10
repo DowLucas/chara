@@ -704,22 +704,28 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       }
     }
 
-    // Persist the current percentage split as this group's personal default,
-    // so future expenses here prefill it. Percentage-only (see saved-splits.ts).
+    // Persist the current percentage split as this user's personal default for
+    // this group (device-local, see saved-splits.ts), so future expenses here
+    // prefill it. Percentage-only. Always gives feedback — never a silent no-op.
     async function handleSaveDefaultSplit() {
       if (!groupId) return;
       const includedIds = members.filter((m) => included[m.id]).map((m) => m.id);
-      if (includedIds.length === 0) return;
       const bp = resolvePercentageBasisPoints(includedIds, pctByMember);
       const sum = Object.values(bp).reduce((s, v) => s + v, 0);
-      if (sum !== 10000) {
+      // No included members (sum 0) or percentages that don't total 100%.
+      if (includedIds.length === 0 || sum !== 10000) {
         showAlert({
           title: t('addExpense.saveDefaultSplitInvalidTitle'),
           message: t('addExpense.saveDefaultSplitInvalidBody'),
         });
         return;
       }
-      await saveGroupDefaultSplit(serverUrl, groupId, bp);
+      try {
+        await saveGroupDefaultSplit(serverUrl, groupId, bp);
+      } catch {
+        showAlert({ title: t('common.error'), message: t('common.requestFailed') });
+        return;
+      }
       showAlert({
         title: t('addExpense.saveDefaultSplitDoneTitle'),
         message: t('addExpense.saveDefaultSplitDoneBody'),
