@@ -914,7 +914,7 @@
     "errorTitle": "Impossible d'enregistrer le profil",
     "eyebrow": "ton profil",
     "headline": "Présente-toi.",
-    "label": "Nom complet",
+    "label": "Nom complet (obligatoire)",
     "phoneLabel": "Numéro de téléphone",
     "phonePlaceholder": "+46 70 123 45 67",
     "placeholder": "Jane Andersson",

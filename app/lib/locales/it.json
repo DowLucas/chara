@@ -914,7 +914,7 @@
     "errorTitle": "Non sono riuscito a salvare il profilo",
     "eyebrow": "il tuo profilo",
     "headline": "Raccontaci chi sei.",
-    "label": "Nome e cognome",
+    "label": "Nome e cognome (obbligatorio)",
     "phoneLabel": "Numero di telefono",
     "phonePlaceholder": "+39 333 123 4567",
     "placeholder": "Giulia Rossi",

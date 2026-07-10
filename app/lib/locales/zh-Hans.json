@@ -891,7 +891,7 @@
     "errorTitle": "资料保存失败",
     "eyebrow": "个人资料",
     "headline": "介绍一下自己。",
-    "label": "姓名",
+    "label": "姓名（必填）",
     "phoneLabel": "手机号",
     "phonePlaceholder": "+46 70 123 45 67",
     "placeholder": "张三",

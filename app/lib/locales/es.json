@@ -914,7 +914,7 @@
     "errorTitle": "No se pudo guardar el perfil",
     "eyebrow": "tu perfil",
     "headline": "Cuéntanos sobre ti.",
-    "label": "Nombre completo",
+    "label": "Nombre completo (obligatorio)",
     "phoneLabel": "Número de teléfono",
     "phonePlaceholder": "+46 70 123 45 67",
     "placeholder": "Jane Andersson",

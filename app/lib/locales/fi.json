@@ -891,7 +891,7 @@
     "errorTitle": "Profiilia ei voitu tallentaa",
     "eyebrow": "profiilisi",
     "headline": "Kerro itsestäsi.",
-    "label": "Koko nimi",
+    "label": "Koko nimi (pakollinen)",
     "phoneLabel": "Puhelinnumero",
     "phonePlaceholder": "+358 40 123 4567",
     "placeholder": "Matti Meikäläinen",

@@ -891,7 +891,7 @@
     "errorTitle": "Kunde inte spara profilen",
     "eyebrow": "din profil",
     "headline": "Berätta lite om dig.",
-    "label": "Fullständigt namn",
+    "label": "Fullständigt namn (obligatoriskt)",
     "phoneLabel": "Telefonnummer",
     "phonePlaceholder": "+46 70 123 45 67",
     "placeholder": "Anna Andersson",

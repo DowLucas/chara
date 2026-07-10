@@ -891,7 +891,7 @@
     "errorTitle": "プロフィールを保存できませんでした",
     "eyebrow": "プロフィール",
     "headline": "プロフィールを入力。",
-    "label": "氏名",
+    "label": "氏名（必須）",
     "phoneLabel": "電話番号",
     "phonePlaceholder": "+46 70 123 45 67",
     "placeholder": "山田 太郎",

@@ -891,7 +891,7 @@
     "errorTitle": "Profil nicht gespeichert",
     "eyebrow": "dein Profil",
     "headline": "Erzähl uns kurz, wer du bist.",
-    "label": "Vollständiger Name",
+    "label": "Vollständiger Name (erforderlich)",
     "phoneLabel": "Telefonnummer",
     "phonePlaceholder": "+49 170 1234567",
     "placeholder": "Lisa Müller",

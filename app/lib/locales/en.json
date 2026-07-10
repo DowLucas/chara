@@ -891,7 +891,7 @@
     "errorTitle": "Could not save profile",
     "eyebrow": "your profile",
     "headline": "Tell us about you.",
-    "label": "Full name",
+    "label": "Full name (required)",
     "phoneLabel": "Phone number (optional)",
     "phonePlaceholder": "+46 70 123 45 67",
     "placeholder": "Jane Andersson",

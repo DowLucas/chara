@@ -914,7 +914,7 @@
     "errorTitle": "Não foi possível salvar o perfil",
     "eyebrow": "seu perfil",
     "headline": "Conte sobre você.",
-    "label": "Nome completo",
+    "label": "Nome completo (obrigatório)",
     "phoneLabel": "Número de telefone",
     "phonePlaceholder": "+55 11 91234 5678",
     "placeholder": "Maria Silva",
