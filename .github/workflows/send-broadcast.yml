@@ -1,0 +1,67 @@
+name: Send broadcast notification
+
+# Manually push a short release-note notification to every registered device
+# on the production instance.
+#
+# Security: this is safe even though the repo is public.
+#   - Only users with write access to this repo can run a workflow_dispatch.
+#   - The ADMIN_API_TOKEN secret is encrypted, masked in logs, and NEVER
+#     available to workflows triggered from forks / pull requests.
+#   - The backend authorizes on that token (constant-time compare) and returns
+#     404 when it is unset — so reading this file reveals nothing exploitable.
+# See docs/ops/broadcast-notifications.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        description: "Notification title (e.g. Chara 1.2.0)"
+        required: true
+        type: string
+      body:
+        description: "Short body / release note"
+        required: true
+        type: string
+
+# No GITHUB_TOKEN permissions needed — this only calls the external API.
+permissions: {}
+
+concurrency:
+  group: send-broadcast
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    # Optional approval gate: add required reviewers to the "production"
+    # environment in repo Settings → Environments to require a second person.
+    environment: production
+    steps:
+      - name: Send broadcast
+        env:
+          API_URL: ${{ vars.CHARA_API_URL }}
+          ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
+          # Passed via env (not ${{ }} interpolation in the script) to avoid
+          # shell-injection through the title/body inputs.
+          TITLE: ${{ inputs.title }}
+          BODY: ${{ inputs.body }}
+        run: |
+          set -euo pipefail
+          if [ -z "${API_URL:-}" ]; then
+            echo "::error::repo variable CHARA_API_URL is not set (e.g. https://api.chara.app)"; exit 1
+          fi
+          if [ -z "${ADMIN_API_TOKEN:-}" ]; then
+            echo "::error::repo secret ADMIN_API_TOKEN is not set"; exit 1
+          fi
+          payload="$(jq -n --arg t "$TITLE" --arg b "$BODY" '{title:$t, body:$b}')"
+          http_code="$(curl -sS -o response.txt -w '%{http_code}' \
+            -X POST "$API_URL/api/admin/notify" \
+            -H "Authorization: Bearer $ADMIN_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$payload")"
+          echo "HTTP $http_code"
+          echo "Response: $(cat response.txt)"
+          if [ "$http_code" != "202" ]; then
+            echo "::error::broadcast failed (HTTP $http_code)"; exit 1
+          fi
+          echo "✅ Broadcast queued for delivery."
