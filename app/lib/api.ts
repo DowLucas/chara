@@ -938,6 +938,9 @@ export interface InstanceFeatures {
   google_auth: boolean;
   apple_auth: boolean;
   ocr: boolean;
+  /** POST /settle-reminders is available. Optional — absent on backends
+   *  predating the feature, which the app treats as unsupported. */
+  settle_reminders?: boolean;
 }
 
 export interface InstanceInfo {

@@ -51,6 +51,25 @@ export default function SettleScreen() {
   // Epoch ms until which the reminder button is on cooldown (server-enforced;
   // reflected here so the button greys out immediately after a send / 429).
   const [reminderCooldownUntil, setReminderCooldownUntil] = useState<number | null>(null);
+  // Whether this server advertises the settle-reminders endpoint. Keeps the
+  // button hidden when the app is newer than the backend it's pointed at.
+  const [remindersSupported, setRemindersSupported] = useState(false);
+
+  useEffect(() => {
+    if (!serverUrl) return;
+    let cancelled = false;
+    api
+      .instanceInfo()
+      .then((info) => {
+        if (!cancelled) setRemindersSupported(info.features.settle_reminders === true);
+      })
+      .catch(() => {
+        if (!cancelled) setRemindersSupported(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [serverUrl]);
 
   // Members live inside the GroupDetail response — there is no separate
   // /members endpoint registered on the backend, so reading from getGroup
@@ -157,7 +176,8 @@ export default function SettleScreen() {
     () => others.some((s) => s.to_member_id === myMember?.id),
     [others, myMember?.id],
   );
-  const canRemind = !!myMember && yours.length === 0 && owedByOthers;
+  const canRemind =
+    remindersSupported && !!myMember && yours.length === 0 && owedByOthers;
   const onReminderCooldown =
     reminderCooldownUntil !== null && reminderCooldownUntil > Date.now();
 

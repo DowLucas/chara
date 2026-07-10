@@ -110,6 +110,10 @@ func TestFeatures_PushReflectsRecurringEnabled(t *testing.T) {
 			if features["push"] != tc.wantPush {
 				t.Errorf("features.push: want %v, got %v", tc.wantPush, features["push"])
 			}
+			// settle_reminders tracks the same job-queue signal as push.
+			if features["settle_reminders"] != tc.wantPush {
+				t.Errorf("features.settle_reminders: want %v, got %v", tc.wantPush, features["settle_reminders"])
+			}
 		})
 	}
 }
