@@ -64,8 +64,14 @@ function handleDeepLink(url: string | null | undefined): void {
     });
     switch (intent.kind) {
       case 'navigate': {
-        const base = `/groups/${encodeURIComponent(intent.serverUrl)}/${intent.groupId}`;
-        router.push(intent.target === 'settle' ? `${base}/settle` : base);
+        // Inline the template literals (rather than via a `string` const) so
+        // they keep the literal type expo-router's typed `Href` requires.
+        const server = encodeURIComponent(intent.serverUrl);
+        router.push(
+          intent.target === 'settle'
+            ? `/groups/${server}/${intent.groupId}/settle`
+            : `/groups/${server}/${intent.groupId}`,
+        );
         return;
       }
       case 'unknown_server':
