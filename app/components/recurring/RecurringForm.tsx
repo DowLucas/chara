@@ -277,13 +277,14 @@ export function RecurringForm({
 
     const amountMinor = Math.round(amount * 100);
     // Wire-format splits, per method:
-    //   - equal: one row per included member, value=1 (placeholder the
-    //     backend ignores; it recomputes minor units per occurrence)
+    //   - equal: one row per included member, value=0 — the backend
+    //     recomputes minor units per occurrence and REJECTS any non-zero
+    //     value (recurring.go validateSplits: "equal split values must be 0").
     //   - exact / percentage: one row per included member; locked values
     //     ride as-is; unlocked (auto-fill) members get value=0 and the
     //     backend distributes the remainder.
     const splits = split.included.map((member_id) => {
-      if (split.method === 'equal') return { member_id, value: 1 };
+      if (split.method === 'equal') return { member_id, value: 0 };
       const locked = split.splits.find((s) => s.member_id === member_id);
       return { member_id, value: locked?.value ?? 0 };
     });

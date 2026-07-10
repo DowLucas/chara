@@ -35,7 +35,7 @@ describe('expenseToRecurringPrefill', () => {
     expect(p.paid_by_id).toBe('m1');
   });
 
-  it('equal split with explicit rows keeps those members (value placeholder)', () => {
+  it('equal split with explicit rows keeps those members with value 0', () => {
     const p = expenseToRecurringPrefill(
       baseExpense({
         split_method: 'equal',
@@ -48,12 +48,16 @@ describe('expenseToRecurringPrefill', () => {
     );
     expect(p.split_method).toBe('equal');
     expect(p.splits.map((s) => s.member_id)).toEqual(['m1', 'm2']);
+    // Backend rejects non-zero values for equal splits (recurring.go
+    // validateSplits: "equal split values must be 0").
+    expect(p.splits.every((s) => s.value === 0)).toBe(true);
   });
 
-  it('empty splits falls back to equal across all current members', () => {
+  it('empty splits falls back to equal across all current members with value 0', () => {
     const p = expenseToRecurringPrefill(baseExpense({ splits: [] }), members);
     expect(p.split_method).toBe('equal');
     expect(p.splits.map((s) => s.member_id)).toEqual(['m1', 'm2', 'm3']);
+    expect(p.splits.every((s) => s.value === 0)).toBe(true);
   });
 
   it('exact split converts each share to minor units', () => {

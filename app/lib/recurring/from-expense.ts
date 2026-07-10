@@ -35,7 +35,9 @@ export function expenseToRecurringPrefill(
       category: expense.category,
       paid_by_id: expense.paid_by_id,
       split_method: 'equal',
-      splits: members.map((m) => ({ member_id: m.id, value: 1 })),
+      // Equal splits carry value 0 — the backend recomputes the per-member
+      // minor units and rejects any non-zero value (recurring.go).
+      splits: members.map((m) => ({ member_id: m.id, value: 0 })),
     };
   }
 
@@ -50,8 +52,8 @@ export function expenseToRecurringPrefill(
       // returns amounts, not the original percentages).
       value = amount_minor > 0 ? Math.round((shareMinor / amount_minor) * 10000) : 0;
     } else {
-      // equal — value is a placeholder the form/backend ignore.
-      value = 1;
+      // equal — the backend recomputes shares and requires value 0.
+      value = 0;
     }
     return { member_id: s.member_id, value };
   });
