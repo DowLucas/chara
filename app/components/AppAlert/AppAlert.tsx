@@ -15,7 +15,9 @@ import {
   TouchableWithoutFeedback,
   StyleSheet,
   Dimensions,
+  Platform,
 } from 'react-native';
+import { FullWindowOverlay } from 'react-native-screens';
 import { Text } from '../Text';
 import { markPopupClosed } from '@/lib/popup-guard';
 import type { AppAlertRequest, AppAlertButton } from '@/lib/app-alert';
@@ -58,6 +60,64 @@ export function AppAlert({ request }: Props) {
   // Horizontal row for <=2 buttons (classic iOS alert), stacked for 3+.
   const stacked = buttons.length > 2;
 
+  const overlay = (
+    <View style={styles.root}>
+      <TouchableWithoutFeedback onPress={dismissable ? handleDismiss : undefined}>
+        <View style={styles.backdrop} />
+      </TouchableWithoutFeedback>
+
+      <View style={[styles.card, { maxWidth: MAX_WIDTH }]} accessibilityRole="alert">
+        <View style={styles.body}>
+          <Text style={styles.title}>{title}</Text>
+          {message ? <Text style={styles.message}>{message}</Text> : null}
+        </View>
+
+        <View style={[styles.buttonRow, stacked && styles.buttonStack]}>
+          {buttons.map((b, i) => (
+            <TouchableOpacity
+              key={`${b.key}-${i}`}
+              onPress={() => handleButton(b)}
+              activeOpacity={0.7}
+              style={[
+                styles.button,
+                stacked ? styles.buttonStacked : styles.buttonInline,
+                // Vertical divider between inline buttons after the first.
+                !stacked && i > 0 && styles.buttonDividerLeft,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={b.label}
+            >
+              <Text
+                style={[
+                  styles.buttonLabel,
+                  b.style === 'destructive' && styles.buttonLabelDestructive,
+                  b.style === 'cancel' && styles.buttonLabelCancel,
+                ]}
+                numberOfLines={1}
+              >
+                {b.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+
+  // A plain <Modal> rendered by the root-mounted host sits *behind* a native
+  // `presentation: 'modal'` screen on iOS (e.g. add-expense), making alerts
+  // fired from a modal invisible. FullWindowOverlay renders in a UIWindow above
+  // ALL native content, including modals. It's iOS-only; on Android a <Modal>
+  // already layers above native-stack modals. The host mounts/unmounts this
+  // component per alert, so no `visible` toggle is needed on the iOS path.
+  if (Platform.OS === 'ios') {
+    return (
+      <FullWindowOverlay>
+        <View style={StyleSheet.absoluteFill}>{overlay}</View>
+      </FullWindowOverlay>
+    );
+  }
+
   return (
     <Modal
       visible
@@ -66,47 +126,7 @@ export function AppAlert({ request }: Props) {
       onRequestClose={handleDismiss}
       statusBarTranslucent
     >
-      <View style={styles.root}>
-        <TouchableWithoutFeedback onPress={dismissable ? handleDismiss : undefined}>
-          <View style={styles.backdrop} />
-        </TouchableWithoutFeedback>
-
-        <View style={[styles.card, { maxWidth: MAX_WIDTH }]} accessibilityRole="alert">
-          <View style={styles.body}>
-            <Text style={styles.title}>{title}</Text>
-            {message ? <Text style={styles.message}>{message}</Text> : null}
-          </View>
-
-          <View style={[styles.buttonRow, stacked && styles.buttonStack]}>
-            {buttons.map((b, i) => (
-              <TouchableOpacity
-                key={`${b.key}-${i}`}
-                onPress={() => handleButton(b)}
-                activeOpacity={0.7}
-                style={[
-                  styles.button,
-                  stacked ? styles.buttonStacked : styles.buttonInline,
-                  // Vertical divider between inline buttons after the first.
-                  !stacked && i > 0 && styles.buttonDividerLeft,
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={b.label}
-              >
-                <Text
-                  style={[
-                    styles.buttonLabel,
-                    b.style === 'destructive' && styles.buttonLabelDestructive,
-                    b.style === 'cancel' && styles.buttonLabelCancel,
-                  ]}
-                  numberOfLines={1}
-                >
-                  {b.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </View>
+      {overlay}
     </Modal>
   );
 }
