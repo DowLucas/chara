@@ -259,7 +259,8 @@
     "mainServerLabel": "Chara-palvelin",
     "ok": "OK",
     "save": "Tallenna",
-    "saving": "Tallennetaan…"
+    "saving": "Tallennetaan…",
+    "requestFailed": "Jotain meni pieleen. Yritä uudelleen."
   },
   "createGroup": {
     "body": "Jotain, minkä kaverit tunnistavat.",

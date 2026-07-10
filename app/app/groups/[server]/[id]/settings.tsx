@@ -64,18 +64,14 @@ interface DeleteApiError {
 }
 
 // The backend returns 409 with a JSON body for unsettled-balances refusals.
-// ApiError stuffs the raw body string into `.message`; this parser extracts
-// the structured payload so the modal can render the rows. Failures (e.g.
-// non-JSON 5xx) collapse to an empty-rows error.
+// ApiError exposes the parsed payload on `.body`; read the structured rows
+// so the modal can render them. Anything else (non-JSON 5xx, missing code)
+// collapses to an empty-rows error.
 function parseDeleteError(e: unknown): DeleteGroupModalError {
   if (e instanceof ApiError) {
-    try {
-      const parsed = JSON.parse(e.message) as DeleteApiError;
-      if (parsed?.code === 'group_has_unsettled_balances') {
-        return { rows: parsed.rows ?? [] };
-      }
-    } catch {
-      // fall through
+    const parsed = e.body as DeleteApiError | null;
+    if (parsed?.code === 'group_has_unsettled_balances') {
+      return { rows: parsed.rows ?? [] };
     }
   }
   return { rows: [] };

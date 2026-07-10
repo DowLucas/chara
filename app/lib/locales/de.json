@@ -259,7 +259,8 @@
     "mainServerLabel": "Chara Server",
     "ok": "OK",
     "save": "Speichern",
-    "saving": "Speichert…"
+    "saving": "Speichert…",
+    "requestFailed": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
   },
   "createGroup": {
     "body": "Etwas, das deine Freunde wiedererkennen.",

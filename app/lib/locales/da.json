@@ -259,7 +259,8 @@
     "mainServerLabel": "Chara-server",
     "ok": "OK",
     "save": "Gem",
-    "saving": "Gemmer…"
+    "saving": "Gemmer…",
+    "requestFailed": "Noget gik galt. Prøv igen."
   },
   "createGroup": {
     "body": "Noget, dine venner vil genkende.",

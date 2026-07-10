@@ -259,7 +259,8 @@
     "mainServerLabel": "Chara Server",
     "ok": "OK",
     "save": "Lagre",
-    "saving": "Lagrer …"
+    "saving": "Lagrer …",
+    "requestFailed": "Noe gikk galt. Prøv igjen."
   },
   "createGroup": {
     "body": "Noe vennene dine kjenner igjen.",

@@ -264,7 +264,8 @@
     "mainServerLabel": "Chara Server",
     "ok": "OK",
     "save": "Enregistrer",
-    "saving": "Enregistrement…"
+    "saving": "Enregistrement…",
+    "requestFailed": "Une erreur s’est produite. Veuillez réessayer."
   },
   "createGroup": {
     "body": "Un nom que tes amis reconnaîtront.",

@@ -259,7 +259,8 @@
     "mainServerLabel": "Charaサーバー",
     "ok": "OK",
     "save": "保存",
-    "saving": "保存中…"
+    "saving": "保存中…",
+    "requestFailed": "問題が発生しました。もう一度お試しください。"
   },
   "createGroup": {
     "body": "メンバーがすぐに分かる名前にしましょう。",

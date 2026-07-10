@@ -72,12 +72,7 @@ export default function EditGroupScreen() {
       // localised explanation rather than a raw JSON error blob. The
       // server returns 409 with body `{"code":"group_currency_locked",…}`.
       if (e instanceof ApiError && e.status === 409) {
-        let parsed: { code?: string } | null = null;
-        try {
-          parsed = JSON.parse(e.message);
-        } catch {
-          parsed = null;
-        }
+        const parsed = e.body as { code?: string } | null;
         if (parsed?.code === 'group_currency_locked') {
           showAlert({
             title: t('editGroup.errors.currencyLockedTitle'),

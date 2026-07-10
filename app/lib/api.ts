@@ -18,6 +18,7 @@ import type {
   UpdateRecurringInput,
 } from './api-types-recurring';
 import { MAIN_HOSTED_SERVER_URL } from './server-url';
+import i18n from './i18n';
 
 const TOKEN_KEY = 'auth_token';
 
@@ -112,6 +113,27 @@ export class ApiError extends Error {
     super(message);
     this.body = body ?? null;
   }
+}
+
+/**
+ * Human-readable message for a failed response. The backend wraps errors in
+ * the envelope `{"error": msg, "code"?: ...}` (handler writeError/
+ * writeErrorCode), so surface `error` — most screens show `err.message`
+ * straight in an alert, and a raw JSON blob is not an acceptable popup.
+ * Structured fields remain available on `ApiError.body`. A non-JSON,
+ * human-sized body (e.g. a plain-text proxy 502) passes through; anything
+ * else collapses to a friendly generic.
+ */
+export function apiErrorMessage(parsed: unknown, rawText: string): string {
+  if (parsed && typeof parsed === 'object') {
+    const err = (parsed as { error?: unknown }).error;
+    if (typeof err === 'string' && err.trim()) return err.trim();
+  }
+  const trimmed = rawText.trim();
+  if (trimmed && !trimmed.startsWith('{') && !trimmed.startsWith('[') && trimmed.length <= 300) {
+    return trimmed;
+  }
+  return i18n.t('common.requestFailed');
 }
 
 export class NoAccountError extends Error {
@@ -337,7 +359,7 @@ async function requestWithToken<T>(
         // Server claimed JSON but sent garbage; fall back to raw text in message.
       }
     }
-    throw new ApiError(res.status, text, parsed);
+    throw new ApiError(res.status, apiErrorMessage(parsed, text), parsed);
   }
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;

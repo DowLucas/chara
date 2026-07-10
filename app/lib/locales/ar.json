@@ -279,7 +279,8 @@
     "mainServerLabel": "خادم Chara",
     "ok": "حسنًا",
     "save": "حفظ",
-    "saving": "حفظ…"
+    "saving": "حفظ…",
+    "requestFailed": "حدث خطأ ما. حاول مرة أخرى."
   },
   "createGroup": {
     "body": "اسم يميزها أمام أصدقائك.",

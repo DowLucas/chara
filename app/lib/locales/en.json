@@ -259,7 +259,8 @@
     "mainServerLabel": "Chara Cloud",
     "ok": "OK",
     "save": "Save",
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "requestFailed": "Something went wrong. Please try again."
   },
   "createGroup": {
     "body": "Something your friends will recognise.",

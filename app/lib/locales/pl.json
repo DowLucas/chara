@@ -269,7 +269,8 @@
     "mainServerLabel": "Chara Server",
     "ok": "OK",
     "save": "Zapisz",
-    "saving": "Zapisywanie…"
+    "saving": "Zapisywanie…",
+    "requestFailed": "Coś poszło nie tak. Spróbuj ponownie."
   },
   "createGroup": {
     "body": "Coś, co twoi znajomi rozpoznają.",

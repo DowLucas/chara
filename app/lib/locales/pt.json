@@ -264,7 +264,8 @@
     "mainServerLabel": "Chara Server",
     "ok": "OK",
     "save": "Salvar",
-    "saving": "Salvando…"
+    "saving": "Salvando…",
+    "requestFailed": "Algo deu errado. Tente novamente."
   },
   "createGroup": {
     "body": "Algo que seus amigos reconheçam.",

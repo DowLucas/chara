@@ -264,7 +264,8 @@
     "mainServerLabel": "Servidor Chara",
     "ok": "OK",
     "save": "Guardar",
-    "saving": "Guardando…"
+    "saving": "Guardando…",
+    "requestFailed": "Algo salió mal. Inténtalo de nuevo."
   },
   "createGroup": {
     "body": "Algo que tus amigos reconozcan.",

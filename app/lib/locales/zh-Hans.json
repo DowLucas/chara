@@ -259,7 +259,8 @@
     "mainServerLabel": "Chara 服务器",
     "ok": "好",
     "save": "保存",
-    "saving": "保存中……"
+    "saving": "保存中……",
+    "requestFailed": "出了点问题，请重试。"
   },
   "createGroup": {
     "body": "起个朋友一眼就能认出的名字。",
