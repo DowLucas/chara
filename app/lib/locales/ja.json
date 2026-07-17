@@ -1172,7 +1172,9 @@
     "legalFooter": "続行することで、<terms>利用規約</terms>および<privacy>プライバシーポリシー</privacy>に同意したものとみなされます。",
     "or": "または",
     "sending": "送信中…",
-    "useMyServer": "自分のサーバーを使う →"
+    "useMyServer": "自分のサーバーを使う →",
+    "linkErrorTitle": "サインインリンクが機能しませんでした",
+    "linkErrorBody": "このリンクは期限切れか、すでに使用された可能性があります。新しいリンクをリクエストしてもう一度お試しください。"
   },
   "tabs": {
     "activity": "アクティビティ",

@@ -1172,7 +1172,9 @@
     "legalFooter": "Når du fortsætter, accepterer du vores <terms>Servicevilkår</terms> og <privacy>Privatlivspolitik</privacy>.",
     "or": "eller",
     "sending": "Sender…",
-    "useMyServer": "brug min server →"
+    "useMyServer": "brug min server →",
+    "linkErrorTitle": "Login-linket virkede ikke",
+    "linkErrorBody": "Linket er måske udløbet eller allerede blevet brugt. Anmod om et nyt link, og prøv igen."
   },
   "tabs": {
     "activity": "Aktivitet",

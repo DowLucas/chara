@@ -1172,7 +1172,9 @@
     "legalFooter": "继续即表示您同意我们的<terms>服务条款</terms>和<privacy>隐私政策</privacy>。",
     "or": "或",
     "sending": "发送中……",
-    "useMyServer": "使用我的服务器 →"
+    "useMyServer": "使用我的服务器 →",
+    "linkErrorTitle": "登录链接无效",
+    "linkErrorBody": "该链接可能已过期或已被使用。请重新获取链接后再试。"
   },
   "tabs": {
     "activity": "动态",
