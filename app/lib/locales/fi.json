@@ -1172,7 +1172,9 @@
     "legalFooter": "Jatkamalla hyväksyt <terms>Käyttöehdot</terms> ja <privacy>Tietosuojakäytännön</privacy>.",
     "or": "tai",
     "sending": "Lähetetään…",
-    "useMyServer": "käytä omaa palvelinta →"
+    "useMyServer": "käytä omaa palvelinta →",
+    "linkErrorTitle": "Kirjautumislinkki ei toiminut",
+    "linkErrorBody": "Linkki on voinut vanhentua tai se on jo käytetty. Pyydä uusi linkki ja yritä uudelleen."
   },
   "tabs": {
     "activity": "Tapahtumat",

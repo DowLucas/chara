@@ -31,6 +31,7 @@ import { REFRESH_FLOOR_MS } from '@/lib/aggregated-reads-internal';
 import { classifyInvite } from '@/lib/invite-handler';
 import { dispatchInviteIntent } from '@/lib/invite-dispatcher';
 import { classifyGroupDeepLink } from '@/lib/deep-link';
+import { normalizeServerUrl } from '@/lib/server-url';
 import i18n from '@/lib/i18n';
 import '@/lib/i18n';
 
@@ -53,6 +54,27 @@ function handleDeepLink(url: string | null | undefined): void {
   if (lower.startsWith('chara://join') || lower.startsWith('quits://join')) {
     const intent = classifyInvite(url, { accounts: accountsSnapshot().accounts });
     void dispatchInviteIntent(intent);
+    return;
+  }
+
+  // Magic-link completion. The email link is a plain https URL, so the OS
+  // opens it in a browser; the backend GET (auth.go VerifyRedirect) bounces it
+  // back as chara://verify?token=…&server=… . Route into the sign-in screen,
+  // which exchanges the raw token for a JWT via its existing flow. The `server`
+  // param is the issuing backend (the browser hop loses the screen's context);
+  // normalize it to the account join-key form, ignoring anything malformed.
+  if (lower.startsWith('chara://verify') || lower.startsWith('quits://verify')) {
+    const q = Linking.parse(url).queryParams ?? {};
+    const rawToken = Array.isArray(q.token) ? q.token[0] : q.token;
+    if (typeof rawToken === 'string' && rawToken) {
+      const params = new URLSearchParams({ verifyToken: rawToken });
+      const rawServer = Array.isArray(q.server) ? q.server[0] : q.server;
+      if (typeof rawServer === 'string' && rawServer) {
+        const normalized = normalizeServerUrl(rawServer);
+        if (typeof normalized === 'string') params.set('server', normalized);
+      }
+      router.push(`/(auth)/sign-in?${params.toString()}` as never);
+    }
     return;
   }
 

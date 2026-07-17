@@ -94,6 +94,7 @@ export default function SignInScreen() {
     server?: string;
     mode?: Mode;
     pendingInvite?: string;
+    verifyToken?: string;
   }>();
 
   const mode: Mode = (params.mode as Mode) ?? 'first-launch';
@@ -130,6 +131,41 @@ export default function SignInScreen() {
     // We only want one event per mount; mode is read once for entry classification.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Magic-link deep-link completion. When the user taps the email link, the
+  // OS opens it in a browser, the backend bounces it to chara://verify?token=…,
+  // and the root layout routes here with the raw token. Exchange it for a JWT
+  // via the same path a same-device sign-in uses. Runs once per token.
+  const verifyToken = Array.isArray(params.verifyToken)
+    ? params.verifyToken[0]
+    : params.verifyToken;
+  const magicHandledRef = React.useRef(false);
+  useEffect(() => {
+    if (!verifyToken || magicHandledRef.current) return;
+    magicHandledRef.current = true;
+    analytics.track('auth_method_selected', { method: 'magic_link' });
+    setLoading(true);
+    void (async () => {
+      try {
+        const verify = await publicApi(serverUrl).verifyMagicLink(verifyToken);
+        await onTokenIssued(verify.token, 'magic_link', verify.refresh_token);
+      } catch (e: unknown) {
+        analytics.track('auth_error', {
+          method: 'magic_link',
+          code: classifyAuthError(e),
+        });
+        await showAlert({
+          title: t('signIn.linkErrorTitle'),
+          message: t('signIn.linkErrorBody'),
+          buttons: [{ key: 'ok', label: t('common.ok') }],
+        });
+      } finally {
+        setLoading(false);
+      }
+    })();
+    // Token drives this; onTokenIssued/serverUrl are stable for a once-guard.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [verifyToken]);
 
   // Always re-read the target server's advertised capabilities on mount, even
   // when a cached snapshot already exists. The auth buttons (Apple/Google) are

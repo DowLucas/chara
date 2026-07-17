@@ -1172,7 +1172,9 @@
     "legalFooter": "Mit „Weiter“ akzeptierst du unsere <terms>Nutzungsbedingungen</terms> und unsere <privacy>Datenschutzerklärung</privacy>.",
     "or": "oder",
     "sending": "Sendet…",
-    "useMyServer": "eigenen Server nutzen →"
+    "useMyServer": "eigenen Server nutzen →",
+    "linkErrorTitle": "Anmeldelink hat nicht funktioniert",
+    "linkErrorBody": "Dieser Link ist möglicherweise abgelaufen oder wurde bereits verwendet. Fordere einen neuen Link an und versuche es erneut."
   },
   "tabs": {
     "activity": "Aktivität",

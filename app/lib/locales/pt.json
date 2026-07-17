@@ -1211,7 +1211,9 @@
     "legalFooter": "Ao continuar, você concorda com nossos <terms>Termos de Serviço</terms> e <privacy>Política de Privacidade</privacy>.",
     "or": "ou",
     "sending": "Enviando…",
-    "useMyServer": "usar meu servidor →"
+    "useMyServer": "usar meu servidor →",
+    "linkErrorTitle": "O link de acesso não funcionou",
+    "linkErrorBody": "Este link pode ter expirado ou já ter sido usado. Solicite um novo link e tente novamente."
   },
   "tabs": {
     "activity": "Atividade",

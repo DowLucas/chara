@@ -1211,7 +1211,9 @@
     "legalFooter": "Continuando accetti i nostri <terms>Termini di servizio</terms> e la <privacy>Informativa sulla privacy</privacy>.",
     "or": "oppure",
     "sending": "Invio…",
-    "useMyServer": "usa il mio server →"
+    "useMyServer": "usa il mio server →",
+    "linkErrorTitle": "Il link di accesso non ha funzionato",
+    "linkErrorBody": "Il link potrebbe essere scaduto o già stato usato. Richiedi un nuovo link e riprova."
   },
   "tabs": {
     "activity": "Attività",

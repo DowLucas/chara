@@ -125,6 +125,9 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 		r.Use(middleware.AuthRateLimit(30, 5))
 		r.Post("/api/auth/magic-link", authH.MagicLink)
 		r.Post("/api/auth/verify", authH.Verify)
+		// Browser GET of the magic-link email URL: bounce the token into the
+		// app via the custom scheme (the POST above does the actual exchange).
+		r.Get("/api/auth/verify", authH.VerifyRedirect)
 		// Unauthenticated: the refresh token is the bearer credential, and the
 		// access JWT it replaces may already be expired. Protocol-version
 		// middleware is skipped for the same reason as verify — a client whose

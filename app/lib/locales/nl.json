@@ -1172,7 +1172,9 @@
     "legalFooter": "Door verder te gaan ga je akkoord met onze <terms>Servicevoorwaarden</terms> en <privacy>Privacybeleid</privacy>.",
     "or": "of",
     "sending": "Versturen…",
-    "useMyServer": "gebruik mijn server →"
+    "useMyServer": "gebruik mijn server →",
+    "linkErrorTitle": "Aanmeldlink werkte niet",
+    "linkErrorBody": "Deze link is mogelijk verlopen of al gebruikt. Vraag een nieuwe link aan en probeer het opnieuw."
   },
   "tabs": {
     "activity": "Activiteit",

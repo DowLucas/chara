@@ -1254,7 +1254,9 @@
     "legalFooter": "Kontynuując, akceptujesz nasz <terms>Regulamin</terms> i <privacy>Politykę prywatności</privacy>.",
     "or": "lub",
     "sending": "Wysyłanie…",
-    "useMyServer": "użyj mojego serwera →"
+    "useMyServer": "użyj mojego serwera →",
+    "linkErrorTitle": "Link logowania nie zadziałał",
+    "linkErrorBody": "Ten link mógł wygasnąć lub został już użyty. Poproś o nowy link i spróbuj ponownie."
   },
   "tabs": {
     "activity": "Aktywność",

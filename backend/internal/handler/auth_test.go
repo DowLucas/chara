@@ -75,6 +75,40 @@ func TestVerify_NewUserHasEmptyDisplayName(t *testing.T) {
 	assert.Equal(t, email, verifyResp.User.Email)
 }
 
+// A magic-link email URL is opened with a browser GET, not the app's POST.
+// The GET handler must bounce the raw token into the app via the custom
+// scheme instead of returning 405 — which silently broke every real
+// email-link sign-in (prod: 20/20 GET /api/auth/verify → 405).
+func TestVerify_GetBouncesToAppScheme(t *testing.T) {
+	env := newAuthEnv(t)
+	email := uniqueEmail(t, "getbounce")
+
+	rr := env.Do(t, mustReq(t, "POST", "/api/auth/magic-link", `{"email":"`+email+`"}`))
+	require.Equal(t, http.StatusOK, rr.Code)
+	var mlResp struct {
+		Token string `json:"token"`
+	}
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&mlResp))
+	require.NotEmpty(t, mlResp.Token)
+
+	rr = env.Do(t, mustReq(t, "GET", "/api/auth/verify?token="+mlResp.Token, ""))
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+	// The page bounces the raw token into the app via the custom scheme; the
+	// app then POSTs it to exchange for a JWT (the JWT never touches the browser).
+	assert.Contains(t, rr.Body.String(), "chara://verify?token="+mlResp.Token)
+
+	// The bounce must NOT consume the token — the app still needs to POST it.
+	rr = env.Do(t, mustReq(t, "POST", "/api/auth/verify", `{"token":"`+mlResp.Token+`"}`))
+	require.Equal(t, http.StatusOK, rr.Code, "token must still be redeemable after the GET bounce")
+}
+
+// A GET with no token is a malformed link — bounce nothing, fail clean.
+func TestVerify_GetWithoutTokenIsBadRequest(t *testing.T) {
+	env := newAuthEnv(t)
+	rr := env.Do(t, mustReq(t, "GET", "/api/auth/verify", ""))
+	require.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
 func TestUpdateMe_SetsFullName(t *testing.T) {
 	env := newAuthEnv(t)
 	user := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "u"), "")

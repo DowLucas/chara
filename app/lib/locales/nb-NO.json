@@ -1172,7 +1172,9 @@
     "legalFooter": "Ved å fortsette godtar du våre <terms>Vilkår for bruk</terms> og <privacy>Personvernerklæring</privacy>.",
     "or": "eller",
     "sending": "Sender …",
-    "useMyServer": "bruk min server →"
+    "useMyServer": "bruk min server →",
+    "linkErrorTitle": "Innloggingslenken virket ikke",
+    "linkErrorBody": "Lenken kan ha utløpt eller allerede vært brukt. Be om en ny lenke og prøv igjen."
   },
   "tabs": {
     "activity": "Aktivitet",

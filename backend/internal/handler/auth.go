@@ -3,9 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"html"
 	"log/slog"
 	"net/http"
 	"net/mail"
+	"net/url"
 	"strings"
 	"time"
 
@@ -185,6 +187,45 @@ func (h *AuthHandler) MagicLink(w http.ResponseWriter, r *http.Request) {
 	}
 	slog.Info("magic link issued", "email_hash", redactEmail(addr))
 	writeJSON(w, http.StatusOK, magicLinkResponse{OK: true})
+}
+
+// VerifyRedirect handles the browser GET that a magic-link email produces.
+// The email link is a plain https URL, so tapping it opens the system browser
+// with a GET — but Verify (the token→JWT exchange) is POST-only, and app-links
+// deliberately exclude /api/* (see aasa.go / assetlinks.go). So this endpoint
+// bounces the raw token into the app via the custom scheme
+// (chara://verify?token=…), where the app POSTs it to Verify. Only the
+// single-use raw token transits the browser; the JWT never does. Not consuming
+// the token here keeps this a dumb, idempotent bounce — the POST does all
+// validation and returns proper expiry/replay errors.
+func (h *AuthHandler) VerifyRedirect(w http.ResponseWriter, r *http.Request) {
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		writeError(w, http.StatusBadRequest, "missing token")
+		return
+	}
+
+	deepLink := "chara://verify?token=" + url.QueryEscape(token)
+	if h.cfg.BaseURL != "" {
+		// Stamp the issuing server so the app knows which backend to POST the
+		// token back to (the browser bounce loses the sign-in screen's context).
+		deepLink += "&server=" + url.QueryEscape(h.cfg.BaseURL)
+	}
+	safe := html.EscapeString(deepLink)
+
+	// Immediate JS redirect for the common case (app installed), with a
+	// tappable fallback for browsers that block scripted scheme navigation.
+	page := `<!doctype html><html><head><meta charset="utf-8">` +
+		`<meta name="viewport" content="width=device-width,initial-scale=1">` +
+		`<title>Chara</title><script>location.replace(` +
+		`decodeURIComponent("` + url.QueryEscape(deepLink) + `"))</script></head>` +
+		`<body style="font-family:system-ui,sans-serif;text-align:center;padding:3rem 1.5rem">` +
+		`<p>Opening Chara…</p><p><a href="` + safe + `">Tap here if it doesn't open</a></p>` +
+		`</body></html>`
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(page))
 }
 
 // Verify exchanges a magic-link token for a JWT.

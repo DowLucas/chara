@@ -1172,7 +1172,9 @@
     "legalFooter": "By continuing you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
     "or": "or",
     "sending": "Sending…",
-    "useMyServer": "use my server →"
+    "useMyServer": "use my server →",
+    "linkErrorTitle": "Sign-in link didn't work",
+    "linkErrorBody": "This link may have expired or already been used. Request a new link and try again."
   },
   "tabs": {
     "activity": "Activity",
