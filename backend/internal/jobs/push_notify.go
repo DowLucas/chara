@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/url"
 
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 
@@ -14,19 +13,25 @@ import (
 	"github.com/DowLucas/chara/internal/pushsend"
 )
 
-// PushNotifyArgs is one group-wide push notification triggered by a member
-// action. GroupName/ActorName/Title/AmountMinor/Currency are embedded so the
-// worker can build copy without a second round trip for anything but the
-// recipient token list.
+// PushNotifyArgs is one push notification triggered by a member action.
+// GroupName/ActorName/Title/AmountMinor/Currency are embedded so the worker
+// can build copy without a second round trip for anything but the recipient
+// token list.
+//
+// RecipientUserIDs is the explicit set of users involved in the event (e.g.
+// an expense's participants plus its payer, or the two parties to a
+// settlement) — notifications are NOT fanned out to the whole group. Callers
+// may include the actor; the worker filters them out.
 type PushNotifyArgs struct {
-	EventKind   string `json:"kind"` // "expense_added" | "settlement_recorded"
-	GroupID     string `json:"group_id"`
-	GroupName   string `json:"group_name"`
-	ActorUserID string `json:"actor_user_id"` // excluded from recipients
-	ActorName   string `json:"actor_name"`
-	Title       string `json:"title"` // expense title; "" for settlements
-	AmountMinor int64  `json:"amount_minor"`
-	Currency    string `json:"currency"`
+	EventKind        string   `json:"kind"` // "expense_added" | "settlement_recorded"
+	GroupID          string   `json:"group_id"`
+	GroupName        string   `json:"group_name"`
+	ActorUserID      string   `json:"actor_user_id"` // excluded from recipients
+	ActorName        string   `json:"actor_name"`
+	RecipientUserIDs []string `json:"recipient_user_ids"`
+	Title            string   `json:"title"` // expense title; "" for settlements
+	AmountMinor      int64    `json:"amount_minor"`
+	Currency         string   `json:"currency"`
 }
 
 func (PushNotifyArgs) Kind() string { return "push_notify" }
@@ -37,10 +42,10 @@ type expoSender interface {
 	Send(ctx context.Context, msgs []pushsend.Message) error
 }
 
-// PushNotifyWorker sends a push notification to every push-token-registered
-// member of a group except the actor who triggered the event. v1 is
-// fire-and-forget: send failures and per-message ticket errors are logged,
-// never retried, and never fail the job.
+// PushNotifyWorker sends a push notification to the push-token-registered
+// users involved in the event (args.RecipientUserIDs), excluding the actor
+// who triggered it. v1 is fire-and-forget: send failures and per-message
+// ticket errors are logged, never retried, and never fail the job.
 //
 // No i18n: notification copy is always English regardless of the
 // recipient's device locale (backend has no per-user locale for push
@@ -65,10 +70,22 @@ func NotifyForTest(ctx context.Context, w *PushNotifyWorker, args PushNotifyArgs
 }
 
 func (w *PushNotifyWorker) notify(ctx context.Context, args PushNotifyArgs) error {
-	tokens, err := w.Queries.ListPushTokensByGroup(ctx, db.ListPushTokensByGroupParams{
-		GroupID: args.GroupID,
-		UserID:  pgtype.Text{String: args.ActorUserID, Valid: true},
-	})
+	// Recipients are the involved users only. Drop the actor (callers may
+	// include them, e.g. the payer is normally also a participant) and any
+	// blanks from unclaimed members. No recipients means nothing to send —
+	// deliberately fail closed rather than fall back to a group-wide blast.
+	recipients := make([]string, 0, len(args.RecipientUserIDs))
+	for _, uid := range args.RecipientUserIDs {
+		if uid == "" || uid == args.ActorUserID {
+			continue
+		}
+		recipients = append(recipients, uid)
+	}
+	if len(recipients) == 0 {
+		return nil
+	}
+
+	tokens, err := w.Queries.ListPushTokensByUsers(ctx, recipients)
 	if err != nil {
 		return fmt.Errorf("push_notify: list tokens: %w", err)
 	}
