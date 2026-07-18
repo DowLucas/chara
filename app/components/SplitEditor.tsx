@@ -40,7 +40,11 @@ import {
   spacing,
 } from '@/lib/theme';
 
-export type SplitMethod = 'equal' | 'exact' | 'percentage';
+/** `itemized` is a client-side authoring mode backed by per-receipt-line
+ *  assignments: its per-member amounts are derived, not typed, so the editor
+ *  renders them read-only. It is only offered when the host supplies an
+ *  itemisation (see `allowedMethods`). */
+export type SplitMethod = 'equal' | 'exact' | 'percentage' | 'itemized';
 
 export interface SplitValue {
   method: SplitMethod;
@@ -59,6 +63,7 @@ const SPLIT_METHODS: { id: SplitMethod; labelKey: string }[] = [
   { id: 'equal', labelKey: 'addExpense.methodEqual' },
   { id: 'exact', labelKey: 'addExpense.methodManual' },
   { id: 'percentage', labelKey: 'addExpense.methodPercent' },
+  { id: 'itemized', labelKey: 'addExpense.methodItemized' },
 ];
 
 export interface SplitEditorProps {
@@ -342,6 +347,14 @@ export function SplitEditor({
                   unit="%"
                   narrow
                 />
+              )}
+              {/* Itemised amounts come from the receipt line assignments, so
+                  they are shown read-only — editing happens by reassigning
+                  items, not by typing here. */}
+              {inc && method === 'itemized' && (
+                <Text style={styles.equalShare}>
+                  {fmtMinor(lockedById.get(m.id) ?? 0, currency)}
+                </Text>
               )}
             </View>
           );

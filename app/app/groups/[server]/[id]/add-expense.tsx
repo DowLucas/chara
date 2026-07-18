@@ -26,7 +26,7 @@ import { ReceiptScanner, ReceiptScanResult } from '@/components/ReceiptScanner';
 import { ExpenseSavedOverlay } from '@/components/ExpenseSavedOverlay';
 import { notifyGroupChanged } from '@/lib/group-refresh';
 import { ScanItemsAssign } from '@/components/ScanItemsAssign';
-import { buildScanItemsState } from '@/lib/scan-items';
+import { buildScanItemsState, type ScanItemsState } from '@/lib/scan-items';
 import { draftKey } from '@/lib/expense-draft';
 import { useAccount } from '@/lib/accounts';
 import {
@@ -67,13 +67,8 @@ export default function AddExpenseScreen() {
   const [pendingReceiptImage, setPendingReceiptImage] = useState<
     { base64: string; mime_type: string } | null
   >(null);
-  const [scanItemsState, setScanItemsState] = useState<{
-    items: ScannedReceiptItem[];
-    taxMinor: number;
-    tipMinor: number;
-    totalMinor: number;
-    currency: string;
-  } | null>(null);
+  const [scanItemsState, setScanItemsState] =
+    useState<ScanItemsState<ScannedReceiptItem> | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Live snapshot of wizard values for duplicate detection.
@@ -144,9 +139,15 @@ export default function AddExpenseScreen() {
     if (state) setScanItemsState(state);
   }
 
-  function applyScanItemsAssignment(perMemberMinor: Record<string, number>) {
+  function applyScanItemsAssignment(
+    result: Parameters<
+      NonNullable<typeof wizardRef.current>['applyScanItemsAssignment']
+    >[0] | null,
+  ) {
     setScanItemsState(null);
-    wizardRef.current?.applyScanItemsAssignment(perMemberMinor);
+    // Skipping the itemised step leaves the wizard's split untouched.
+    if (!result) return;
+    wizardRef.current?.applyScanItemsAssignment(result);
   }
 
   // Duplicate detection: title + amount + currency match against any existing
@@ -309,6 +310,7 @@ export default function AddExpenseScreen() {
         items={scanItemsState?.items ?? []}
         taxMinor={scanItemsState?.taxMinor ?? 0}
         tipMinor={scanItemsState?.tipMinor ?? 0}
+        depositMinor={scanItemsState?.depositMinor ?? 0}
         totalMinor={scanItemsState?.totalMinor ?? 0}
         currency={scanItemsState?.currency ?? group?.currency ?? 'SEK'}
         members={members}

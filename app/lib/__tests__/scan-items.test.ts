@@ -1,5 +1,6 @@
 import {
   buildScanItemsState,
+  itemizedAmounts,
   prorateItemAssignments,
   ScanItem,
   ItemAssignment,
@@ -226,5 +227,54 @@ describe('buildScanItemsState', () => {
       'EUR',
     );
     expect(state!.taxMinor).toBe(0);
+  });
+});
+
+// itemizedAmounts ----------------------------------------------------------
+// The wizard keeps the itemisation and re-derives amounts on every render, so
+// that switching split method (and back) is lossless and toggling a member off
+// redistributes rather than leaving a stale snapshot behind.
+describe('itemizedAmounts', () => {
+  const itemization = {
+    items: items(['Beer', 6000], ['Pizza', 3000]),
+    assignments: { i0: ['a'], i1: ['b'] } as ItemAssignment,
+    taxMinor: 0,
+    tipMinor: 0,
+  };
+
+  it('derives per-member amounts from the assignments', () => {
+    expect(itemizedAmounts(itemization, PARTICIPANTS)).toEqual({
+      a: 6000,
+      b: 3000,
+    });
+  });
+
+  it('is deterministic — repeated derivation gives the same result', () => {
+    const first = itemizedAmounts(itemization, PARTICIPANTS);
+    const second = itemizedAmounts(itemization, PARTICIPANTS);
+    expect(second).toEqual(first);
+  });
+
+  it('redistributes when a participant is removed', () => {
+    // Dropping "a" leaves their beer unassigned, so it is shared by the rest.
+    const out = itemizedAmounts(itemization, ['b', 'c']);
+    expect(out.a).toBeUndefined();
+    const sum = Object.values(out).reduce((s, v) => s + v, 0);
+    expect(sum).toBe(9000);
+  });
+
+  it('still totals the receipt when a participant is added', () => {
+    const out = itemizedAmounts(itemization, ['a', 'b', 'c', 'd']);
+    const sum = Object.values(out).reduce((s, v) => s + v, 0);
+    expect(sum).toBe(9000);
+    // d was on no items, so they owe nothing from the itemised base.
+    expect(out.d).toBeUndefined();
+  });
+
+  it('prorates tax and tip alongside the items', () => {
+    const withTax = { ...itemization, taxMinor: 900, tipMinor: 0 };
+    const out = itemizedAmounts(withTax, PARTICIPANTS);
+    const sum = Object.values(out).reduce((s, v) => s + v, 0);
+    expect(sum).toBe(9900);
   });
 });

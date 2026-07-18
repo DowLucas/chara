@@ -18,6 +18,40 @@ export interface ScanItem {
 /** memberID[] per item id. Empty array (or missing) = unassigned. */
 export type ItemAssignment = Record<string, string[]>;
 
+/**
+ * Everything needed to re-derive an itemised split.
+ *
+ * Owned by the expense wizard rather than the assign modal, so that switching
+ * split method is non-destructive: the per-item assignments survive a trip
+ * through "evenly" / "%" and the user can return to the itemised split
+ * without rescanning the receipt.
+ */
+export interface Itemization {
+  items: ScanItem[];
+  assignments: ItemAssignment;
+  taxMinor: number;
+  tipMinor: number;
+}
+
+/**
+ * Per-member amounts for an itemisation, re-derived against the *current*
+ * participant set rather than a snapshot taken at scan time. Toggling a member
+ * off therefore redistributes their items across whoever is left, instead of
+ * leaving a stale amount behind.
+ */
+export function itemizedAmounts(
+  itemization: Itemization,
+  participants: string[],
+): Record<string, number> {
+  return prorateItemAssignments({
+    items: itemization.items,
+    assignments: itemization.assignments,
+    taxMinor: itemization.taxMinor,
+    tipMinor: itemization.tipMinor,
+    participants,
+  });
+}
+
 export interface ProrateInput {
   items: ScanItem[];
   assignments: ItemAssignment;
@@ -38,6 +72,10 @@ export interface ScanItemsState<I extends ConvertibleItem> {
   items: I[];
   taxMinor: number;
   tipMinor: number;
+  /** Container deposit ("pant") from the receipt. Part of the total but not
+   *  of the items, so it is offered as an evenly-shared extra charge rather
+   *  than prorated like tax/tip. */
+  depositMinor: number;
   totalMinor: number;
   currency: string;
 }
@@ -62,6 +100,7 @@ export function buildScanItemsState<I extends ConvertibleItem>(
     total_minor: number;
     tax_minor?: number;
     tip_minor?: number;
+    deposit_minor?: number;
     items?: I[];
   },
   applied: { amount_minor: number; currency: string },
@@ -98,6 +137,9 @@ export function buildScanItemsState<I extends ConvertibleItem>(
     items: convItems,
     taxMinor: taxAlreadyInItems ? 0 : conv(tax),
     tipMinor: conv(tip),
+    // A deposit refund would make this negative; clamp to 0 because the extra
+    // charge is a positive share-out, and a credit has no sensible even split.
+    depositMinor: Math.max(0, conv(receipt.deposit_minor ?? 0)),
     totalMinor: applied.amount_minor,
     currency: applied.currency,
   };

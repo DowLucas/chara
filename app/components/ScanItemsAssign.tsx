@@ -32,7 +32,7 @@ import {
   fontSize,
   spacing,
 } from '@/lib/theme';
-import { prorateItemAssignments, ScanItem } from '@/lib/scan-items';
+import { prorateItemAssignments, ScanItem, type Itemization } from '@/lib/scan-items';
 
 function minorToInput(n: number): string {
   return (n / 100).toFixed(2).replace(/\.?0+$/, '');
@@ -54,6 +54,10 @@ export interface ScanItemsAssignProps {
   items: ScannedReceiptItem[];
   taxMinor: number;
   tipMinor: number;
+  /** Container deposit ("pant") read off the receipt. Passed straight through
+   *  to the wizard as the evenly-shared extra charge rather than prorated
+   *  here — nobody in particular owes the deposit. */
+  depositMinor?: number;
   totalMinor: number;
   currency: string;
   members: GroupMember[];
@@ -63,10 +67,16 @@ export interface ScanItemsAssignProps {
    *  resolve against this server, not the default account. */
   serverUrl: string;
   onCancel: () => void;
-  /** Called with the resolved per-member amounts in minor units. The
-   *  caller is responsible for flipping the expense to exact split and
-   *  filling the splits[]. */
-  onApply: (perMemberMinor: Record<string, number>) => void;
+  /** Called with the raw itemisation — items, per-item assignments and the
+   *  tax/tip meta — rather than the amounts it derives. The wizard keeps it
+   *  so the itemised split can be re-derived after the user visits another
+   *  split method, instead of being lost the moment this modal unmounts.
+   *  `null` means "skip itemising" (the Skip CTA). */
+  onApply: (result: {
+    itemization: Itemization;
+    participants: string[];
+    depositMinor: number;
+  } | null) => void;
 }
 
 export function ScanItemsAssign(props: ScanItemsAssignProps) {
@@ -394,14 +404,20 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
           <ContentContainer style={styles.ctaRow}>
           <Button
             kind="secondary"
-            onPress={() => props.onApply({})}
+            onPress={() => props.onApply(null)}
             style={{ flex: 1 }}
           >
             {t('scanItems.skip')}
           </Button>
           <Button
             kind="primary"
-            onPress={() => props.onApply(perMember)}
+            onPress={() =>
+              props.onApply({
+                itemization: { items: scanItems, assignments, taxMinor, tipMinor },
+                participants,
+                depositMinor: props.depositMinor ?? 0,
+              })
+            }
             disabled={totalMismatch}
             style={{ flex: 1 }}
           >
