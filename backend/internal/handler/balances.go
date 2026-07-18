@@ -426,14 +426,25 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.rc != nil {
+		// Only the two parties to the settlement — not the whole group. The
+		// worker filters the actor back out. Unclaimed members have no user
+		// account and are skipped.
+		recipients := make([]string, 0, 2)
+		for _, m := range []db.GroupMember{fromM, toM} {
+			if m.UserID.Valid && m.UserID.String != "" {
+				recipients = append(recipients, m.UserID.String)
+			}
+		}
+
 		if _, err := h.rc.Insert(r.Context(), jobs.PushNotifyArgs{
-			EventKind:   "settlement_recorded",
-			GroupID:     groupID,
-			GroupName:   group.Name,
-			ActorUserID: claims.UserID,
-			ActorName:   actorMember.Name,
-			AmountMinor: settlement.Amount,
-			Currency:    settlement.Currency,
+			EventKind:        "settlement_recorded",
+			GroupID:          groupID,
+			GroupName:        group.Name,
+			ActorUserID:      claims.UserID,
+			ActorName:        actorMember.Name,
+			RecipientUserIDs: recipients,
+			AmountMinor:      settlement.Amount,
+			Currency:         settlement.Currency,
 		}, nil); err != nil {
 			slog.Warn("balances: enqueue push notification failed", "error", err, "group_id", groupID)
 		}

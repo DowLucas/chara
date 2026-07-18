@@ -25,6 +25,17 @@ func (f *fakeExpoSender) Send(ctx context.Context, msgs []pushsend.Message) erro
 	return f.err
 }
 
+// sentTokens flattens every message the fake received into a token set.
+func sentTokens(f *fakeExpoSender) map[string]bool {
+	out := map[string]bool{}
+	for _, call := range f.calls {
+		for _, m := range call {
+			out[m.To] = true
+		}
+	}
+	return out
+}
+
 func TestPushNotify_HappyPath(t *testing.T) {
 	env := testutil.NewEnv(t)
 	actor := testutil.CreateUser(t, env.Pool, "actor-"+ulidSuffix()+"@test", "Actor")
@@ -43,28 +54,90 @@ func TestPushNotify_HappyPath(t *testing.T) {
 	require.NoError(t, jobs.NotifyForTest(context.Background(), w, jobs.PushNotifyArgs{
 		EventKind: "expense_added", GroupID: group.ID, GroupName: group.Name,
 		ActorUserID: actor.ID, ActorName: "Actor",
-		Title: "Dinner", AmountMinor: 4500, Currency: "SEK",
+		RecipientUserIDs: []string{other1.ID, other2.ID},
+		Title:            "Dinner", AmountMinor: 4500, Currency: "SEK",
 	}))
 
 	require.Len(t, fake.calls, 1)
 	sent := fake.calls[0]
 	require.Len(t, sent, 2)
-	tokens := map[string]bool{}
 	for _, m := range sent {
-		tokens[m.To] = true
 		require.Contains(t, m.Body, "45.00 SEK")
 		require.Equal(t, group.Name, m.Title)
 		require.Equal(t, "chara://groups/https:%2F%2Fchara.example.com/"+group.ID, m.Data["url"])
 	}
+	tokens := sentTokens(fake)
 	require.True(t, tokens["ExponentPushToken[other1]"])
 	require.True(t, tokens["ExponentPushToken[other2]"])
 	require.False(t, tokens["ExponentPushToken[actor]"])
 }
 
-func TestPushNotify_NoTokensNoOp(t *testing.T) {
+// TestPushNotify_OnlyInvolvedUsersNotified is the regression test for the bug
+// where every group member was notified regardless of involvement. A group
+// member who is not in RecipientUserIDs must receive nothing.
+func TestPushNotify_OnlyInvolvedUsersNotified(t *testing.T) {
+	env := testutil.NewEnv(t)
+	actor := testutil.CreateUser(t, env.Pool, "actor-"+ulidSuffix()+"@test", "Actor")
+	group, actorMember := testutil.CreateGroup(t, env.Pool, "Trip", "SEK", actor.ID, "Actor")
+	involved := testutil.CreateUser(t, env.Pool, "involved-"+ulidSuffix()+"@test", "Involved")
+	testutil.AddMember(t, env.Pool, group.ID, involved.ID, "Involved")
+	bystander := testutil.CreateUser(t, env.Pool, "bystander-"+ulidSuffix()+"@test", "Bystander")
+	testutil.AddMember(t, env.Pool, group.ID, bystander.ID, "Bystander")
+
+	testutil.SeedPushToken(t, env.Pool, actorMember.UserID.String, "ExponentPushToken[actor]")
+	testutil.SeedPushToken(t, env.Pool, involved.ID, "ExponentPushToken[involved]")
+	testutil.SeedPushToken(t, env.Pool, bystander.ID, "ExponentPushToken[bystander]")
+
+	fake := &fakeExpoSender{}
+	w := &jobs.PushNotifyWorker{Pool: env.Pool, Queries: env.Queries, Expo: fake, BaseURL: "https://chara.example.com"}
+	require.NoError(t, jobs.NotifyForTest(context.Background(), w, jobs.PushNotifyArgs{
+		EventKind: "expense_added", GroupID: group.ID, GroupName: group.Name,
+		ActorUserID: actor.ID, ActorName: "Actor",
+		RecipientUserIDs: []string{involved.ID},
+		Title:            "Dinner", AmountMinor: 4500, Currency: "SEK",
+	}))
+
+	tokens := sentTokens(fake)
+	require.True(t, tokens["ExponentPushToken[involved]"], "the involved member should be notified")
+	require.False(t, tokens["ExponentPushToken[bystander]"], "a group member not involved must NOT be notified")
+	require.False(t, tokens["ExponentPushToken[actor]"], "the actor must never be notified")
+}
+
+// The actor is filtered out even when a caller includes them in the recipient
+// set (the payer is normally also a participant).
+func TestPushNotify_ActorExcludedEvenWhenListed(t *testing.T) {
+	env := testutil.NewEnv(t)
+	actor := testutil.CreateUser(t, env.Pool, "actor-"+ulidSuffix()+"@test", "Actor")
+	group, actorMember := testutil.CreateGroup(t, env.Pool, "Trip", "SEK", actor.ID, "Actor")
+	other := testutil.CreateUser(t, env.Pool, "other-"+ulidSuffix()+"@test", "Other")
+	testutil.AddMember(t, env.Pool, group.ID, other.ID, "Other")
+
+	testutil.SeedPushToken(t, env.Pool, actorMember.UserID.String, "ExponentPushToken[actor]")
+	testutil.SeedPushToken(t, env.Pool, other.ID, "ExponentPushToken[other]")
+
+	fake := &fakeExpoSender{}
+	w := &jobs.PushNotifyWorker{Pool: env.Pool, Queries: env.Queries, Expo: fake, BaseURL: "https://chara.example.com"}
+	require.NoError(t, jobs.NotifyForTest(context.Background(), w, jobs.PushNotifyArgs{
+		EventKind: "expense_added", GroupID: group.ID, GroupName: group.Name,
+		ActorUserID: actor.ID, ActorName: "Actor",
+		RecipientUserIDs: []string{actor.ID, other.ID},
+		Title:            "Dinner", AmountMinor: 4500, Currency: "SEK",
+	}))
+
+	tokens := sentTokens(fake)
+	require.True(t, tokens["ExponentPushToken[other]"])
+	require.False(t, tokens["ExponentPushToken[actor]"])
+}
+
+// No recipients means nothing to send — mirrors SettleReminderWorker's
+// fail-closed posture rather than falling back to a group-wide blast.
+func TestPushNotify_EmptyRecipientsNoOp(t *testing.T) {
 	env := testutil.NewEnv(t)
 	actor := testutil.CreateUser(t, env.Pool, "actor-"+ulidSuffix()+"@test", "Actor")
 	group, _ := testutil.CreateGroup(t, env.Pool, "Trip", "SEK", actor.ID, "Actor")
+	other := testutil.CreateUser(t, env.Pool, "other-"+ulidSuffix()+"@test", "Other")
+	testutil.AddMember(t, env.Pool, group.ID, other.ID, "Other")
+	testutil.SeedPushToken(t, env.Pool, other.ID, "ExponentPushToken[other]")
 
 	fake := &fakeExpoSender{}
 	w := &jobs.PushNotifyWorker{Pool: env.Pool, Queries: env.Queries, Expo: fake, BaseURL: "https://chara.example.com"}
@@ -72,6 +145,25 @@ func TestPushNotify_NoTokensNoOp(t *testing.T) {
 		EventKind: "expense_added", GroupID: group.ID, GroupName: group.Name,
 		ActorUserID: actor.ID, ActorName: "Actor",
 		Title: "Dinner", AmountMinor: 4500, Currency: "SEK",
+	}))
+
+	require.Empty(t, fake.calls)
+}
+
+func TestPushNotify_NoTokensNoOp(t *testing.T) {
+	env := testutil.NewEnv(t)
+	actor := testutil.CreateUser(t, env.Pool, "actor-"+ulidSuffix()+"@test", "Actor")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Trip", "SEK", actor.ID, "Actor")
+	other := testutil.CreateUser(t, env.Pool, "other-"+ulidSuffix()+"@test", "Other")
+	testutil.AddMember(t, env.Pool, group.ID, other.ID, "Other")
+
+	fake := &fakeExpoSender{}
+	w := &jobs.PushNotifyWorker{Pool: env.Pool, Queries: env.Queries, Expo: fake, BaseURL: "https://chara.example.com"}
+	require.NoError(t, jobs.NotifyForTest(context.Background(), w, jobs.PushNotifyArgs{
+		EventKind: "expense_added", GroupID: group.ID, GroupName: group.Name,
+		ActorUserID: actor.ID, ActorName: "Actor",
+		RecipientUserIDs: []string{other.ID},
+		Title:            "Dinner", AmountMinor: 4500, Currency: "SEK",
 	}))
 
 	require.Empty(t, fake.calls)
@@ -90,7 +182,8 @@ func TestPushNotify_SendErrorDoesNotFailJob(t *testing.T) {
 	require.NoError(t, jobs.NotifyForTest(context.Background(), w, jobs.PushNotifyArgs{
 		EventKind: "settlement_recorded", GroupID: group.ID, GroupName: group.Name,
 		ActorUserID: actor.ID, ActorName: "Actor",
-		AmountMinor: 1000, Currency: "SEK",
+		RecipientUserIDs: []string{other.ID},
+		AmountMinor:      1000, Currency: "SEK",
 	}))
 	require.Len(t, fake.calls, 1)
 }
