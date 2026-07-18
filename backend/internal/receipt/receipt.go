@@ -42,13 +42,21 @@ type Receipt struct {
 	SubtotalMinor money.Amount `json:"subtotal_minor,omitempty"`
 	TaxMinor      money.Amount `json:"tax_minor,omitempty"`
 	TipMinor      money.Amount `json:"tip_minor,omitempty"`
+	// DepositMinor is the total container deposit on the receipt — Swedish
+	// "pant", bottle/can deposit. It is part of TotalMinor but is never one
+	// of the Items, because it belongs to the receipt as a whole rather
+	// than to any purchased good. Negative when the receipt records a
+	// deposit refund ("pantretur") instead of a charge. Clients surface it
+	// as an evenly-shared extra charge, which is what stops it showing up
+	// as an unassignable remainder against the total.
+	DepositMinor money.Amount `json:"deposit_minor,omitempty"`
 
 	// Items, if present, lists per-line entries extracted from the receipt
 	// (in the receipt's currency). Optional — Gemini may return an empty
 	// list when items can't be confidently parsed. Mobile clients MUST
 	// tolerate a missing/empty array. Modifiers are folded into the parent
-	// line; deposit-return rows are omitted; subtotal/tax/tip lines are not
-	// repeated here.
+	// line; deposit / "pant" rows are reported in DepositMinor instead;
+	// subtotal/tax/tip lines are not repeated here.
 	Items []Item `json:"items,omitempty"`
 }
 

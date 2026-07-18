@@ -131,6 +131,9 @@ type scanResponse struct {
 	SubtotalMinor int64              `json:"subtotal_minor,omitempty"`
 	TaxMinor      int64              `json:"tax_minor,omitempty"`
 	TipMinor      int64              `json:"tip_minor,omitempty"`
+	// DepositMinor is container deposit ("pant") included in the total but
+	// not in Items. Clients offer it as an evenly-shared extra charge.
+	DepositMinor  int64              `json:"deposit_minor,omitempty"`
 	Items         []scanResponseItem `json:"items,omitempty"`
 
 	// Hosted-only fields. Omitted on selfhost instances where the counter
@@ -321,6 +324,7 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 		SubtotalMinor: int64(res.SubtotalMinor),
 		TaxMinor:      int64(res.TaxMinor),
 		TipMinor:      int64(res.TipMinor),
+		DepositMinor:  int64(res.DepositMinor),
 		Items:         items,
 	}
 	if metered {

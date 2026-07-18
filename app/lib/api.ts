@@ -1002,6 +1002,11 @@ export interface ScannedReceipt {
   subtotal_minor?: number;
   tax_minor?: number;
   tip_minor?: number;
+  /** Container deposit ("pant") included in total_minor but never in
+   *  `items` — it belongs to the receipt rather than to any purchased good.
+   *  Negative for a deposit refund ("pantretur"). Absent on older backends,
+   *  so treat missing as 0. Surfaced as an evenly-shared extra charge. */
+  deposit_minor?: number;
   /** Per-line items in the receipt's currency. Optional — backends without
    *  itemized OCR (or scans where items can't be confidently parsed) omit
    *  this field. The mobile app must tolerate missing / empty. */

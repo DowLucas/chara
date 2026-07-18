@@ -18,6 +18,40 @@ export interface ScanItem {
 /** memberID[] per item id. Empty array (or missing) = unassigned. */
 export type ItemAssignment = Record<string, string[]>;
 
+/**
+ * Everything needed to re-derive an itemised split.
+ *
+ * Owned by the expense wizard rather than the assign modal, so that switching
+ * split method is non-destructive: the per-item assignments survive a trip
+ * through "evenly" / "%" and the user can return to the itemised split
+ * without rescanning the receipt.
+ */
+export interface Itemization {
+  items: ScanItem[];
+  assignments: ItemAssignment;
+  taxMinor: number;
+  tipMinor: number;
+}
+
+/**
+ * Per-member amounts for an itemisation, re-derived against the *current*
+ * participant set rather than a snapshot taken at scan time. Toggling a member
+ * off therefore redistributes their items across whoever is left, instead of
+ * leaving a stale amount behind.
+ */
+export function itemizedAmounts(
+  itemization: Itemization,
+  participants: string[],
+): Record<string, number> {
+  return prorateItemAssignments({
+    items: itemization.items,
+    assignments: itemization.assignments,
+    taxMinor: itemization.taxMinor,
+    tipMinor: itemization.tipMinor,
+    participants,
+  });
+}
+
 export interface ProrateInput {
   items: ScanItem[];
   assignments: ItemAssignment;

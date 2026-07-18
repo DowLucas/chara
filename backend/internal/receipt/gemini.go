@@ -48,6 +48,7 @@ const extractionPrompt = `You are a receipt parser. Look at the attached receipt
 - subtotal: the pre-tax pre-tip subtotal as a decimal string, or "" if not shown.
 - tax: tax/VAT amount as a decimal string, or "" if not shown.
 - tip: tip/gratuity amount as a decimal string, or "" if not shown.
+- deposit: the total container deposit charged on this receipt — Swedish "pant", bottle/can deposit, crate or keg deposit — as a decimal string, or "" if not shown. Common labels: "Pant", "Pantavgift", "Pant 1kr", "Retur pant", "Panta mera", "Flaskpant", "Burkpant". A deposit is part of the total but is NOT one of the purchased goods, so report its SUM here rather than as an item. Report a deposit REFUND (e.g. "Pantretur", "Pant retur", a bottle-return credit) as a NEGATIVE decimal string.
 - items: an ARRAY of the individual purchased line items. Each item is an object with:
     • description: the item name as it appears on the receipt (string).
     • qty: quantity as an integer (defaults to 1 if not shown).
@@ -56,13 +57,13 @@ const extractionPrompt = `You are a receipt parser. Look at the attached receipt
   All item amounts are in the SAME currency as the "currency" field above (the receipt's currency — NOT translated).
   Rules for items:
     • IGNORE subtotal, tax/VAT, tip, total, change, and rounding lines — those are summary lines, not items.
-    • IGNORE deposit-return / "pant" / bottle-return rows.
+    • Do NOT list deposit / "pant" / bottle-return rows as items — their sum belongs in the "deposit" field above.
     • OMIT modifiers (e.g. "+ extra cheese", "no onions"); sum any modifier price into the parent line total.
     • If you can't confidently identify the line items, return an EMPTY array []. Do not hallucinate items.
     • Keep item descriptions in the receipt's original language (do NOT translate item names).
 
 Respond with a single JSON object and no other text. Example:
-{"title":"Groceries at ICA Maxi","merchant":"ICA Maxi","date":"2026-05-20","currency":"SEK","total":"284.50","subtotal":"227.60","tax":"56.90","tip":"","category":"groceries","items":[{"description":"Mjölk 1L","qty":2,"unit_price":"15.90","total":"31.80"},{"description":"Bröd","qty":1,"unit_price":"32.50","total":"32.50"}]}
+{"title":"Groceries at ICA Maxi","merchant":"ICA Maxi","date":"2026-05-20","currency":"SEK","total":"286.50","subtotal":"227.60","tax":"56.90","tip":"","deposit":"2.00","category":"groceries","items":[{"description":"Mjölk 1L","qty":2,"unit_price":"15.90","total":"31.80"},{"description":"Bröd","qty":1,"unit_price":"32.50","total":"32.50"}]}
 
 If the image is not a receipt or you cannot read a total, respond with {"error":"unreadable"}.`
 
@@ -157,6 +158,7 @@ type geminiExtracted struct {
 	Subtotal string                `json:"subtotal"`
 	Tax      string                `json:"tax"`
 	Tip      string                `json:"tip"`
+	Deposit  string                `json:"deposit"`
 	Category string                `json:"category"`
 	Items    []geminiExtractedItem `json:"items"`
 	Error    string                `json:"error"`
@@ -285,6 +287,14 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 	if err != nil {
 		return nil, fmt.Errorf("receipt: tip: %w", err)
 	}
+	// Deposit ("pant") is an optional enhancement like items, so an
+	// unparseable value degrades to "not present" rather than failing an
+	// otherwise good scan — notably a refund row the parser may render with
+	// a leading minus.
+	deposit, err := parseDecimalToMinor(extracted.Deposit)
+	if err != nil {
+		deposit = 0
+	}
 
 	merchant := strings.TrimSpace(extracted.Merchant)
 	title := strings.TrimSpace(extracted.Title)
@@ -339,6 +349,7 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 		SubtotalMinor: subtotal,
 		TaxMinor:      tax,
 		TipMinor:      tip,
+		DepositMinor:  deposit,
 		Items:         items,
 	}, nil
 }
