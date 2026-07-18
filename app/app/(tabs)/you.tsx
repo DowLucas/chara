@@ -32,6 +32,7 @@ import i18n, {
 } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 import { useAccounts } from '@/lib/accounts';
+import { resetAllAccounts } from '@/lib/accounts-store';
 import { initialsOf } from '@/lib/name';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import {
@@ -260,6 +261,23 @@ export default function YouScreen() {
 
   function handleAccountsRowPress() {
     router.push('/settings/accounts');
+  }
+
+  // Development only — rendered in the __DEV__ tools block below.
+  async function handleDevResetAccounts() {
+    if (isPopupJustClosed()) return;
+    const result = await showAlert({
+      title: 'Reset all accounts?',
+      message:
+        'Removes every signed-in account on this device and returns to sign-in. Server data is untouched. Development builds only.',
+      buttons: [
+        { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
+        { key: 'reset', label: 'Reset', style: 'destructive' },
+      ],
+    });
+    if (result !== 'reset') return;
+    await resetAllAccounts();
+    router.replace('/(auth)/sign-in');
   }
 
   async function handleSignOutPress() {
@@ -551,6 +569,17 @@ export default function YouScreen() {
               <NavRow
                 label={t('you.replayOnboarding')}
                 onPress={() => router.push('/onboarding')}
+              />
+              {/* Remove Account refuses when a server's balance check fails,
+                  so an account pointing at a local backend that no longer
+                  exists can't be removed normally — and on iOS the blob is
+                  Keychain-backed, surviving a reinstall. This wipes it
+                  outright. Hardcoded English: never ships to users. */}
+              <NavRow
+                label="DEV: reset all accounts"
+                onPress={handleDevResetAccounts}
+                destructive
+                showChevron={false}
               />
             </View>
           </>

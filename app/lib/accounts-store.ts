@@ -230,6 +230,26 @@ export async function removeAccount(serverUrl: string): Promise<void> {
   await clearWidgetSnapshot().catch(() => undefined);
 }
 
+/**
+ * Development escape hatch: wipe every account and reset the whole blob.
+ *
+ * The Remove Account flow refuses when a server's balance check fails, which
+ * is the right fail-safe in production but leaves an account pointing at a
+ * local backend that no longer exists (a different dev machine, a torn-down
+ * container) permanently unremovable — and on iOS the blob is Keychain-backed,
+ * so reinstalling the app does not clear it either. This bypasses the guard.
+ *
+ * Deliberately not exposed in production: the only call site is gated on
+ * `__DEV__`.
+ */
+export async function resetAllAccounts(): Promise<void> {
+  const urls = blob.accounts.map((a) => a.serverUrl);
+  await persist(EMPTY);
+  for (const url of urls) {
+    await evictServer(url);
+  }
+}
+
 export async function updateAccount(
   serverUrl: string,
   patch: Partial<Omit<Account, 'serverUrl'>>,
