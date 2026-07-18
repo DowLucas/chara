@@ -582,11 +582,14 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
     // the selected split method applies only to the remainder, so the parts
     // still sum to the amount the user entered. Clamped because the amount
     // can be edited after the charge is set (or prefilled from a scan).
-    const extraCharge = Math.max(
-      0,
-      Math.min(extraChargeMinor, effectiveAmountMinor),
-    );
-    const baseAmountMinor = effectiveAmountMinor - extraCharge;
+    // The extra charge is ADDITIONAL to the amount entered. The split method
+    // divides exactly what the user typed — that number never moves — and the
+    // charge is shared evenly on top, so the expense total is the sum of the
+    // two. (A scanned receipt prefills the amount with its total minus any
+    // deposit, so `entered + deposit` still equals what the receipt printed.)
+    const extraCharge = Math.max(0, extraChargeMinor);
+    const baseAmountMinor = effectiveAmountMinor;
+    const totalWithExtraMinor = effectiveAmountMinor + extraCharge;
     const extraByMember = splitExtraCharge(extraCharge, includedIds);
 
     const equalShare =
@@ -871,6 +874,19 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
           setIncluded(nextIncluded);
           if (depositMinor && depositMinor > 0) {
             setExtraChargeInput((depositMinor / 100).toFixed(2));
+            // The receipt total already includes the deposit, and the charge
+            // adds on top of the entered amount — so take the deposit back out
+            // of the amount, leaving entered + deposit equal to what the
+            // receipt actually printed.
+            setAmount((prev) => {
+              const cleaned = prev.replace(',', '.');
+              const n = hasOperator(cleaned)
+                ? evalExpression(cleaned)
+                : parseFloat(cleaned);
+              if (n === null || !Number.isFinite(n) || n <= 0) return prev;
+              const rest = Math.max(0, Math.round(n * 100) - depositMinor);
+              return (rest / 100).toFixed(2);
+            });
           }
         },
       }),
@@ -888,7 +904,8 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
         return;
       }
 
-      const amountDecimal = (effectiveAmountMinor / 100).toFixed(2);
+      // The saved expense is what was entered plus the evenly-shared charge.
+      const amountDecimal = (totalWithExtraMinor / 100).toFixed(2);
       // FX-snapshot is sent so the backend doesn't re-convert: it preserves
       // exactly the rate (and source: 'ecb' vs 'manual') we showed the user.
       const fx_payload =
@@ -1021,7 +1038,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
               <Step2
                 currency={effectiveCurrency}
                 amountMinor={baseAmountMinor}
-                fullAmountMinor={effectiveAmountMinor}
+                fullAmountMinor={totalWithExtraMinor}
                 allowedMethods={
                   itemization
                     ? ['equal', 'exact', 'percentage', 'itemized']
