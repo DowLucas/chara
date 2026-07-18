@@ -139,6 +139,7 @@
     "methodExact": "Exakt",
     "methodManual": "Manuellt",
     "methodPercent": "%",
+    "methodItemized": "Varor",
     "multiplePayers": "Flera betalare",
     "mustTotal": "ska summera till {{amount}}",
     "nWays": "{{count}} delar",

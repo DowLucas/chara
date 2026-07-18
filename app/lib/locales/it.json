@@ -143,6 +143,7 @@
     "methodExact": "Esatto",
     "methodManual": "Manuale",
     "methodPercent": "%",
+    "methodItemized": "Voci",
     "multiplePayers": "Più persone",
     "mustTotal": "deve fare {{amount}}",
     "nWays": "{{count}} persone",

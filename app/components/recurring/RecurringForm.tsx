@@ -294,7 +294,10 @@ export function RecurringForm({
       title: title.trim(),
       amount_minor: amountMinor,
       paid_by_id: payerId,
-      split_method: split.method,
+      // Recurring bills never offer the receipt-backed `itemized` mode (there
+      // is no scan in this flow), so the widened editor type is narrowed back
+      // to what the API accepts.
+      split_method: split.method === 'itemized' ? 'exact' : split.method,
       splits,
       category,
       notes: null,

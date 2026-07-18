@@ -139,6 +139,7 @@
     "methodExact": "金額指定",
     "methodManual": "手動",
     "methodPercent": "%",
+    "methodItemized": "品目",
     "multiplePayers": "複数人で支払い",
     "mustTotal": "合計は{{amount}}にしてください",
     "nWays": "{{count}}人で分割",

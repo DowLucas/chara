@@ -155,6 +155,7 @@
     "methodExact": "مبالغ محددة",
     "methodManual": "يدوي",
     "methodPercent": "%",
+    "methodItemized": "العناصر",
     "multiplePayers": "عدة دافعين",
     "mustTotal": "يجب أن يساوي المجموع {{amount}}",
     "nWays": "بين {{count}} أشخاص",

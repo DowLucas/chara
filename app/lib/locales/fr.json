@@ -143,6 +143,7 @@
     "methodExact": "Exact",
     "methodManual": "Manuel",
     "methodPercent": "%",
+    "methodItemized": "Articles",
     "multiplePayers": "Plusieurs payeurs",
     "mustTotal": "doit faire un total de {{amount}}",
     "nWays": "en {{count}} parts",

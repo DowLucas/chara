@@ -72,6 +72,10 @@ export interface ScanItemsState<I extends ConvertibleItem> {
   items: I[];
   taxMinor: number;
   tipMinor: number;
+  /** Container deposit ("pant") from the receipt. Part of the total but not
+   *  of the items, so it is offered as an evenly-shared extra charge rather
+   *  than prorated like tax/tip. */
+  depositMinor: number;
   totalMinor: number;
   currency: string;
 }
@@ -96,6 +100,7 @@ export function buildScanItemsState<I extends ConvertibleItem>(
     total_minor: number;
     tax_minor?: number;
     tip_minor?: number;
+    deposit_minor?: number;
     items?: I[];
   },
   applied: { amount_minor: number; currency: string },
@@ -132,6 +137,9 @@ export function buildScanItemsState<I extends ConvertibleItem>(
     items: convItems,
     taxMinor: taxAlreadyInItems ? 0 : conv(tax),
     tipMinor: conv(tip),
+    // A deposit refund would make this negative; clamp to 0 because the extra
+    // charge is a positive share-out, and a credit has no sensible even split.
+    depositMinor: Math.max(0, conv(receipt.deposit_minor ?? 0)),
     totalMinor: applied.amount_minor,
     currency: applied.currency,
   };

@@ -139,6 +139,7 @@
     "methodExact": "Præcist",
     "methodManual": "Manuelt",
     "methodPercent": "%",
+    "methodItemized": "Varer",
     "multiplePayers": "Flere betalere",
     "mustTotal": "skal give {{amount}} i alt",
     "nWays": "{{count}} dele",

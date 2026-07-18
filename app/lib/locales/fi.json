@@ -139,6 +139,7 @@
     "methodExact": "Tarkka",
     "methodManual": "Manuaalinen",
     "methodPercent": "%",
+    "methodItemized": "Tuotteet",
     "multiplePayers": "Useita maksajia",
     "mustTotal": "yhteissumman on oltava {{amount}}",
     "nWays": "{{count}} osaan",

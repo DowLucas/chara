@@ -139,6 +139,7 @@
     "methodExact": "Exact",
     "methodManual": "Handmatig",
     "methodPercent": "%",
+    "methodItemized": "Items",
     "multiplePayers": "Meerdere betalers",
     "mustTotal": "moet samen {{amount}} zijn",
     "nWays": "{{count}} personen",

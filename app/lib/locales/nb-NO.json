@@ -139,6 +139,7 @@
     "methodExact": "Eksakt",
     "methodManual": "Manuelt",
     "methodPercent": "%",
+    "methodItemized": "Varer",
     "multiplePayers": "Flere som betalte",
     "mustTotal": "må summere til {{amount}}",
     "nWays": "{{count}} deler",

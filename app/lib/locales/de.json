@@ -139,6 +139,7 @@
     "methodExact": "Exakt",
     "methodManual": "Manuell",
     "methodPercent": "%",
+    "methodItemized": "Posten",
     "multiplePayers": "Mehrere Zahler",
     "mustTotal": "muss zusammen {{amount}} ergeben",
     "nWays": "{{count}}-fach",

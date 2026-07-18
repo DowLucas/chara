@@ -18,10 +18,29 @@ export interface ExpenseDraft {
   currency?: string;
   payerMemberId?: string;
   category?: string;
-  method?: 'equal' | 'exact' | 'percentage';
+  method?: 'equal' | 'exact' | 'percentage' | 'itemized';
   included?: Record<string, boolean>;
   exactByMember?: Record<string, string>;
   pctByMember?: Record<string, string>;
+  /** Receipt itemisation behind the `itemized` method. Persisted so a
+   *  restored draft can still re-derive the split — without it a draft saved
+   *  in `itemized` mode would come back with no amounts. Shape mirrors
+   *  lib/scan-items Itemization; typed loosely to keep this module free of a
+   *  dependency on the scan types. */
+  itemization?: {
+    items: Array<{
+      id: string;
+      description: string;
+      qty: number;
+      unit_price_minor: number;
+      total_minor: number;
+    }>;
+    assignments: Record<string, string[]>;
+    taxMinor: number;
+    tipMinor: number;
+  };
+  /** Evenly-shared secondary charge (fee / "pant"), in minor units. */
+  extraChargeMinor?: number;
 }
 
 export type DraftFields = Omit<ExpenseDraft, 'savedAt'>;

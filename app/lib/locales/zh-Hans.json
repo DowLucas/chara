@@ -139,6 +139,7 @@
     "methodExact": "按金额",
     "methodManual": "手动",
     "methodPercent": "%",
+    "methodItemized": "明细",
     "multiplePayers": "多人付款",
     "mustTotal": "总额需为 {{amount}}",
     "nWays": "分 {{count}} 份",
