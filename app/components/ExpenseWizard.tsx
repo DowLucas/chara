@@ -1021,6 +1021,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
               <Step2
                 currency={effectiveCurrency}
                 amountMinor={baseAmountMinor}
+                fullAmountMinor={effectiveAmountMinor}
                 allowedMethods={
                   itemization
                     ? ['equal', 'exact', 'percentage', 'itemized']
@@ -1339,8 +1340,11 @@ function Step1({
 interface Step2Props {
   currency: string;
   /** The amount the split method must account for: the expense total minus
-   *  any evenly-shared extra charge. */
+   *  any evenly-shared extra charge. Drives the split editor only. */
   amountMinor: number;
+  /** The full expense total. Shown in the recap, so carving off an extra
+   *  charge never looks like the expense itself got smaller. */
+  fullAmountMinor: number;
   /** Split methods to offer. `itemized` is included only once a receipt has
    *  been itemised, since it has nothing to derive from otherwise. */
   allowedMethods: SplitMethod[];
@@ -1365,6 +1369,7 @@ interface Step2Props {
 function Step2({
   currency,
   amountMinor,
+  fullAmountMinor,
   allowedMethods,
   recapMeta,
   groupName,
@@ -1386,7 +1391,7 @@ function Step2({
       <Recap
         eyebrow={recapMeta}
         line={groupName}
-        amount={fmtMinor(amountMinor, currency)}
+        amount={fmtMinor(fullAmountMinor, currency)}
       />
       {/* Carved out of the total and shared evenly — the split methods below
           apply to what's left, which is what the Recap shows. */}
