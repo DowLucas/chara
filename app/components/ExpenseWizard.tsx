@@ -140,8 +140,8 @@ export interface ExpenseWizardHandle {
   applyScanItemsAssignment(input: {
     itemization: Itemization;
     participants: string[];
-    /** Container deposit ("pant") from the scan, prefilled as the evenly
-     *  shared extra charge. */
+    /** Container deposit ("pant") from the scan. Not part of any line item,
+     *  so it lands in the unassigned remainder for the user to distribute. */
     depositMinor?: number;
   }): void;
 }
@@ -351,23 +351,11 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
     // switching to "evenly"/"%" and back to "itemised" is lossless — no
     // rescan. Null when no receipt was scanned.
     const [itemization, setItemization] = useState<Itemization | null>(null);
-    // Optional secondary charge (service fee, or a receipt's "pant" deposit)
-    // taken OUT of the total and shared evenly by everyone on the expense;
-    // the selected split method then applies to whatever is left. Held as the
-    // raw input string so the shared AmountKeypad can edit it like any other
-    // amount field; minor units are derived.
-    const [extraChargeInput, setExtraChargeInput] = useState('');
-    const extraChargeMinor = useMemo(() => {
-      const cleaned = extraChargeInput.replace(',', '.');
-      const n = hasOperator(cleaned) ? evalExpression(cleaned) : parseFloat(cleaned);
-      if (n === null || !Number.isFinite(n) || n <= 0) return 0;
-      return Math.round(n * 100);
-    }, [extraChargeInput]);
     // A saved default split loaded on mount, awaiting members to be applied.
     const [pendingSavedSplit, setPendingSavedSplit] =
       useState<GroupDefaultSplit | null>(null);
 
-    type KeypadTarget = { kind: 'amount' } | { kind: 'extraCharge' };
+    type KeypadTarget = { kind: 'amount' };
     const [keypadTarget, setKeypadTarget] = useState<KeypadTarget | null>(null);
 
     // Reset state when the identity of `initialValue` or `members` changes
@@ -442,9 +430,6 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
             if (d.exactByMember != null) setExactByMember(d.exactByMember);
             if (d.pctByMember != null) setPctByMember(d.pctByMember);
             if (d.itemization != null) setItemization(d.itemization);
-            if (d.extraChargeMinor != null && d.extraChargeMinor > 0) {
-              setExtraChargeInput((d.extraChargeMinor / 100).toFixed(2));
-            }
           }
         }
         draftHydrated.current = true;
@@ -496,7 +481,6 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
         // Persisted so a draft restored in `itemized` mode can still derive
         // its amounts instead of coming back empty.
         ...(itemization ? { itemization } : {}),
-        ...(extraChargeMinor > 0 ? { extraChargeMinor } : {}),
       };
       const handle = setTimeout(() => {
         if (draftSubmitted.current) return;
@@ -518,7 +502,6 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       exactByMember,
       pctByMember,
       itemization,
-      extraChargeInput,
     ]);
 
     // When members arrive after the wizard has mounted in create mode and
@@ -530,16 +513,10 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [members.length]);
 
-    const keypadValue =
-      keypadTarget?.kind === 'amount'
-        ? amount
-        : keypadTarget?.kind === 'extraCharge'
-          ? extraChargeInput
-          : '';
+    const keypadValue = keypadTarget?.kind === 'amount' ? amount : '';
     const setKeypadValue = (next: string) => {
       if (!keypadTarget) return;
       if (keypadTarget.kind === 'amount') setAmount(next);
-      else if (keypadTarget.kind === 'extraCharge') setExtraChargeInput(next);
     };
 
     const amountMinor = useMemo(() => {
@@ -582,15 +559,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
     // the selected split method applies only to the remainder, so the parts
     // still sum to the amount the user entered. Clamped because the amount
     // can be edited after the charge is set (or prefilled from a scan).
-    // The extra charge is ADDITIONAL to the amount entered. The split method
-    // divides exactly what the user typed — that number never moves — and the
-    // charge is shared evenly on top, so the expense total is the sum of the
-    // two. (A scanned receipt prefills the amount with its total minus any
-    // deposit, so `entered + deposit` still equals what the receipt printed.)
-    const extraCharge = Math.max(0, extraChargeMinor);
     const baseAmountMinor = effectiveAmountMinor;
-    const totalWithExtraMinor = effectiveAmountMinor + extraCharge;
-    const extraByMember = splitExtraCharge(extraCharge, includedIds);
 
     const equalShare =
       method === 'equal' && includedMembers.length > 0
@@ -706,12 +675,11 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       return 0;
     }
 
-    /** What a member ends up owing: their share of the base split plus their
-     *  even share of the extra charge. This is what gets submitted. */
+    /** What a member ends up owing. This is what gets submitted. */
     function finalMinor(memberId: string): number {
-      const base =
-        method === 'equal' ? (equalMinorByMember[memberId] ?? 0) : effectiveMinor(memberId);
-      return base + (extraByMember[memberId] ?? 0);
+      return method === 'equal'
+        ? (equalMinorByMember[memberId] ?? 0)
+        : effectiveMinor(memberId);
     }
 
     // Equal is apportioned rather than rounded per member so the shares sum
@@ -732,10 +700,33 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [method, equalShare, includedMembers, exactByMember, pctByMember, baseAmountMinor, autoExactMinor, pctMinorByMember, itemizedByMember]);
 
-    // Reconciliation is against the BASE amount — the extra charge is always
-    // fully allocated by construction, so it can never be the thing that is
-    // off.
     const offBy = totalSplitMinor - baseAmountMinor;
+
+    /** Unassigned money: what the split leaves short of the total. Positive
+     *  only when under-assigned — an over-assigned split is the user's own
+     *  arithmetic to resolve, not something to silently spread around. */
+    const remainderMinor = offBy < 0 ? -offBy : 0;
+
+    /**
+     * Spread the unassigned remainder evenly over everyone on the expense.
+     *
+     * Materialises the current per-member amounts as an exact split plus an
+     * even share of what was left over. This is what closes the gap a receipt
+     * leaves behind when its line items don't account for the whole total
+     * (deposits, service fees, rounding) — money nobody in particular owes, so
+     * everybody carries a piece.
+     */
+    function splitRemainderEvenly() {
+      if (remainderMinor <= 0 || includedMembers.length === 0) return;
+      const shares = splitExtraCharge(remainderMinor, includedIds);
+      const next: Record<string, string> = {};
+      for (const m of includedMembers) {
+        const total = finalMinor(m.id) + (shares[m.id] ?? 0);
+        next[m.id] = (total / 100).toFixed(2);
+      }
+      setMethod('exact');
+      setExactByMember(next);
+    }
 
     // SplitEditor uses a single canonical SplitValue shape; the wizard still
     // owns the per-method maps it needs at submit time. These two adapters
@@ -872,22 +863,6 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
           const nextIncluded: Record<string, boolean> = {};
           for (const m of members) nextIncluded[m.id] = participants.includes(m.id);
           setIncluded(nextIncluded);
-          if (depositMinor && depositMinor > 0) {
-            setExtraChargeInput((depositMinor / 100).toFixed(2));
-            // The receipt total already includes the deposit, and the charge
-            // adds on top of the entered amount — so take the deposit back out
-            // of the amount, leaving entered + deposit equal to what the
-            // receipt actually printed.
-            setAmount((prev) => {
-              const cleaned = prev.replace(',', '.');
-              const n = hasOperator(cleaned)
-                ? evalExpression(cleaned)
-                : parseFloat(cleaned);
-              if (n === null || !Number.isFinite(n) || n <= 0) return prev;
-              const rest = Math.max(0, Math.round(n * 100) - depositMinor);
-              return (rest / 100).toFixed(2);
-            });
-          }
         },
       }),
       [members],
@@ -904,8 +879,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
         return;
       }
 
-      // The saved expense is what was entered plus the evenly-shared charge.
-      const amountDecimal = (totalWithExtraMinor / 100).toFixed(2);
+      const amountDecimal = (effectiveAmountMinor / 100).toFixed(2);
       // FX-snapshot is sent so the backend doesn't re-convert: it preserves
       // exactly the rate (and source: 'ecb' vs 'manual') we showed the user.
       const fx_payload =
@@ -922,15 +896,11 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
             }
           : undefined;
 
-      // `itemized` has no server representation, and a percentage split stops
-      // being expressible in basis points once part of the total is carved off
-      // as an evenly-shared extra charge — both submit as explicit exact
-      // shares. `equal` survives as-is: an even base plus an even extra charge
-      // is still an even split of the whole amount.
+      // `itemized` has no server representation, so it submits as `exact`.
       const wireMethod: WireSplitMethod =
         method === 'equal'
           ? 'equal'
-          : method === 'percentage' && extraCharge === 0
+          : method === 'percentage'
             ? 'percentage'
             : 'exact';
 
@@ -1038,7 +1008,6 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
               <Step2
                 currency={effectiveCurrency}
                 amountMinor={baseAmountMinor}
-                fullAmountMinor={totalWithExtraMinor}
                 allowedMethods={
                   itemization
                     ? ['equal', 'exact', 'percentage', 'itemized']
@@ -1051,16 +1020,8 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
                 splitValue={splitValue}
                 onSplitChange={handleSplitChange}
                 serverUrl={serverUrl}
-                extraChargeInput={extraChargeInput}
-                extraChargeMinor={extraCharge}
-                extraChargePerPersonMinor={
-                  includedMembers.length > 0
-                    ? Math.round(extraCharge / includedMembers.length)
-                    : 0
-                }
-                extraPerMemberMinor={extraByMember}
-                onExtraChargePress={() => setKeypadTarget({ kind: 'extraCharge' })}
-                onExtraChargeClear={() => setExtraChargeInput('')}
+                remainderMinor={remainderMinor}
+                onSplitRemainder={splitRemainderEvenly}
                 onSaveDefaultSplit={groupId ? handleSaveDefaultSplit : undefined}
               />
             )}
@@ -1360,9 +1321,6 @@ interface Step2Props {
   /** The amount the split method must account for: the expense total minus
    *  any evenly-shared extra charge. Drives the split editor only. */
   amountMinor: number;
-  /** The full expense total. Shown in the recap, so carving off an extra
-   *  charge never looks like the expense itself got smaller. */
-  fullAmountMinor: number;
   /** Split methods to offer. `itemized` is included only once a receipt has
    *  been itemised, since it has nothing to derive from otherwise. */
   allowedMethods: SplitMethod[];
@@ -1373,16 +1331,9 @@ interface Step2Props {
   splitValue: SplitValue;
   onSplitChange: (v: SplitValue) => void;
   serverUrl: string;
-  /** Raw input for the evenly-shared extra charge (fee / deposit). */
-  extraChargeInput: string;
-  extraChargeMinor: number;
-  /** What each included member pays of the charge, for the hint line. */
-  extraChargePerPersonMinor: number;
-  /** Per-member share of the charge, added back onto the displayed amounts so
-   *  the editor shows what someone actually owes rather than the base alone. */
-  extraPerMemberMinor: Record<string, number>;
-  onExtraChargePress: () => void;
-  onExtraChargeClear: () => void;
+  /** Money the split hasn't accounted for; drives the distribute action. */
+  remainderMinor: number;
+  onSplitRemainder: () => void;
   /** When set and the current method is percentage, shows a "Save as group
    *  default" affordance under the split editor. */
   onSaveDefaultSplit?: () => void;
@@ -1390,7 +1341,6 @@ interface Step2Props {
 function Step2({
   currency,
   amountMinor,
-  fullAmountMinor,
   allowedMethods,
   recapMeta,
   groupName,
@@ -1399,12 +1349,8 @@ function Step2({
   splitValue,
   onSplitChange,
   serverUrl,
-  extraChargeInput,
-  extraChargeMinor,
-  extraChargePerPersonMinor,
-  extraPerMemberMinor,
-  onExtraChargePress,
-  onExtraChargeClear,
+  remainderMinor,
+  onSplitRemainder,
   onSaveDefaultSplit,
 }: Step2Props) {
   const { t } = useTranslation();
@@ -1413,48 +1359,11 @@ function Step2({
       <Recap
         eyebrow={recapMeta}
         line={groupName}
-        amount={fmtMinor(fullAmountMinor, currency)}
+        amount={fmtMinor(amountMinor, currency)}
       />
-      {/* Carved out of the total and shared evenly — the split methods below
-          apply to what's left, which is what the Recap shows. */}
-      <TouchableOpacity
-        style={styles.extraChargeRow}
-        onPress={onExtraChargePress}
-        accessibilityRole="button"
-        accessibilityLabel={t('addExpense.extraChargeLabel')}
-      >
-        <View style={styles.extraChargeText}>
-          <Text style={styles.extraChargeLabel}>
-            {t('addExpense.extraChargeLabel')}
-          </Text>
-          <Text style={styles.extraChargeHint}>
-            {extraChargeMinor > 0
-              ? t('addExpense.extraChargeEach', {
-                  amount: fmtMinor(extraChargePerPersonMinor, currency),
-                })
-              : t('addExpense.extraChargeHint')}
-          </Text>
-        </View>
-        <Text style={styles.extraChargeValue}>
-          {extraChargeInput.trim() !== ''
-            ? fmtMinor(extraChargeMinor, currency)
-            : t('addExpense.extraChargeNone')}
-        </Text>
-        {extraChargeMinor > 0 && (
-          <TouchableOpacity
-            onPress={onExtraChargeClear}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel={t('addExpense.extraChargeClear')}
-          >
-            <Feather name="x" size={16} color={colors.lead} />
-          </TouchableOpacity>
-        )}
-      </TouchableOpacity>
       <SplitEditor
         members={members}
         totalMinor={amountMinor}
-        extraPerMember={extraPerMemberMinor}
         allowedMethods={allowedMethods}
         currency={currency}
         value={splitValue}
@@ -1462,6 +1371,30 @@ function Step2({
         currentUserMemberId={currentUserMemberId}
         serverUrl={serverUrl}
       />
+      {/* Whatever the split hasn't accounted for — a receipt's deposit or
+          service fee, items nobody claimed, rounding — is money no one in
+          particular owes, so offer to spread it over everyone at once rather
+          than making the user reconcile it by hand. */}
+      {remainderMinor > 0 && (
+        <TouchableOpacity
+          style={styles.remainderRow}
+          onPress={onSplitRemainder}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+        >
+          <Feather name="divide-circle" size={18} color={colors.graphite} />
+          <View style={styles.remainderText}>
+            <Text style={styles.remainderLabel}>
+              {t('addExpense.splitRemainder')}
+            </Text>
+            <Text style={styles.remainderHint}>
+              {t('addExpense.splitRemainderHint', {
+                amount: fmtMinor(remainderMinor, currency),
+              })}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      )}
       {onSaveDefaultSplit && splitValue.method === 'percentage' && (
         <TouchableOpacity
           onPress={onSaveDefaultSplit}
@@ -1614,7 +1547,7 @@ const styles = StyleSheet.create({
   groupName: { fontFamily: fontBody, fontSize: fontSize.bodyL, color: colors.graphite },
 
   recapWrap: { paddingHorizontal: spacing.s5, paddingTop: 10, paddingBottom: spacing.s4 },
-  extraChargeRow: {
+  remainderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.s3,
@@ -1625,23 +1558,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bone,
     borderRadius: 10,
   },
-  extraChargeText: { flex: 1 },
-  extraChargeLabel: {
+  remainderText: { flex: 1 },
+  remainderLabel: {
     fontFamily: fontDisplay,
     fontSize: 15,
     color: colors.graphite,
   },
-  extraChargeHint: {
+  remainderHint: {
     fontFamily: fontBody,
     fontSize: 12,
     color: colors.lead,
     marginTop: 2,
-  },
-  extraChargeValue: {
-    fontFamily: fontMono,
-    fontSize: 15,
-    color: colors.graphite,
-    fontVariant: ['tabular-nums'],
   },
   saveDefaultSplitRow: {
     flexDirection: 'row',

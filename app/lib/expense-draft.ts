@@ -39,8 +39,6 @@ export interface ExpenseDraft {
     taxMinor: number;
     tipMinor: number;
   };
-  /** Evenly-shared secondary charge (fee / "pant"), in minor units. */
-  extraChargeMinor?: number;
 }
 
 export type DraftFields = Omit<ExpenseDraft, 'savedAt'>;
