@@ -77,6 +77,7 @@ import {
 import {
   colors,
   fontBody,
+  fontDisplay,
   fontMono,
   fontMonoMedium,
   fontSize,
@@ -352,13 +353,21 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
     const [itemization, setItemization] = useState<Itemization | null>(null);
     // Optional secondary charge (service fee, or a receipt's "pant" deposit)
     // taken OUT of the total and shared evenly by everyone on the expense;
-    // the selected split method then applies to whatever is left.
-    const [extraChargeMinor, setExtraChargeMinor] = useState(0);
+    // the selected split method then applies to whatever is left. Held as the
+    // raw input string so the shared AmountKeypad can edit it like any other
+    // amount field; minor units are derived.
+    const [extraChargeInput, setExtraChargeInput] = useState('');
+    const extraChargeMinor = useMemo(() => {
+      const cleaned = extraChargeInput.replace(',', '.');
+      const n = hasOperator(cleaned) ? evalExpression(cleaned) : parseFloat(cleaned);
+      if (n === null || !Number.isFinite(n) || n <= 0) return 0;
+      return Math.round(n * 100);
+    }, [extraChargeInput]);
     // A saved default split loaded on mount, awaiting members to be applied.
     const [pendingSavedSplit, setPendingSavedSplit] =
       useState<GroupDefaultSplit | null>(null);
 
-    type KeypadTarget = { kind: 'amount' };
+    type KeypadTarget = { kind: 'amount' } | { kind: 'extraCharge' };
     const [keypadTarget, setKeypadTarget] = useState<KeypadTarget | null>(null);
 
     // Reset state when the identity of `initialValue` or `members` changes
@@ -433,7 +442,9 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
             if (d.exactByMember != null) setExactByMember(d.exactByMember);
             if (d.pctByMember != null) setPctByMember(d.pctByMember);
             if (d.itemization != null) setItemization(d.itemization);
-            if (d.extraChargeMinor != null) setExtraChargeMinor(d.extraChargeMinor);
+            if (d.extraChargeMinor != null && d.extraChargeMinor > 0) {
+              setExtraChargeInput((d.extraChargeMinor / 100).toFixed(2));
+            }
           }
         }
         draftHydrated.current = true;
@@ -507,7 +518,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       exactByMember,
       pctByMember,
       itemization,
-      extraChargeMinor,
+      extraChargeInput,
     ]);
 
     // When members arrive after the wizard has mounted in create mode and
@@ -519,10 +530,16 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [members.length]);
 
-    const keypadValue = keypadTarget?.kind === 'amount' ? amount : '';
+    const keypadValue =
+      keypadTarget?.kind === 'amount'
+        ? amount
+        : keypadTarget?.kind === 'extraCharge'
+          ? extraChargeInput
+          : '';
     const setKeypadValue = (next: string) => {
       if (!keypadTarget) return;
       if (keypadTarget.kind === 'amount') setAmount(next);
+      else if (keypadTarget.kind === 'extraCharge') setExtraChargeInput(next);
     };
 
     const amountMinor = useMemo(() => {
@@ -852,7 +869,9 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
           const nextIncluded: Record<string, boolean> = {};
           for (const m of members) nextIncluded[m.id] = participants.includes(m.id);
           setIncluded(nextIncluded);
-          if (depositMinor && depositMinor > 0) setExtraChargeMinor(depositMinor);
+          if (depositMinor && depositMinor > 0) {
+            setExtraChargeInput((depositMinor / 100).toFixed(2));
+          }
         },
       }),
       [members],
@@ -1014,6 +1033,15 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
                 splitValue={splitValue}
                 onSplitChange={handleSplitChange}
                 serverUrl={serverUrl}
+                extraChargeInput={extraChargeInput}
+                extraChargeMinor={extraCharge}
+                extraChargePerPersonMinor={
+                  includedMembers.length > 0
+                    ? Math.round(extraCharge / includedMembers.length)
+                    : 0
+                }
+                onExtraChargePress={() => setKeypadTarget({ kind: 'extraCharge' })}
+                onExtraChargeClear={() => setExtraChargeInput('')}
                 onSaveDefaultSplit={groupId ? handleSaveDefaultSplit : undefined}
               />
             )}
@@ -1323,6 +1351,13 @@ interface Step2Props {
   splitValue: SplitValue;
   onSplitChange: (v: SplitValue) => void;
   serverUrl: string;
+  /** Raw input for the evenly-shared extra charge (fee / deposit). */
+  extraChargeInput: string;
+  extraChargeMinor: number;
+  /** What each included member pays of the charge, for the hint line. */
+  extraChargePerPersonMinor: number;
+  onExtraChargePress: () => void;
+  onExtraChargeClear: () => void;
   /** When set and the current method is percentage, shows a "Save as group
    *  default" affordance under the split editor. */
   onSaveDefaultSplit?: () => void;
@@ -1338,6 +1373,11 @@ function Step2({
   splitValue,
   onSplitChange,
   serverUrl,
+  extraChargeInput,
+  extraChargeMinor,
+  extraChargePerPersonMinor,
+  onExtraChargePress,
+  onExtraChargeClear,
   onSaveDefaultSplit,
 }: Step2Props) {
   const { t } = useTranslation();
@@ -1348,6 +1388,42 @@ function Step2({
         line={groupName}
         amount={fmtMinor(amountMinor, currency)}
       />
+      {/* Carved out of the total and shared evenly — the split methods below
+          apply to what's left, which is what the Recap shows. */}
+      <TouchableOpacity
+        style={styles.extraChargeRow}
+        onPress={onExtraChargePress}
+        accessibilityRole="button"
+        accessibilityLabel={t('addExpense.extraChargeLabel')}
+      >
+        <View style={styles.extraChargeText}>
+          <Text style={styles.extraChargeLabel}>
+            {t('addExpense.extraChargeLabel')}
+          </Text>
+          <Text style={styles.extraChargeHint}>
+            {extraChargeMinor > 0
+              ? t('addExpense.extraChargeEach', {
+                  amount: fmtMinor(extraChargePerPersonMinor, currency),
+                })
+              : t('addExpense.extraChargeHint')}
+          </Text>
+        </View>
+        <Text style={styles.extraChargeValue}>
+          {extraChargeInput.trim() !== ''
+            ? fmtMinor(extraChargeMinor, currency)
+            : t('addExpense.extraChargeNone')}
+        </Text>
+        {extraChargeMinor > 0 && (
+          <TouchableOpacity
+            onPress={onExtraChargeClear}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={t('addExpense.extraChargeClear')}
+          >
+            <Feather name="x" size={16} color={colors.lead} />
+          </TouchableOpacity>
+        )}
+      </TouchableOpacity>
       <SplitEditor
         members={members}
         totalMinor={amountMinor}
@@ -1510,6 +1586,35 @@ const styles = StyleSheet.create({
   groupName: { fontFamily: fontBody, fontSize: fontSize.bodyL, color: colors.graphite },
 
   recapWrap: { paddingHorizontal: spacing.s5, paddingTop: 10, paddingBottom: spacing.s4 },
+  extraChargeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.s3,
+    marginHorizontal: spacing.s4,
+    marginTop: spacing.s2,
+    paddingVertical: spacing.s3,
+    paddingHorizontal: spacing.s4,
+    backgroundColor: colors.bone,
+    borderRadius: 10,
+  },
+  extraChargeText: { flex: 1 },
+  extraChargeLabel: {
+    fontFamily: fontDisplay,
+    fontSize: 15,
+    color: colors.graphite,
+  },
+  extraChargeHint: {
+    fontFamily: fontBody,
+    fontSize: 12,
+    color: colors.lead,
+    marginTop: 2,
+  },
+  extraChargeValue: {
+    fontFamily: fontMono,
+    fontSize: 15,
+    color: colors.graphite,
+    fontVariant: ['tabular-nums'],
+  },
   saveDefaultSplitRow: {
     flexDirection: 'row',
     alignItems: 'center',
