@@ -11,3 +11,6 @@ coverage.html
 .env.dev
 .env.local
 .env.*.local
+
+# Local-only compose adaptation (e.g. macOS bridge networking); not for the Linux host.
+docker-compose.override.yml
