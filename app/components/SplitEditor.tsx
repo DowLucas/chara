@@ -82,6 +82,12 @@ export interface SplitEditorProps {
   /** Restrict the method picker. Defaults to all three. When length === 1
    *  the picker is hidden. */
   allowedMethods?: SplitMethod[];
+  /** Each member's share of an evenly-shared extra charge that was carved out
+   *  of the expense total. `totalMinor` is the remaining base the split method
+   *  divides, so these must be added back before showing what someone actually
+   *  owes — otherwise the displayed amount drops when a charge is added, even
+   *  though nobody's share really changed. */
+  extraPerMember?: Record<string, number>;
 }
 
 function fmtMinor(n: number, currency: string): string {
@@ -110,6 +116,7 @@ function fmtAutoPct(bp: number): string {
 export function SplitEditor({
   members,
   totalMinor,
+  extraPerMember,
   currency,
   value,
   onChange,
@@ -326,7 +333,7 @@ export function SplitEditor({
               </TouchableOpacity>
               {inc && method === 'equal' && (
                 <Text style={styles.equalShare}>
-                  {fmtMinor(equalShare, currency)}
+                  {fmtMinor(equalShare + (extraPerMember?.[m.id] ?? 0), currency)}
                 </Text>
               )}
               {inc && method === 'exact' && (
@@ -353,7 +360,10 @@ export function SplitEditor({
                   items, not by typing here. */}
               {inc && method === 'itemized' && (
                 <Text style={styles.equalShare}>
-                  {fmtMinor(lockedById.get(m.id) ?? 0, currency)}
+                  {fmtMinor(
+                    (lockedById.get(m.id) ?? 0) + (extraPerMember?.[m.id] ?? 0),
+                    currency,
+                  )}
                 </Text>
               )}
             </View>

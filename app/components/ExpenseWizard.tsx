@@ -1041,6 +1041,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
                     ? Math.round(extraCharge / includedMembers.length)
                     : 0
                 }
+                extraPerMemberMinor={extraByMember}
                 onExtraChargePress={() => setKeypadTarget({ kind: 'extraCharge' })}
                 onExtraChargeClear={() => setExtraChargeInput('')}
                 onSaveDefaultSplit={groupId ? handleSaveDefaultSplit : undefined}
@@ -1360,6 +1361,9 @@ interface Step2Props {
   extraChargeMinor: number;
   /** What each included member pays of the charge, for the hint line. */
   extraChargePerPersonMinor: number;
+  /** Per-member share of the charge, added back onto the displayed amounts so
+   *  the editor shows what someone actually owes rather than the base alone. */
+  extraPerMemberMinor: Record<string, number>;
   onExtraChargePress: () => void;
   onExtraChargeClear: () => void;
   /** When set and the current method is percentage, shows a "Save as group
@@ -1381,6 +1385,7 @@ function Step2({
   extraChargeInput,
   extraChargeMinor,
   extraChargePerPersonMinor,
+  extraPerMemberMinor,
   onExtraChargePress,
   onExtraChargeClear,
   onSaveDefaultSplit,
@@ -1432,6 +1437,7 @@ function Step2({
       <SplitEditor
         members={members}
         totalMinor={amountMinor}
+        extraPerMember={extraPerMemberMinor}
         allowedMethods={allowedMethods}
         currency={currency}
         value={splitValue}
