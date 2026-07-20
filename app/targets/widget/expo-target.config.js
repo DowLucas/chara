@@ -10,7 +10,12 @@
 /** @type {import('@bacons/apple-targets').Config} */
 module.exports = (config) => ({
   type: 'widget',
-  name: 'CharaWidgets',
+  // Must NOT collide with the `CharaWidgets` pod in modules/chara-widgets:
+  // both would emit a Swift module of the same name, and the app (iOS 15.1)
+  // would resolve `import CharaWidgets` to this extension's 17.0 swiftmodule
+  // and fail to compile. The JS-facing name is `Name("CharaWidgets")` in the
+  // module definition and is independent of this.
+  name: 'CharaWidgetExtension',
   // Appended to the host id: app.chara -> app.chara.widgets. Apple requires
   // the extension id to be a prefix-child of the host app's.
   bundleIdentifier: '.widgets',
