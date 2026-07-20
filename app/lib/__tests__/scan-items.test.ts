@@ -2,6 +2,7 @@ import {
   buildScanItemsState,
   itemizedAmounts,
   prorateItemAssignments,
+  scanTotalReconciles,
   ScanItem,
   ItemAssignment,
 } from '../scan-items';
@@ -227,6 +228,115 @@ describe('buildScanItemsState', () => {
       'EUR',
     );
     expect(state!.taxMinor).toBe(0);
+  });
+
+  it('preserves a positive deposit and reconciles prorated items + deposit to the total', () => {
+    // ICA-style: VAT-inclusive items 100.00, pant 2.00, total 102.00. The
+    // deposit is part of the total but not the items, so prorate(items) must
+    // equal total − deposit for the assign screen to accept the receipt.
+    const receipt = {
+      currency: 'SEK',
+      total_minor: 10200,
+      tax_minor: 0,
+      tip_minor: 0,
+      deposit_minor: 200,
+      items: receiptItems([10000, 10000]),
+    };
+    const state = buildScanItemsState(
+      receipt,
+      { amount_minor: 10200, currency: 'SEK' },
+      'SEK',
+    )!;
+    expect(state.depositMinor).toBe(200);
+    const perMember = prorateItemAssignments({
+      items: state.items,
+      assignments: {},
+      taxMinor: state.taxMinor,
+      tipMinor: state.tipMinor,
+      participants: PARTICIPANTS,
+    });
+    const proratedSum = Object.values(perMember).reduce((s, v) => s + v, 0);
+    expect(proratedSum + state.depositMinor).toBe(state.totalMinor);
+  });
+
+  it('measures tax-inclusivity against the total net of the deposit', () => {
+    // VAT-inclusive items 100.00, informational moms 5.00, pant 5.00,
+    // total 105.00. Comparing tax against the raw total makes exclusive win
+    // (100+5 == 105) and double-counts the 5.00 moms; netting the deposit out
+    // (compare against 100.00) correctly drops the inclusive tax.
+    const receipt = {
+      currency: 'SEK',
+      total_minor: 10500,
+      tax_minor: 500,
+      tip_minor: 0,
+      deposit_minor: 500,
+      items: receiptItems([10000, 10000]),
+    };
+    const state = buildScanItemsState(
+      receipt,
+      { amount_minor: 10500, currency: 'SEK' },
+      'SEK',
+    )!;
+    expect(state.taxMinor).toBe(0);
+    const perMember = prorateItemAssignments({
+      items: state.items,
+      assignments: {},
+      taxMinor: state.taxMinor,
+      tipMinor: state.tipMinor,
+      participants: PARTICIPANTS,
+    });
+    const proratedSum = Object.values(perMember).reduce((s, v) => s + v, 0);
+    expect(proratedSum + state.depositMinor).toBe(state.totalMinor);
+  });
+
+  it('keeps a deposit refund negative rather than clamping it to zero', () => {
+    // Pantretur: items 100.00, refund −5.00, total 95.00. Clamping the refund
+    // to 0 leaves prorated items (100.00) unreconcilable against the 95.00
+    // total; the signed −5.00 closes the gap.
+    const receipt = {
+      currency: 'SEK',
+      total_minor: 9500,
+      tax_minor: 0,
+      tip_minor: 0,
+      deposit_minor: -500,
+      items: receiptItems([10000, 10000]),
+    };
+    const state = buildScanItemsState(
+      receipt,
+      { amount_minor: 9500, currency: 'SEK' },
+      'SEK',
+    )!;
+    expect(state.depositMinor).toBe(-500);
+    const perMember = prorateItemAssignments({
+      items: state.items,
+      assignments: {},
+      taxMinor: state.taxMinor,
+      tipMinor: state.tipMinor,
+      participants: PARTICIPANTS,
+    });
+    const proratedSum = Object.values(perMember).reduce((s, v) => s + v, 0);
+    expect(proratedSum + state.depositMinor).toBe(state.totalMinor);
+  });
+});
+
+describe('scanTotalReconciles', () => {
+  it('reconciles when prorated items plus the deposit hit the total', () => {
+    expect(scanTotalReconciles(10000, 200, 10200)).toBe(true);
+  });
+
+  it('reconciles a signed refund', () => {
+    expect(scanTotalReconciles(10000, -500, 9500)).toBe(true);
+  });
+
+  it('tolerates one minor unit of rounding slack', () => {
+    expect(scanTotalReconciles(10000, 200, 10201)).toBe(true);
+    expect(scanTotalReconciles(10000, 200, 10199)).toBe(true);
+  });
+
+  it('rejects a genuine mismatch beyond the slack', () => {
+    // The bug this guards: deposit ignored → 10000 vs 10200 reads as mismatch.
+    expect(scanTotalReconciles(10000, 0, 10200)).toBe(false);
+    expect(scanTotalReconciles(10000, 200, 10500)).toBe(false);
   });
 });
 

@@ -114,11 +114,17 @@ export function buildScanItemsState<I extends ConvertibleItem>(
   // include VAT, and Gemini *also* returns tax separately, so naively summing
   // items + tax + tip double-counts. Pick whichever candidate reconciles
   // better against the printed total; ties go to tax-exclusive.
+  //
+  // The deposit is part of the printed total but never part of the items, so
+  // it is netted out first — otherwise a pant (or refund) the same size as the
+  // moms line flips the comparison and the wrong candidate wins.
   const tax = receipt.tax_minor ?? 0;
   const tip = receipt.tip_minor ?? 0;
+  const deposit = receipt.deposit_minor ?? 0;
   const itemsSum = items.reduce((s, it) => s + it.total_minor, 0);
-  const inclusiveErr = Math.abs(itemsSum + tip - receipt.total_minor);
-  const exclusiveErr = Math.abs(itemsSum + tax + tip - receipt.total_minor);
+  const totalNetDeposit = receipt.total_minor - deposit;
+  const inclusiveErr = Math.abs(itemsSum + tip - totalNetDeposit);
+  const exclusiveErr = Math.abs(itemsSum + tax + tip - totalNetDeposit);
   const taxAlreadyInItems = tax > 0 && inclusiveErr < exclusiveErr;
 
   const factor =
@@ -137,12 +143,31 @@ export function buildScanItemsState<I extends ConvertibleItem>(
     items: convItems,
     taxMinor: taxAlreadyInItems ? 0 : conv(tax),
     tipMinor: conv(tip),
-    // A deposit refund would make this negative; clamp to 0 because the extra
-    // charge is a positive share-out, and a credit has no sensible even split.
-    depositMinor: Math.max(0, conv(receipt.deposit_minor ?? 0)),
+    // Signed: a pant charge is positive, a pantretur refund negative. The
+    // deposit is part of the total but not the items, so the sign has to
+    // survive or the assign screen can't reconcile a refunded receipt.
+    depositMinor: conv(deposit),
     totalMinor: applied.amount_minor,
     currency: applied.currency,
   };
+}
+
+/**
+ * Whether a scanned receipt's assigned split reconciles with its printed
+ * total, within one minor unit of rounding slack.
+ *
+ * `proratedMinor` is the sum of the per-member item + tax + tip amounts.
+ * `depositMinor` is the evenly-shared deposit, which is deliberately NOT
+ * prorated into members — it becomes the wizard's "split the rest" remainder —
+ * yet it is still part of the receipt total. Leaving it out of this check is
+ * what made a pant receipt unable to leave the assign screen.
+ */
+export function scanTotalReconciles(
+  proratedMinor: number,
+  depositMinor: number,
+  totalMinor: number,
+): boolean {
+  return Math.abs(proratedMinor + depositMinor - totalMinor) <= 1;
 }
 
 /** Distribute `total` int minor units across `count` recipients as evenly

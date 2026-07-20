@@ -32,7 +32,12 @@ import {
   fontSize,
   spacing,
 } from '@/lib/theme';
-import { prorateItemAssignments, ScanItem, type Itemization } from '@/lib/scan-items';
+import {
+  prorateItemAssignments,
+  scanTotalReconciles,
+  ScanItem,
+  type Itemization,
+} from '@/lib/scan-items';
 
 function minorToInput(n: number): string {
   return (n / 100).toFixed(2).replace(/\.?0+$/, '');
@@ -187,16 +192,19 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
     (it) => !assignments[it.id] || assignments[it.id].length === 0,
   ).length;
 
-  // The proration always sums to items + tax + tip. We compare that against
-  // the receipt total — if Gemini's parse is internally inconsistent, the
-  // user can fix any of the editable values (item amounts, tax, tip, or the
-  // total) to reconcile.
+  // The proration always sums to items + tax + tip. The deposit is part of the
+  // receipt total but is shared evenly in the wizard rather than prorated
+  // here, so it has to be added back before comparing — otherwise a pant
+  // receipt reads as a permanent mismatch and Continue never enables. If
+  // Gemini's parse is still internally inconsistent, the user can fix any
+  // editable value (item amounts, tax, tip, or the total) to reconcile.
+  const deposit = props.depositMinor ?? 0;
   const computedTotal = useMemo(
     () => Object.values(perMember).reduce((s, v) => s + v, 0),
     [perMember],
   );
-  const totalDiff = computedTotal - totalMinor;
-  const totalMismatch = Math.abs(totalDiff) > 1;
+  const totalDiff = computedTotal + deposit - totalMinor;
+  const totalMismatch = !scanTotalReconciles(computedTotal, deposit, totalMinor);
 
   // Context-aware shortener: "Lucas" when unique in the group, "Lucas H."
   // when there's another Lucas, "Lucas Heinonen" only on a full collision.
@@ -373,6 +381,12 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
                   {fmtMinor(computedTotal, props.currency)}
                 </Text>
               </View>
+              {deposit !== 0 && (
+                <View style={styles.errLine}>
+                  <Text style={styles.errLineLabel}>{t('scanItems.depositLine')}</Text>
+                  <Text style={styles.errLineValue}>{fmtMinor(deposit, props.currency)}</Text>
+                </View>
+              )}
               <View style={styles.errLine}>
                 <Text style={styles.errLineLabel}>{t('scanItems.receiptTotal')}</Text>
                 <Text style={styles.errLineValue}>{fmtMinor(totalMinor, props.currency)}</Text>
@@ -387,7 +401,7 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
               </View>
               <TouchableOpacity
                 style={styles.matchBtn}
-                onPress={() => setTotalMinor(computedTotal)}
+                onPress={() => setTotalMinor(computedTotal + deposit)}
                 activeOpacity={0.7}
                 accessibilityRole="button"
               >
