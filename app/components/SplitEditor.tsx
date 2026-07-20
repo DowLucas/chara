@@ -30,6 +30,7 @@ import { avatarImageSourceOn, GroupMember } from '@/lib/api';
 import { currentLocale } from '@/lib/i18n';
 import { initialsOf } from '@/lib/name';
 import { previewApportion } from '@/lib/split';
+import { splitBalance } from '@/lib/split-reconcile';
 import {
   colors,
   fontBody,
@@ -197,6 +198,7 @@ export function SplitEditor({
   }, [method, includedMembers, lockedById, autoExactMinor, percentMinorById, totalMinor]);
 
   const offBy = totalSplitMinor - totalMinor;
+  const balance = splitBalance(offBy);
 
   function memberLabel(m: GroupMember): string {
     return m.id === currentUserMemberId ? t('addExpense.you') : m.name;
@@ -372,22 +374,25 @@ export function SplitEditor({
             </Text>
           </View>
           <View style={styles.reconcileRow}>
-            <Text style={styles.reconcileLabel}>
-              {t('addExpense.matchesPaid')}
+            <Text
+              style={[
+                styles.reconcileLabel,
+                { color: balance === 'matched' ? colors.moss : colors.brick },
+              ]}
+            >
+              {balance === 'matched'
+                ? t('addExpense.matchesPaid')
+                : balance === 'over'
+                  ? t('addExpense.overBy')
+                  : t('addExpense.leftToAssign')}
             </Text>
             <Text
               style={[
                 styles.reconcileValue,
-                { color: offBy === 0 ? colors.moss : colors.brick },
+                { color: balance === 'matched' ? colors.moss : colors.brick },
               ]}
             >
-              {offBy === 0
-                ? ''
-                : `${fmtMinor(Math.abs(offBy), currency)} ${
-                    offBy > 0
-                      ? t('addExpense.leftToAssign')
-                      : t('addExpense.overBy')
-                  }`}
+              {balance === 'matched' ? '✓' : fmtMinor(Math.abs(offBy), currency)}
             </Text>
           </View>
         </View>
