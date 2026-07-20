@@ -187,6 +187,13 @@ export function SplitEditor({
     if (method === 'percentage') {
       return percentMinorById[memberId] ?? 0;
     }
+    if (method === 'itemized') {
+      // Amounts come from the itemisation (carried in `splits`), same source
+      // the itemised rows render from. Without this branch the reconcile total
+      // reads 0 and the card claims the whole amount is unassigned, while the
+      // rows below show real per-person figures.
+      return lockedById.get(memberId) ?? 0;
+    }
     // equal — equal share rounded; reconcile picks up the remainder.
     return equalShare;
   }
