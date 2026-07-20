@@ -127,11 +127,16 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
     // what was assigned. Without this a prior scan's assignments (keyed by the
     // same synthetic i0/i1 ids) would leak onto the new items.
     setAssignments(props.initialAssignments ?? {});
+    setShowTaxTip(false);
   }, [props.items, props.taxMinor, props.tipMinor, props.totalMinor, props.initialAssignments]);
 
   const [assignments, setAssignments] = useState<Record<string, string[]>>(
     () => props.initialAssignments ?? {},
   );
+  // Tax/tip rows are hidden when both are zero (the norm on a VAT-inclusive,
+  // no-tip receipt) and revealed on demand, so they don't sit as two dead rows
+  // on every scan. Auto-shown below whenever either is already nonzero.
+  const [showTaxTip, setShowTaxTip] = useState(false);
   const [pickerOpen, setPickerOpen] = useState<string | null>(null);
 
   // Inline amount editor (item totals, tax, tip, receipt total).
@@ -213,7 +218,16 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
     [perMember],
   );
   const totalDiff = computedTotal + deposit - totalMinor;
-  const totalMismatch = !scanTotalReconciles(computedTotal, deposit, totalMinor);
+  const reconciled = scanTotalReconciles(computedTotal, deposit, totalMinor);
+  // Two different situations, not one "mismatch":
+  //  - overTotal: items+tax+tip (+deposit) exceed the receipt total. The wizard
+  //    has no way to absorb a negative remainder, so this genuinely blocks.
+  //  - underTotal: they fall short — an unitemised remainder (pant, rounding)
+  //    that the split step distributes with "split the rest". Not an error;
+  //    shown as a calm note and Continue stays enabled.
+  const overTotal = !reconciled && totalDiff > 0;
+  const underTotal = !reconciled && totalDiff < 0;
+  const remainderMinor = underTotal ? -totalDiff : 0;
 
   // Context-aware shortener: "Lucas" when unique in the group, "Lucas H."
   // when there's another Lucas, "Lucas Heinonen" only on a full collision.
@@ -317,26 +331,39 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
           })}
 
           <View style={styles.metaWrap}>
-            <TouchableOpacity
-              style={styles.metaRow}
-              onPress={() => openEditor({ kind: 'tax' })}
-              activeOpacity={0.6}
-              accessibilityRole="button"
-              accessibilityLabel={t('scanItems.editTax')}
-            >
-              <Text style={styles.metaLabel}>{t('scanItems.taxLine')}</Text>
-              <Text style={styles.metaValueEditable}>{fmtMinor(taxMinor, props.currency)}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.metaRow}
-              onPress={() => openEditor({ kind: 'tip' })}
-              activeOpacity={0.6}
-              accessibilityRole="button"
-              accessibilityLabel={t('scanItems.editTip')}
-            >
-              <Text style={styles.metaLabel}>{t('scanItems.tipLine')}</Text>
-              <Text style={styles.metaValueEditable}>{fmtMinor(tipMinor, props.currency)}</Text>
-            </TouchableOpacity>
+            {(showTaxTip || taxMinor !== 0 || tipMinor !== 0) ? (
+              <>
+                <TouchableOpacity
+                  style={styles.metaRow}
+                  onPress={() => openEditor({ kind: 'tax' })}
+                  activeOpacity={0.6}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('scanItems.editTax')}
+                >
+                  <Text style={styles.metaLabel}>{t('scanItems.taxLine')}</Text>
+                  <Text style={styles.metaValueEditable}>{fmtMinor(taxMinor, props.currency)}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.metaRow}
+                  onPress={() => openEditor({ kind: 'tip' })}
+                  activeOpacity={0.6}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('scanItems.editTip')}
+                >
+                  <Text style={styles.metaLabel}>{t('scanItems.tipLine')}</Text>
+                  <Text style={styles.metaValueEditable}>{fmtMinor(tipMinor, props.currency)}</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TouchableOpacity
+                style={styles.metaRow}
+                onPress={() => setShowTaxTip(true)}
+                activeOpacity={0.6}
+                accessibilityRole="button"
+              >
+                <Text style={styles.addTaxTip}>{t('scanItems.addTaxTip')}</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={styles.metaRow}
               onPress={() => openEditor({ kind: 'total' })}
@@ -347,6 +374,13 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
               <Text style={styles.metaLabel}>{t('scanItems.receiptTotal')}</Text>
               <Text style={styles.metaValueEditable}>{fmtMinor(totalMinor, props.currency)}</Text>
             </TouchableOpacity>
+            {underTotal && (
+              <Text style={styles.remainderNote}>
+                {t('scanItems.remainderNote', {
+                  amount: fmtMinor(remainderMinor, props.currency),
+                })}
+              </Text>
+            )}
           </View>
 
           <View style={styles.summaryWrap}>
@@ -378,7 +412,7 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
             </View>
           )}
 
-          {totalMismatch && (
+          {overTotal && (
             <View style={styles.errBanner}>
               <View style={styles.errHeader}>
                 <Feather name="alert-circle" size={14} color={colors.brick} />
@@ -387,25 +421,7 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
               <View style={styles.errLine}>
                 <Text style={styles.errLineLabel}>{t('scanItems.computedTotal')}</Text>
                 <Text style={styles.errLineValue}>
-                  {fmtMinor(computedTotal, props.currency)}
-                </Text>
-              </View>
-              {deposit !== 0 && (
-                <View style={styles.errLine}>
-                  <Text style={styles.errLineLabel}>{t('scanItems.depositLine')}</Text>
-                  <Text style={styles.errLineValue}>{fmtMinor(deposit, props.currency)}</Text>
-                </View>
-              )}
-              <View style={styles.errLine}>
-                <Text style={styles.errLineLabel}>{t('scanItems.receiptTotal')}</Text>
-                <Text style={styles.errLineValue}>{fmtMinor(totalMinor, props.currency)}</Text>
-              </View>
-              <View style={styles.errLine}>
-                <Text style={[styles.errLineLabel, { color: colors.brick }]}>
-                  {t('scanItems.diff')}
-                </Text>
-                <Text style={[styles.errLineValue, { color: colors.brick }]}>
-                  {(totalDiff > 0 ? '+' : '−') + fmtMinor(Math.abs(totalDiff), props.currency)}
+                  {fmtMinor(computedTotal + deposit, props.currency)}
                 </Text>
               </View>
               <TouchableOpacity
@@ -417,7 +433,6 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
                 <Feather name="refresh-cw" size={12} color={colors.graphite} />
                 <Text style={styles.matchBtnLabel}>{t('scanItems.matchItems')}</Text>
               </TouchableOpacity>
-              <Text style={styles.matchHint}>{t('scanItems.matchItemsHint')}</Text>
             </View>
           )}
           </ContentContainer>
@@ -441,7 +456,7 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
                 depositMinor: props.depositMinor ?? 0,
               })
             }
-            disabled={totalMismatch}
+            disabled={overTotal}
             style={{ flex: 1 }}
           >
             {t('scanItems.continue')}
@@ -564,10 +579,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   shortcutLabel: {
-    fontFamily: fontMono,
+    fontFamily: fontBody,
     fontSize: fontSize.caption,
     color: colors.graphite,
-    letterSpacing: 0.3,
   },
 
   itemRow: {
@@ -612,16 +626,22 @@ const styles = StyleSheet.create({
   assignedLabel: { flex: 1, fontFamily: fontBody, fontSize: fontSize.bodyS, color: colors.graphite },
   unassignedBadge: {
     flex: 1,
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
+    fontFamily: fontBody,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
   },
 
   metaWrap: { paddingHorizontal: spacing.s5, paddingTop: spacing.s3 },
   metaRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
-  metaLabel: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
+  metaLabel: { fontFamily: fontBody, fontSize: fontSize.bodyS, color: colors.lead },
+  addTaxTip: { fontFamily: fontBody, fontSize: fontSize.bodyS, color: colors.lead },
+  remainderNote: {
+    fontFamily: fontBody,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    paddingTop: 6,
+    lineHeight: 18,
+  },
   metaValue: {
     fontFamily: fontMono,
     fontSize: fontSize.bodyS,
@@ -674,7 +694,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bone,
     borderRadius: 6,
   },
-  warnText: { flex: 1, fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
+  warnText: { flex: 1, fontFamily: fontBody, fontSize: fontSize.caption, color: colors.lead },
   errBanner: {
     marginHorizontal: spacing.s5,
     marginTop: spacing.s3,
@@ -685,9 +705,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   errHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  errText: { flex: 1, fontFamily: fontMono, fontSize: fontSize.caption, color: colors.brick },
+  errText: { flex: 1, fontFamily: fontBody, fontSize: fontSize.caption, color: colors.brick },
   errLine: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
-  errLineLabel: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
+  errLineLabel: { fontFamily: fontBody, fontSize: fontSize.caption, color: colors.lead },
   errLineValue: {
     fontFamily: fontMonoMedium,
     fontSize: fontSize.caption,
@@ -707,15 +727,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   matchBtnLabel: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.graphite,
-    letterSpacing: 0.3,
-  },
-  matchHint: {
     fontFamily: fontBody,
     fontSize: fontSize.caption,
-    color: colors.lead,
+    color: colors.graphite,
   },
 
   ctaBar: {
@@ -741,7 +755,7 @@ const styles = StyleSheet.create({
   },
   sheetTitle: { fontFamily: fontBodyMedium, fontSize: fontSize.bodyL, color: colors.graphite },
   sheetHint: {
-    fontFamily: fontMono,
+    fontFamily: fontBody,
     fontSize: fontSize.caption,
     color: colors.lead,
     marginTop: 4,
