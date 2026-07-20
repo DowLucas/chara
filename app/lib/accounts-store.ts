@@ -248,6 +248,10 @@ export async function resetAllAccounts(): Promise<void> {
   for (const url of urls) {
     await evictServer(url);
   }
+  // Same leak `removeAccount` guards against: the widget snapshot still names
+  // the wiped accounts' groups and amounts on a lock-screen-readable surface,
+  // and with zero accounts left nothing would otherwise repopulate it.
+  await clearWidgetSnapshot().catch(() => undefined);
 }
 
 export async function updateAccount(

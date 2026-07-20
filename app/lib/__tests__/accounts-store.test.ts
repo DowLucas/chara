@@ -38,6 +38,7 @@ import {
   markIncompatible,
   markReauthRequired,
   removeAccount,
+  resetAllAccounts,
   setDefault,
   setLastUsedCreate,
   snapshot,
@@ -243,6 +244,21 @@ describe('accounts-store', () => {
       });
       await expect(removeAccount('https://a.example')).resolves.toBeUndefined();
       expect(snapshot().accounts).toHaveLength(0);
+    });
+
+    it('clears the widget snapshot on a full reset', async () => {
+      // resetAllAccounts wipes every account, so the snapshot would otherwise
+      // strand the departed groups/amounts on the homescreen with nothing left
+      // to repopulate it.
+      const s = makeStorage();
+      configure(s);
+      await load();
+      await addAccount(makeAccount('https://a.example'));
+      await addAccount(makeAccount('https://b.example'));
+      clearWidgetSnapshot.mockClear();
+      await resetAllAccounts();
+      expect(snapshot().accounts).toHaveLength(0);
+      expect(clearWidgetSnapshot).toHaveBeenCalled();
     });
   });
 
