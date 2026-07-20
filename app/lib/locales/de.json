@@ -1203,6 +1203,18 @@
     "success": "Danke – wir melden uns.",
     "title": "Du hast deine {{cap}} kostenlosen Belegscans diesen Monat aufgebraucht"
   },
+  "widget": {
+    "addExpense": "Ausgabe hinzufügen",
+    "allSettled": "Alles ausgeglichen",
+    "mixedSignsLabel": "Gemischte Salden über Währungen hinweg",
+    "netBalance": "Nettosaldo",
+    "noGroups": "Noch keine Gruppen",
+    "openChara": "Chara öffnen",
+    "partialNotice": "Einige Konten waren nicht erreichbar",
+    "signedOut": "Melde dich an, um deine Salden zu sehen",
+    "youOwe": "Du schuldest",
+    "youreOwed": "Dir wird geschuldet"
+  },
   "you": {
     "about": "Über die App",
     "accountsRowCount_one": "{{count}} Konto",

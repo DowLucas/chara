@@ -1203,6 +1203,18 @@
     "success": "ありがとうございます — ご連絡いたします。",
     "title": "今月の無料レシートスキャン{{cap}}回をすべて使い切りました"
   },
+  "widget": {
+    "addExpense": "支出を追加",
+    "allSettled": "すべて精算済み",
+    "mixedSignsLabel": "通貨ごとに残高の符号が異なります",
+    "netBalance": "純残高",
+    "noGroups": "グループがありません",
+    "openChara": "Chara を開く",
+    "partialNotice": "一部のアカウントに接続できませんでした",
+    "signedOut": "ログインして残高を確認",
+    "youOwe": "支払い",
+    "youreOwed": "受け取り"
+  },
   "you": {
     "about": "アプリについて",
     "accountsRowCount_one": "アカウント{{count}}件",

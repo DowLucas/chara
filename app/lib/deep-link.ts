@@ -15,6 +15,20 @@
 import type { Account } from './accounts-store';
 import { normalizeServerUrl } from './server-url';
 
+/**
+ * Schemes we accept group links on, mirroring `scheme` in app.config.ts.
+ *
+ * The dev variant ships `charadev` so it can sit alongside a production
+ * install, and links minted by that build — push payloads, homescreen widget
+ * taps — carry the dev scheme. Matching only `chara://` silently dropped all
+ * of them, in exactly the build we test in.
+ *
+ * Kept as literals rather than read from `expo-constants`: this classifier is
+ * deliberately dependency-free so it stays trivially testable, and the two
+ * variants are fixed by app.config.ts anyway. Keep in sync if `scheme` changes.
+ */
+const ACCEPTED_SCHEMES = ['chara', 'charadev'];
+
 export type GroupDeepLinkIntent =
   /** URL was empty / not a group deep link / not recognised. */
   | { kind: 'ignore' }
@@ -25,8 +39,14 @@ export type GroupDeepLinkIntent =
   /** Group link points at a server the user isn't signed into. */
   | { kind: 'unknown_server'; serverUrl: string }
   /** Safe to navigate. `target` selects a sub-screen (e.g. a settle-up
-   *  reminder deep-links to the group's settle screen); undefined = group home. */
-  | { kind: 'navigate'; serverUrl: string; groupId: string; target?: 'settle' };
+   *  reminder deep-links to the group's settle screen, the homescreen
+   *  widget's shortcut to add-expense); undefined = group home. */
+  | {
+      kind: 'navigate';
+      serverUrl: string;
+      groupId: string;
+      target?: 'settle' | 'add-expense';
+    };
 
 interface ClassifyDeps {
   accounts: Account[];
@@ -39,12 +59,13 @@ export function classifyGroupDeepLink(
 ): GroupDeepLinkIntent {
   if (!url) return { kind: 'ignore' };
   const lower = url.toLowerCase();
-  if (!lower.startsWith('chara://groups/')) return { kind: 'ignore' };
+  const scheme = ACCEPTED_SCHEMES.find((s) => lower.startsWith(`${s}://groups/`));
+  if (!scheme) return { kind: 'ignore' };
 
   if (!deps.isLoaded) return { kind: 'not_loaded' };
 
   // Strip scheme and any query/fragment, then split.
-  const withoutScheme = url.slice('chara://'.length);
+  const withoutScheme = url.slice(`${scheme}://`.length);
   const [path] = withoutScheme.split(/[?#]/);
   const parts = path.split('/').filter((p) => p.length > 0);
   // parts: ['groups', '<encodedServer>', '<groupId>', ...]
@@ -67,8 +88,13 @@ export function classifyGroupDeepLink(
   const match = deps.accounts.some((a) => a.serverUrl === normalized);
   if (!match) return { kind: 'unknown_server', serverUrl: normalized };
 
-  // Optional sub-screen: chara://groups/<server>/<groupId>/settle.
-  const target = parts[3] === 'settle' ? ('settle' as const) : undefined;
+  // Optional sub-screen, e.g. chara://groups/<server>/<groupId>/settle.
+  // Unrecognised values fall back to the group home rather than being
+  // forwarded as a route fragment.
+  const target =
+    parts[3] === 'settle' || parts[3] === 'add-expense'
+      ? (parts[3] as 'settle' | 'add-expense')
+      : undefined;
 
   return { kind: 'navigate', serverUrl: normalized, groupId, target };
 }

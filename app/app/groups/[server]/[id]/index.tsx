@@ -41,6 +41,7 @@ import { useAccount } from '@/lib/accounts';
 import { formatMinorUnits, decimalToMinor, formatDate } from '@/lib/i18n';
 import { initialsOf, makeNameShortener } from '@/lib/name';
 import { isPopupJustClosed, markPopupClosed } from '@/lib/popup-guard';
+import { setLastActiveGroup } from '@/lib/preferences';
 import { subscribeGroupChanged, notifyGroupChanged } from '@/lib/group-refresh';
 import { computeStandings, expensesInvolvingMember } from '@/lib/standings';
 import { categoryIcon } from '@/lib/categories';
@@ -167,6 +168,14 @@ export default function GroupDetailScreen() {
   // settle flow), so balances + suggestions reflect any settlements the user
   // just recorded.
   useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  // Remember this group as the homescreen widget's "add expense" target.
+  // `Group` has no last-activity timestamp, so recency is tracked here as
+  // the user actually opens groups.
+  useEffect(() => {
+    if (!group || !serverUrl) return;
+    void setLastActiveGroup({ serverUrl, groupId: group.id, name: group.name });
+  }, [serverUrl, group]);
 
   // Also subscribe to explicit group-changed notifications from mutators
   // (add-expense, settle, etc.). useFocusEffect alone misses cases where the

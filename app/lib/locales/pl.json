@@ -1285,6 +1285,18 @@
     "success": "Dzięki — odezwiemy się.",
     "title": "Wykorzystałeś {{cap}} darmowych skanów paragonów w tym miesiącu"
   },
+  "widget": {
+    "addExpense": "Dodaj wydatek",
+    "allSettled": "Wszystko rozliczone",
+    "mixedSignsLabel": "Mieszane salda w różnych walutach",
+    "netBalance": "saldo netto",
+    "noGroups": "Brak grup",
+    "openChara": "Otwórz Charę",
+    "partialNotice": "Nie udało się połączyć z niektórymi kontami",
+    "signedOut": "Zaloguj się, aby zobaczyć salda",
+    "youOwe": "Jesteś winien",
+    "youreOwed": "Należy ci się"
+  },
   "you": {
     "about": "O aplikacji",
     "accountsRowCount_few": "{{count}} konta",

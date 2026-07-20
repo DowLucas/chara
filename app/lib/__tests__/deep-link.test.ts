@@ -68,6 +68,46 @@ describe('classifyGroupDeepLink', () => {
     }
   });
 
+  it('routes to add-expense when the path ends in /add-expense', () => {
+    const accounts = [makeAccount('https://api.example.com')];
+    const url = `chara://groups/${encodeURIComponent('https://api.example.com')}/g123/add-expense`;
+    const intent = classifyGroupDeepLink(url, { accounts, isLoaded: true });
+    expect(intent.kind).toBe('navigate');
+    if (intent.kind === 'navigate') {
+      expect(intent.groupId).toBe('g123');
+      expect(intent.target).toBe('add-expense');
+    }
+  });
+
+  it('ignores an unrecognised sub-target rather than inventing a route', () => {
+    const accounts = [makeAccount('https://api.example.com')];
+    const url = `chara://groups/${encodeURIComponent('https://api.example.com')}/g123/wat`;
+    const intent = classifyGroupDeepLink(url, { accounts, isLoaded: true });
+    if (intent.kind === 'navigate') {
+      expect(intent.target).toBeUndefined();
+    }
+  });
+
+  // The dev variant ships scheme `charadev` (app.config.ts). A hardcoded
+  // `chara://` prefix silently dropped every dev-build deep link — push
+  // notifications and widget taps alike — which is exactly the build we
+  // test in.
+  it('accepts the dev-variant scheme', () => {
+    const accounts = [makeAccount('https://api.example.com')];
+    const url = `charadev://groups/${encodeURIComponent('https://api.example.com')}/g123`;
+    const intent = classifyGroupDeepLink(url, { accounts, isLoaded: true });
+    expect(intent.kind).toBe('navigate');
+    if (intent.kind === 'navigate') {
+      expect(intent.groupId).toBe('g123');
+    }
+  });
+
+  it('still ignores a foreign scheme that merely contains our own', () => {
+    const accounts = [makeAccount('https://api.example.com')];
+    const url = `notchara://groups/${encodeURIComponent('https://api.example.com')}/g123`;
+    expect(classifyGroupDeepLink(url, { accounts, isLoaded: true }).kind).toBe('ignore');
+  });
+
   it('refuses to navigate to a server the user is not signed into', () => {
     const accounts = [makeAccount('https://api.example.com')];
     const url = `chara://groups/${encodeURIComponent('https://unknown.example.com')}/g1`;

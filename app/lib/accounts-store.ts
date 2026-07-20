@@ -13,6 +13,7 @@
 import type { MigrationStorage } from './migrate-legacy-auth';
 import { ACCOUNTS_KEY } from './migrate-legacy-auth';
 import { evictServer } from './cache';
+import { clearWidgetSnapshot } from './widget-bridge';
 
 export type AddAccountMethod = 'magic_link' | 'google' | 'apple';
 
@@ -222,6 +223,11 @@ export async function removeAccount(serverUrl: string): Promise<void> {
       blob.lastUsedCreateServerUrl === serverUrl ? fallback : blob.lastUsedCreateServerUrl,
   });
   await evictServer(serverUrl);
+  // Unconditionally, not just when the last account goes: the snapshot still
+  // names the departed server's groups and amounts, and the homescreen is
+  // readable without unlocking. The next home-screen refresh repopulates it
+  // for whichever accounts remain. Never allowed to block removal.
+  await clearWidgetSnapshot().catch(() => undefined);
 }
 
 export async function updateAccount(

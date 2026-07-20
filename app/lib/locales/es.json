@@ -1242,6 +1242,18 @@
     "success": "Gracias — te contactaremos.",
     "title": "Has usado tus {{cap}} escaneos gratis de este mes"
   },
+  "widget": {
+    "addExpense": "Añadir gasto",
+    "allSettled": "Todo saldado",
+    "mixedSignsLabel": "Saldos mixtos entre monedas",
+    "netBalance": "saldo neto",
+    "noGroups": "Aún no hay grupos",
+    "openChara": "Abrir Chara",
+    "partialNotice": "No se pudo contactar con algunas cuentas",
+    "signedOut": "Inicia sesión para ver tus saldos",
+    "youOwe": "Debes",
+    "youreOwed": "Te deben"
+  },
   "you": {
     "about": "Acerca de la app",
     "accountsRowCount_many": "{{count}} cuentas",

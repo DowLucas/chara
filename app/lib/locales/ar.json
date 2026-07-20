@@ -1367,6 +1367,18 @@
     "success": "شكرًا — سنتواصل معك قريبًا.",
     "title": "استخدمت {{cap}} عمليات مسح إيصال مجانية هذا الشهر"
   },
+  "widget": {
+    "addExpense": "إضافة مصروف",
+    "allSettled": "تمت التسوية بالكامل",
+    "mixedSignsLabel": "أرصدة متباينة بين العملات",
+    "netBalance": "الرصيد الصافي",
+    "noGroups": "لا توجد مجموعات بعد",
+    "openChara": "فتح Chara",
+    "partialNotice": "تعذّر الوصول إلى بعض الحسابات",
+    "signedOut": "سجّل الدخول لعرض أرصدتك",
+    "youOwe": "عليك",
+    "youreOwed": "لك"
+  },
   "you": {
     "about": "حول التطبيق",
     "accountsRowCount_few": "{{count}} حسابات",

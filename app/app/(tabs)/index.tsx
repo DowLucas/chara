@@ -28,8 +28,15 @@ import { hapticLongPress, hapticSelect } from '@/lib/haptics';
 import { getPinnedGroupKeys, groupKey, togglePinnedGroup } from '@/lib/pinned-groups';
 import { useHomeCurrency } from '@/lib/use-home-currency';
 import { aggregateMyNetReads } from '@/lib/aggregate-mynet';
+import {
+  groupPosition,
+  mergeGroupsWithBalances,
+  netByCurrency as netByCurrencyOf,
+  type MergedGroup,
+} from '@/lib/balance-summary';
 import { formatMinorUnits, formatMinorUnitsCompact, decimalToMinor } from '@/lib/i18n';
 import { isPopupJustClosed } from '@/lib/popup-guard';
+import { useWidgetSnapshot } from '@/lib/use-widget-snapshot';
 import {
   colors,
   fontBody,
@@ -54,14 +61,6 @@ const fmtAmount = (minor: string, currency: string) => formatMinorUnits(minor, c
 // instead of leaking infra details into the UI. Self-hosted URLs still
 // render as the bare host.
 
-interface MergedGroup {
-  group: Group;
-  serverUrl: string;
-  /** All per-currency balance rows for this group. Empty when the user has
-   *  no balance entries yet (new group / fully settled). Multi-currency
-   *  groups carry one row per currency. */
-  balances: MyBalance[];
-}
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -146,31 +145,11 @@ export default function HomeScreen() {
     setGroupActionsFor({ serverUrl, groupId, groupName });
   }
 
-  // Merge: concatenate all groups, attach every per-currency balance row for
-  // that group. We keep the full list (not just one row) so the card can
-  // detect mixed-sign positions across currencies — e.g. you're owed €100
-  // but still owe $30 in the same group. Collapsing to a single row would
-  // hide that and the "+€100" hero reads as "I'm owed", which is false.
+  // Merge groups with every per-currency balance row (see `balance-summary.ts`
+  // for why the full row list is preserved rather than collapsed), then apply
+  // the home screen's own ordering.
   const mergedGroups: MergedGroup[] = useMemo(() => {
-    const balancesByKey = new Map<string, MyBalance[]>();
-    for (const br of balanceReads) {
-      for (const b of br.data ?? []) {
-        const key = `${br.serverUrl}::${b.group_id}`;
-        const list = balancesByKey.get(key);
-        if (list) list.push(b);
-        else balancesByKey.set(key, [b]);
-      }
-    }
-    const rows: MergedGroup[] = [];
-    for (const gr of groupReads) {
-      for (const g of gr.data ?? []) {
-        rows.push({
-          group: g,
-          serverUrl: gr.serverUrl,
-          balances: balancesByKey.get(`${gr.serverUrl}::${g.id}`) ?? [],
-        });
-      }
-    }
+    const rows = mergeGroupsWithBalances(groupReads, balanceReads);
     // Pinned groups float to the top; within each partition, sort by
     // created_at desc (Group type lacks last_activity_at today).
     rows.sort((a, b) => {
@@ -183,17 +162,7 @@ export default function HomeScreen() {
   }, [groupReads, balanceReads, pinnedKeys]);
 
   // Per-currency net totals across all accounts.
-  const netByCurrency = useMemo(() => {
-    const totals = new Map<string, number>();
-    for (const br of balanceReads) {
-      for (const b of br.data ?? []) {
-        totals.set(b.currency, (totals.get(b.currency) ?? 0) + decimalToMinor(b.net_balance));
-      }
-    }
-    return [...totals.entries()]
-      .map(([currency, minor]) => ({ currency, minor }))
-      .sort((a, b) => Math.abs(b.minor) - Math.abs(a.minor));
-  }, [balanceReads]);
+  const netByCurrency = useMemo(() => netByCurrencyOf(balanceReads), [balanceReads]);
 
   const primaryCurrency = netByCurrency[0]?.currency ?? 'SEK';
   const primaryNet = netByCurrency[0]?.minor ?? 0;
@@ -209,6 +178,16 @@ export default function HomeScreen() {
     () => aggregateMyNetReads(myNetReads, accounts.length),
     [myNetReads, accounts.length],
   );
+
+  // Mirror what this screen shows onto the homescreen widgets. Passive — it
+  // adds no fetches of its own, so the widget cannot disagree with the hero.
+  useWidgetSnapshot({
+    accountsTotal: accounts.length,
+    homeCurrency,
+    groupReads,
+    balanceReads,
+    myNetReads,
+  });
 
   // Render the "≈" line only when at least one balance row is in a
   // currency other than the home currency. For monocurrency users the
@@ -404,28 +383,15 @@ export default function HomeScreen() {
               </Text>
             </View>
             <View style={styles.cardWrap}>
-              {mergedGroups.map(({ group: g, serverUrl, balances }) => {
-                const hasActivity = balances.length > 0;
-                // Display the dominant currency: largest absolute net wins.
-                // Ties break by the row order from the server (deterministic
-                // since the backend returns by currency).
-                const dominant = hasActivity
-                  ? [...balances].sort(
-                      (a, b) =>
-                        Math.abs(decimalToMinor(b.net_balance)) -
-                        Math.abs(decimalToMinor(a.net_balance)),
-                    )[0]
-                  : null;
-                const n = dominant ? decimalToMinor(dominant.net_balance) : 0;
-                const displayCurrency = dominant?.currency ?? g.currency;
-                const settled =
-                  hasActivity && balances.every((b) => decimalToMinor(b.net_balance) === 0);
-                // Mixed signs across currencies in the same group: the
-                // dominant row hides debt (or credit) in another currency.
-                // Headline reads "+€100" while you actually still owe $30.
-                const hasPositive = balances.some((b) => decimalToMinor(b.net_balance) > 0);
-                const hasNegative = balances.some((b) => decimalToMinor(b.net_balance) < 0);
-                const mixedSigns = hasPositive && hasNegative;
+              {mergedGroups.map((row) => {
+                const { group: g, serverUrl } = row;
+                const {
+                  hasActivity,
+                  minor: n,
+                  currency: displayCurrency,
+                  settled,
+                  mixedSigns,
+                } = groupPosition(row);
                 const isPinned = pinnedKeys.has(groupKey(serverUrl, g.id));
                 return (
                   <TouchableOpacity

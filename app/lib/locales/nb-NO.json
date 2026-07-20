@@ -1203,6 +1203,18 @@
     "success": "Takk — vi tar kontakt.",
     "title": "Du har brukt opp {{cap}} gratis kvitteringsskann denne måneden"
   },
+  "widget": {
+    "addExpense": "Legg til utgift",
+    "allSettled": "Alt er gjort opp",
+    "mixedSignsLabel": "Blandede saldoer på tvers av valutaer",
+    "netBalance": "nettosaldo",
+    "noGroups": "Ingen grupper ennå",
+    "openChara": "Åpne Chara",
+    "partialNotice": "Noen kontoer kunne ikke nås",
+    "signedOut": "Logg inn for å se saldoene dine",
+    "youOwe": "Du skylder",
+    "youreOwed": "Du har til gode"
+  },
   "you": {
     "about": "Om appen",
     "accountsRowCount_one": "{{count}} konto",

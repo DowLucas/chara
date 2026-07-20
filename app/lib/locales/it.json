@@ -1242,6 +1242,18 @@
     "success": "Grazie — ti faremo sapere.",
     "title": "Hai usato le tue {{cap}} scansioni gratuite di questo mese"
   },
+  "widget": {
+    "addExpense": "Aggiungi spesa",
+    "allSettled": "Tutto saldato",
+    "mixedSignsLabel": "Saldi misti tra valute",
+    "netBalance": "saldo netto",
+    "noGroups": "Ancora nessun gruppo",
+    "openChara": "Apri Chara",
+    "partialNotice": "Alcuni account non sono raggiungibili",
+    "signedOut": "Accedi per vedere i tuoi saldi",
+    "youOwe": "Devi",
+    "youreOwed": "Ti devono"
+  },
   "you": {
     "about": "Info sull'app",
     "accountsRowCount_many": "{{count}} account",

@@ -1203,6 +1203,18 @@
     "success": "Tack — vi hör av oss.",
     "title": "Du har använt dina {{cap}} fria kvittoskanningar den här månaden"
   },
+  "widget": {
+    "addExpense": "Lägg till utgift",
+    "allSettled": "Allt är reglerat",
+    "mixedSignsLabel": "Blandade saldon i olika valutor",
+    "netBalance": "nettosaldo",
+    "noGroups": "Inga grupper än",
+    "openChara": "Öppna Chara",
+    "partialNotice": "Vissa konton kunde inte nås",
+    "signedOut": "Logga in för att se dina saldon",
+    "youOwe": "Du är skyldig",
+    "youreOwed": "Du har till godo"
+  },
   "you": {
     "about": "Om appen",
     "accountsRowCount_one": "{{count}} konto",

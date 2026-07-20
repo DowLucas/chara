@@ -1203,6 +1203,18 @@
     "success": "Kiitos — olemme yhteydessä.",
     "title": "Olet käyttänyt {{cap}} ilmaista kuittiskannausta tässä kuussa"
   },
+  "widget": {
+    "addExpense": "Lisää kulu",
+    "allSettled": "Kaikki selvitetty",
+    "mixedSignsLabel": "Sekalaisia saldoja eri valuutoissa",
+    "netBalance": "nettosaldo",
+    "noGroups": "Ei vielä ryhmiä",
+    "openChara": "Avaa Chara",
+    "partialNotice": "Joitakin tilejä ei tavoitettu",
+    "signedOut": "Kirjaudu sisään nähdäksesi saldosi",
+    "youOwe": "Olet velkaa",
+    "youreOwed": "Sinulle ollaan velkaa"
+  },
   "you": {
     "about": "Tietoja sovelluksesta",
     "accountsRowCount_one": "{{count}} tili",

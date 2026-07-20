@@ -1203,6 +1203,18 @@
     "success": "Thanks — we'll be in touch.",
     "title": "You've reached this month's receipt scan limit"
   },
+  "widget": {
+    "addExpense": "Add expense",
+    "allSettled": "All settled up",
+    "mixedSignsLabel": "Mixed balances across currencies",
+    "netBalance": "net balance",
+    "noGroups": "No groups yet",
+    "openChara": "Open Chara",
+    "partialNotice": "Some accounts couldn't be reached",
+    "signedOut": "Sign in to see your balances",
+    "youOwe": "You owe",
+    "youreOwed": "You're owed"
+  },
   "you": {
     "about": "About the app",
     "accountsRowCount_one": "{{count}} account",

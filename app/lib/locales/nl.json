@@ -1203,6 +1203,18 @@
     "success": "Bedankt — we nemen contact op.",
     "title": "Je hebt je {{cap}} gratis bonscans deze maand gebruikt"
   },
+  "widget": {
+    "addExpense": "Uitgave toevoegen",
+    "allSettled": "Alles is vereffend",
+    "mixedSignsLabel": "Gemengde saldi over valuta's",
+    "netBalance": "nettosaldo",
+    "noGroups": "Nog geen groepen",
+    "openChara": "Chara openen",
+    "partialNotice": "Sommige accounts waren onbereikbaar",
+    "signedOut": "Log in om je saldi te zien",
+    "youOwe": "Jij bent schuldig",
+    "youreOwed": "Jij krijgt terug"
+  },
   "you": {
     "about": "Over de app",
     "accountsRowCount_one": "{{count}} account",
