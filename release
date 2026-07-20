@@ -86,6 +86,17 @@ echo "==> submitting Android build to Play Store (internal track)"
 eas submit --platform android --profile production --non-interactive --path "$android_output"
 
 echo "==> building iOS on EAS cloud with auto-submit"
+# The widget extension (app.chara.widgets) is a second bundle id needing its
+# own App ID, App Group capability, and distribution provisioning profile.
+# EAS creates those interactively, and this build runs --non-interactive, so
+# the first release after the widgets landed fails here until you have run:
+#
+#   eas credentials -p ios --profile production
+#
+# once for both app.chara and app.chara.widgets. Not asserted automatically:
+# there is no non-interactive way to query credential state, and a wrong
+# guess would block a legitimate release.
+echo "    (if this fails on missing credentials, see the note above this line)"
 eas build --platform ios --profile production --auto-submit --non-interactive
 
 echo "==> done. Android submitted; iOS build+submit running on EAS — check https://expo.dev for status."
