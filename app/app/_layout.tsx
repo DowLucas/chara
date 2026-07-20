@@ -78,8 +78,14 @@ function handleDeepLink(url: string | null | undefined): void {
     return;
   }
 
-  // Notification-tap group route: chara://groups/<encodedServer>/<groupId>?…
-  if (lower.startsWith('chara://groups/')) {
+  // Notification-tap / widget-tap group route:
+  // chara://groups/<encodedServer>/<groupId>?…
+  //
+  // The scheme check lives in the classifier (which accepts the dev variant's
+  // `charadev` too) rather than being duplicated here — a second hardcoded
+  // `chara://` gate would drop dev-build links before classification.
+  // Non-group URLs classify as `ignore` and fall through to the return below.
+  {
     const intent = classifyGroupDeepLink(url, {
       accounts: accountsSnapshot().accounts,
       isLoaded: accountsIsLoaded(),
@@ -92,7 +98,9 @@ function handleDeepLink(url: string | null | undefined): void {
         router.push(
           intent.target === 'settle'
             ? `/groups/${server}/${intent.groupId}/settle`
-            : `/groups/${server}/${intent.groupId}`,
+            : intent.target === 'add-expense'
+              ? `/groups/${server}/${intent.groupId}/add-expense`
+              : `/groups/${server}/${intent.groupId}`,
         );
         return;
       }
