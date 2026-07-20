@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  updatePeriodMillis="0" is deliberate: the app is the only writer of widget
+  data, so there is nothing for the system to poll for. Updates arrive via the
+  broadcast in CharaWidgetsModule.
+
+  previewLayout renders live in the picker; a static previewImage would have
+  to be regenerated whenever the design changes.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="110dp"
+    android:minHeight="110dp"
+    android:targetCellWidth="2"
+    android:targetCellHeight="2"
+    android:maxResizeWidth="360dp"
+    android:maxResizeHeight="280dp"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen"
+    android:updatePeriodMillis="0"
+    android:initialLayout="@layout/chara_widget_small"
+    android:previewLayout="@layout/chara_widget_list"
+    android:description="@string/chara_widget_description" />

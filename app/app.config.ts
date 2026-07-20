@@ -36,6 +36,9 @@ const config: ExpoConfig = {
     // reads as a single column on iPad instead of stretching edge to edge.
     supportsTablet: true,
     bundleIdentifier: IS_DEV_VARIANT ? 'app.chara.dev' : 'app.chara',
+    // Required by @bacons/apple-targets to sign the widget extension target.
+    // Same value as `submit.production.ios.appleTeamId` in eas.json.
+    appleTeamId: 'AV39AJYC85',
     usesAppleSignIn: true,
     // Universal Links — the system fetches
     // https://<HOSTED_API_HOST>/.well-known/apple-app-site-association
@@ -240,6 +243,13 @@ const config: ExpoConfig = {
           'com.googleusercontent.apps.53625108191-nkpr2abaukbq7s22ev6fp4vmu1djrsgf',
       },
     ],
+    // Homescreen widgets. Generates the iOS WidgetKit target (via
+    // @bacons/apple-targets reading targets/widget/) and copies the Android
+    // provider + resources in, since ios/ and android/ are gitignored.
+    // Must come after the bundle id / package are set — it derives the App
+    // Group from ios.bundleIdentifier.
+    '@bacons/apple-targets',
+    './plugins/withWidgets',
   ],
   experiments: {
     typedRoutes: true,

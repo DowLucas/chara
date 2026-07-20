@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Medium / large family: per-currency header, then the biggest open positions.
+
+  Row slots are pre-inflated and hidden when unused. That avoids a
+  RemoteViewsService adapter (a bound service plus a factory) for what is at
+  most six static rows.
+
+  Shares ids with chara_widget_small.xml where the provider writes to both.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/chara_widget_bg"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/placeholder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:fontFamily="@font/snpro_semibold"
+        android:textSize="14sp"
+        android:maxLines="3"
+        android:textColor="@color/chara_widget_graphite" />
+
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/hero_caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/jetbrainsmono_regular"
+                android:textSize="10sp"
+                android:textAllCaps="true"
+                android:letterSpacing="0.06"
+                android:maxLines="1"
+                android:textColor="@color/chara_widget_lead" />
+
+            <TextView
+                android:id="@+id/hero_amount"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:gravity="end"
+                android:fontFamily="@font/jetbrainsmono_medium"
+                android:fontFeatureSettings="tnum"
+                android:textSize="16sp"
+                android:maxLines="1"
+                android:textColor="@color/chara_widget_graphite" />
+
+            <TextView
+                android:id="@+id/add_expense"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:text="+"
+                android:background="@drawable/chara_widget_pill"
+                android:fontFamily="@font/snpro_semibold"
+                android:textSize="15sp"
+                android:textColor="@color/chara_widget_graphite" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="2dp"
+            android:background="@color/chara_widget_rule_soft" />
+
+        <LinearLayout
+            android:id="@+id/row_0"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/row_0_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/snpro_semibold"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/chara_widget_graphite" />
+
+            <TextView
+                android:id="@+id/row_0_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:fontFamily="@font/jetbrainsmono_medium"
+                android:fontFeatureSettings="tnum"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:textColor="@color/chara_widget_graphite" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/row_1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/row_1_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/snpro_semibold"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/chara_widget_graphite" />
+
+            <TextView
+                android:id="@+id/row_1_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:fontFamily="@font/jetbrainsmono_medium"
+                android:fontFeatureSettings="tnum"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:textColor="@color/chara_widget_graphite" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/row_2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/row_2_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/snpro_semibold"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/chara_widget_graphite" />
+
+            <TextView
+                android:id="@+id/row_2_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:fontFamily="@font/jetbrainsmono_medium"
+                android:fontFeatureSettings="tnum"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:textColor="@color/chara_widget_graphite" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/row_3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/row_3_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/snpro_semibold"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/chara_widget_graphite" />
+
+            <TextView
+                android:id="@+id/row_3_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:fontFamily="@font/jetbrainsmono_medium"
+                android:fontFeatureSettings="tnum"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:textColor="@color/chara_widget_graphite" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/row_4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/row_4_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/snpro_semibold"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/chara_widget_graphite" />
+
+            <TextView
+                android:id="@+id/row_4_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:fontFamily="@font/jetbrainsmono_medium"
+                android:fontFeatureSettings="tnum"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:textColor="@color/chara_widget_graphite" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/row_5"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/row_5_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="@font/snpro_semibold"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/chara_widget_graphite" />
+
+            <TextView
+                android:id="@+id/row_5_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:fontFamily="@font/jetbrainsmono_medium"
+                android:fontFeatureSettings="tnum"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:textColor="@color/chara_widget_graphite" />
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/partial_marker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:visibility="gone"
+                android:text="!"
+                android:fontFamily="@font/jetbrainsmono_regular"
+                android:textSize="9sp"
+                android:textColor="@color/chara_widget_lead" />
+
+            <TextView
+                android:id="@+id/updated_at"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/jetbrainsmono_regular"
+                android:textSize="9sp"
+                android:textColor="@color/chara_widget_lead" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

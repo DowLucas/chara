@@ -364,6 +364,67 @@ preference, never synced to the backend or other group members. Two
 users looking at the same group can still see different colors by
 design; that's not what this fix addresses.
 
+### Homescreen widgets (iOS WidgetKit + Android RemoteViews) ✅
+
+Small family renders a per-currency hero; medium/large render that hero
+plus the largest open group positions, each row deep-linking into the
+group. A `+` shortcut in the medium/large header jumps straight into
+add-expense for the most recently opened group.
+
+**Architecture: the widget renders from a snapshot, never from the
+network.** The iOS extension cannot read the SecureStore tokens
+(`WHEN_UNLOCKED_THIS_DEVICE_ONLY`, no keychain access group) and the app
+has no background-fetch infrastructure. So the app pre-renders
+everything — formatting, sorting, truncation, translation, URL encoding
+— into shared storage (App Group `UserDefaults` on iOS, private
+`SharedPreferences` on Android; Android needs no App Group because the
+provider runs in the app's own process). Native does layout only, which
+keeps both native implementations small and puts all the logic under
+Jest.
+
+Freshness is foreground-only: `lib/use-widget-snapshot.ts` is a passive
+consumer of reads the home screen already performs, so it inherits every
+existing refresh trigger without adding a second refresh path. A widget
+can therefore be hours old, which is why every layout carries an "as of"
+stamp and dims past ~6h — stale balances must not read as current.
+
+- `lib/balance-summary.ts` — per-currency bucketing, group/balance join,
+  and dominant-row logic extracted from `app/(tabs)/index.tsx` and now
+  shared by the home screen and the snapshot builder, so the widget
+  cannot drift from the hero. In particular the widget inherits the
+  never-collapse-mixed-sign rule rather than reimplementing it wrong.
+  16 characterization tests written against the pre-extraction behaviour.
+- `lib/widget-snapshot.ts` — pure, fully-injected builder (23 tests).
+- `lib/widget-bridge.ts` — swallows all native errors (a widget failure
+  must never break the app) and dedups writes by content so the home
+  screen's refresh cadence doesn't burn the OS widget-refresh budget
+  (10 tests).
+- Snapshot is cleared on **every** account removal, not just the last:
+  it names the departed server's groups and amounts, and the homescreen
+  is readable without unlocking. Asserted by a test that no group name
+  survives into a signed-out snapshot.
+- `plugins/withWidgets/` — generates the native surface at prebuild
+  (`ios/`/`android/` are gitignored). iOS target creation delegates to
+  `@bacons/apple-targets` (pinned exact); the plugin itself adds the App
+  Group to the **host** app's entitlements, which that library does not
+  do and whose absence makes the widget silently show the empty state
+  forever.
+- Android uses classic RemoteViews rather than Glance — Glance compiles
+  into the app module and would require enabling Compose in the RN app's
+  Gradle via brittle regex mods, plus a compile cost on every local
+  release build. Fixed row slots are pre-inflated and hidden, avoiding a
+  `RemoteViewsService` adapter.
+
+Also fixed: `classifyGroupDeepLink` hardcoded a `chara://` prefix while
+the dev variant ships `charadev`, so every deep link in a dev build —
+push taps included — silently did nothing. The root layout duplicated
+the same gate and now delegates it.
+
+**Not yet verified on device.** The Android prebuild path is confirmed
+(sources copied, receiver registered, mod is idempotent, module
+autolinks), but no iOS or Android build has been run. See the PR for the
+required one-time `eas credentials` step before the next `./release`.
+
 ### Week 10 — Web client (Expo for Web) 🔲
 
 - [ ] Sign-in flow with magic link

@@ -18,9 +18,11 @@ package-lock.json
 dist/
 web-build/
 
-# Native builds
-ios/
-android/
+# Native builds — anchored to the project root. Unanchored `ios/` / `android/`
+# would match at any depth and silently swallow checked-in native sources
+# (modules/*/ios, modules/*/android, widgets/android).
+/ios/
+/android/
 *.aab
 *.jks
 *.p12

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Mirrors the semantic tokens in lib/theme.ts. Prefixed `chara_widget_` so
+  these cannot collide with resources the Expo prebuild generates.
+-->
+<resources>
+    <color name="chara_widget_paper">#F0E5CC</color>
+    <color name="chara_widget_bone">#E6D9BB</color>
+    <color name="chara_widget_graphite">#2D1F1A</color>
+    <color name="chara_widget_lead">#6B5A4E</color>
+    <!-- "You're owed" / settled. -->
+    <color name="chara_widget_moss">#586D2A</color>
+    <!-- "You owe". -->
+    <color name="chara_widget_brick">#8A2A2A</color>
+    <color name="chara_widget_rule_soft">#122D1F1A</color>
+
+    <string name="chara_widget_description">Your balances at a glance.</string>
+    <string name="chara_widget_label">Chara</string>
+</resources>

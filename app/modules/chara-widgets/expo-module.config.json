@@ -1,0 +1,9 @@
+{
+  "platforms": ["ios", "android"],
+  "ios": {
+    "modules": ["CharaWidgetsModule"]
+  },
+  "android": {
+    "modules": ["app.chara.widgets.CharaWidgetsModule"]
+  }
+}
