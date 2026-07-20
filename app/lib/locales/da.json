@@ -1197,6 +1197,18 @@
     "success": "Tak — vi vender tilbage.",
     "title": "Du har brugt dine {{cap}} gratis kvitteringsscanninger denne måned"
   },
+  "widget": {
+    "addExpense": "Tilføj udgift",
+    "allSettled": "Alt er gjort op",
+    "mixedSignsLabel": "Blandede saldi på tværs af valutaer",
+    "netBalance": "nettosaldo",
+    "noGroups": "Ingen grupper endnu",
+    "openChara": "Åbn Chara",
+    "partialNotice": "Nogle konti kunne ikke nås",
+    "signedOut": "Log ind for at se dine saldi",
+    "youOwe": "Du skylder",
+    "youreOwed": "Du har til gode"
+  },
   "you": {
     "about": "Om appen",
     "accountsRowCount_one": "{{count}} konto",

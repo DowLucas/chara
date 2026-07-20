@@ -20,6 +20,12 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   },
 }));
 
+// The widget snapshot must not outlive the account it describes.
+const clearWidgetSnapshot = jest.fn(async () => undefined);
+jest.mock('../widget-bridge', () => ({
+  clearWidgetSnapshot: () => clearWidgetSnapshot(),
+}));
+
 import {
   __resetForTests,
   accountFor,
@@ -202,6 +208,41 @@ describe('accounts-store', () => {
       await addAccount(makeAccount('https://b.example'));
       await removeAccount('https://b.example');
       expect(snapshot().defaultServerUrl).toBe('https://a.example');
+    });
+
+    it('clears the widget snapshot when the last account goes', async () => {
+      const s = makeStorage();
+      configure(s);
+      await load();
+      clearWidgetSnapshot.mockClear();
+      await addAccount(makeAccount('https://a.example'));
+      await removeAccount('https://a.example');
+      expect(clearWidgetSnapshot).toHaveBeenCalled();
+    });
+
+    it('clears the widget snapshot even when other accounts remain', async () => {
+      // The snapshot still names the departed server's groups and amounts,
+      // and would sit on the homescreen until the next home-screen refresh.
+      const s = makeStorage();
+      configure(s);
+      await load();
+      await addAccount(makeAccount('https://a.example'));
+      await addAccount(makeAccount('https://b.example'));
+      clearWidgetSnapshot.mockClear();
+      await removeAccount('https://b.example');
+      expect(clearWidgetSnapshot).toHaveBeenCalled();
+    });
+
+    it('still removes the account when clearing the widget fails', async () => {
+      const s = makeStorage();
+      configure(s);
+      await load();
+      await addAccount(makeAccount('https://a.example'));
+      clearWidgetSnapshot.mockImplementationOnce(async () => {
+        throw new Error('widget storage unavailable');
+      });
+      await expect(removeAccount('https://a.example')).resolves.toBeUndefined();
+      expect(snapshot().accounts).toHaveLength(0);
     });
   });
 

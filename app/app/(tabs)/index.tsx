@@ -36,6 +36,7 @@ import {
 } from '@/lib/balance-summary';
 import { formatMinorUnits, formatMinorUnitsCompact, decimalToMinor } from '@/lib/i18n';
 import { isPopupJustClosed } from '@/lib/popup-guard';
+import { useWidgetSnapshot } from '@/lib/use-widget-snapshot';
 import {
   colors,
   fontBody,
@@ -177,6 +178,16 @@ export default function HomeScreen() {
     () => aggregateMyNetReads(myNetReads, accounts.length),
     [myNetReads, accounts.length],
   );
+
+  // Mirror what this screen shows onto the homescreen widgets. Passive — it
+  // adds no fetches of its own, so the widget cannot disagree with the hero.
+  useWidgetSnapshot({
+    accountsTotal: accounts.length,
+    homeCurrency,
+    groupReads,
+    balanceReads,
+    myNetReads,
+  });
 
   // Render the "≈" line only when at least one balance row is in a
   // currency other than the home currency. For monocurrency users the

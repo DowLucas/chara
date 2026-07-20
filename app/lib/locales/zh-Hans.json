@@ -1197,6 +1197,18 @@
     "success": "感谢 · 我们会与您联系。",
     "title": "本月 {{cap}} 次免费小票扫描已用完"
   },
+  "widget": {
+    "addExpense": "添加支出",
+    "allSettled": "已全部结清",
+    "mixedSignsLabel": "不同货币的余额方向不一致",
+    "netBalance": "净余额",
+    "noGroups": "暂无群组",
+    "openChara": "打开 Chara",
+    "partialNotice": "部分账户无法连接",
+    "signedOut": "登录以查看余额",
+    "youOwe": "你欠款",
+    "youreOwed": "待收款"
+  },
   "you": {
     "about": "关于",
     "accountsRowCount_one": "1 个账户",

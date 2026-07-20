@@ -1236,6 +1236,18 @@
     "success": "Merci — on revient vers toi bientôt.",
     "title": "Tu as utilisé tes {{cap}} scans de reçus gratuits ce mois-ci"
   },
+  "widget": {
+    "addExpense": "Ajouter une dépense",
+    "allSettled": "Tout est réglé",
+    "mixedSignsLabel": "Soldes mixtes selon les devises",
+    "netBalance": "solde net",
+    "noGroups": "Aucun groupe pour l'instant",
+    "openChara": "Ouvrir Chara",
+    "partialNotice": "Certains comptes sont injoignables",
+    "signedOut": "Connectez-vous pour voir vos soldes",
+    "youOwe": "Vous devez",
+    "youreOwed": "On vous doit"
+  },
   "you": {
     "about": "À propos de l'app",
     "accountsRowCount_many": "{{count}} comptes",
