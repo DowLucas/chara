@@ -53,6 +53,31 @@ describe('saveDraft / loadDraft / clearDraft', () => {
     expect(d).toMatchObject({ amount: '40.00', title: 'Taxi', category: 'transport', savedAt: 1000 });
   });
 
+  it('round-trips the scan itemisation and its deposit', async () => {
+    // The deposit is what lets a restored draft re-open the items screen with
+    // the same unassigned remainder; without it the itemisation comes back but
+    // the pant is lost.
+    await saveDraft(
+      KEY,
+      {
+        amount: '228.22',
+        title: 'Groceries',
+        method: 'itemized',
+        depositMinor: 1200,
+        itemization: {
+          items: [{ id: 'i0', description: 'Milk', qty: 1, unit_price_minor: 1750, total_minor: 1750 }],
+          assignments: { i0: ['a', 'b'] },
+          taxMinor: 0,
+          tipMinor: 0,
+        },
+      },
+      1000,
+    );
+    const d = await loadDraft(KEY, 1000);
+    expect(d?.depositMinor).toBe(1200);
+    expect(d?.itemization?.assignments).toEqual({ i0: ['a', 'b'] });
+  });
+
   it('does not persist an empty draft', async () => {
     await saveDraft(KEY, { amount: '', title: '' }, 1000);
     expect(await loadDraft(KEY, 1000)).toBeNull();

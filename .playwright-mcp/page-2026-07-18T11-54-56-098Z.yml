@@ -1,0 +1,175 @@
+- generic [active] [ref=f11e1]:
+  - generic [ref=f11e3]:
+    - generic [ref=f11e6]:
+      - generic [ref=f11e8]:
+        - button "Navigate to home" [ref=f11e9] [cursor=pointer]:
+          - img "Expo home" [ref=f11e10]
+        - generic [ref=f11e12]:
+          - button "Notifications" [ref=f11e13] [cursor=pointer]
+          - button "Search" [ref=f11e20] [cursor=pointer]
+      - generic [ref=f11e24]:
+        - button [ref=f11e26] [cursor=pointer]:
+          - generic [ref=f11e27]:
+            - img "lucasdow1 account icon" [ref=f11e28]
+            - paragraph [ref=f11e29]: lucasdow1
+        - button [ref=f11e35] [cursor=pointer]:
+          - generic [ref=f11e36]:
+            - figure [ref=f11e37]:
+              - generic [ref=f11e38]: C
+            - paragraph [ref=f11e41]: chara
+      - generic [ref=f11e48]:
+        - link [ref=f11e51] [cursor=pointer]:
+          - /url: /accounts/lucasdow1
+          - paragraph [ref=f11e56]: Account
+        - generic [ref=f11e57]:
+          - generic [ref=f11e58]:
+            - paragraph [ref=f11e59]: Project
+            - link [ref=f11e61] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara
+              - paragraph [ref=f11e70]: Overview
+            - link [ref=f11e72] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/insights
+              - paragraph [ref=f11e81]: Insights
+            - link [ref=f11e83] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/usage
+              - paragraph [ref=f11e88]: Usage
+            - link "Observe New" [ref=f11e90] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/observe
+              - paragraph [ref=f11e95]: Observe
+              - generic [ref=f11e96]: New
+          - generic [ref=f11e99]:
+            - paragraph [ref=f11e100]: Develop
+            - link [ref=f11e102] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/workflows
+              - paragraph [ref=f11e107]: Workflows
+            - link [ref=f11e109] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/development-builds
+              - paragraph [ref=f11e114]: Development builds
+          - generic [ref=f11e115]:
+            - paragraph [ref=f11e116]: Deploy
+            - link [ref=f11e118] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/builds
+              - paragraph [ref=f11e123]: Builds
+            - link [ref=f11e125] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/submissions
+              - paragraph [ref=f11e135]: Submissions
+            - button [ref=f11e137] [cursor=pointer]:
+              - paragraph [ref=f11e142]: Over-the-air updates
+            - link [ref=f11e147] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/hosting
+              - paragraph [ref=f11e152]: Hosting
+            - link [ref=f11e154] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/push-notifications
+              - paragraph [ref=f11e159]: Push notifications
+          - generic [ref=f11e160]:
+            - paragraph [ref=f11e161]: Entities
+            - link [ref=f11e163] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/fingerprints
+              - paragraph [ref=f11e165]: Fingerprints
+          - generic [ref=f11e166]:
+            - paragraph [ref=f11e167]: Project settings
+            - link [ref=f11e169] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/settings
+              - paragraph [ref=f11e171]: General
+            - link [ref=f11e173] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/credentials
+              - paragraph [ref=f11e175]: Credentials
+            - link [ref=f11e177] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/environment-variables
+              - paragraph [ref=f11e179]: Environment variables
+            - link [ref=f11e181] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/github
+              - paragraph [ref=f11e183]: GitHub
+      - button [ref=f11e186] [cursor=pointer]:
+        - generic [ref=f11e187]:
+          - img "User menu" [ref=f11e188]
+          - paragraph [ref=f11e189]: lucasdow1
+    - generic [ref=f11e199]:
+      - generic [ref=f11e200]:
+        - link [ref=f11e201] [cursor=pointer]:
+          - /url: /accounts/lucasdow1/projects/chara/credentials
+          - paragraph [ref=f11e203]: Project credentials
+        - paragraph [ref=f11e211]: app.chara
+      - generic [ref=f11e212]:
+        - generic [ref=f11e215]:
+          - generic [ref=f11e216]:
+            - heading "app.chara" [level=3] [ref=f11e221]
+            - paragraph [ref=f11e222]: Bundle Identifier
+          - button "Delete configuration" [ref=f11e223] [cursor=pointer]
+        - generic [ref=f11e229]:
+          - generic [ref=f11e230]:
+            - heading "Build credentials" [level=3] [ref=f11e234]
+            - generic [ref=f11e236]:
+              - button [ref=f11e238] [cursor=pointer]:
+                - paragraph [ref=f11e245]: App Store
+              - button [ref=f11e247] [cursor=pointer]:
+                - paragraph [ref=f11e252]: Development
+              - button [ref=f11e254] [cursor=pointer]:
+                - paragraph [ref=f11e259]: Enterprise
+              - button [ref=f11e261] [cursor=pointer]:
+                - paragraph [ref=f11e266]: Ad-hoc
+          - generic [ref=f11e267]:
+            - heading "Distribution certificate" [level=4] [ref=f11e272]
+            - generic [ref=f11e274]:
+              - paragraph [ref=f11e277]: Serial Number
+              - paragraph [ref=f11e279]: Team
+              - paragraph [ref=f11e281]: Status
+              - paragraph [ref=f11e283]: Uploaded at
+              - generic [ref=f11e286]:
+                - paragraph [ref=f11e287]: 43B311881846A6DEEFBAE6DA605C551D
+                - paragraph [ref=f11e288]: "Developer ID: MU7X5K934C"
+              - generic [ref=f11e289]:
+                - paragraph [ref=f11e290]: Lucas Dow (Individual)
+                - paragraph [ref=f11e291]: "ID: AV39AJYC85"
+              - button "Valid" [ref=f11e293]
+              - time [ref=f11e303]: May 25, 2026 9:04 PM
+              - button [ref=f11e305] [cursor=pointer]
+          - generic [ref=f11e312]:
+            - heading "Provisioning profile" [level=4] [ref=f11e317]
+            - generic [ref=f11e319]:
+              - paragraph [ref=f11e322]: Apple UUID
+              - paragraph [ref=f11e324]: Team
+              - paragraph [ref=f11e326]: Status
+              - paragraph [ref=f11e328]: Uploaded at
+              - generic [ref=f11e331]:
+                - paragraph [ref=f11e332]: ba6879ac-38da-4a98-9f02-bcae145c1200
+                - paragraph [ref=f11e333]: "Developer ID: F7L2ASW5MF"
+              - generic [ref=f11e334]:
+                - paragraph [ref=f11e335]: Lucas Dow (Individual)
+                - paragraph [ref=f11e336]: "ID: AV39AJYC85"
+              - button "Valid" [ref=f11e338]
+              - time [ref=f11e348]: May 25, 2026 9:04 PM
+              - button [ref=f11e350] [cursor=pointer]
+        - generic [ref=f11e357]:
+          - heading "Service credentials" [level=3] [ref=f11e361]
+          - generic [ref=f11e362]:
+            - heading "Push key" [level=4] [ref=f11e367]
+            - generic [ref=f11e369]:
+              - paragraph [ref=f11e372]: Key ID
+              - paragraph [ref=f11e374]: Team
+              - paragraph [ref=f11e376]: Uploaded at
+              - paragraph [ref=f11e380]: 2JM2PKFH9P
+              - generic [ref=f11e381]:
+                - paragraph [ref=f11e382]: Lucas Dow (Individual)
+                - paragraph [ref=f11e383]: "ID: AV39AJYC85"
+              - time [ref=f11e387]: May 25, 2026 9:03 PM
+              - button [ref=f11e389] [cursor=pointer]
+          - generic [ref=f11e396]:
+            - heading "App Store Connect API key" [level=4] [ref=f11e401]
+            - generic [ref=f11e403]:
+              - paragraph [ref=f11e406]: Identifier
+              - paragraph [ref=f11e408]: Key ID
+              - paragraph [ref=f11e410]: Team
+              - paragraph [ref=f11e412]: Roles
+              - paragraph [ref=f11e414]: Uploaded at
+              - generic [ref=f11e417]:
+                - paragraph [ref=f11e418]: "[Expo] EAS Submit rZpov9SDCT"
+                - paragraph [ref=f11e419]: "Issuer ID: f8cafeb5-a003-43e3-884f-e1c3fd8b6886"
+              - paragraph [ref=f11e421]: SC999WG783
+              - generic [ref=f11e422]:
+                - paragraph [ref=f11e423]: Lucas Dow (Individual)
+                - paragraph [ref=f11e424]: "ID: AV39AJYC85"
+              - paragraph [ref=f11e426]: ADMIN
+              - time [ref=f11e430]: May 26, 2026 5:09 PM
+              - button [ref=f11e432] [cursor=pointer]
+  - alert [ref=f11e439]

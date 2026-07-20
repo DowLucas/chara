@@ -1,0 +1,94 @@
+- generic [ref=f8e3]:
+  - generic [ref=f8e6]:
+    - generic [ref=f8e8]:
+      - button "Navigate to home" [ref=f8e9] [cursor=pointer]:
+        - img "Expo home" [ref=f8e10]
+      - generic [ref=f8e12]:
+        - button "Notifications" [ref=f8e13] [cursor=pointer]
+        - button "Search" [ref=f8e19] [cursor=pointer]
+    - generic [ref=f8e23]:
+      - button [ref=f8e25] [cursor=pointer]:
+        - generic [ref=f8e26]:
+          - img "lucasdow1 account icon" [ref=f8e27]
+          - paragraph [ref=f8e28]: lucasdow1
+      - button [ref=f8e34] [cursor=pointer]
+    - generic [ref=f8e46]:
+      - link [ref=f8e49] [cursor=pointer]:
+        - /url: /accounts/lucasdow1
+        - paragraph [ref=f8e54]: Account
+      - generic [ref=f8e55]:
+        - generic [ref=f8e56]:
+          - paragraph [ref=f8e57]: Project
+          - link [ref=f8e59] [cursor=pointer]:
+            - /url: /accounts/lucasdow1/projects/chara
+            - paragraph [ref=f8e68]: Overview
+          - link [ref=f8e70] [cursor=pointer]:
+            - /url: /accounts/lucasdow1/projects/chara/insights
+            - paragraph [ref=f8e79]: Insights
+          - link [ref=f8e81] [cursor=pointer]:
+            - /url: /accounts/lucasdow1/projects/chara/usage
+            - paragraph [ref=f8e86]: Usage
+          - link [ref=f8e88] [cursor=pointer]:
+            - /url: /accounts/lucasdow1/projects/chara/observe
+            - paragraph [ref=f8e93]: Observe
+        - generic [ref=f8e94]:
+          - paragraph [ref=f8e95]: Develop
+          - link [ref=f8e97] [cursor=pointer]:
+            - /url: /accounts/lucasdow1/projects/chara/workflows
+            - paragraph [ref=f8e102]: Workflows
+          - link [ref=f8e104] [cursor=pointer]:
+            - /url: /accounts/lucasdow1/projects/chara/development-builds
+            - paragraph [ref=f8e109]: Development builds
+        - generic [ref=f8e110]:
+          - paragraph [ref=f8e111]: Deploy
+          - link [ref=f8e113] [cursor=pointer]:
+            - /url: /accounts/lucasdow1/projects/chara/builds
+            - paragraph [ref=f8e118]: Builds
+          - link [ref=f8e120] [cursor=pointer]:
+            - /url: /accounts/lucasdow1/projects/chara/submissions
+            - paragraph [ref=f8e130]: Submissions
+          - button [ref=f8e132] [cursor=pointer]:
+            - paragraph [ref=f8e137]: Over-the-air updates
+          - link [ref=f8e142] [cursor=pointer]:
+            - /url: /accounts/lucasdow1/projects/chara/hosting
+            - paragraph [ref=f8e147]: Hosting
+          - link [ref=f8e149] [cursor=pointer]:
+            - /url: /accounts/lucasdow1/projects/chara/push-notifications
+            - paragraph [ref=f8e154]: Push notifications
+        - generic [ref=f8e155]:
+          - paragraph [ref=f8e156]: Entities
+          - link [ref=f8e158] [cursor=pointer]:
+            - /url: /accounts/lucasdow1/projects/chara/fingerprints
+            - paragraph [ref=f8e160]: Fingerprints
+        - generic [ref=f8e161]:
+          - paragraph [ref=f8e162]: Project settings
+          - link [ref=f8e164] [cursor=pointer]:
+            - /url: /accounts/lucasdow1/projects/chara/settings
+            - paragraph [ref=f8e166]: General
+          - link [ref=f8e168] [cursor=pointer]:
+            - /url: /accounts/lucasdow1/projects/chara/credentials
+            - paragraph [ref=f8e170]: Credentials
+          - link [ref=f8e172] [cursor=pointer]:
+            - /url: /accounts/lucasdow1/projects/chara/environment-variables
+            - paragraph [ref=f8e174]: Environment variables
+          - link [ref=f8e176] [cursor=pointer]:
+            - /url: /accounts/lucasdow1/projects/chara/github
+            - paragraph [ref=f8e178]: GitHub
+    - button [ref=f8e181] [cursor=pointer]:
+      - generic [ref=f8e182]:
+        - img "User menu" [ref=f8e183]
+        - paragraph [ref=f8e184]: lucasdow1
+  - generic [ref=f8e194]:
+    - generic [ref=f8e198]:
+      - heading "Project credentials" [level=1] [ref=f8e199]
+      - button "Additional information" [ref=f8e200] [cursor=pointer]
+    - generic [ref=f8e206]:
+      - generic [ref=f8e207]:
+        - heading "Android" [level=4] [ref=f8e213]
+        - button "Add Application Identifier" [disabled]
+      - progressbar [ref=f8e217]
+    - generic [ref=f8e218]:
+      - generic [ref=f8e219]:
+        - heading "iOS" [level=4] [ref=f8e225]
+        - button "Add Bundle Identifier" [disabled]
+      - progressbar [ref=f8e229]

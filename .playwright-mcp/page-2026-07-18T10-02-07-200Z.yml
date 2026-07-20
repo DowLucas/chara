@@ -1,0 +1,147 @@
+- generic [active] [ref=f9e1]:
+  - generic [ref=f9e3]:
+    - generic [ref=f9e6]:
+      - generic [ref=f9e8]:
+        - button "Navigate to home" [ref=f9e9] [cursor=pointer]:
+          - img "Expo home" [ref=f9e10]
+        - generic [ref=f9e12]:
+          - button "Notifications" [ref=f9e13] [cursor=pointer]
+          - button "Search" [ref=f9e19] [cursor=pointer]
+      - generic [ref=f9e23]:
+        - button [ref=f9e25] [cursor=pointer]:
+          - generic [ref=f9e26]:
+            - img "lucasdow1 account icon" [ref=f9e27]
+            - paragraph [ref=f9e28]: lucasdow1
+        - button [ref=f9e34] [cursor=pointer]:
+          - generic [ref=f9e35]:
+            - figure [ref=f9e36]:
+              - generic [ref=f9e37]: C
+            - paragraph [ref=f9e40]: chara
+      - generic [ref=f9e47]:
+        - link [ref=f9e50] [cursor=pointer]:
+          - /url: /accounts/lucasdow1
+          - paragraph [ref=f9e55]: Account
+        - generic [ref=f9e56]:
+          - generic [ref=f9e57]:
+            - paragraph [ref=f9e58]: Project
+            - link [ref=f9e60] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara
+              - paragraph [ref=f9e69]: Overview
+            - link [ref=f9e71] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/insights
+              - paragraph [ref=f9e80]: Insights
+            - link [ref=f9e82] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/usage
+              - paragraph [ref=f9e87]: Usage
+            - link "Observe New" [ref=f9e214] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/observe
+              - paragraph [ref=f9e94]: Observe
+              - generic [ref=f9e215]: New
+          - generic [ref=f9e95]:
+            - paragraph [ref=f9e96]: Develop
+            - link [ref=f9e98] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/workflows
+              - paragraph [ref=f9e103]: Workflows
+            - link [ref=f9e105] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/development-builds
+              - paragraph [ref=f9e110]: Development builds
+          - generic [ref=f9e111]:
+            - paragraph [ref=f9e112]: Deploy
+            - link [ref=f9e114] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/builds
+              - paragraph [ref=f9e119]: Builds
+            - link [ref=f9e121] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/submissions
+              - paragraph [ref=f9e131]: Submissions
+            - button [ref=f9e133] [cursor=pointer]:
+              - paragraph [ref=f9e138]: Over-the-air updates
+            - link [ref=f9e143] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/hosting
+              - paragraph [ref=f9e148]: Hosting
+            - link [ref=f9e150] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/push-notifications
+              - paragraph [ref=f9e155]: Push notifications
+          - generic [ref=f9e156]:
+            - paragraph [ref=f9e157]: Entities
+            - link [ref=f9e159] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/fingerprints
+              - paragraph [ref=f9e161]: Fingerprints
+          - generic [ref=f9e162]:
+            - paragraph [ref=f9e163]: Project settings
+            - link [ref=f9e165] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/settings
+              - paragraph [ref=f9e167]: General
+            - link [ref=f9e169] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/credentials
+              - paragraph [ref=f9e171]: Credentials
+            - link [ref=f9e173] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/environment-variables
+              - paragraph [ref=f9e175]: Environment variables
+            - link [ref=f9e177] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/github
+              - paragraph [ref=f9e179]: GitHub
+      - button [ref=f9e182] [cursor=pointer]:
+        - generic [ref=f9e183]:
+          - img "User menu" [ref=f9e184]
+          - paragraph [ref=f9e185]: lucasdow1
+    - generic [ref=f9e195]:
+      - generic [ref=f9e196]:
+        - link [ref=f9e197] [cursor=pointer]:
+          - /url: /accounts/lucasdow1/projects/chara/credentials
+          - paragraph [ref=f9e199]: Project credentials
+        - paragraph [ref=f9e207]: chara.app
+      - generic [ref=f9e218]:
+        - generic [ref=f9e221]:
+          - generic [ref=f9e222]:
+            - heading "chara.app" [level=3] [ref=f9e227]
+            - paragraph [ref=f9e228]: Application Identifier
+          - button "Delete configuration" [ref=f9e229] [cursor=pointer]
+        - generic [ref=f9e236]:
+          - generic [ref=f9e237]:
+            - generic [ref=f9e238]:
+              - generic [ref=f9e239]:
+                - heading "Build credentials" [level=3] [ref=f9e241]
+                - paragraph [ref=f9e242]: Select saved credentials below or create new one
+              - button "Create New Build Credentials" [ref=f9e243] [cursor=pointer]
+            - generic [ref=f9e250]:
+              - combobox "Build credentials selector" [ref=f9e251] [cursor=pointer]:
+                - generic [ref=f9e253]:
+                  - generic "e1fb4478-a2ac-4fc0-9d60-fac663551088":
+                    - generic:
+                      - text: Build Credentials 3anAE0aHCG
+                      - generic: Default
+              - button [ref=f9e257] [cursor=pointer]
+          - generic [ref=f9e264]:
+            - heading "Android upload keystore" [level=4] [ref=f9e269]
+            - generic [ref=f9e271]:
+              - paragraph [ref=f9e274]: Key alias
+              - paragraph [ref=f9e276]: MD5 Fingerprint
+              - paragraph [ref=f9e278]: SHA-1 Fingerprint
+              - paragraph [ref=f9e280]: SHA-256 Fingerprint
+              - paragraph [ref=f9e282]: Uploaded at
+              - generic [ref=f9e285]:
+                - paragraph [ref=f9e286]: ccb5f6cec5fc11451a8d2674b10c5af6
+                - paragraph [ref=f9e287]: "Type: JKS"
+              - generic [ref=f9e290]:
+                - paragraph [ref=f9e291]: 41:61...F5:53
+                - button [ref=f9e293] [cursor=pointer]
+              - generic [ref=f9e299]:
+                - paragraph [ref=f9e300]: 02:36...FB:67
+                - button [ref=f9e302] [cursor=pointer]
+              - generic [ref=f9e308]:
+                - paragraph [ref=f9e309]: 04:5D...C8:3F
+                - button [ref=f9e311] [cursor=pointer]
+              - time [ref=f9e318]: Jul 12, 2026 12:28 PM
+              - button [ref=f9e320] [cursor=pointer]
+        - generic [ref=f9e327]:
+          - heading "Service credentials" [level=3] [ref=f9e331]
+          - generic [ref=f9e332]:
+            - generic [ref=f9e336]:
+              - paragraph [ref=f9e337]: FCM V1 service account key
+              - paragraph [ref=f9e338]: A service account key for sending Android push notifications.
+              - button "Add a service account key" [ref=f9e339] [cursor=pointer]
+            - generic [ref=f9e345]:
+              - paragraph [ref=f9e346]: Google service account key for EAS Submit
+              - paragraph [ref=f9e347]: A Google service account key lets EAS Submit upload your app to Google Play.
+              - button "Add a Google service account key" [ref=f9e348] [cursor=pointer]
+  - alert [ref=f9e212]

@@ -65,6 +65,9 @@ export interface ScanItemsAssignProps {
   depositMinor?: number;
   totalMinor: number;
   currency: string;
+  /** Per-item member assignments to pre-select — used when re-opening the
+   *  screen for an already-applied itemisation. Empty/omitted for a fresh scan. */
+  initialAssignments?: Record<string, string[]>;
   members: GroupMember[];
   /** ID of the current user's group-member row (for the "you" label). */
   currentMemberId?: string;
@@ -120,9 +123,15 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
     setTaxMinor(props.taxMinor);
     setTipMinor(props.tipMinor);
     setTotalMinor(props.totalMinor);
-  }, [props.items, props.taxMinor, props.tipMinor, props.totalMinor]);
+    // Reseed assignments too: a fresh scan clears them, re-opening restores
+    // what was assigned. Without this a prior scan's assignments (keyed by the
+    // same synthetic i0/i1 ids) would leak onto the new items.
+    setAssignments(props.initialAssignments ?? {});
+  }, [props.items, props.taxMinor, props.tipMinor, props.totalMinor, props.initialAssignments]);
 
-  const [assignments, setAssignments] = useState<Record<string, string[]>>({});
+  const [assignments, setAssignments] = useState<Record<string, string[]>>(
+    () => props.initialAssignments ?? {},
+  );
   const [pickerOpen, setPickerOpen] = useState<string | null>(null);
 
   // Inline amount editor (item totals, tax, tip, receipt total).

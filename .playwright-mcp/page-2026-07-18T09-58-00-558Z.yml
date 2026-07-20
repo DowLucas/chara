@@ -1,0 +1,280 @@
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - button
+                - generic:
+                  - button
+                  - button
+            - generic:
+              - generic:
+                - button:
+                  - generic:
+                    - paragraph: lucasdow1
+              - generic:
+                - button:
+                  - generic:
+                    - figure:
+                      - generic: C
+                    - paragraph: chara
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - link:
+                        - /url: /accounts/lucasdow1
+                        - generic:
+                          - paragraph: Account
+                  - generic:
+                    - generic:
+                      - paragraph: Project
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara
+                          - generic:
+                            - paragraph: Overview
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/insights
+                          - generic:
+                            - paragraph: Insights
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/usage
+                          - generic:
+                            - paragraph: Usage
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/observe
+                          - generic:
+                            - paragraph: Observe
+                          - generic: New
+                    - generic:
+                      - paragraph: Develop
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/workflows
+                          - generic:
+                            - paragraph: Workflows
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/development-builds
+                          - generic:
+                            - paragraph: Development builds
+                    - generic:
+                      - paragraph: Deploy
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/builds
+                          - generic:
+                            - paragraph: Builds
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/submissions
+                          - generic:
+                            - paragraph: Submissions
+                      - generic:
+                        - button:
+                          - generic:
+                            - paragraph: Over-the-air updates
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/hosting
+                          - generic:
+                            - paragraph: Hosting
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/push-notifications
+                          - generic:
+                            - paragraph: Push notifications
+                    - generic:
+                      - paragraph: Entities
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/fingerprints
+                          - generic:
+                            - paragraph: Fingerprints
+                    - generic:
+                      - paragraph: Project settings
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/settings
+                          - generic:
+                            - paragraph: General
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/credentials
+                          - generic:
+                            - paragraph: Credentials
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/environment-variables
+                          - generic:
+                            - paragraph: Environment variables
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/github
+                          - generic:
+                            - paragraph: GitHub
+            - generic:
+              - generic:
+                - button:
+                  - generic:
+                    - paragraph: lucasdow1
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - link:
+                - /url: /accounts/lucasdow1/projects/chara/credentials
+                - generic:
+                  - paragraph: Project credentials
+              - generic:
+                - paragraph: chara.app
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - heading [level=3]: chara.app
+                      - paragraph: Application Identifier
+                    - button:
+                      - generic: Delete configuration
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - heading [level=3]: Build credentials
+                        - paragraph: Select saved credentials below or create new one
+                      - button:
+                        - generic: Create New Build Credentials
+                    - generic:
+                      - generic:
+                        - combobox:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - text: Build Credentials 3anAE0aHCG
+                                  - generic: Default
+                        - button
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - heading [level=4]: Android upload keystore
+                    - generic:
+                      - generic:
+                        - generic:
+                          - paragraph: Key alias
+                        - generic:
+                          - paragraph: MD5 Fingerprint
+                        - generic:
+                          - paragraph: SHA-1 Fingerprint
+                        - generic:
+                          - paragraph: SHA-256 Fingerprint
+                        - generic:
+                          - paragraph: Uploaded at
+                        - generic:
+                          - paragraph: ccb5f6cec5fc11451a8d2674b10c5af6
+                          - paragraph: "Type: JKS"
+                        - generic:
+                          - generic:
+                            - generic:
+                              - paragraph: 41:61...F5:53
+                              - generic:
+                                - button
+                        - generic:
+                          - generic:
+                            - generic:
+                              - paragraph: 02:36...FB:67
+                              - generic:
+                                - button
+                        - generic:
+                          - generic:
+                            - generic:
+                              - paragraph: 04:5D...C8:3F
+                              - generic:
+                                - button
+                        - generic:
+                          - generic:
+                            - generic:
+                              - time: Jul 12, 2026 12:28 PM
+                        - generic:
+                          - button
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading [level=3]: Service credentials
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - paragraph: FCM V1 service account key
+                          - paragraph: A service account key for sending Android push notifications.
+                          - button:
+                            - generic: Add a service account key
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - paragraph: Google service account key for EAS Submit
+                          - paragraph: A Google service account key lets EAS Submit upload your app to Google Play.
+                          - button:
+                            - generic: Add a Google service account key
+  - alert
+  - dialog [ref=f9e366]:
+    - paragraph [ref=f9e367]
+    - generic [ref=f9e369]:
+      - heading [level=2] [ref=f9e371]:
+        - generic [ref=f9e372]:
+          - heading "Create Build Credentials" [level=3] [ref=f9e375]
+          - button [active] [ref=f9e376] [cursor=pointer]
+      - generic [ref=f9e380]:
+        - generic [ref=f9e381]:
+          - generic [ref=f9e382]: Name
+          - 'textbox "Example: ''Google Play Store'', ''Amazon App Store'', ''Galaxy Store''" [ref=f9e388]'
+        - generic [ref=f9e389]:
+          - generic [ref=f9e390]: Use as Default
+          - generic [ref=f9e395]:
+            - checkbox "Use these credentials when another set isn't specified at build time." [ref=f9e396]
+            - paragraph [ref=f9e398]: Use these credentials when another set isn't specified at build time.
+        - generic [ref=f9e399]:
+          - generic [ref=f9e400]:
+            - generic [ref=f9e401]: Android Keystore File
+            - generic [ref=f9e405] [cursor=pointer]:
+              - button "Choose File" [ref=f9e406]
+              - paragraph [ref=f9e407]: Keystore.jks / Keystore.p12
+              - button "Upload File" [ref=f9e408]
+          - generic [ref=f9e414]:
+            - generic [ref=f9e415]: Android Keystore Password
+            - textbox "Android Keystore Password" [ref=f9e421]:
+              - /placeholder: Enter Android keystore password here
+          - generic [ref=f9e422]:
+            - checkbox "Show keystore password" [ref=f9e423]
+            - paragraph [ref=f9e425]: Show keystore password
+          - generic [ref=f9e426]:
+            - generic [ref=f9e427]: Android Key Alias
+            - textbox "Android Key Alias" [ref=f9e433]:
+              - /placeholder: Enter Android key alias here
+          - generic [ref=f9e434]:
+            - generic [ref=f9e435]: Android Key Password
+            - textbox "Android Key Password" [ref=f9e441]:
+              - /placeholder: Enter Android key password here
+          - generic [ref=f9e442]:
+            - checkbox "Show key password" [ref=f9e443]
+            - paragraph [ref=f9e445]: Show key password
+      - generic [ref=f9e447]:
+        - button "Save" [ref=f9e448] [cursor=pointer]
+        - button "Cancel" [ref=f9e451] [cursor=pointer]

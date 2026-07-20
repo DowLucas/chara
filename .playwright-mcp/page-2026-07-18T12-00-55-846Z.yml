@@ -1,0 +1,139 @@
+- generic [active] [ref=f12e1]:
+  - generic [ref=f12e3]:
+    - generic [ref=f12e6]:
+      - generic [ref=f12e8]:
+        - button "Navigate to home" [ref=f12e9] [cursor=pointer]:
+          - img "Expo home" [ref=f12e10]
+        - generic [ref=f12e12]:
+          - button "Notifications" [ref=f12e13] [cursor=pointer]
+          - button "Search" [ref=f12e20] [cursor=pointer]
+      - generic [ref=f12e24]:
+        - button [ref=f12e26] [cursor=pointer]:
+          - generic [ref=f12e27]:
+            - img "lucasdow1 account icon" [ref=f12e28]
+            - paragraph [ref=f12e29]: lucasdow1
+        - button [ref=f12e35] [cursor=pointer]:
+          - generic [ref=f12e36]:
+            - figure [ref=f12e37]:
+              - generic [ref=f12e38]: C
+            - paragraph [ref=f12e41]: chara
+      - generic [ref=f12e48]:
+        - link [ref=f12e51] [cursor=pointer]:
+          - /url: /accounts/lucasdow1
+          - paragraph [ref=f12e56]: Account
+        - generic [ref=f12e57]:
+          - generic [ref=f12e58]:
+            - paragraph [ref=f12e59]: Project
+            - link [ref=f12e61] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara
+              - paragraph [ref=f12e70]: Overview
+            - link [ref=f12e72] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/insights
+              - paragraph [ref=f12e81]: Insights
+            - link [ref=f12e83] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/usage
+              - paragraph [ref=f12e88]: Usage
+            - link "Observe New" [ref=f12e90] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/observe
+              - paragraph [ref=f12e95]: Observe
+              - generic [ref=f12e96]: New
+          - generic [ref=f12e99]:
+            - paragraph [ref=f12e100]: Develop
+            - link [ref=f12e102] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/workflows
+              - paragraph [ref=f12e107]: Workflows
+            - link [ref=f12e109] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/development-builds
+              - paragraph [ref=f12e114]: Development builds
+          - generic [ref=f12e115]:
+            - paragraph [ref=f12e116]: Deploy
+            - link [ref=f12e118] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/builds
+              - paragraph [ref=f12e123]: Builds
+            - link [ref=f12e125] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/submissions
+              - paragraph [ref=f12e135]: Submissions
+            - button [ref=f12e137] [cursor=pointer]:
+              - paragraph [ref=f12e142]: Over-the-air updates
+            - link [ref=f12e147] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/hosting
+              - paragraph [ref=f12e152]: Hosting
+            - link [ref=f12e154] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/push-notifications
+              - paragraph [ref=f12e159]: Push notifications
+          - generic [ref=f12e160]:
+            - paragraph [ref=f12e161]: Entities
+            - link [ref=f12e163] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/fingerprints
+              - paragraph [ref=f12e165]: Fingerprints
+          - generic [ref=f12e166]:
+            - paragraph [ref=f12e167]: Project settings
+            - link [ref=f12e169] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/settings
+              - paragraph [ref=f12e171]: General
+            - link [ref=f12e173] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/credentials
+              - paragraph [ref=f12e175]: Credentials
+            - link [ref=f12e177] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/environment-variables
+              - paragraph [ref=f12e179]: Environment variables
+            - link [ref=f12e181] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/github
+              - paragraph [ref=f12e183]: GitHub
+      - button [ref=f12e186] [cursor=pointer]:
+        - generic [ref=f12e187]:
+          - img "User menu" [ref=f12e188]
+          - paragraph [ref=f12e189]: lucasdow1
+    - generic [ref=f12e199]:
+      - generic [ref=f12e200]:
+        - generic [ref=f12e201]:
+          - heading "Environment variables" [level=1] [ref=f12e204]
+          - generic [ref=f12e206]:
+            - button "Export" [ref=f12e207] [cursor=pointer]
+            - link "Add Variables" [ref=f12e213] [cursor=pointer]:
+              - /url: /accounts/lucasdow1/projects/chara/environment-variables/new
+        - generic [ref=f12e219]:
+          - generic [ref=f12e220]:
+            - paragraph [ref=f12e221]: Bulk actions
+            - generic [ref=f12e222]:
+              - button "Edit" [ref=f12e223] [cursor=pointer]
+              - button "Delete" [ref=f12e229] [cursor=pointer]
+              - paragraph [ref=f12e235]: 0 variable selected
+          - generic [ref=f12e237]:
+            - generic [ref=f12e238]:
+              - generic [ref=f12e239]: Filter by name
+              - textbox "Filter by name" [ref=f12e242]:
+                - /placeholder: Search variables
+            - generic [ref=f12e243]:
+              - generic [ref=f12e244]:
+                - generic [ref=f12e245]: Environment
+                - combobox "Environment" [ref=f12e246] [cursor=pointer]:
+                  - generic [ref=f12e248]:
+                    - generic "all": All
+              - generic [ref=f12e252]:
+                - generic [ref=f12e253]: Scope
+                - combobox "Scope" [ref=f12e254] [cursor=pointer]:
+                  - generic [ref=f12e256]:
+                    - generic "ALL": All
+      - generic [ref=f12e261]:
+        - checkbox [ref=f12e264]
+        - paragraph [ref=f12e266]: Name
+        - paragraph [ref=f12e268]: Environments
+        - paragraph [ref=f12e270]: Value
+        - generic [ref=f12e271]:
+          - paragraph [ref=f12e272]: Visibility
+          - button [ref=f12e273]
+        - checkbox [ref=f12e281]
+        - generic [ref=f12e282]:
+          - paragraph [ref=f12e284]: EXPO_PUBLIC_HOSTED_API_URL
+          - button [ref=f12e285]:
+            - paragraph [ref=f12e286]: Jun 16, 2026
+        - generic [ref=f12e287]:
+          - generic [ref=f12e288]: preview
+          - generic [ref=f12e290]: production
+        - generic [ref=f12e292]:
+          - paragraph [ref=f12e293]: https://chara-api.lurkhuset.com
+          - button [ref=f12e295] [cursor=pointer]
+        - paragraph [ref=f12e304]: Plain text
+        - button [ref=f12e306] [cursor=pointer]
+  - alert [ref=f12e313]

@@ -195,6 +195,10 @@ export interface ExpenseWizardProps {
     amountMinor: number;
     currency: string;
   }) => void;
+  /** Fires whenever the receipt itemisation behind the split changes — from a
+   *  fresh scan, an edit, or a restored draft — so the host can offer to
+   *  re-open the items screen. `null` once there is no itemisation. */
+  onScanChange?: (scan: { itemization: Itemization; depositMinor: number } | null) => void;
 }
 
 function toDateStr(d: Date): string {
@@ -267,6 +271,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       topSlot,
       preCtaSlot,
       onValuesChange,
+      onScanChange,
       draftKey,
     } = props;
 
@@ -351,6 +356,10 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
     // switching to "evenly"/"%" and back to "itemised" is lossless — no
     // rescan. Null when no receipt was scanned.
     const [itemization, setItemization] = useState<Itemization | null>(null);
+    // Evenly-shared deposit ("pant") from the scan. Held here (not just in the
+    // amount/split gap) so it survives in the draft and can re-open the items
+    // screen with the same unassigned remainder.
+    const [depositMinor, setDepositMinor] = useState(0);
     // A saved default split loaded on mount, awaiting members to be applied.
     const [pendingSavedSplit, setPendingSavedSplit] =
       useState<GroupDefaultSplit | null>(null);
@@ -430,6 +439,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
             if (d.exactByMember != null) setExactByMember(d.exactByMember);
             if (d.pctByMember != null) setPctByMember(d.pctByMember);
             if (d.itemization != null) setItemization(d.itemization);
+            if (d.depositMinor != null) setDepositMinor(d.depositMinor);
           }
         }
         draftHydrated.current = true;
@@ -481,6 +491,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
         // Persisted so a draft restored in `itemized` mode can still derive
         // its amounts instead of coming back empty.
         ...(itemization ? { itemization } : {}),
+        ...(depositMinor ? { depositMinor } : {}),
       };
       const handle = setTimeout(() => {
         if (draftSubmitted.current) return;
@@ -502,6 +513,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       exactByMember,
       pctByMember,
       itemization,
+      depositMinor,
     ]);
 
     // When members arrive after the wizard has mounted in create mode and
@@ -841,6 +853,11 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [title, amount, amountMinor, currency]);
 
+    useEffect(() => {
+      onScanChange?.(itemization ? { itemization, depositMinor } : null);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [itemization, depositMinor]);
+
     useImperativeHandle(
       ref,
       () => ({
@@ -854,11 +871,12 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
             setCategoryTouched(true);
           }
         },
-        applyScanItemsAssignment({ itemization: scanned, participants, depositMinor }) {
+        applyScanItemsAssignment({ itemization: scanned, participants, depositMinor: dep }) {
           // Store the itemisation itself rather than the amounts it happens
           // to produce, so the split can be re-derived after the user visits
           // another method — the whole point of the `itemized` mode.
           setItemization(scanned);
+          setDepositMinor(dep ?? 0);
           setMethod('itemized');
           const nextIncluded: Record<string, boolean> = {};
           for (const m of members) nextIncluded[m.id] = participants.includes(m.id);

@@ -39,6 +39,10 @@ export interface ExpenseDraft {
     taxMinor: number;
     tipMinor: number;
   };
+  /** Evenly-shared deposit ("pant") from the scan, kept alongside the
+   *  itemisation so a restored draft can re-open the items screen with the
+   *  same unassigned remainder rather than losing the deposit. */
+  depositMinor?: number;
 }
 
 export type DraftFields = Omit<ExpenseDraft, 'savedAt'>;

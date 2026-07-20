@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Image,
   Modal,
   StyleSheet,
   Text,
@@ -26,7 +27,7 @@ import { ReceiptScanner, ReceiptScanResult } from '@/components/ReceiptScanner';
 import { ExpenseSavedOverlay } from '@/components/ExpenseSavedOverlay';
 import { notifyGroupChanged } from '@/lib/group-refresh';
 import { ScanItemsAssign } from '@/components/ScanItemsAssign';
-import { buildScanItemsState, type ScanItemsState } from '@/lib/scan-items';
+import { buildScanItemsState, type Itemization, type ScanItemsState } from '@/lib/scan-items';
 import { draftKey } from '@/lib/expense-draft';
 import { useAccount } from '@/lib/accounts';
 import {
@@ -69,6 +70,20 @@ export default function AddExpenseScreen() {
   >(null);
   const [scanItemsState, setScanItemsState] =
     useState<ScanItemsState<ScannedReceiptItem> | null>(null);
+  // Assignments to seed the items screen with when it opens: empty for a fresh
+  // scan, the prior per-item assignments when re-opening an applied itemisation.
+  const [scanInitialAssignments, setScanInitialAssignments] = useState<
+    Record<string, string[]>
+  >({});
+  // The itemisation currently behind the split, surfaced by the wizard (from a
+  // fresh scan, an edit, or a restored draft). Drives the "Receipt" card that
+  // lets the user re-open the items screen. Deposit rides along so re-opening
+  // reconstructs the same unassigned remainder.
+  const [appliedScan, setAppliedScan] = useState<{
+    itemization: Itemization;
+    depositMinor: number;
+  } | null>(null);
+  const [receiptViewerOpen, setReceiptViewerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Live snapshot of wizard values for duplicate detection.
@@ -136,7 +151,27 @@ export default function AddExpenseScreen() {
     // items, or when the applied amount isn't in group currency — see
     // buildScanItemsState for the FX rationale.
     const state = buildScanItemsState(receipt, applied, group?.currency ?? 'SEK');
-    if (state) setScanItemsState(state);
+    if (state) {
+      setScanInitialAssignments({});
+      setScanItemsState(state);
+    }
+  }
+
+  // Re-open the items screen for the itemisation already behind the split,
+  // reconstructed from what the wizard holds plus the live expense amount (the
+  // receipt total the split reconciles against). Editing and re-applying flows
+  // back through the same path as a fresh scan.
+  function reopenItems() {
+    if (!appliedScan) return;
+    setScanInitialAssignments(appliedScan.itemization.assignments);
+    setScanItemsState({
+      items: appliedScan.itemization.items,
+      taxMinor: appliedScan.itemization.taxMinor,
+      tipMinor: appliedScan.itemization.tipMinor,
+      depositMinor: appliedScan.depositMinor,
+      totalMinor: liveValues.amountMinor,
+      currency: group?.currency ?? 'SEK',
+    });
   }
 
   function applyScanItemsAssignment(
@@ -223,7 +258,51 @@ export default function AddExpenseScreen() {
     }
   }
 
-  const topSlot = ocrAvailable ? (
+  // Once a scan is applied the plain "Scan receipt" row becomes a card that
+  // re-opens the items screen and the captured receipt image, so neither is a
+  // one-shot. The image is session-only (too large for the SecureStore draft),
+  // so "View receipt" only appears while it's still in memory; the itemisation
+  // itself persists in the draft and re-opens after a restart.
+  const topSlot = appliedScan ? (
+    <View style={styles.receiptCard}>
+      <View style={styles.receiptCardHead}>
+        <Feather name="file-text" size={16} color={colors.graphite} />
+        <Text style={styles.receiptCardTitle}>
+          {t('addExpense.receiptItems', { count: appliedScan.itemization.items.length })}
+        </Text>
+      </View>
+      <View style={styles.receiptCardActions}>
+        <TouchableOpacity
+          style={styles.receiptActionBtn}
+          onPress={reopenItems}
+          accessibilityRole="button"
+          activeOpacity={0.7}
+        >
+          <Text style={styles.receiptActionLabel}>{t('addExpense.viewItems')}</Text>
+        </TouchableOpacity>
+        {pendingReceiptImage && (
+          <TouchableOpacity
+            style={styles.receiptActionBtn}
+            onPress={() => setReceiptViewerOpen(true)}
+            accessibilityRole="button"
+            activeOpacity={0.7}
+          >
+            <Text style={styles.receiptActionLabel}>{t('addExpense.viewReceipt')}</Text>
+          </TouchableOpacity>
+        )}
+        {ocrAvailable && (
+          <TouchableOpacity
+            style={styles.receiptActionBtn}
+            onPress={() => setScannerOpen(true)}
+            accessibilityRole="button"
+            activeOpacity={0.7}
+          >
+            <Text style={styles.receiptActionLabelMuted}>{t('addExpense.rescan')}</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  ) : ocrAvailable ? (
     <TouchableOpacity
       style={styles.scanRow}
       onPress={() => setScannerOpen(true)}
@@ -285,6 +364,7 @@ export default function AddExpenseScreen() {
         onSubmit={handleSubmit}
         draftKey={id ? draftKey(serverUrl, id) : undefined}
         onValuesChange={setLiveValues}
+        onScanChange={setAppliedScan}
         topSlot={topSlot}
         preCtaSlot={preCtaSlot}
       />
@@ -313,12 +393,39 @@ export default function AddExpenseScreen() {
         depositMinor={scanItemsState?.depositMinor ?? 0}
         totalMinor={scanItemsState?.totalMinor ?? 0}
         currency={scanItemsState?.currency ?? group?.currency ?? 'SEK'}
+        initialAssignments={scanInitialAssignments}
         members={members}
         currentMemberId={currentUserMemberId}
         serverUrl={serverUrl}
         onCancel={() => setScanItemsState(null)}
         onApply={applyScanItemsAssignment}
       />
+
+      <Modal
+        visible={receiptViewerOpen && !!pendingReceiptImage}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setReceiptViewerOpen(false)}
+        statusBarTranslucent
+      >
+        <TouchableOpacity
+          style={styles.receiptViewer}
+          activeOpacity={1}
+          onPress={() => setReceiptViewerOpen(false)}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.close')}
+        >
+          {pendingReceiptImage && (
+            <Image
+              style={styles.receiptImage}
+              resizeMode="contain"
+              source={{
+                uri: `data:${pendingReceiptImage.mime_type};base64,${pendingReceiptImage.base64}`,
+              }}
+            />
+          )}
+        </TouchableOpacity>
+      </Modal>
 
       <ExpenseSavedOverlay
         visible={!!savedSubtitle}
@@ -353,6 +460,50 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     letterSpacing: 0.3,
   },
+  receiptCard: {
+    marginHorizontal: spacing.s5,
+    marginTop: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderWidth: 0.5,
+    borderColor: colors.graphite,
+    borderRadius: 8,
+    gap: 10,
+  },
+  receiptCardHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  receiptCardTitle: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.graphite,
+    letterSpacing: 0.3,
+  },
+  receiptCardActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.s2 },
+  receiptActionBtn: {
+    backgroundColor: colors.bone,
+    borderRadius: 6,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+  },
+  receiptActionLabel: {
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.caption,
+    color: colors.graphite,
+    letterSpacing: 0.3,
+  },
+  receiptActionLabelMuted: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    letterSpacing: 0.3,
+  },
+  receiptViewer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.s4,
+  },
+  receiptImage: { width: '100%', height: '100%' },
   dupWrap: {
     paddingHorizontal: spacing.s5,
     paddingTop: spacing.s3,

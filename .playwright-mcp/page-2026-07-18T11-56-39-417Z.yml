@@ -1,0 +1,306 @@
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - button
+                - generic:
+                  - button
+                  - button
+            - generic:
+              - generic:
+                - button:
+                  - generic:
+                    - paragraph: lucasdow1
+              - generic:
+                - button:
+                  - generic:
+                    - figure:
+                      - generic: C
+                    - paragraph: chara
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - link:
+                        - /url: /accounts/lucasdow1
+                        - generic:
+                          - paragraph: Account
+                  - generic:
+                    - generic:
+                      - paragraph: Project
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara
+                          - generic:
+                            - paragraph: Overview
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/insights
+                          - generic:
+                            - paragraph: Insights
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/usage
+                          - generic:
+                            - paragraph: Usage
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/observe
+                          - generic:
+                            - paragraph: Observe
+                          - generic: New
+                    - generic:
+                      - paragraph: Develop
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/workflows
+                          - generic:
+                            - paragraph: Workflows
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/development-builds
+                          - generic:
+                            - paragraph: Development builds
+                    - generic:
+                      - paragraph: Deploy
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/builds
+                          - generic:
+                            - paragraph: Builds
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/submissions
+                          - generic:
+                            - paragraph: Submissions
+                      - generic:
+                        - button:
+                          - generic:
+                            - paragraph: Over-the-air updates
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/hosting
+                          - generic:
+                            - paragraph: Hosting
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/push-notifications
+                          - generic:
+                            - paragraph: Push notifications
+                    - generic:
+                      - paragraph: Entities
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/fingerprints
+                          - generic:
+                            - paragraph: Fingerprints
+                    - generic:
+                      - paragraph: Project settings
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/settings
+                          - generic:
+                            - paragraph: General
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/credentials
+                          - generic:
+                            - paragraph: Credentials
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/environment-variables
+                          - generic:
+                            - paragraph: Environment variables
+                      - generic:
+                        - link:
+                          - /url: /accounts/lucasdow1/projects/chara/github
+                          - generic:
+                            - paragraph: GitHub
+            - generic:
+              - generic:
+                - button:
+                  - generic:
+                    - paragraph: lucasdow1
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - link:
+                - /url: /accounts/lucasdow1/projects/chara/credentials
+                - generic:
+                  - paragraph: Project credentials
+              - generic:
+                - paragraph: app.chara
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - heading [level=3]: app.chara
+                      - paragraph: Bundle Identifier
+                    - button:
+                      - generic: Delete configuration
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - heading [level=3]: Build credentials
+                  - generic:
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - paragraph: App Store
+                      - generic:
+                        - button:
+                          - generic:
+                            - paragraph: Development
+                      - generic:
+                        - button:
+                          - generic:
+                            - paragraph: Enterprise
+                      - generic:
+                        - button:
+                          - generic:
+                            - paragraph: Ad-hoc
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - heading [level=4]: Distribution certificate
+                  - generic:
+                    - generic:
+                      - generic:
+                        - paragraph: Serial Number
+                      - generic:
+                        - paragraph: Team
+                      - generic:
+                        - paragraph: Status
+                      - generic:
+                        - paragraph: Uploaded at
+                      - generic:
+                        - paragraph: 43B311881846A6DEEFBAE6DA605C551D
+                        - paragraph: "Developer ID: MU7X5K934C"
+                      - generic:
+                        - paragraph: Lucas Dow (Individual)
+                        - paragraph: "ID: AV39AJYC85"
+                      - generic:
+                        - button:
+                          - generic: Valid
+                      - generic:
+                        - generic:
+                          - generic:
+                            - time: May 25, 2026 9:04 PM
+                      - generic:
+                        - button [expanded]
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - heading [level=4]: Provisioning profile
+                  - generic:
+                    - generic:
+                      - generic:
+                        - paragraph: Apple UUID
+                      - generic:
+                        - paragraph: Team
+                      - generic:
+                        - paragraph: Status
+                      - generic:
+                        - paragraph: Uploaded at
+                      - generic:
+                        - paragraph: ba6879ac-38da-4a98-9f02-bcae145c1200
+                        - paragraph: "Developer ID: F7L2ASW5MF"
+                      - generic:
+                        - paragraph: Lucas Dow (Individual)
+                        - paragraph: "ID: AV39AJYC85"
+                      - generic:
+                        - button:
+                          - generic: Valid
+                      - generic:
+                        - generic:
+                          - generic:
+                            - time: May 25, 2026 9:04 PM
+                      - generic:
+                        - button
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading [level=3]: Service credentials
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - heading [level=4]: Push key
+                  - generic:
+                    - generic:
+                      - generic:
+                        - paragraph: Key ID
+                      - generic:
+                        - paragraph: Team
+                      - generic:
+                        - paragraph: Uploaded at
+                      - generic:
+                        - paragraph: 2JM2PKFH9P
+                      - generic:
+                        - paragraph: Lucas Dow (Individual)
+                        - paragraph: "ID: AV39AJYC85"
+                      - generic:
+                        - generic:
+                          - generic:
+                            - time: May 25, 2026 9:03 PM
+                      - generic:
+                        - button
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - heading [level=4]: App Store Connect API key
+                  - generic:
+                    - generic:
+                      - generic:
+                        - paragraph: Identifier
+                      - generic:
+                        - paragraph: Key ID
+                      - generic:
+                        - paragraph: Team
+                      - generic:
+                        - paragraph: Roles
+                      - generic:
+                        - paragraph: Uploaded at
+                      - generic:
+                        - paragraph: "[Expo] EAS Submit rZpov9SDCT"
+                        - paragraph: "Issuer ID: f8cafeb5-a003-43e3-884f-e1c3fd8b6886"
+                      - generic:
+                        - paragraph: SC999WG783
+                      - generic:
+                        - paragraph: Lucas Dow (Individual)
+                        - paragraph: "ID: AV39AJYC85"
+                      - generic:
+                        - paragraph: ADMIN
+                      - generic:
+                        - generic:
+                          - generic:
+                            - time: May 26, 2026 5:09 PM
+                      - generic:
+                        - button
+  - alert
+  - menu [active] [ref=f11e441]:
+    - menuitem [ref=f11e444] [cursor=pointer]:
+      - paragraph [ref=f11e451]: Download
+    - menuitem [ref=f11e452] [cursor=pointer]:
+      - paragraph [ref=f11e459]: Edit
+    - menuitem [ref=f11e460] [cursor=pointer]:
+      - paragraph [ref=f11e467]: Delete
