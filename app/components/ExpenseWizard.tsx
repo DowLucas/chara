@@ -1395,22 +1395,23 @@ function Step2({
           than making the user reconcile it by hand. */}
       {remainderMinor > 0 && (
         <TouchableOpacity
-          style={styles.remainderRow}
+          style={styles.remainderCta}
           onPress={onSplitRemainder}
-          activeOpacity={0.7}
+          activeOpacity={0.85}
           accessibilityRole="button"
         >
-          <Feather name="divide-circle" size={18} color={colors.graphite} />
+          <Feather name="divide-circle" size={20} color={colors.fgOnAccent} />
           <View style={styles.remainderText}>
-            <Text style={styles.remainderLabel}>
+            <Text style={styles.remainderCtaLabel}>
               {t('addExpense.splitRemainder')}
             </Text>
-            <Text style={styles.remainderHint}>
+            <Text style={styles.remainderCtaHint}>
               {t('addExpense.splitRemainderHint', {
                 amount: fmtMinor(remainderMinor, currency),
               })}
             </Text>
           </View>
+          <Feather name="chevron-right" size={20} color={colors.fgOnAccent} />
         </TouchableOpacity>
       )}
       {onSaveDefaultSplit && splitValue.method === 'percentage' && (
@@ -1565,27 +1566,32 @@ const styles = StyleSheet.create({
   groupName: { fontFamily: fontBody, fontSize: fontSize.bodyL, color: colors.graphite },
 
   recapWrap: { paddingHorizontal: spacing.s5, paddingTop: 10, paddingBottom: spacing.s4 },
-  remainderRow: {
+  // Filled "resolve" button (graphite dark-on-cream), not the subtle bone row
+  // it used to be: while a remainder is unassigned the split doesn't reconcile
+  // and Continue stays disabled, so this is the action that has to be taken to
+  // move on — it needs to read as the active CTA, not an optional hint.
+  remainderCta: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.s3,
     marginHorizontal: spacing.s4,
-    marginTop: spacing.s2,
-    paddingVertical: spacing.s3,
+    marginTop: spacing.s3,
+    paddingVertical: spacing.s3 + 2,
     paddingHorizontal: spacing.s4,
-    backgroundColor: colors.bone,
+    backgroundColor: colors.graphite,
     borderRadius: 10,
   },
   remainderText: { flex: 1 },
-  remainderLabel: {
+  remainderCtaLabel: {
     fontFamily: fontDisplay,
     fontSize: 15,
-    color: colors.graphite,
+    color: colors.fgOnAccent,
   },
-  remainderHint: {
+  remainderCtaHint: {
     fontFamily: fontBody,
     fontSize: 12,
-    color: colors.lead,
+    color: colors.fgOnAccent,
+    opacity: 0.75,
     marginTop: 2,
   },
   saveDefaultSplitRow: {
