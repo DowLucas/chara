@@ -6,12 +6,40 @@ const { assertExists, copyDirMerge } = require('./copy');
 const PROVIDER = 'app.chara.widget.CharaWidgetProvider';
 
 /**
+ * Copy-time rewrite injecting `import <androidPackage>.R` into Kotlin sources
+ * that reference `R.*`.
+ *
+ * The widget's Kotlin package is a fixed `app.chara.widget` while the app
+ * module's namespace — where `R` is generated — is the applicationId
+ * (`chara.app` vs `chara.app.dev`), so the import cannot be hardcoded in the
+ * source. Idempotent: the injected import short-circuits a second pass, so
+ * re-copying an already-transformed tree cannot double-inject.
+ *
+ * @param {string} androidPackage
+ * @returns {(fileName: string, content: string) => string}
+ */
+const kotlinRImportTransform = (androidPackage) => {
+  const rImport = `import ${androidPackage}.R`;
+  return (fileName, content) => {
+    if (!fileName.endsWith('.kt')) return content;
+    if (!/\bR\.[a-z]/.test(content)) return content;
+    if (content.includes(`${rImport}\n`)) return content;
+    const rewritten = content.replace(/^(package .+)$/m, `$1\n\n${rImport}`);
+    if (!rewritten.includes(rImport)) {
+      throw new Error(`withWidgets: no package declaration to anchor R import in ${fileName}`);
+    }
+    return rewritten;
+  };
+};
+
+/**
  * Copies the widget sources into the generated Android project.
  *
  * The Kotlin package is a fixed `app.chara.widget`, deliberately not derived
  * from `applicationId` (`chara.app` vs `chara.app.dev`) — Kotlin package and
  * applicationId are independent, so a fixed package compiles under both
- * variants with no source rewriting at copy time.
+ * variants. The one thing that does depend on the variant is the `R` class
+ * import, handled by `kotlinRImportTransform` above.
  *
  * @type {import('expo/config-plugins').ConfigPlugin}
  */
@@ -22,12 +50,21 @@ const withWidgetSources = (config) =>
       const src = path.join(cfg.modRequest.projectRoot, 'widgets', 'android');
       const platformRoot = cfg.modRequest.platformProjectRoot;
 
+      const androidPackage = cfg.android?.package;
+      if (!androidPackage) {
+        throw new Error('withWidgets: android.package missing from the Expo config');
+      }
+
       assertExists(
         path.join(src, 'res', 'font', 'jetbrainsmono_medium.ttf'),
         'widget font resources',
       );
 
-      copyDirMerge(path.join(src, 'java'), path.join(platformRoot, 'app/src/main/java'));
+      copyDirMerge(
+        path.join(src, 'java'),
+        path.join(platformRoot, 'app/src/main/java'),
+        kotlinRImportTransform(androidPackage),
+      );
       copyDirMerge(path.join(src, 'res'), path.join(platformRoot, 'app/src/main/res'));
       return cfg;
     },
@@ -82,4 +119,4 @@ const withWidgetReceiver = (config) =>
 /** @type {import('expo/config-plugins').ConfigPlugin} */
 const withAndroidWidget = (config) => withWidgetReceiver(withWidgetSources(config));
 
-module.exports = { withAndroidWidget };
+module.exports = { withAndroidWidget, kotlinRImportTransform };

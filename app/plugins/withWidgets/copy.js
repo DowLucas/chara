@@ -6,10 +6,16 @@ const path = require('path');
  * rather than replacing them — the Android res/ and java/ trees already
  * contain files the Expo prebuild generated.
  *
+ * An optional `transform(fileName, content)` rewrites file content on the way
+ * across. It must return the content unchanged for files it does not target —
+ * returning the input string verbatim makes the file a byte-for-byte copy, so
+ * binaries (fonts) pass through safely as latin1 round-trips.
+ *
  * @param {string} src
  * @param {string} dest
+ * @param {((fileName: string, content: string) => string) | undefined} [transform]
  */
-function copyDirMerge(src, dest) {
+function copyDirMerge(src, dest, transform) {
   if (!fs.existsSync(src)) {
     throw new Error(`withWidgets: missing source directory ${src}`);
   }
@@ -18,7 +24,12 @@ function copyDirMerge(src, dest) {
     const from = path.join(src, entry.name);
     const to = path.join(dest, entry.name);
     if (entry.isDirectory()) {
-      copyDirMerge(from, to);
+      copyDirMerge(from, to, transform);
+    } else if (transform) {
+      // latin1 is a lossless byte<->string round-trip, so untargeted files
+      // (including binaries) come out identical.
+      const content = fs.readFileSync(from, 'latin1');
+      fs.writeFileSync(to, transform(entry.name, content), 'latin1');
     } else {
       fs.copyFileSync(from, to);
     }
