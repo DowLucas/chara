@@ -878,8 +878,15 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
           setItemization(scanned);
           setDepositMinor(dep ?? 0);
           setMethod('itemized');
+          // Include only members who actually carry a share of the itemisation,
+          // not the whole group. `participants` is every group member, so gating
+          // on it put people who ordered nothing onto the expense (0.00 rows) —
+          // and let "split the rest" charge them a slice of the deposit. An
+          // unassigned line still prorates to everyone, so anyone who genuinely
+          // owes something has a positive amount here.
+          const amounts = itemizedAmounts(scanned, participants);
           const nextIncluded: Record<string, boolean> = {};
-          for (const m of members) nextIncluded[m.id] = participants.includes(m.id);
+          for (const m of members) nextIncluded[m.id] = (amounts[m.id] ?? 0) > 0;
           setIncluded(nextIncluded);
         },
       }),

@@ -152,24 +152,6 @@ export function buildScanItemsState<I extends ConvertibleItem>(
   };
 }
 
-/**
- * Whether a scanned receipt's assigned split reconciles with its printed
- * total, within one minor unit of rounding slack.
- *
- * `proratedMinor` is the sum of the per-member item + tax + tip amounts.
- * `depositMinor` is the evenly-shared deposit, which is deliberately NOT
- * prorated into members — it becomes the wizard's "split the rest" remainder —
- * yet it is still part of the receipt total. Leaving it out of this check is
- * what made a pant receipt unable to leave the assign screen.
- */
-export function scanTotalReconciles(
-  proratedMinor: number,
-  depositMinor: number,
-  totalMinor: number,
-): boolean {
-  return Math.abs(proratedMinor + depositMinor - totalMinor) <= 1;
-}
-
 /** Distribute `total` int minor units across `count` recipients as evenly
  *  as possible. First `remainder` recipients get one extra minor unit. */
 function distributeInt(total: number, count: number): number[] {

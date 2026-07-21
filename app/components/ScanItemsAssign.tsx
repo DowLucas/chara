@@ -34,7 +34,6 @@ import {
 } from '@/lib/theme';
 import {
   prorateItemAssignments,
-  scanTotalReconciles,
   ScanItem,
   type Itemization,
 } from '@/lib/scan-items';
@@ -206,27 +205,24 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
     (it) => !assignments[it.id] || assignments[it.id].length === 0,
   ).length;
 
-  // The proration always sums to items + tax + tip. The deposit is part of the
-  // receipt total but is shared evenly in the wizard rather than prorated
-  // here, so it has to be added back before comparing — otherwise a pant
-  // receipt reads as a permanent mismatch and Continue never enables. If
-  // Gemini's parse is still internally inconsistent, the user can fix any
-  // editable value (item amounts, tax, tip, or the total) to reconcile.
-  const deposit = props.depositMinor ?? 0;
+  // The proration always sums to items + tax + tip. The receipt total minus that
+  // is the un-itemised remainder — a deposit (pant), rounding, or unclaimed lines
+  // — and it is EXACTLY what the split step's "split the rest" distributes. So
+  // compare against it directly: netting a deposit out here made the note
+  // under-report (and hid the pant case entirely), disagreeing with the CTA.
   const computedTotal = useMemo(
     () => Object.values(perMember).reduce((s, v) => s + v, 0),
     [perMember],
   );
-  const totalDiff = computedTotal + deposit - totalMinor;
-  const reconciled = scanTotalReconciles(computedTotal, deposit, totalMinor);
+  const totalDiff = computedTotal - totalMinor;
   // Two different situations, not one "mismatch":
-  //  - overTotal: items+tax+tip (+deposit) exceed the receipt total. The wizard
-  //    has no way to absorb a negative remainder, so this genuinely blocks.
-  //  - underTotal: they fall short — an unitemised remainder (pant, rounding)
-  //    that the split step distributes with "split the rest". Not an error;
-  //    shown as a calm note and Continue stays enabled.
-  const overTotal = !reconciled && totalDiff > 0;
-  const underTotal = !reconciled && totalDiff < 0;
+  //  - overTotal: items+tax+tip exceed the receipt total. The wizard has no way
+  //    to absorb a negative remainder, so this genuinely blocks.
+  //  - underTotal: they fall short — the un-itemised remainder the split step
+  //    distributes with "split the rest". Not an error; shown as a calm note
+  //    and Continue stays enabled. ±1 minor unit of rounding slack.
+  const overTotal = totalDiff > 1;
+  const underTotal = totalDiff < -1;
   const remainderMinor = underTotal ? -totalDiff : 0;
 
   // Context-aware shortener: "Lucas" when unique in the group, "Lucas H."
@@ -421,12 +417,12 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
               <View style={styles.errLine}>
                 <Text style={styles.errLineLabel}>{t('scanItems.computedTotal')}</Text>
                 <Text style={styles.errLineValue}>
-                  {fmtMinor(computedTotal + deposit, props.currency)}
+                  {fmtMinor(computedTotal, props.currency)}
                 </Text>
               </View>
               <TouchableOpacity
                 style={styles.matchBtn}
-                onPress={() => setTotalMinor(computedTotal + deposit)}
+                onPress={() => setTotalMinor(computedTotal)}
                 activeOpacity={0.7}
                 accessibilityRole="button"
               >

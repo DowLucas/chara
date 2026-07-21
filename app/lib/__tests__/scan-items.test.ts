@@ -2,7 +2,6 @@ import {
   buildScanItemsState,
   itemizedAmounts,
   prorateItemAssignments,
-  scanTotalReconciles,
   ScanItem,
   ItemAssignment,
 } from '../scan-items';
@@ -316,27 +315,6 @@ describe('buildScanItemsState', () => {
     });
     const proratedSum = Object.values(perMember).reduce((s, v) => s + v, 0);
     expect(proratedSum + state.depositMinor).toBe(state.totalMinor);
-  });
-});
-
-describe('scanTotalReconciles', () => {
-  it('reconciles when prorated items plus the deposit hit the total', () => {
-    expect(scanTotalReconciles(10000, 200, 10200)).toBe(true);
-  });
-
-  it('reconciles a signed refund', () => {
-    expect(scanTotalReconciles(10000, -500, 9500)).toBe(true);
-  });
-
-  it('tolerates one minor unit of rounding slack', () => {
-    expect(scanTotalReconciles(10000, 200, 10201)).toBe(true);
-    expect(scanTotalReconciles(10000, 200, 10199)).toBe(true);
-  });
-
-  it('rejects a genuine mismatch beyond the slack', () => {
-    // The bug this guards: deposit ignored → 10000 vs 10200 reads as mismatch.
-    expect(scanTotalReconciles(10000, 0, 10200)).toBe(false);
-    expect(scanTotalReconciles(10000, 200, 10500)).toBe(false);
   });
 });
 
