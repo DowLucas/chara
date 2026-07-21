@@ -51,6 +51,7 @@ function myNet(over: Partial<MyNetResponse> = {}): MyNetResponse {
 
 /** Deterministic deps: no i18next, no clock, no locale lookup. */
 const deps: SnapshotDeps = {
+  scheme: 'chara',
   t: (key) => `T:${key}`,
   formatAmount: (minor, currency) => `${minor} ${currency}`,
   formatAmountCompact: (minor, currency) => `${minor}${currency}`,
@@ -245,6 +246,13 @@ describe('buildWidgetSnapshot — groups', () => {
     );
     expect(s.groups[0].deepLink).toContain('https%3A%2F%2Fapi.example.com');
     expect(s.groups[0].serverUrl).toBe(SERVER);
+  });
+
+  it('mints deep links with the app scheme it was given (dev variant)', () => {
+    // The dev build ships scheme `charadev`; a hardcoded `chara://` link would
+    // not route to the installed dev app.
+    const s = buildWidgetSnapshot(baseInput(), { ...deps, scheme: 'charadev' });
+    expect(s.groups[0].deepLink.startsWith('charadev://groups/')).toBe(true);
   });
 
   it('keeps groups from different servers that share an id distinct', () => {

@@ -30,9 +30,6 @@ import {
   type WidgetStrings,
 } from './widget-snapshot-types';
 
-/** The production scheme. Dev builds still resolve it — see deep-link.ts. */
-const SCHEME = 'chara';
-
 export interface LastActiveGroup {
   serverUrl: string;
   groupId: string;
@@ -50,6 +47,10 @@ export interface SnapshotInput {
 }
 
 export interface SnapshotDeps {
+  /** The app's own URL scheme — `chara` in production, `charadev` on the dev
+   *  variant. Minted into every deep link so widget taps route to the app that
+   *  actually published the snapshot, not a differently-schemed build. */
+  scheme: string;
   t: (key: string) => string;
   /** Absolute minor units → display string. */
   formatAmount: (minor: number, currency: string) => string;
@@ -64,8 +65,8 @@ function directionOf(minor: number): BalanceDirection {
   return minor > 0 ? 'owed' : minor < 0 ? 'owe' : 'settled';
 }
 
-function groupLink(serverUrl: string, groupId: string, target?: string): string {
-  const base = `${SCHEME}://groups/${encodeURIComponent(serverUrl)}/${groupId}`;
+function groupLink(scheme: string, serverUrl: string, groupId: string, target?: string): string {
+  const base = `${scheme}://groups/${encodeURIComponent(serverUrl)}/${groupId}`;
   return target ? `${base}/${target}` : base;
 }
 
@@ -168,7 +169,7 @@ export function buildWidgetSnapshot(
       direction: pos.direction,
       amountText: deps.formatAmount(Math.abs(pos.minor), pos.currency),
       mixedSigns: pos.mixedSigns,
-      deepLink: groupLink(row.serverUrl, row.group.id),
+      deepLink: groupLink(deps.scheme, row.serverUrl, row.group.id),
     }));
 
   // Mirrors the home screen's gate: the cross-currency aggregate is only
@@ -195,7 +196,7 @@ export function buildWidgetSnapshot(
   const shortcut = shortcutVisible
     ? {
         name: last.name,
-        deepLink: groupLink(last.serverUrl, last.groupId, 'add-expense'),
+        deepLink: groupLink(deps.scheme, last.serverUrl, last.groupId, 'add-expense'),
       }
     : null;
 
