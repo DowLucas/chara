@@ -22,16 +22,24 @@ import (
 // an expense's participants plus its payer, or the two parties to a
 // settlement) — notifications are NOT fanned out to the whole group. Callers
 // may include the actor; the worker filters them out.
+//
+// RecipientMemberIDs is an alternative for events that know the involved
+// *members* but not their user ids: the worker resolves them (skipping
+// unclaimed/ghost members). Resolving here rather than at enqueue time means a
+// transient DB failure returns an error and River retries the job, instead of
+// the caller swallowing it into an empty recipient set that looks like success.
+// The two fields are unioned; either or both may be set.
 type PushNotifyArgs struct {
-	EventKind        string   `json:"kind"` // "expense_added" | "settlement_recorded"
-	GroupID          string   `json:"group_id"`
-	GroupName        string   `json:"group_name"`
-	ActorUserID      string   `json:"actor_user_id"` // excluded from recipients
-	ActorName        string   `json:"actor_name"`
-	RecipientUserIDs []string `json:"recipient_user_ids"`
-	Title            string   `json:"title"` // expense title; "" for settlements
-	AmountMinor      int64    `json:"amount_minor"`
-	Currency         string   `json:"currency"`
+	EventKind          string   `json:"kind"` // "expense_added" | "settlement_recorded"
+	GroupID            string   `json:"group_id"`
+	GroupName          string   `json:"group_name"`
+	ActorUserID        string   `json:"actor_user_id"` // excluded from recipients
+	ActorName          string   `json:"actor_name"`
+	RecipientUserIDs   []string `json:"recipient_user_ids"`
+	RecipientMemberIDs []string `json:"recipient_member_ids,omitempty"`
+	Title              string   `json:"title"` // expense title; "" for settlements
+	AmountMinor        int64    `json:"amount_minor"`
+	Currency           string   `json:"currency"`
 }
 
 func (PushNotifyArgs) Kind() string { return "push_notify" }
@@ -70,15 +78,28 @@ func NotifyForTest(ctx context.Context, w *PushNotifyWorker, args PushNotifyArgs
 }
 
 func (w *PushNotifyWorker) notify(ctx context.Context, args PushNotifyArgs) error {
+	// Combine explicitly-passed user ids with any resolved from member ids.
+	// A resolution failure is returned (not swallowed) so River retries.
+	userIDs := append([]string(nil), args.RecipientUserIDs...)
+	if len(args.RecipientMemberIDs) > 0 {
+		resolved, err := w.resolveMemberUsers(ctx, args.GroupID, args.RecipientMemberIDs)
+		if err != nil {
+			return fmt.Errorf("push_notify: resolve members: %w", err)
+		}
+		userIDs = append(userIDs, resolved...)
+	}
+
 	// Recipients are the involved users only. Drop the actor (callers may
-	// include them, e.g. the payer is normally also a participant) and any
-	// blanks from unclaimed members. No recipients means nothing to send —
-	// deliberately fail closed rather than fall back to a group-wide blast.
-	recipients := make([]string, 0, len(args.RecipientUserIDs))
-	for _, uid := range args.RecipientUserIDs {
-		if uid == "" || uid == args.ActorUserID {
+	// include them, e.g. the payer is normally also a participant), any blanks
+	// from unclaimed members, and duplicates. No recipients means nothing to
+	// send — deliberately fail closed rather than fall back to a group-wide blast.
+	seen := make(map[string]bool, len(userIDs))
+	recipients := make([]string, 0, len(userIDs))
+	for _, uid := range userIDs {
+		if uid == "" || uid == args.ActorUserID || seen[uid] {
 			continue
 		}
+		seen[uid] = true
 		recipients = append(recipients, uid)
 	}
 	if len(recipients) == 0 {
@@ -109,6 +130,29 @@ func (w *PushNotifyWorker) notify(ctx context.Context, args PushNotifyArgs) erro
 		slog.Warn("push_notify: send failed", "group_id", args.GroupID, "kind", args.EventKind, "error", err)
 	}
 	return nil
+}
+
+// resolveMemberUsers maps group member ids to the user ids behind them,
+// skipping unclaimed/ghost members that have no user account. A DB failure is
+// returned so the caller can retry rather than silently notify no one.
+func (w *PushNotifyWorker) resolveMemberUsers(ctx context.Context, groupID string, memberIDs []string) ([]string, error) {
+	members, err := w.Queries.ListGroupMembers(ctx, groupID)
+	if err != nil {
+		return nil, err
+	}
+	userByMember := make(map[string]string, len(members))
+	for _, m := range members {
+		if m.UserID.Valid && m.UserID.String != "" {
+			userByMember[m.ID] = m.UserID.String
+		}
+	}
+	out := make([]string, 0, len(memberIDs))
+	for _, id := range memberIDs {
+		if uid, ok := userByMember[id]; ok {
+			out = append(out, uid)
+		}
+	}
+	return out, nil
 }
 
 // buildGroupDeepLink matches the shape the mobile app's

@@ -366,37 +366,6 @@ func writeSplits(ctx context.Context, q *db.Queries, expenseID string, shares []
 
 // ── Handlers ──────────────────────────────────────────────────────────────────
 
-// involvedUserIDs resolves group member ids to the user ids behind them,
-// skipping unclaimed/ghost members (which have no user account) and
-// de-duplicating (the payer is normally also a participant). Used to target a
-// push notification at exactly the people involved rather than the whole
-// group. Best-effort: a lookup failure yields no recipients, which makes the
-// notification a no-op rather than failing the request.
-func (h *ExpenseHandler) involvedUserIDs(ctx context.Context, groupID string, memberIDs []string) []string {
-	members, err := h.queries.ListGroupMembers(ctx, groupID)
-	if err != nil {
-		slog.Warn("expenses: resolving involved users failed", "error", err, "group_id", groupID)
-		return nil
-	}
-	userByMember := make(map[string]string, len(members))
-	for _, m := range members {
-		if m.UserID.Valid && m.UserID.String != "" {
-			userByMember[m.ID] = m.UserID.String
-		}
-	}
-	seen := make(map[string]bool, len(memberIDs))
-	out := make([]string, 0, len(memberIDs))
-	for _, id := range memberIDs {
-		uid, ok := userByMember[id]
-		if !ok || seen[uid] {
-			continue
-		}
-		seen[uid] = true
-		out = append(out, uid)
-	}
-	return out
-}
-
 func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "groupID")
 	claims := middleware.ClaimsFromContext(r.Context())
@@ -595,22 +564,30 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.rc != nil {
-		// Involved = every split participant plus the payer. The worker
-		// filters the actor back out.
+		// Involved = every split participant plus the payer (de-duplicated; the
+		// payer is normally also a participant). The worker resolves these to
+		// users and filters the actor back out.
+		seen := make(map[string]bool, len(created.Splits)+1)
 		involvedMemberIDs := make([]string, 0, len(created.Splits)+1)
-		for _, s := range created.Splits {
-			involvedMemberIDs = append(involvedMemberIDs, s.MemberID)
+		addMember := func(id string) {
+			if id != "" && !seen[id] {
+				seen[id] = true
+				involvedMemberIDs = append(involvedMemberIDs, id)
+			}
 		}
-		involvedMemberIDs = append(involvedMemberIDs, req.PaidByID)
+		for _, s := range created.Splits {
+			addMember(s.MemberID)
+		}
+		addMember(req.PaidByID)
 
 		if _, err := h.rc.Insert(r.Context(), jobs.PushNotifyArgs{
 			EventKind:        "expense_added",
 			GroupID:          groupID,
 			GroupName:        group.Name,
-			ActorUserID:      claims.UserID,
-			ActorName:        actorMember.Name,
-			RecipientUserIDs: h.involvedUserIDs(r.Context(), groupID, involvedMemberIDs),
-			Title:            req.Title,
+			ActorUserID:        claims.UserID,
+			ActorName:          actorMember.Name,
+			RecipientMemberIDs: involvedMemberIDs,
+			Title:              req.Title,
 			AmountMinor:      canonicalAmount,
 			Currency:         canonicalCurrency,
 		}, nil); err != nil {

@@ -103,6 +103,36 @@ func TestPushNotify_OnlyInvolvedUsersNotified(t *testing.T) {
 	require.False(t, tokens["ExponentPushToken[actor]"], "the actor must never be notified")
 }
 
+// A caller may pass member ids instead of pre-resolved user ids; the worker
+// resolves them (and still drops the actor). Resolving in the worker rather
+// than at enqueue time is what lets a transient DB failure retry the job
+// instead of the caller swallowing it into an empty, silently-successful set.
+func TestPushNotify_ResolvesMemberIDsToUsers(t *testing.T) {
+	env := testutil.NewEnv(t)
+	actor := testutil.CreateUser(t, env.Pool, "actor-"+ulidSuffix()+"@test", "Actor")
+	group, actorMember := testutil.CreateGroup(t, env.Pool, "Trip", "SEK", actor.ID, "Actor")
+	involved := testutil.CreateUser(t, env.Pool, "involved-"+ulidSuffix()+"@test", "Involved")
+	involvedMember := testutil.AddMember(t, env.Pool, group.ID, involved.ID, "Involved")
+
+	testutil.SeedPushToken(t, env.Pool, actorMember.UserID.String, "ExponentPushToken[actor]")
+	testutil.SeedPushToken(t, env.Pool, involved.ID, "ExponentPushToken[involved]")
+
+	fake := &fakeExpoSender{}
+	w := &jobs.PushNotifyWorker{Pool: env.Pool, Queries: env.Queries, Expo: fake, BaseURL: "https://chara.example.com"}
+	require.NoError(t, jobs.NotifyForTest(context.Background(), w, jobs.PushNotifyArgs{
+		EventKind: "expense_added", GroupID: group.ID, GroupName: group.Name,
+		ActorUserID: actor.ID, ActorName: "Actor",
+		// Payer + participant as member ids, including the actor's own member —
+		// the worker resolves them and then filters the actor back out.
+		RecipientMemberIDs: []string{involvedMember.ID, actorMember.ID},
+		Title:              "Dinner", AmountMinor: 4500, Currency: "SEK",
+	}))
+
+	tokens := sentTokens(fake)
+	require.True(t, tokens["ExponentPushToken[involved]"], "the resolved involved member should be notified")
+	require.False(t, tokens["ExponentPushToken[actor]"], "the actor must never be notified")
+}
+
 // The actor is filtered out even when a caller includes them in the recipient
 // set (the payer is normally also a participant).
 func TestPushNotify_ActorExcludedEvenWhenListed(t *testing.T) {

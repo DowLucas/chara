@@ -31,7 +31,7 @@ func newInsertOnlyRiverClient(t *testing.T, env *testutil.Env) *river.Client[pgx
 }
 
 func TestExpenses_Create_EnqueuesPushNotification(t *testing.T) {
-	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
 	rc := newInsertOnlyRiverClient(t, env)
 	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil, rc)
 
@@ -54,15 +54,16 @@ func TestExpenses_Create_EnqueuesPushNotification(t *testing.T) {
 	require.Equal(t, "Dinner", job.Args.Title)
 	require.Equal(t, int64(9000), job.Args.AmountMinor)
 	require.Equal(t, "SEK", job.Args.Currency)
-	// Recipients are the people involved: the payer and every split
-	// participant. The actor is filtered out by the worker at send time.
-	require.ElementsMatch(t, []string{alice.ID, bob.ID}, job.Args.RecipientUserIDs)
+	// The involved members — payer + every split participant, de-duplicated —
+	// are carried as member ids; the worker resolves them to users and filters
+	// the actor out at send time.
+	require.ElementsMatch(t, []string{aliceMemberID, bobMemberID}, job.Args.RecipientMemberIDs)
 }
 
 // A group member who is not a participant in the expense must not appear in
 // the notification's recipient set.
 func TestExpenses_Create_PushExcludesUninvolvedMember(t *testing.T) {
-	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
 	rc := newInsertOnlyRiverClient(t, env)
 	env.Router = server.New(env.Config, env.Pool, env.Queries, env.JWT, nil, rc)
 
@@ -83,8 +84,9 @@ func TestExpenses_Create_PushExcludesUninvolvedMember(t *testing.T) {
 	require.Equal(t, http.StatusCreated, rr.Code)
 
 	job := rivertest.RequireInserted(context.Background(), t, riverpgxv5.New(env.Pool), &jobs.PushNotifyArgs{}, nil)
-	require.ElementsMatch(t, []string{alice.ID, bob.ID}, job.Args.RecipientUserIDs)
-	require.NotContains(t, job.Args.RecipientUserIDs, carolU.ID)
+	// Only the two participants are targeted; Carol, a group member who took no
+	// part, is absent (ElementsMatch is exact, so her member id can't be here).
+	require.ElementsMatch(t, []string{aliceMemberID, bobMemberID}, job.Args.RecipientMemberIDs)
 }
 
 func TestExpenses_Create_NoPushWhenRiverClientNil(t *testing.T) {
