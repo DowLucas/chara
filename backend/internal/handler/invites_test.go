@@ -295,6 +295,116 @@ func TestInviteLanding_DesktopUserAgent_ShowsBoth(t *testing.T) {
 	assert.Contains(t, body, "play.google.com/store/apps/details?id=chara.app")
 }
 
+// ── In-app browsers ──────────────────────────────────────────────────────────
+//
+// Snapchat, Instagram, Facebook et al. render links in an embedded WKWebView /
+// Android WebView that silently drops navigation to non-http(s) schemes, and
+// where iOS Universal Links never fire. So the chara:// button does nothing at
+// all — no prompt, no error — and there is no page-side trick that can hand off
+// to the installed app. The only working path is to get the visitor out to a
+// real browser, so in those clients we replace the dead link with instructions.
+
+const (
+	snapchatIOSUA   = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Snapchat/12.94.0.42 (like Safari/604.1)"
+	instagramIOSUA  = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 331.0.0.37.90 (iPhone14,3; iOS 17_5; en_US)"
+	facebookIOSUA   = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [FBAN/FBIOS;FBAV/468.0.0.44.107;FBBV/605230101]"
+	tiktokAndroidUA = "Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36 trill_320404 BytedanceWebview/d8a21c6"
+)
+
+// The reported bug: a friend opened the invite inside Snapchat on an iPhone and
+// "Open in Chara" did nothing. Offering a link that cannot possibly work is the
+// defect — show the escape route instead.
+func TestInviteLanding_SnapchatIOS_ReplacesDeadLinkWithInstructions(t *testing.T) {
+	env := setupEnv(t)
+	group, _ := seedInviteGroup(t, env, "Skidresa", "Anna")
+
+	rr := doRequestUA(t, env, "/i/"+group.InviteToken, snapchatIOSUA)
+	require.Equal(t, http.StatusOK, rr.Code)
+	body := rr.Body.String()
+
+	// The dead link must be gone — it is a silent no-op in this webview.
+	assert.NotContains(t, body, "chara://join",
+		"the chara:// link cannot work inside an in-app browser and must not be offered")
+	// Name the app the user is actually in, the menu glyph they're looking
+	// for, and the menu item — guessing at any of these is the difference
+	// between a followable instruction and a dead end.
+	assert.Contains(t, body, "Snapchat")
+	assert.Contains(t, body, "&bull;&bull;&bull;")
+	assert.Contains(t, body, "Open in Safari")
+	// The steps must not stop at Safari: say what to tap once there, using
+	// the exact label of the link that renders in a real browser.
+	assert.Contains(t, body, "Open in Chara")
+	// The invite itself still renders, and installing is still one tap away.
+	assert.Contains(t, body, "Skidresa")
+	assert.Contains(t, body, "apps.apple.com/app/id6773089720")
+}
+
+// Android in-app webviews have the same limitation; only the menu wording and
+// the store badge differ.
+func TestInviteLanding_TikTokAndroid_ShowsBrowserInstructions(t *testing.T) {
+	env := setupEnv(t)
+	group, _ := seedInviteGroup(t, env, "Skidresa", "Anna")
+
+	rr := doRequestUA(t, env, "/i/"+group.InviteToken, tiktokAndroidUA)
+	require.Equal(t, http.StatusOK, rr.Code)
+	body := rr.Body.String()
+
+	assert.NotContains(t, body, "chara://join")
+	assert.Contains(t, body, "TikTok")
+	assert.Contains(t, body, "Open in browser")
+	assert.Contains(t, body, "Open in Chara")
+	// Android's overflow menu is a vertical ellipsis, not iOS's horizontal one.
+	assert.Contains(t, body, "&#8942;")
+	assert.NotContains(t, body, "Open in Safari", "Safari wording is iOS-only")
+	assert.NotContains(t, body, "&bull;&bull;&bull;", "horizontal ellipsis is iOS-only")
+	assert.Contains(t, body, "play.google.com/store/apps/details?id=chara.app")
+}
+
+func TestInviteLanding_OtherInAppBrowsers_AreDetected(t *testing.T) {
+	cases := []struct {
+		name, ua, wantAppName string
+	}{
+		{"instagram", instagramIOSUA, "Instagram"},
+		{"facebook", facebookIOSUA, "Facebook"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			env := setupEnv(t)
+			group, _ := seedInviteGroup(t, env, "Skidresa", "Anna")
+
+			rr := doRequestUA(t, env, "/i/"+group.InviteToken, tc.ua)
+			require.Equal(t, http.StatusOK, rr.Code)
+			body := rr.Body.String()
+
+			assert.NotContains(t, body, "chara://join")
+			assert.Contains(t, body, tc.wantAppName)
+		})
+	}
+}
+
+// Regression guard on the detector itself: a real browser must keep the
+// working link. Safari's UA contains "Safari", Chrome's contains both
+// "Chrome" and "Safari" — neither may trip an in-app-browser token.
+func TestInviteLanding_RealBrowsers_KeepTheAppLink(t *testing.T) {
+	for name, ua := range map[string]string{
+		"ios safari":     iosUA,
+		"android chrome": androidUA,
+		"desktop chrome": desktopUA,
+	} {
+		t.Run(name, func(t *testing.T) {
+			env := setupEnv(t)
+			group, _ := seedInviteGroup(t, env, "Skidresa", "Anna")
+
+			rr := doRequestUA(t, env, "/i/"+group.InviteToken, ua)
+			require.Equal(t, http.StatusOK, rr.Code)
+			body := rr.Body.String()
+
+			assert.Contains(t, body, "chara://join?invite=")
+			assert.NotContains(t, body, "Open in Safari")
+		})
+	}
+}
+
 // On the hosted instance the footer shows the friendly "Chara Cloud" name
 // instead of the raw API host. Self-hosted instances keep showing their host
 // (covered by TestInviteLanding_OkState_ContainsExpectedStrings above).
@@ -322,7 +432,7 @@ func TestInviteLanding_OkState_NullInviter_FallsBackCopy(t *testing.T) {
 	require.Equal(t, http.StatusOK, rr.Code)
 	body := rr.Body.String()
 
-	assert.Contains(t, body, "You")          // "You're invited to ..."
+	assert.Contains(t, body, "You") // "You're invited to ..."
 	assert.Contains(t, body, "invited to")
 	assert.NotContains(t, body, "Lucas invited you to")
 }
@@ -377,7 +487,7 @@ func TestInviteLanding_NoIndexHeader(t *testing.T) {
 	group, _ := seedInviteGroup(t, env, "Trip", "Lucas")
 
 	cases := []string{
-		"/i/" + group.InviteToken, // ok
+		"/i/" + group.InviteToken,     // ok
 		"/i/garbage_not_a_real_token", // invalid
 	}
 	for _, path := range cases {

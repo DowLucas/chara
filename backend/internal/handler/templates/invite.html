@@ -75,11 +75,33 @@
     font-size: 15px;
     color: #4f4a44;
   }
+  .notice {
+    margin: 0 0 20px 0;
+    padding: 14px 16px;
+    background: #f0e5cc;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #4f4a44;
+  }
+  .notice p { margin: 0; }
+  .notice-title {
+    font-weight: 600;
+    color: #1f1d1a;
+    margin-bottom: 6px !important;
+  }
+  .steps {
+    margin: 10px 0 0 0;
+    padding-left: 20px;
+  }
+  .steps li { margin-bottom: 4px; }
+  .steps li:last-child { margin-bottom: 0; }
   @media (prefers-color-scheme: dark) {
     body { background: #1a1817; color: #f0ede7; }
     .brand .tagline { color: #9a948c; }
     .card { background: #2a2724; box-shadow: none; }
     .meta, .locked-message, .invalid-message { color: #c0bbb4; }
+    .notice { background: #3a352e; color: #e2ddd5; }
+    .notice-title { color: #f0ede7; }
     .badge { background: #f0ede7; color: #1a1817; }
     .open-link { color: #f0ede7; border-bottom-color: #f0ede7; }
     .footer { color: #6e6962; }
@@ -97,6 +119,21 @@
     {{if eq .State "ok"}}
       <h1>{{if .InviterName}}{{.InviterName}} invited you to &lsquo;{{.GroupName}}&rsquo;{{else}}You&rsquo;re invited to &lsquo;{{.GroupName}}&rsquo;{{end}}</h1>
       <p class="meta">{{.MemberCount}} members</p>
+      {{if .InAppBrowser}}
+      <div class="notice">
+        <p class="notice-title">{{.InAppBrowser}} can&rsquo;t open Chara from here.</p>
+        {{if or .IsIOS .IsAndroid}}
+        <p>Its built-in browser isn&rsquo;t allowed to open other apps. Three steps:</p>
+        <ol class="steps">
+          <li>Tap <b>{{if .IsIOS}}&bull;&bull;&bull;{{else}}&#8942;{{end}}</b> in this browser&rsquo;s toolbar</li>
+          <li>Choose <b>{{if .IsIOS}}Open in Safari{{else}}Open in browser{{end}}</b></li>
+          <li>Tap <b>Open in Chara</b> on the page that opens</li>
+        </ol>
+        {{else}}
+        <p>Its built-in browser isn&rsquo;t allowed to open other apps. Reopen this page in your normal browser, then tap <b>Open in Chara</b>.</p>
+        {{end}}
+      </div>
+      {{end}}
       <div class="badges">
         {{if .IsIOS}}
         <a class="badge" href="https://apps.apple.com/app/id6773089720">Get Chara on the App Store</a>
@@ -107,7 +144,9 @@
         <a class="badge" href="https://play.google.com/store/apps/details?id=chara.app">Get Chara on Google Play</a>
         {{end}}
       </div>
+      {{if not .InAppBrowser}}
       <a class="open-link" href="{{.CharaSchemeHref}}">Already installed? Open in Chara &rarr;</a>
+      {{end}}
       <div class="footer">Server: {{.ServerName}}</div>
     {{else if eq .State "locked"}}
       <h1>{{if .InviterName}}{{.InviterName}} invited you to &lsquo;{{.GroupName}}&rsquo;{{else}}You&rsquo;re invited to &lsquo;{{.GroupName}}&rsquo;{{end}}</h1>
