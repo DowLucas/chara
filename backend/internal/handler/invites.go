@@ -202,6 +202,7 @@ func (h *InviteHandler) Landing(w http.ResponseWriter, r *http.Request) {
 	}
 
 	platform := detectMobilePlatform(r.UserAgent())
+	inAppBrowser := detectInAppBrowser(r.UserAgent())
 	view := struct {
 		State           string
 		GroupName       string
@@ -210,17 +211,22 @@ func (h *InviteHandler) Landing(w http.ResponseWriter, r *http.Request) {
 		ServerName      string
 		IsIOS           bool
 		IsAndroid       bool
+		InAppBrowser    string       // display name of the embedding app, "" in a real browser
 		CharaSchemeHref template.URL // template.URL bypasses html/template's URL re-escaping; we've already done it.
 	}{
-		State:       string(resolved.State),
-		GroupName:   resolved.GroupName,
-		MemberCount: resolved.MemberCount,
-		InviterName: resolved.InviterName,
-		ServerName:  resolved.ServerName,
-		IsIOS:       platform == "ios",
-		IsAndroid:   platform == "android",
+		State:        string(resolved.State),
+		GroupName:    resolved.GroupName,
+		MemberCount:  resolved.MemberCount,
+		InviterName:  resolved.InviterName,
+		ServerName:   resolved.ServerName,
+		IsIOS:        platform == "ios",
+		IsAndroid:    platform == "android",
+		InAppBrowser: inAppBrowser,
 	}
-	if resolved.State == stateOK {
+	// Inside an in-app browser the chara:// link is a silent no-op, so we don't
+	// render it at all (the template shows escape instructions instead) and
+	// don't bother building the href.
+	if resolved.State == stateOK && inAppBrowser == "" {
 		// The app's invite-url parser expects chara://join?invite=<urlencoded
 		// https URL>. We build and escape the full href here; template.URL
 		// tells html/template to trust the URL as-is so the %XX encoding is
@@ -258,6 +264,51 @@ func detectMobilePlatform(userAgent string) string {
 	default:
 		return ""
 	}
+}
+
+// inAppBrowserSignatures maps a lowercased User-Agent token to the display
+// name of the app whose embedded browser it identifies.
+//
+// These clients render links in a WKWebView (iOS) or Android WebView that
+// silently drops navigation to a non-http(s) scheme — tapping a chara:// link
+// produces no prompt and no error — and iOS Universal Links never fire inside
+// them either. So there is no way for this page to hand off to an installed
+// app; the only working path is for the visitor to reopen it in a real
+// browser, where both mechanisms work again. Detect the common offenders so we
+// can say that instead of offering a link we know is dead.
+//
+// Order matters: Messenger's UA carries FBAN too, so it must be matched before
+// the generic Facebook tokens.
+var inAppBrowserSignatures = []struct{ token, name string }{
+	{"snapchat", "Snapchat"},
+	{"messenger", "Messenger"},
+	{"instagram", "Instagram"},
+	{"fban", "Facebook"},
+	{"fbav", "Facebook"},
+	{"bytedancewebview", "TikTok"},
+	{"tiktok", "TikTok"},
+	{"musical_ly", "TikTok"},
+	{"twitter", "X"},
+	{"linkedinapp", "LinkedIn"},
+	{"pinterest", "Pinterest"},
+	{"line/", "LINE"},
+	{"whatsapp", "WhatsApp"},
+	{"telegram", "Telegram"},
+	{"reddit", "Reddit"},
+}
+
+// detectInAppBrowser returns the display name of the app embedding this page,
+// or "" when the visitor is in a real browser. Matching is on tokens that only
+// appear in embedded webviews — "Safari" and "Chrome" appear in ordinary
+// mobile UAs and are deliberately not signatures.
+func detectInAppBrowser(userAgent string) string {
+	ua := strings.ToLower(userAgent)
+	for _, sig := range inAppBrowserSignatures {
+		if strings.Contains(ua, sig.token) {
+			return sig.name
+		}
+	}
+	return ""
 }
 
 // extractHost pulls the host from cfg.BaseURL ("https://api.chara.app"
