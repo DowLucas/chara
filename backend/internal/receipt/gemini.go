@@ -27,7 +27,7 @@ const defaultGeminiBase = "https://generativelanguage.googleapis.com/v1beta"
 // extractionPrompt is sent alongside the image. We instruct the model to
 // return JSON-only with explicit field semantics so the response is
 // machine-parseable without further structuring.
-const extractionPrompt = `You are a receipt parser. Look at the attached receipt image and extract:
+const extractionPrompt = `You are a receipt parser. The attachment is a receipt, supplied either as a photo or as a PDF document. Extract:
 - title: a SHORT natural-language description of what this expense was for, written like a friend would label it in a shared-expenses app. Combine the merchant type and the most distinctive line items. 3-6 words, no quotes, no trailing period. Examples:
     • Grocery store with food items     → "Groceries at ICA Maxi"
     • Restaurant with meals             → "Dinner at Café Husaren"
@@ -65,7 +65,11 @@ const extractionPrompt = `You are a receipt parser. Look at the attached receipt
 Respond with a single JSON object and no other text. Example:
 {"title":"Groceries at ICA Maxi","merchant":"ICA Maxi","date":"2026-05-20","currency":"SEK","total":"286.50","subtotal":"227.60","tax":"56.90","tip":"","deposit":"2.00","category":"groceries","items":[{"description":"Mjölk 1L","qty":2,"unit_price":"15.90","total":"31.80"},{"description":"Bröd","qty":1,"unit_price":"32.50","total":"32.50"}]}
 
-If the image is not a receipt or you cannot read a total, respond with {"error":"unreadable"}.`
+Document rules (these matter for PDFs):
+- A multi-page document is ONE receipt or invoice. Accumulate line items across every page; do not restart or return only the last page. The "total" is the final amount due for the whole document, not a per-page subtotal.
+- If the document is a transaction list rather than a single purchase — a bank or card statement, an account history, a monthly summary listing many separate purchases on different dates at different merchants — it is NOT a receipt. Respond with {"error":"unreadable"}. Do NOT pick one row, and do NOT sum the rows.
+
+If the attachment is not a receipt or you cannot read a total, respond with {"error":"unreadable"}.`
 
 // GeminiScanner calls Google's Generative Language API.
 type GeminiScanner struct {

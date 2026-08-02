@@ -397,6 +397,46 @@ func TestGeminiScanner_Scan_EmptyImageRejected(t *testing.T) {
 	assert.False(t, errors.Is(err, ErrUnreadable))
 }
 
+func TestGeminiScanner_Scan_SendsPDFMimeInline(t *testing.T) {
+	var capturedReq geminiRequest
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		require.NoError(t, err)
+		require.NoError(t, json.Unmarshal(body, &capturedReq))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(geminiTextResponse(t,
+			`{"title":"Hotel — Scandic Stockholm","merchant":"Scandic","date":"2026-07-02","currency":"SEK","total":"1450.00","subtotal":"","tax":"","tip":""}`,
+		))
+	}))
+	defer srv.Close()
+
+	s := NewGemini("test-key", WithGeminiBaseURL(srv.URL))
+	pdfBytes := []byte("%PDF-1.7\nfake pdf body")
+
+	got, err := s.Scan(context.Background(), pdfBytes, "application/pdf", "", nil)
+	require.NoError(t, err)
+	assert.Equal(t, "Scandic", got.Merchant)
+	assert.EqualValues(t, 145000, got.TotalMinor)
+
+	require.Len(t, capturedReq.Contents, 1)
+	require.Len(t, capturedReq.Contents[0].Parts, 2)
+	require.NotNil(t, capturedReq.Contents[0].Parts[1].InlineData)
+	assert.Equal(t, "application/pdf", capturedReq.Contents[0].Parts[1].InlineData.MIMEType)
+	assert.Equal(t,
+		base64.StdEncoding.EncodeToString(pdfBytes),
+		capturedReq.Contents[0].Parts[1].InlineData.Data,
+	)
+}
+
+// The prompt must carry the two PDF-specific rules. This is a guard against
+// someone editing the prompt and silently dropping them — the extraction
+// quality itself is verified by the manual eval in the plan, not here.
+func TestExtractionPrompt_CoversMultiPageAndStatements(t *testing.T) {
+	assert.Contains(t, extractionPrompt, "multi-page")
+	assert.Contains(t, extractionPrompt, "statement")
+	assert.NotContains(t, extractionPrompt, "attached receipt image and extract")
+}
+
 func TestParseDecimalToMinor(t *testing.T) {
 	cases := []struct {
 		in   string
