@@ -171,6 +171,22 @@ const config: ExpoConfig = {
   plugins: [
     'expo-router',
     [
+      // Generates the iOS Share Extension target and the Android ACTION_SEND
+      // intent filters. The extension only stashes the incoming file in the
+      // App Group container and opens the host app — group selection and the
+      // scan itself happen in JS. See
+      // docs/superpowers/specs/2026-08-02-document-receipt-extraction-design.md
+      'expo-share-intent',
+      {
+        iosActivationRules: {
+          NSExtensionActivationSupportsFileWithMaxCount: 1,
+          NSExtensionActivationSupportsImageWithMaxCount: 1,
+        },
+        iosAppGroupIdentifier: `group.${IS_DEV_VARIANT ? 'app.chara.dev' : 'app.chara'}`,
+        androidIntentFilters: ['application/pdf', 'image/*'],
+      },
+    ],
+    [
       // GoogleSignIn 9.x pulls in AppCheckCore (a Swift pod) which depends on
       // GoogleUtilities + RecaptchaInterop. Those don't define modules, so under
       // static libraries `pod install` fails ("cannot be integrated as static
