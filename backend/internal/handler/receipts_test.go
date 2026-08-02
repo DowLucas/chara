@@ -276,7 +276,7 @@ func TestReceiptScan_RejectsEmptyImage(t *testing.T) {
 func TestReceiptScan_RejectsUnsupportedMIME(t *testing.T) {
 	rr := postScan(t, newReceiptsRouter(&fakeScanner{}), map[string]string{
 		"image_base64": base64.StdEncoding.EncodeToString([]byte{1, 2}),
-		"mime_type":    "application/pdf",
+		"mime_type":    "text/plain",
 	})
 	require.Equal(t, http.StatusBadRequest, rr.Code)
 	assert.Contains(t, rr.Body.String(), "mime_type")
@@ -345,6 +345,66 @@ func TestReceiptScan_UpstreamFailureDoesNotLeakErrorDetails(t *testing.T) {
 	})
 	require.Equal(t, http.StatusBadGateway, rr.Code)
 	assert.NotContains(t, rr.Body.String(), "SUPER-SECRET-KEY")
+}
+
+func TestScan_AcceptsPDF(t *testing.T) {
+	scanner := &fakeScanner{resp: &receipt.Receipt{Title: "Hotel — Scandic", Currency: "SEK"}}
+	router := newReceiptsRouter(scanner)
+
+	pdf := append([]byte("%PDF-1.7\n"), bytes.Repeat([]byte("x"), 64)...)
+	rr := postScan(t, router, map[string]any{
+		"image_base64": base64.StdEncoding.EncodeToString(pdf),
+		"mime_type":    "application/pdf",
+	})
+
+	require.Equal(t, http.StatusOK, rr.Code)
+	assert.Equal(t, "application/pdf", scanner.gotMIME)
+	assert.Equal(t, pdf, scanner.gotBytes)
+}
+
+// A file whose bytes are not a PDF must be rejected BEFORE the scanner is
+// invoked: on hosted instances every scan consumes a slot against the
+// free-tier cap, so a mislabeled file must not cost the user a scan.
+func TestScan_RejectsNonPDFBytesDeclaredAsPDF(t *testing.T) {
+	scanner := &fakeScanner{resp: &receipt.Receipt{Title: "should not be reached"}}
+	router := newReceiptsRouter(scanner)
+
+	jpeg := []byte{0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46}
+	rr := postScan(t, router, map[string]any{
+		"image_base64": base64.StdEncoding.EncodeToString(jpeg),
+		"mime_type":    "application/pdf",
+	})
+
+	require.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Nil(t, scanner.gotBytes, "scanner must not run for a non-PDF payload")
+}
+
+// The magic-byte check is scoped to PDFs only — image payloads keep working
+// exactly as before, including ones whose first bytes we don't sniff.
+func TestScan_ImagePayloadsSkipPDFMagicCheck(t *testing.T) {
+	scanner := &fakeScanner{resp: &receipt.Receipt{Title: "Groceries", Currency: "SEK"}}
+	router := newReceiptsRouter(scanner)
+
+	rr := postScan(t, router, map[string]any{
+		"image_base64": base64.StdEncoding.EncodeToString([]byte{0xFF, 0xD8, 0xFF, 0xE0}),
+		"mime_type":    "image/jpeg",
+	})
+
+	require.Equal(t, http.StatusOK, rr.Code)
+	assert.Equal(t, "image/jpeg", scanner.gotMIME)
+}
+
+func TestScan_RejectsUnsupportedDocumentMIME(t *testing.T) {
+	scanner := &fakeScanner{resp: &receipt.Receipt{}}
+	router := newReceiptsRouter(scanner)
+
+	rr := postScan(t, router, map[string]any{
+		"image_base64": base64.StdEncoding.EncodeToString([]byte("PK\x03\x04")),
+		"mime_type":    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+	})
+
+	require.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Nil(t, scanner.gotBytes)
 }
 
 func TestReceiptScan_RejectsInvalidJSONBody(t *testing.T) {

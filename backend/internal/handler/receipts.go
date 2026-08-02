@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -162,13 +163,20 @@ type capReachedResponse struct {
 }
 
 var allowedReceiptMIME = map[string]struct{}{
-	"image/jpeg": {},
-	"image/jpg":  {},
-	"image/png":  {},
-	"image/webp": {},
-	"image/heic": {},
-	"image/heif": {},
+	"image/jpeg":      {},
+	"image/jpg":       {},
+	"image/png":       {},
+	"image/webp":      {},
+	"image/heic":      {},
+	"image/heif":      {},
+	"application/pdf": {},
 }
+
+// pdfMagic is the required leading signature of every PDF file. We verify it
+// rather than trusting the client's declared mime_type because a scan
+// consumes a slot against the hosted free-tier cap — a corrupt or mislabeled
+// file must fail here, not after we've spent the user's quota on Gemini.
+var pdfMagic = []byte("%PDF-")
 
 // Scan handles POST /api/receipts/scan.
 func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
@@ -212,6 +220,11 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(imgData) > MaxReceiptImageBytes {
 		writeError(w, http.StatusRequestEntityTooLarge, "image exceeds 6 MB limit")
+		return
+	}
+
+	if strings.EqualFold(req.MIMEType, "application/pdf") && !bytes.HasPrefix(imgData, pdfMagic) {
+		writeError(w, http.StatusBadRequest, "file is not a valid PDF")
 		return
 	}
 
