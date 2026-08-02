@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Image,
+  Linking,
   Modal,
   StyleSheet,
   Text,
@@ -15,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { showAlert } from '@/lib/app-alert';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
+import { Button } from '@/components/Button';
 import {
   apiFor,
   Expense,
@@ -65,8 +67,8 @@ export default function AddExpenseScreen() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [savedSubtitle, setSavedSubtitle] = useState<string | null>(null);
   const [existingExpenses, setExistingExpenses] = useState<Expense[]>([]);
-  const [pendingReceiptImage, setPendingReceiptImage] = useState<
-    { base64: string; mime_type: string } | null
+  const [pendingReceiptFile, setPendingReceiptFile] = useState<
+    { base64: string; mime_type: string; name?: string } | null
   >(null);
   const [scanItemsState, setScanItemsState] =
     useState<ScanItemsState<ScannedReceiptItem> | null>(null);
@@ -131,7 +133,7 @@ export default function AddExpenseScreen() {
   function handleReceiptScanned(result: ReceiptScanResult) {
     setScannerOpen(false);
     const { receipt, applied } = result;
-    if (result.file) setPendingReceiptImage(result.file);
+    if (result.file) setPendingReceiptFile(result.file);
 
     wizardRef.current?.applyReceiptResult({
       amount: applied.amount_minor > 0 ? (applied.amount_minor / 100).toFixed(2) : undefined,
@@ -231,13 +233,13 @@ export default function AddExpenseScreen() {
 
       notifyGroupChanged(serverUrl, id);
 
-      if (pendingReceiptImage && created?.id) {
+      if (pendingReceiptFile && created?.id) {
         try {
           await api.uploadExpenseAttachment(
             id,
             created.id,
-            pendingReceiptImage.base64,
-            pendingReceiptImage.mime_type,
+            pendingReceiptFile.base64,
+            pendingReceiptFile.mime_type,
           );
         } catch (uploadErr) {
           console.warn('receipt attachment upload failed', uploadErr);
@@ -280,7 +282,7 @@ export default function AddExpenseScreen() {
         >
           <Text style={styles.receiptActionLabel}>{t('addExpense.viewItems')}</Text>
         </TouchableOpacity>
-        {pendingReceiptImage && (
+        {pendingReceiptFile && (
           <TouchableOpacity
             style={styles.receiptActionBtn}
             onPress={() => setReceiptViewerOpen(true)}
@@ -402,7 +404,7 @@ export default function AddExpenseScreen() {
       />
 
       <Modal
-        visible={receiptViewerOpen && !!pendingReceiptImage}
+        visible={receiptViewerOpen && !!pendingReceiptFile}
         animationType="fade"
         transparent
         onRequestClose={() => setReceiptViewerOpen(false)}
@@ -415,14 +417,39 @@ export default function AddExpenseScreen() {
           accessibilityRole="button"
           accessibilityLabel={t('common.close')}
         >
-          {pendingReceiptImage && (
-            <Image
-              style={styles.receiptImage}
-              resizeMode="contain"
-              source={{
-                uri: `data:${pendingReceiptImage.mime_type};base64,${pendingReceiptImage.base64}`,
-              }}
-            />
+          {pendingReceiptFile && (
+            pendingReceiptFile.mime_type === 'application/pdf' ? (
+              <View style={styles.receiptDocCard}>
+                <Feather name="file-text" size={48} color={colors.lead} />
+                <Text style={styles.receiptDocName} numberOfLines={2}>
+                  {pendingReceiptFile.name ?? t('addExpense.receiptDocument')}
+                </Text>
+                <Button
+                  kind="secondary"
+                  onPress={() => {
+                    void Linking.openURL(
+                      `data:application/pdf;base64,${pendingReceiptFile.base64}`,
+                    ).catch(() => {
+                      void showAlert({
+                        title: t('addExpense.receiptOpenFailedTitle'),
+                        message: t('addExpense.receiptOpenFailedBody'),
+                        buttons: [{ key: 'ok', label: t('common.ok') }],
+                      });
+                    });
+                  }}
+                >
+                  {t('addExpense.openReceipt')}
+                </Button>
+              </View>
+            ) : (
+              <Image
+                style={styles.receiptImage}
+                resizeMode="contain"
+                source={{
+                  uri: `data:${pendingReceiptFile.mime_type};base64,${pendingReceiptFile.base64}`,
+                }}
+              />
+            )
           )}
         </TouchableOpacity>
       </Modal>
@@ -504,6 +531,19 @@ const styles = StyleSheet.create({
     padding: spacing.s4,
   },
   receiptImage: { width: '100%', height: '100%' },
+  receiptDocCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.s4,
+    padding: spacing.s6,
+  },
+  receiptDocName: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.paper,
+    letterSpacing: 0.3,
+    textAlign: 'center',
+  },
   dupWrap: {
     paddingHorizontal: spacing.s5,
     paddingTop: spacing.s3,
