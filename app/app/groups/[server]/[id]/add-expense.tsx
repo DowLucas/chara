@@ -131,7 +131,7 @@ export default function AddExpenseScreen() {
   function handleReceiptScanned(result: ReceiptScanResult) {
     setScannerOpen(false);
     const { receipt, applied } = result;
-    if (result.image) setPendingReceiptImage(result.image);
+    if (result.file) setPendingReceiptImage(result.file);
 
     wizardRef.current?.applyReceiptResult({
       amount: applied.amount_minor > 0 ? (applied.amount_minor / 100).toFixed(2) : undefined,

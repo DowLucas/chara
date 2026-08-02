@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,6 +24,12 @@ import { apiFor, ScannedReceipt, ApiError, isOcrCapReached } from '@/lib/api';
 import { useAccount } from '@/lib/accounts';
 import { WaitlistModal } from '@/components/WaitlistModal';
 import { formatMinorUnits } from '@/lib/i18n';
+import { showAlert } from '@/lib/app-alert';
+import {
+  checkReceiptFile,
+  MAX_RECEIPT_FILE_BYTES,
+  type ReceiptSource,
+} from '@/lib/receipt-file';
 import {
   FxConversionSection,
   FxState as SharedFxState,
@@ -48,9 +56,10 @@ export interface ReceiptScanResult {
     source: string;
     original_total_minor: number;
   };
-  /** Captured image bytes the parent can persist as an attachment after
-   *  the expense is saved. Set on every successful scan. */
-  image?: { base64: string; mime_type: string };
+  /** The captured or picked file the parent persists as an attachment after
+   *  the expense is saved. Set on every successful scan. `name` is present
+   *  only for documents, which have no thumbnail to show instead. */
+  file?: { base64: string; mime_type: string; name?: string };
 }
 
 interface Props {
@@ -69,30 +78,17 @@ interface Props {
   onCancel: () => void;
 }
 
-// Map common image extensions to MIME types accepted by the backend. We use
-// this when expo-image-picker returns an asset without a populated
-// mimeType field (older library versions / certain platforms).
-function inferMimeFromUri(uri: string): string | null {
-  const lower = uri.toLowerCase();
-  if (lower.endsWith('.png')) return 'image/png';
-  if (lower.endsWith('.webp')) return 'image/webp';
-  if (lower.endsWith('.heic')) return 'image/heic';
-  if (lower.endsWith('.heif')) return 'image/heif';
-  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
-  return null;
-}
-
 type Phase =
   | { kind: 'camera' }
-  | { kind: 'analyzing'; photoUri: string }
+  | { kind: 'analyzing'; source: ReceiptSource }
   | {
       kind: 'result';
-      photoUri: string;
+      source: ReceiptSource;
       receipt: ScannedReceipt;
-      imageBase64: string;
-      imageMime: string;
+      fileBase64: string;
+      fileMime: string;
     }
-  | { kind: 'error'; photoUri: string; message: string };
+  | { kind: 'error'; source: ReceiptSource; message: string };
 
 /**
  * Full-screen receipt scanner with three phases:
@@ -142,7 +138,7 @@ export function ReceiptScanner({ serverUrl, groupCurrency, groupLanguage, groupI
       return;
     }
 
-    runScan(photoUri, base64, 'image/jpeg');
+    runScan({ kind: 'image', uri: photoUri }, base64, 'image/jpeg');
   }
 
   async function pickFromLibrary() {
@@ -161,25 +157,81 @@ export function ReceiptScanner({ serverUrl, groupCurrency, groupLanguage, groupI
       const asset = picked.assets?.[0];
       if (!asset?.base64 || !asset?.uri) return;
       // expo-image-picker reports the MIME via the asset.mimeType field when
-      // available; otherwise infer from the file extension and fall back to
-      // jpeg, which the backend always accepts.
-      const mime =
-        (asset as { mimeType?: string }).mimeType ??
-        inferMimeFromUri(asset.uri) ??
-        'image/jpeg';
-      runScan(asset.uri, asset.base64, mime);
+      // available; otherwise fall back to jpeg, which the backend always
+      // accepts.
+      const mime = (asset as { mimeType?: string }).mimeType ?? 'image/jpeg';
+      runScan({ kind: 'image', uri: asset.uri }, asset.base64, mime);
     } catch {
       // Permission denial / unavailable library — stay on the camera phase.
     }
   }
 
-  async function runScan(photoUri: string, base64: string, mimeType: string) {
+  async function pickDocument() {
+    if (phase.kind !== 'camera') return;
+    let picked: DocumentPicker.DocumentPickerResult;
+    try {
+      picked = await DocumentPicker.getDocumentAsync({
+        type: 'application/pdf',
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+    } catch {
+      // Picker unavailable (web, or a provider that failed to start).
+      return;
+    }
+    if (picked.canceled) return;
+    const asset = picked.assets?.[0];
+    if (!asset?.uri) return;
+
+    const check = checkReceiptFile({
+      name: asset.name,
+      mimeType: asset.mimeType,
+      size: asset.size,
+    });
+    if (!check.ok) {
+      await showAlert({
+        title: t('receiptScanner.fileRejectedTitle'),
+        message:
+          check.reason === 'too_large'
+            ? t('receiptScanner.fileTooLarge', {
+                limit: Math.round(MAX_RECEIPT_FILE_BYTES / (1024 * 1024)),
+              })
+            : t('receiptScanner.fileUnsupported'),
+        buttons: [{ key: 'ok', label: t('common.ok') }],
+      });
+      return;
+    }
+
+    let base64: string;
+    try {
+      base64 = await FileSystem.readAsStringAsync(asset.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+    } catch {
+      await showAlert({
+        title: t('receiptScanner.fileRejectedTitle'),
+        message: t('receiptScanner.fileUnreadable'),
+        buttons: [{ key: 'ok', label: t('common.ok') }],
+      });
+      return;
+    }
+
+    runScan(
+      check.kind === 'pdf'
+        ? { kind: 'pdf', uri: asset.uri, name: asset.name }
+        : { kind: 'image', uri: asset.uri },
+      base64,
+      check.mimeType,
+    );
+  }
+
+  async function runScan(source: ReceiptSource, base64: string, mimeType: string) {
     // Switch to analyzing immediately so the user sees feedback while the
     // network call runs.
-    setPhase({ kind: 'analyzing', photoUri });
+    setPhase({ kind: 'analyzing', source });
     try {
       const receipt = await apiFor(serverUrl).scanReceipt(base64, mimeType, groupLanguage, groupId);
-      setPhase({ kind: 'result', photoUri, receipt, imageBase64: base64, imageMime: mimeType });
+      setPhase({ kind: 'result', source, receipt, fileBase64: base64, fileMime: mimeType });
     } catch (e) {
       // Hosted free-tier cap hit. Don't render the generic error state — open
       // the waitlist modal so we capture intent instead of just an apology.
@@ -195,7 +247,7 @@ export function ReceiptScanner({ serverUrl, groupCurrency, groupLanguage, groupI
           : e instanceof ApiError
           ? t('receiptScanner.errorUpstream')
           : t('receiptScanner.errorCapture');
-      setPhase({ kind: 'error', photoUri, message });
+      setPhase({ kind: 'error', source, message });
     }
   }
 
@@ -264,8 +316,8 @@ export function ReceiptScanner({ serverUrl, groupCurrency, groupLanguage, groupI
         </View>
         {closeBtn}
         <View style={[styles.shutterRow, { bottom: insets.bottom + spacing.s5 }]}>
-          {/* Spacer keeps the shutter visually centred while the gallery
-              button hangs off to the right. */}
+          {/* Spacer keeps the shutter visually centred while the source
+              buttons hang off to the right. */}
           <View style={styles.shutterSide} />
           <TouchableOpacity
             style={styles.shutter}
@@ -283,6 +335,14 @@ export function ReceiptScanner({ serverUrl, groupCurrency, groupLanguage, groupI
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
               <Feather name="image" size={22} color={colors.paper} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.galleryBtn}
+              onPress={pickDocument}
+              accessibilityLabel={t('receiptScanner.pickDocument')}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <Feather name="file-text" size={22} color={colors.paper} />
             </TouchableOpacity>
           </View>
         </View>
@@ -302,7 +362,7 @@ export function ReceiptScanner({ serverUrl, groupCurrency, groupLanguage, groupI
   if (phase.kind === 'analyzing') {
     return (
       <View style={styles.container}>
-        <AnalyzingView photoUri={phase.photoUri} />
+        <AnalyzingView source={phase.source} />
         {closeBtn}
       </View>
     );
@@ -311,7 +371,7 @@ export function ReceiptScanner({ serverUrl, groupCurrency, groupLanguage, groupI
   if (phase.kind === 'error') {
     return (
       <View style={styles.container}>
-        <Image source={{ uri: phase.photoUri }} style={styles.fullPhoto} resizeMode="contain" />
+        <SourcePreview source={phase.source} style={styles.fullPhoto} />
         <View style={styles.errorOverlay}>
           <Feather name="alert-triangle" size={28} color={colors.paper} />
           <Text style={styles.errorTitle}>{t('receiptScanner.errorTitle')}</Text>
@@ -335,16 +395,25 @@ export function ReceiptScanner({ serverUrl, groupCurrency, groupLanguage, groupI
   }
 
   // phase.kind === 'result'
-  const imageBase64 = phase.imageBase64;
-  const imageMime = phase.imageMime;
+  const fileBase64 = phase.fileBase64;
+  const fileMime = phase.fileMime;
   return (
     <View style={styles.container}>
       <ResultView
         serverUrl={serverUrl}
-        photoUri={phase.photoUri}
+        source={phase.source}
         receipt={phase.receipt}
         groupCurrency={groupCurrency}
-        onUse={(r) => onScanned({ ...r, image: { base64: imageBase64, mime_type: imageMime } })}
+        onUse={(r) =>
+          onScanned({
+            ...r,
+            file: {
+              base64: fileBase64,
+              mime_type: fileMime,
+              ...(phase.source.kind === 'pdf' ? { name: phase.source.name } : {}),
+            },
+          })
+        }
         onRetake={() => setPhase({ kind: 'camera' })}
         topPad={insets.top + spacing.s7}
         bottomPad={insets.bottom + spacing.s4}
@@ -354,8 +423,27 @@ export function ReceiptScanner({ serverUrl, groupCurrency, groupLanguage, groupI
   );
 }
 
+/**
+ * Stands in for the photo preview when the source is a PDF: there is no
+ * thumbnail to show, so we show what we do know — that it's a document, and
+ * its filename.
+ */
+function SourcePreview({ source, style }: { source: ReceiptSource; style?: object }) {
+  if (source.kind === 'image') {
+    return <Image source={{ uri: source.uri }} style={style} resizeMode="contain" />;
+  }
+  return (
+    <View style={[style, styles.docCard]}>
+      <Feather name="file-text" size={40} color={colors.lead} />
+      <Text style={styles.docName} numberOfLines={2}>
+        {source.name}
+      </Text>
+    </View>
+  );
+}
+
 // ─── Analyzing phase ──────────────────────────────────────────────────────────
-function AnalyzingView({ photoUri }: { photoUri: string }) {
+function AnalyzingView({ source }: { source: ReceiptSource }) {
   const { t } = useTranslation();
   const anim = useRef(new Animated.Value(0)).current;
   const [stepIdx, setStepIdx] = useState(0);
@@ -423,7 +511,7 @@ function AnalyzingView({ photoUri }: { photoUri: string }) {
         style={styles.photoBox}
         onLayout={(e) => setBoxHeight(e.nativeEvent.layout.height)}
       >
-        <Image source={{ uri: photoUri }} style={StyleSheet.absoluteFill} resizeMode="contain" />
+        <SourcePreview source={source} style={StyleSheet.absoluteFill} />
         {boxHeight > 0 && (
           <Animated.View style={[styles.scanLine, { transform: [{ translateY }] }]} />
         )}
@@ -449,7 +537,7 @@ function AnalyzingView({ photoUri }: { photoUri: string }) {
 // ─── Result phase ─────────────────────────────────────────────────────────────
 interface ResultViewProps {
   serverUrl: string;
-  photoUri: string;
+  source: ReceiptSource;
   receipt: ScannedReceipt;
   groupCurrency: string;
   onUse: (result: ReceiptScanResult) => void;
@@ -464,7 +552,7 @@ type FxState =
 
 function ResultView({
   serverUrl,
-  photoUri,
+  source,
   receipt,
   groupCurrency,
   onUse,
@@ -593,7 +681,7 @@ function ResultView({
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.resultThumbWrap}>
-          <Image source={{ uri: photoUri }} style={styles.resultThumb} resizeMode="cover" />
+          <SourcePreview source={source} style={styles.resultThumb} />
         </View>
         <Text style={styles.resultEyebrow}>{t('receiptScanner.resultEyebrow')}</Text>
         <Text style={styles.resultTitle}>
@@ -730,7 +818,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     paddingHorizontal: spacing.s5,
   },
-  shutterSide: { width: 76, alignItems: 'center', justifyContent: 'center' },
+  shutterSide: {
+    width: 116,
+    flexDirection: 'row',
+    gap: spacing.s2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   galleryBtn: {
     width: 52,
     height: 52,
@@ -813,6 +907,22 @@ const styles = StyleSheet.create({
     color: colors.lead,
     textAlign: 'center',
     paddingTop: spacing.s2,
+  },
+
+  // Document source preview (stands in for the photo when there's no thumbnail)
+  docCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bone,
+    gap: spacing.s3,
+    paddingHorizontal: spacing.s5,
+  },
+  docName: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.graphite,
+    letterSpacing: 0.3,
+    textAlign: 'center',
   },
 
   // Error phase
