@@ -145,6 +145,8 @@
     "nWays": "{{count}}人で分割",
     "nWays_one": "{{count}}人で分割",
     "nWays_other": "{{count}}人で分割",
+    "noOcrBody": "このサーバーはレシートの読み取りに対応していないため、金額は手入力してください。レシートは添付されます。",
+    "noOcrTitle": "レシートを添付しました",
     "off": "オフ",
     "onePerson": "1人",
     "openReceipt": "レシートを開く",

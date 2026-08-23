@@ -145,6 +145,8 @@
     "nWays": "{{count}} delar",
     "nWays_one": "{{count}} delar",
     "nWays_other": "{{count}} delar",
+    "noOcrBody": "Den här servern läser inte av kvitton, så fyll i beloppet själv. Kvittot bifogas ändå.",
+    "noOcrTitle": "Kvitto bifogat",
     "off": "fel",
     "onePerson": "En person",
     "openReceipt": "Öppna kvitto",

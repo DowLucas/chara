@@ -145,6 +145,8 @@
     "nWays": "{{count}} ways",
     "nWays_one": "1 way",
     "nWays_other": "{{count}} ways",
+    "noOcrBody": "This server doesn't do receipt extraction, so enter the amount yourself. The receipt will still be attached.",
+    "noOcrTitle": "Receipt attached",
     "off": "off",
     "onePerson": "One person",
     "openReceipt": "Open receipt",

@@ -145,6 +145,8 @@
     "nWays": "{{count}}-fach",
     "nWays_one": "{{count}}-fach",
     "nWays_other": "{{count}}-fach",
+    "noOcrBody": "Dieser Server liest Belege nicht aus – trag den Betrag selbst ein. Der Beleg wird trotzdem angehängt.",
+    "noOcrTitle": "Beleg angehängt",
     "off": "fehlt noch",
     "onePerson": "Eine Person",
     "openReceipt": "Beleg öffnen",

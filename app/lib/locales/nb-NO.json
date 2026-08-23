@@ -145,6 +145,8 @@
     "nWays": "{{count}} deler",
     "nWays_one": "1 del",
     "nWays_other": "{{count}} deler",
+    "noOcrBody": "Denne serveren leser ikke kvitteringer, så skriv inn beløpet selv. Kvitteringen legges ved likevel.",
+    "noOcrTitle": "Kvittering lagt ved",
     "off": "for lite",
     "onePerson": "Én person",
     "openReceipt": "Åpne kvittering",

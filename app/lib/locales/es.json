@@ -150,6 +150,8 @@
     "nWays_many": "{{count}} partes",
     "nWays_one": "1 parte",
     "nWays_other": "{{count}} partes",
+    "noOcrBody": "Este servidor no extrae recibos, así que introduce el importe tú mismo. El recibo se adjuntará igualmente.",
+    "noOcrTitle": "Recibo adjuntado",
     "off": "de menos",
     "onePerson": "Una persona",
     "openReceipt": "Abrir recibo",

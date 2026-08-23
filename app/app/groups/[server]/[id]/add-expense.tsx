@@ -26,6 +26,9 @@ import {
 } from '@/lib/api';
 import { decimalToMinor, currentLocale } from '@/lib/i18n';
 import { ReceiptScanner, ReceiptScanResult } from '@/components/ReceiptScanner';
+import * as FileSystem from 'expo-file-system/legacy';
+import type { ReceiptSource } from '@/lib/receipt-file';
+import { consumePendingShare } from '@/lib/pending-share';
 import { ExpenseSavedOverlay } from '@/components/ExpenseSavedOverlay';
 import { notifyGroupChanged } from '@/lib/group-refresh';
 import { ScanItemsAssign } from '@/components/ScanItemsAssign';
@@ -63,8 +66,16 @@ export default function AddExpenseScreen() {
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
 
-  const [ocrAvailable, setOcrAvailable] = useState(false);
+  // null until the instance descriptor has answered — the shared-file effect
+  // below must not decide "no OCR" on the initial value.
+  const [ocrAvailable, setOcrAvailable] = useState<boolean | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
+  // A file handed over by the OS share sheet, for the scanner to start on.
+  const [initialScan, setInitialScan] = useState<{
+    source: ReceiptSource;
+    base64: string;
+    mimeType: string;
+  } | null>(null);
   const [savedSubtitle, setSavedSubtitle] = useState<string | null>(null);
   const [existingExpenses, setExistingExpenses] = useState<Expense[]>([]);
   const [pendingReceiptFile, setPendingReceiptFile] = useState<
@@ -125,13 +136,64 @@ export default function AddExpenseScreen() {
       .catch(() => setExistingExpenses([]));
   }, [id, serverUrl]);
 
+  // Shared-file entry (receipt-inbox → here). Consumed once, after the group
+  // and OCR availability are known: with OCR the scanner opens already
+  // analyzing the file; without it the file is attached as-is and the user
+  // enters the amount by hand.
+  const shareConsumedRef = useRef(false);
+  useEffect(() => {
+    if (!group || ocrAvailable === null || shareConsumedRef.current) return;
+    const share = consumePendingShare();
+    if (!share) return;
+    shareConsumedRef.current = true;
+    void (async () => {
+      let base64: string;
+      try {
+        base64 = await FileSystem.readAsStringAsync(share.uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+      } catch {
+        await showAlert({
+          title: t('receiptScanner.fileRejectedTitle'),
+          message: t('receiptScanner.fileUnreadable'),
+          buttons: [{ key: 'ok', label: t('common.ok') }],
+        });
+        return;
+      }
+      if (ocrAvailable) {
+        setInitialScan({
+          source:
+            share.mimeType === 'application/pdf'
+              ? { kind: 'pdf', uri: share.uri, name: share.name }
+              : { kind: 'image', uri: share.uri },
+          base64,
+          mimeType: share.mimeType,
+        });
+        setScannerOpen(true);
+      } else {
+        setPendingReceiptFile({ base64, mime_type: share.mimeType, name: share.name });
+        await showAlert({
+          title: t('addExpense.noOcrTitle'),
+          message: t('addExpense.noOcrBody'),
+          buttons: [{ key: 'ok', label: t('common.ok') }],
+        });
+      }
+    })();
+  }, [group, ocrAvailable, t]);
+
   const currentUserMemberId = useMemo(
     () => members.find((m) => m.user_id === user?.id)?.id ?? '',
     [members, user?.id],
   );
 
-  function handleReceiptScanned(result: ReceiptScanResult) {
+  function closeScanner() {
     setScannerOpen(false);
+    // A shared file is scanned once; a later manual open starts at the camera.
+    setInitialScan(null);
+  }
+
+  function handleReceiptScanned(result: ReceiptScanResult) {
+    closeScanner();
     const { receipt, applied } = result;
     if (result.file) setPendingReceiptFile(result.file);
 
@@ -374,7 +436,7 @@ export default function AddExpenseScreen() {
       <Modal
         visible={scannerOpen}
         animationType="slide"
-        onRequestClose={() => setScannerOpen(false)}
+        onRequestClose={closeScanner}
         statusBarTranslucent
       >
         <ReceiptScanner
@@ -383,7 +445,8 @@ export default function AddExpenseScreen() {
           groupLanguage={group?.language}
           groupId={id}
           onScanned={handleReceiptScanned}
-          onCancel={() => setScannerOpen(false)}
+          onCancel={closeScanner}
+          initialScan={initialScan ?? undefined}
         />
       </Modal>
 

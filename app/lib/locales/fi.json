@@ -145,6 +145,8 @@
     "nWays": "{{count}} osaan",
     "nWays_one": "{{count}} osaan",
     "nWays_other": "{{count}} osaan",
+    "noOcrBody": "Tämä palvelin ei lue kuitteja, joten syötä summa itse. Kuitti liitetään silti.",
+    "noOcrTitle": "Kuitti liitetty",
     "off": "yli",
     "onePerson": "Yksi henkilö",
     "openReceipt": "Avaa kuitti",

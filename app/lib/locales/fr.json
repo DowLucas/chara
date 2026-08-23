@@ -150,6 +150,8 @@
     "nWays_many": "en {{count}} parts",
     "nWays_one": "en {{count}} part",
     "nWays_other": "en {{count}} parts",
+    "noOcrBody": "Ce serveur n'extrait pas les reçus : saisissez le montant vous-même. Le reçu sera tout de même joint.",
+    "noOcrTitle": "Reçu joint",
     "off": "de trop",
     "onePerson": "Une personne",
     "openReceipt": "Ouvrir le reçu",

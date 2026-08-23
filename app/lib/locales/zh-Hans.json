@@ -145,6 +145,8 @@
     "nWays": "分 {{count}} 份",
     "nWays_one": "分 1 份",
     "nWays_other": "分 {{count}} 份",
+    "noOcrBody": "此服务器不提取收据信息，请自行输入金额。收据仍会被附加。",
+    "noOcrTitle": "已附加收据",
     "off": "差",
     "onePerson": "1 人",
     "openReceipt": "打开收据",

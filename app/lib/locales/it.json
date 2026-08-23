@@ -150,6 +150,8 @@
     "nWays_many": "{{count}} persone",
     "nWays_one": "{{count}} persone",
     "nWays_other": "{{count}} persone",
+    "noOcrBody": "Questo server non estrae gli scontrini: inserisci l'importo a mano. Lo scontrino verrà comunque allegato.",
+    "noOcrTitle": "Scontrino allegato",
     "off": "in meno",
     "onePerson": "Una persona",
     "openReceipt": "Apri scontrino",

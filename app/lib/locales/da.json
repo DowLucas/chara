@@ -145,6 +145,8 @@
     "nWays": "{{count}} dele",
     "nWays_one": "{{count}} dele",
     "nWays_other": "{{count}} dele",
+    "noOcrBody": "Denne server læser ikke kvitteringer, så indtast beløbet selv. Kvitteringen bliver stadig vedhæftet.",
+    "noOcrTitle": "Kvittering vedhæftet",
     "off": "for meget",
     "onePerson": "Én person",
     "openReceipt": "Åbn kvittering",

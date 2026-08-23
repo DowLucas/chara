@@ -155,6 +155,8 @@
     "nWays_many": "na {{count}}",
     "nWays_one": "na 1",
     "nWays_other": "na {{count}}",
+    "noOcrBody": "Ten serwer nie odczytuje paragonów, więc wpisz kwotę samodzielnie. Paragon i tak zostanie dołączony.",
+    "noOcrTitle": "Paragon dołączony",
     "off": "za dużo o",
     "onePerson": "Jedna osoba",
     "openReceipt": "Otwórz paragon",

@@ -145,6 +145,8 @@
     "nWays": "{{count}} personen",
     "nWays_one": "{{count}} personen",
     "nWays_other": "{{count}} personen",
+    "noOcrBody": "Deze server leest geen bonnen uit, dus vul het bedrag zelf in. De bon wordt wel bijgevoegd.",
+    "noOcrTitle": "Bon bijgevoegd",
     "off": "te veel",
     "onePerson": "Eén persoon",
     "openReceipt": "Bon openen",

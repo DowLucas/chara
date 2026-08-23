@@ -76,6 +76,9 @@ interface Props {
   groupId?: string;
   onScanned: (result: ReceiptScanResult) => void;
   onCancel: () => void;
+  /** Skip the camera: start analyzing this file immediately. Used when a
+   *  file arrives from outside the scanner (the OS share sheet). */
+  initialScan?: { source: ReceiptSource; base64: string; mimeType: string };
 }
 
 type Phase =
@@ -98,12 +101,22 @@ type Phase =
  *
  * Only mount this when the server reports `features.ocr === true`.
  */
-export function ReceiptScanner({ serverUrl, groupCurrency, groupLanguage, groupId, onScanned, onCancel }: Props) {
+export function ReceiptScanner({
+  serverUrl,
+  groupCurrency,
+  groupLanguage,
+  groupId,
+  onScanned,
+  onCancel,
+  initialScan,
+}: Props) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView | null>(null);
-  const [phase, setPhase] = useState<Phase>({ kind: 'camera' });
+  const [phase, setPhase] = useState<Phase>(
+    initialScan ? { kind: 'analyzing', source: initialScan.source } : { kind: 'camera' },
+  );
   // Waitlist modal state, separate from the phase state machine. The modal
   // floats over whichever phase the scanner happens to be in (we drop back
   // to 'camera' on cap-hit so the analyzing animation isn't stuck behind it).
@@ -111,10 +124,18 @@ export function ReceiptScanner({ serverUrl, groupCurrency, groupLanguage, groupI
   const account = useAccount(serverUrl);
 
   useEffect(() => {
-    if (permission && !permission.granted && permission.canAskAgain) {
+    // A shared file never needs the camera; don't prompt for it unless the
+    // user retakes (phase drops back to 'camera').
+    if (phase.kind === 'camera' && permission && !permission.granted && permission.canAskAgain) {
       requestPermission();
     }
-  }, [permission, requestPermission]);
+  }, [phase.kind, permission, requestPermission]);
+
+  useEffect(() => {
+    if (initialScan) void runScan(initialScan.source, initialScan.base64, initialScan.mimeType);
+    // Mount-only: the initial file is fixed for the life of this scanner.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function capture() {
     if (phase.kind !== 'camera' || !cameraRef.current) return;
