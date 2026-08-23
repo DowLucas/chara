@@ -1,0 +1,6 @@
+# Build the API from this checkout instead of pulling the published image.
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+services:
+  chara-api:
+    build:
+      context: ../backend

@@ -224,6 +224,7 @@
     "urlLabel": "URL del servidor",
     "urlPlaceholder": "https://tu-servidor.ejemplo",
     "validateInvalidUrl": "Esa URL no parece correcta. Usa el formato https://tu-servidor.ejemplo.",
+    "validateHttpNotAllowed": "http:// sin cifrar solo funciona para servidores de tu red doméstica (p. ej. http://192.168.1.10:8080). Para todo lo demás, usa https://.",
     "validateNotChara": "Eso no parece un servidor de Chara.",
     "validateUnreachable": "No se pudo contactar con ese servidor."
   },

@@ -218,6 +218,7 @@
     "urlLabel": "サーバーURL",
     "urlPlaceholder": "https://your-server.example",
     "validateInvalidUrl": "URLの形式が正しくありません。https://your-server.example の形式で入力してください。",
+    "validateHttpNotAllowed": "http:// はホームネットワーク内のサーバー（例: http://192.168.1.10:8080）でのみ使えます。それ以外は https:// を使ってください。",
     "validateNotChara": "Charaサーバーではないようです。",
     "validateUnreachable": "サーバーに接続できませんでした。"
   },
