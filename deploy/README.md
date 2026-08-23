@@ -1,7 +1,8 @@
 # Run your own Chara server
 
 You need one computer that stays on (a Raspberry Pi, an old laptop, a NAS, a
-cheap VPS — anything that runs Docker, Intel or ARM) and about 10 minutes.
+cheap VPS — anything that runs Docker, Intel or ARM, including 32-bit
+Raspberry Pi OS) and about 10 minutes.
 
 ## 1. Install Docker
 
@@ -22,7 +23,7 @@ and waits until the server is healthy:
 | Question | If you're not sure, pick… |
 |----------|---------------------------|
 | **How will phones reach this server?** | **c) home Wi-Fi only.** Works instantly, nothing to configure. Pick **a)** once you own a domain and want to use Chara away from home — Chara then gets an HTTPS certificate for you automatically. |
-| **How should Chara send email?** | **b) test mode.** Sign-in just works (no email sent). Add SMTP later by re-running `./setup.sh`. |
+| **How should Chara send email?** | On home Wi-Fi: **b) test mode** — sign-in just works, no email sent. On the internet: **a) SMTP** (test mode lets *anyone* sign in as *anyone*, so the script steers you away from it there). A Gmail "app password" is the easiest SMTP to get. |
 | **Gemini API key?** | Press Enter to skip. Only needed for receipt scanning. |
 
 At the end it prints the address to type into the app.
@@ -41,9 +42,9 @@ group.
 
 ## Everyday commands
 
-Run these from the `deploy/` folder. If you chose option **a)** (Caddy/HTTPS),
-add `-f docker-compose.yml -f docker-compose.caddy.yml` after `docker compose`
-— `./setup.sh` prints the exact command.
+Run these from the `deploy/` folder. (`setup.sh` records which compose files
+you use in `.env` via `COMPOSE_FILE`, so plain `docker compose` always does the
+right thing, Caddy add-on included.)
 
 | I want to… | Run |
 |------------|-----|
@@ -51,7 +52,7 @@ add `-f docker-compose.yml -f docker-compose.caddy.yml` after `docker compose`
 | update to the newest Chara | `docker compose pull && docker compose up -d` |
 | stop | `docker compose down` |
 | back up | copy the two Docker volumes `deploy_postgres_data` and `deploy_minio_data` (e.g. `docker run --rm -v deploy_postgres_data:/v -v $PWD:/b alpine tar czf /b/postgres.tgz -C /v .`) |
-| change a setting | edit `.env`, then `docker compose up -d` |
+| change a setting (add SMTP, switch to a domain…) | `./setup.sh`, answer **n** to "keep .env?" — passwords and secrets are kept, only the questions are re-asked |
 | start over | `docker compose down -v` (**deletes all data**), then `./setup.sh` |
 
 ## Doing it by hand instead
@@ -66,7 +67,8 @@ Add-ons, combined with `-f`:
 
 - `docker-compose.caddy.yml` — bundled Caddy reverse proxy with automatic HTTPS.
   Needs `CHARA_DOMAIN` in `.env`, DNS pointing at your machine, and ports 80/443
-  forwarded.
+  forwarded. Set `COMPOSE_FILE=docker-compose.yml:docker-compose.caddy.yml` in
+  `.env` so it's always included.
 - `docker-compose.build.yml` — build the API from this checkout instead of pulling
   `ghcr.io/dowlucas/chara-backend`.
 

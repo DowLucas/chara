@@ -67,7 +67,7 @@ services:
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
-      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_FROM: ${SMTP_FROM:-${SMTP_USER:-}}
       DEV_MODE: ${DEV_MODE:-false}
       # Reverse proxies whose X-Forwarded-For should be trusted (CIDRs).
       # The bundled Caddy override sets this automatically.
