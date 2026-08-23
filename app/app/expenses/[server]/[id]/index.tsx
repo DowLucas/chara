@@ -12,7 +12,7 @@ import { ActionSheet, ActionSheetOption, openNativeActionSheet } from '@/compone
 import { MoneyText } from '@/components/MoneyText';
 import { SettlementImpactSheet } from '@/components/SettlementImpactSheet';
 import { showAlert } from '@/lib/app-alert';
-import { openPdfExternally } from '@/lib/receipt-open';
+import { openPdfExternally, stagePdf } from '@/lib/receipt-open';
 import { PdfView, canRenderPdfInline } from '@/components/PdfView';
 import { hapticWarning } from '@/lib/haptics';
 import { Trans, useTranslation } from 'react-i18next';
@@ -471,7 +471,15 @@ export default function ExpenseDetailScreen() {
                   if (a.mime_type.startsWith('image/')) {
                     setViewer({ uri, headers });
                   } else if (a.mime_type === 'application/pdf' && canRenderPdfInline) {
-                    setViewer({ uri, headers, isPdf: true });
+                    // Stage locally first — react-native-pdf's own downloader
+                    // is unreliable with Authorization headers on Android
+                    // (lib/receipt-open.ts).
+                    const local = await stagePdf({ kind: 'url', url: uri, headers });
+                    if (local) {
+                      setViewer({ uri: local, headers: {}, isPdf: true });
+                    } else {
+                      void Linking.openURL(uri).catch(() => {});
+                    }
                   } else if (a.mime_type === 'application/pdf') {
                     // No inline renderer on this platform (web): stage the
                     // bytes and hand them to the OS, or fall back to the
@@ -510,11 +518,7 @@ export default function ExpenseDetailScreen() {
                 <TouchableOpacity
                   style={styles.viewerShare}
                   onPress={() => {
-                    void openPdfExternally({
-                      kind: 'url',
-                      url: viewer.uri,
-                      headers: viewer.headers,
-                    });
+                    void openPdfExternally({ kind: 'file', path: viewer.uri });
                   }}
                   accessibilityLabel={t('common.share')}
                 >

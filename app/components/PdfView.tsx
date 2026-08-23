@@ -11,6 +11,8 @@ let Pdf: React.ComponentType<{
   source: { uri: string; headers?: Record<string, string>; cache?: boolean };
   style?: StyleProp<ViewStyle>;
   trustAllCerts?: boolean;
+  onError?: (error: unknown) => void;
+  onLoadComplete?: (pages: number) => void;
 }> | null = null;
 
 if (Platform.OS !== 'web') {
@@ -33,5 +35,14 @@ export function PdfView(props: {
   style?: StyleProp<ViewStyle>;
 }) {
   if (!Pdf) return null;
-  return <Pdf source={props.source} style={props.style} trustAllCerts={false} />;
+  return (
+    <Pdf
+      source={props.source}
+      style={props.style}
+      trustAllCerts={false}
+      onError={(e) => {
+        if (__DEV__) console.log('[PdfView] error', e);
+      }}
+    />
+  );
 }

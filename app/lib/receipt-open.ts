@@ -27,12 +27,19 @@ export function receiptShareFilename(name: string | undefined): string {
 
 export type PdfSource =
   | { kind: 'base64'; base64: string; name?: string }
-  | { kind: 'url'; url: string; headers?: Record<string, string>; name?: string };
+  | { kind: 'url'; url: string; headers?: Record<string, string>; name?: string }
+  | { kind: 'file'; path: string };
 
-export async function openPdfExternally(source: PdfSource): Promise<boolean> {
+/**
+ * Stage the PDF bytes as a local cache file and return its path, or null.
+ * Downloading ourselves (expo-file-system) rather than letting
+ * react-native-pdf fetch matters on Android: its react-native-blob-util
+ * downloader is unreliable with Authorization headers ("Download
+ * interrupted", wonday/react-native-pdf#14).
+ */
+export async function stagePdf(source: PdfSource): Promise<string | null> {
   try {
-    if (!(await Sharing.isAvailableAsync())) return false;
-
+    if (source.kind === 'file') return source.path;
     const dir = `${FileSystem.cacheDirectory}shared-receipts/`;
     await FileSystem.makeDirectoryAsync(dir, { intermediates: true }).catch(() => {
       // Already exists — fine.
@@ -47,8 +54,19 @@ export async function openPdfExternally(source: PdfSource): Promise<boolean> {
       const res = await FileSystem.downloadAsync(source.url, path, {
         headers: source.headers,
       });
-      if (res.status !== 200) return false;
+      if (res.status !== 200) return null;
     }
+    return path;
+  } catch {
+    return null;
+  }
+}
+
+export async function openPdfExternally(source: PdfSource): Promise<boolean> {
+  try {
+    if (!(await Sharing.isAvailableAsync())) return false;
+    const path = await stagePdf(source);
+    if (!path) return false;
 
     await Sharing.shareAsync(path, {
       mimeType: 'application/pdf',

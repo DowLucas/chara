@@ -18,7 +18,7 @@ jest.mock('expo-sharing', () => ({
 
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
-import { openPdfExternally, receiptShareFilename } from '../receipt-open';
+import { openPdfExternally, receiptShareFilename, stagePdf } from '../receipt-open';
 
 const fs = FileSystem as jest.Mocked<typeof FileSystem>;
 const sharing = Sharing as jest.Mocked<typeof Sharing>;
@@ -41,6 +41,23 @@ describe('receiptShareFilename', () => {
   it('strips path separators and other hostile characters', () => {
     expect(receiptShareFilename('../../etc/passwd')).toBe('etc_passwd.pdf');
     expect(receiptShareFilename('a/b\\c:d.pdf')).toBe('a_b_c_d.pdf');
+  });
+});
+
+describe('stagePdf', () => {
+  it('stages base64 and returns the local path', async () => {
+    await expect(stagePdf({ kind: 'base64', base64: 'QUJD', name: 'a.pdf' }))
+      .resolves.toBe('file:///cache/shared-receipts/a.pdf');
+  });
+
+  it('stages a url download and returns the local path', async () => {
+    await expect(stagePdf({ kind: 'url', url: 'https://s3.example/x' }))
+      .resolves.toBe('file:///cache/shared-receipts/receipt.pdf');
+  });
+
+  it('returns null on a non-200 download', async () => {
+    fs.downloadAsync.mockResolvedValueOnce({ uri: 'x', status: 401 } as never);
+    await expect(stagePdf({ kind: 'url', url: 'https://s3.example/x' })).resolves.toBeNull();
   });
 });
 
