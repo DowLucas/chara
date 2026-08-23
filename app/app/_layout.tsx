@@ -10,6 +10,8 @@ import { AppState, AppStateStatus, LogBox } from 'react-native';
 // this only affects dev/preview.
 LogBox.ignoreLogs([/ExpoSecureStore/i]);
 import * as Linking from 'expo-linking';
+import * as FileSystem from 'expo-file-system/legacy';
+import { useShareIntent } from 'expo-share-intent';
 import * as Notifications from 'expo-notifications';
 import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -31,6 +33,8 @@ import { REFRESH_FLOOR_MS } from '@/lib/aggregated-reads-internal';
 import { classifyInvite } from '@/lib/invite-handler';
 import { dispatchInviteIntent } from '@/lib/invite-dispatcher';
 import { classifyGroupDeepLink } from '@/lib/deep-link';
+import { classifyShareIntent, isShareArtifact, sweepShareFiles } from '@/lib/share-inbox';
+import { setPendingShare } from '@/lib/pending-share';
 import { normalizeServerUrl } from '@/lib/server-url';
 import i18n from '@/lib/i18n';
 import '@/lib/i18n';
@@ -164,6 +168,75 @@ function retryDeepLinkOnceLoaded(url: string): void {
 // noisy in dev. Swallow them.
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
+/**
+ * Bound how long shared receipts sit in the App Group container. The share
+ * extension copies every shared file there and never deletes it; only the
+ * extension's own `<UUID>.<ext>` artifacts are touched (lib/share-inbox.ts).
+ * Best-effort: a failure here must never block the share itself.
+ */
+async function sweepShareContainer(fileUri: string): Promise<void> {
+  const slash = fileUri.lastIndexOf('/');
+  if (slash < 0) return;
+  const dir = fileUri.slice(0, slash + 1);
+  // Only the iOS App Group container persists across launches. Android hands
+  // us a copy in the app's own cache dir, which the OS already manages.
+  if (!dir.includes('/AppGroup/')) return;
+  try {
+    const names = (await FileSystem.readDirectoryAsync(dir)).filter(isShareArtifact);
+    const stats = await Promise.all(
+      names.map(async (name) => {
+        const info = await FileSystem.getInfoAsync(dir + name);
+        const savedAtMs = info.exists && !info.isDirectory ? info.modificationTime * 1000 : null;
+        return { name, savedAtMs };
+      }),
+    );
+    const { remove } = sweepShareFiles(
+      stats.filter((f): f is { name: string; savedAtMs: number } => f.savedAtMs !== null),
+      Date.now(),
+    );
+    await Promise.all(
+      remove
+        .filter((name) => dir + name !== fileUri)
+        .map((name) => FileSystem.deleteAsync(dir + name, { idempotent: true })),
+    );
+  } catch {
+    // Listing or deleting failed — leave the container alone.
+  }
+}
+
+/**
+ * Share-sheet entry point ("open a PDF anywhere → Share → Chara"). Mounted
+ * inside AccountsProvider so the receipt-inbox screen it routes to can read
+ * accounts. Classifies the handoff, stashes the file for add-expense, sweeps
+ * stale artifacts, and navigates; unsupported files get an alert instead.
+ * Spec: docs/superpowers/specs/2026-08-02-document-receipt-extraction-design.md
+ */
+function ShareIntentListener() {
+  const { hasShareIntent, shareIntent, resetShareIntent } = useShareIntent();
+
+  useEffect(() => {
+    if (!hasShareIntent) return;
+    const intent = classifyShareIntent(shareIntent.files);
+    resetShareIntent();
+    if (intent.kind === 'ignore') return;
+    if (intent.kind === 'unsupported') {
+      void showAlert({
+        title: i18n.t('receiptInbox.unsupportedTitle'),
+        message: i18n.t('receiptInbox.unsupportedBody'),
+        buttons: [{ key: 'ok', label: i18n.t('common.ok') }],
+      });
+      return;
+    }
+    setPendingShare({ ...intent.file, extraFilesIgnored: intent.extraFilesIgnored });
+    void sweepShareContainer(intent.file.uri);
+    router.push('/receipt-inbox' as never);
+    // resetShareIntent is stable per the library; hasShareIntent is the trigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasShareIntent]);
+
+  return null;
+}
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     'SNPro-Regular': require('../assets/fonts/SNPro-Regular.ttf'),
@@ -260,6 +333,7 @@ export default function RootLayout() {
           <Stack.Screen name="groups/[server]/[id]/edit" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="groups/[server]/[id]/members" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="groups/scan" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="receipt-inbox" options={{ presentation: 'modal' }} />
           <Stack.Screen name="join/[server]/[token]" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="expenses/[server]/[id]/index" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="settings/about" options={{ animation: 'slide_from_right' }} />
@@ -268,6 +342,7 @@ export default function RootLayout() {
         </Stack>
         <StatusBar style="dark" />
         <AppAlertHost />
+        <ShareIntentListener />
       </AccountsProvider>
     </SafeAreaProvider>
   );

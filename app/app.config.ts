@@ -25,7 +25,7 @@ const IS_DEV_VARIANT = process.env.APP_VARIANT === 'dev';
 const config: ExpoConfig = {
   name: IS_DEV_VARIANT ? 'Chara Dev' : 'Chara',
   slug: 'chara',
-  version: '1.3.0',
+  version: '1.3.1',
   scheme: IS_DEV_VARIANT ? 'charadev' : 'chara',
   orientation: 'portrait',
   icon: './assets/icon.png',
@@ -171,6 +171,22 @@ const config: ExpoConfig = {
   plugins: [
     'expo-router',
     [
+      // Generates the iOS Share Extension target and the Android ACTION_SEND
+      // intent filters. The extension only stashes the incoming file in the
+      // App Group container and opens the host app — group selection and the
+      // scan itself happen in JS. See
+      // docs/superpowers/specs/2026-08-02-document-receipt-extraction-design.md
+      'expo-share-intent',
+      {
+        iosActivationRules: {
+          NSExtensionActivationSupportsFileWithMaxCount: 1,
+          NSExtensionActivationSupportsImageWithMaxCount: 1,
+        },
+        iosAppGroupIdentifier: `group.${IS_DEV_VARIANT ? 'app.chara.dev' : 'app.chara'}`,
+        androidIntentFilters: ['application/pdf', 'image/*'],
+      },
+    ],
+    [
       // GoogleSignIn 9.x pulls in AppCheckCore (a Swift pod) which depends on
       // GoogleUtilities + RecaptchaInterop. Those don't define modules, so under
       // static libraries `pod install` fails ("cannot be integrated as static
@@ -194,9 +210,11 @@ const config: ExpoConfig = {
     [
       'expo-splash-screen',
       {
-        backgroundColor: '#F0E5CC',
-        image: './assets/chara-logo.png',
-        imageWidth: 200,
+        // Background matches the paper tone at the art's edges so the
+        // full-bleed illustration blends seamlessly into the window color.
+        backgroundColor: '#F0EAD0',
+        image: './assets/splash-art.png',
+        imageWidth: 300,
         resizeMode: 'contain',
       },
     ],

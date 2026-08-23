@@ -425,6 +425,44 @@ the same gate and now delegates it.
 autolinks), but no iOS or Android build has been run. See the PR for the
 required one-time `eas credentials` step before the next `./release`.
 
+### Document receipts: PDF extraction + share-to-Chara ✅
+
+A PDF e-receipt or invoice becomes an expense through the same extract →
+confirm → FX → itemize → save → attach flow as a photographed receipt, from
+two entry points: a "pick a file" button in the receipt scanner, and the OS
+share sheet ("open a PDF anywhere → Share → Chara").
+
+- **Backend**: `/api/receipts/scan` accepts `application/pdf`, validated
+  by `%PDF-` magic bytes *before* the billing counter reserves a slot.
+  Gemini reads PDF inline; prompt rules cover multi-page invoices (one
+  expense, items accumulated across pages) and bank statements /
+  transaction lists (not a receipt → `unreadable`). No `PROTOCOL_VERSION`
+  bump — an extra MIME value is additive.
+- **Scanner**: `lib/receipt-file.ts` validates type + size before any
+  base64 read; the phase state machine carries a `ReceiptSource` union so a
+  PDF renders a document card. `ReceiptScanResult.image` → `.file`.
+- **Share sheet**: `expo-share-intent` (pinned `^5.1.1` — SDK 54) generates
+  the iOS Share Extension alongside the `@bacons/apple-targets` widget;
+  both share `group.app.chara`. `ShareIntentListener` in the root layout
+  classifies the handoff (`lib/share-inbox.ts`), stashes it in the
+  session-only `lib/pending-share.ts`, sweeps stale `<UUID>.<ext>`
+  artifacts out of the App Group container (the library never deletes
+  them), and routes to `app/receipt-inbox.tsx`, which lists groups across
+  all linked accounts (sticky create-server first) — the group is an input
+  to extraction. `add-expense` consumes the share once group + OCR
+  availability are known: scanner mounts via `initialScan` already
+  analyzing, or — on a server without `GEMINI_API_KEY` — the file is
+  attached without extraction and the user is told to enter the amount.
+- **i18n**: all new keys in all 15 locales; `lib/__tests__/locale-parity.test.ts`
+  now enforces key parity (plural-suffix aware) for every future change.
+- **Tests**: backend handler + prompt tests; a `geminieval` build-tagged
+  eval against real Gemini (receipt, 3-page invoice, bank statement,
+  photographed JPEG). Client: `receipt-file` (12), `share-inbox` (20),
+  `receipt-inbox.helpers` (8), locale parity (14).
+- **Not verified**: no device run of the share path (the share extension
+  is native — Expo Go can't exercise it; needs a dev client on iOS/Android),
+  and no Xcode build of the generated Share Extension (Linux host).
+
 ### Week 10 — Web client (Expo for Web) 🔲
 
 - [ ] Sign-in flow with magic link
@@ -433,12 +471,15 @@ required one-time `eas credentials` step before the next `./release`.
 - [ ] Group view: expenses list, balances summary, activity feed
 - [ ] Mobile-responsive layout
 
-### Week 12 — Self-host deployment 🔲
+### Week 12 — Self-host deployment ✅ (PR #89)
 
-- [ ] Docker Compose that works on fresh server in <10 minutes
-- [ ] `.env.example` with every config option commented
-- [ ] Backup/restore CLI scripts
-- [ ] README with install instructions, configuration reference, troubleshooting
+- [x] `deploy/setup.sh` — three questions, secrets generated, stack up and
+      healthy from the published `ghcr.io/dowlucas/chara-backend` image
+      (amd64 / arm64 / arm/v7); Caddy add-on for automatic HTTPS
+- [x] `.env.example` with every config option commented
+- [x] `deploy/README.md` — install, connect the app, everyday commands,
+      backup (volume copy), update, reset
+- [ ] Backup/restore CLI scripts (volume-copy one-liner documented instead)
 
 ---
 

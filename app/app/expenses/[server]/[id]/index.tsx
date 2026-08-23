@@ -12,6 +12,8 @@ import { ActionSheet, ActionSheetOption, openNativeActionSheet } from '@/compone
 import { MoneyText } from '@/components/MoneyText';
 import { SettlementImpactSheet } from '@/components/SettlementImpactSheet';
 import { showAlert } from '@/lib/app-alert';
+import { openPdfExternally, stagePdf } from '@/lib/receipt-open';
+import { PdfView, canRenderPdfInline } from '@/components/PdfView';
 import { hapticWarning } from '@/lib/haptics';
 import { Trans, useTranslation } from 'react-i18next';
 import {
@@ -47,7 +49,11 @@ export default function ExpenseDetailScreen() {
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [attachments, setAttachments] = useState<ExpenseAttachment[]>([]);
-  const [viewer, setViewer] = useState<{ uri: string; headers: Record<string, string> } | null>(
+  const [viewer, setViewer] = useState<{
+    uri: string;
+    headers: Record<string, string>;
+    isPdf?: boolean;
+  } | null>(
     null,
   );
   const [actionSheetVisible, setActionSheetVisible] = useState(false);
@@ -464,6 +470,22 @@ export default function ExpenseDetailScreen() {
                     : {};
                   if (a.mime_type.startsWith('image/')) {
                     setViewer({ uri, headers });
+                  } else if (a.mime_type === 'application/pdf' && canRenderPdfInline) {
+                    // Stage locally first — react-native-pdf's own downloader
+                    // is unreliable with Authorization headers on Android
+                    // (lib/receipt-open.ts).
+                    const local = await stagePdf({ kind: 'url', url: uri, headers });
+                    if (local) {
+                      setViewer({ uri: local, headers: {}, isPdf: true });
+                    } else {
+                      void Linking.openURL(uri).catch(() => {});
+                    }
+                  } else if (a.mime_type === 'application/pdf') {
+                    // No inline renderer on this platform (web): stage the
+                    // bytes and hand them to the OS, or fall back to the
+                    // browser tab as a last resort.
+                    const ok = await openPdfExternally({ kind: 'url', url: uri, headers });
+                    if (!ok) void Linking.openURL(uri).catch(() => {});
                   } else {
                     // Non-images can't pass headers via Linking, so fall back
                     // to opening the absolute API URL — caller is responsible
@@ -491,7 +513,23 @@ export default function ExpenseDetailScreen() {
             >
               <Feather name="x" size={24} color={colors.paper} />
             </TouchableOpacity>
-            {viewer ? (
+            {viewer?.isPdf ? (
+              <>
+                <TouchableOpacity
+                  style={styles.viewerShare}
+                  onPress={() => {
+                    void openPdfExternally({ kind: 'file', path: viewer.uri });
+                  }}
+                  accessibilityLabel={t('common.share')}
+                >
+                  <Feather name="share" size={22} color={colors.paper} />
+                </TouchableOpacity>
+                <PdfView
+                  source={{ uri: viewer.uri, headers: viewer.headers, cache: true }}
+                  style={styles.viewerPdf}
+                />
+              </>
+            ) : viewer ? (
               <Image
                 source={{ uri: viewer.uri, headers: viewer.headers }}
                 style={styles.viewerImage}
@@ -782,6 +820,14 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   viewerImage: { width: '100%', height: '100%' },
+  viewerPdf: { flex: 1, alignSelf: 'stretch', marginTop: 64 },
+  viewerShare: {
+    position: 'absolute',
+    top: 48,
+    right: 76,
+    zIndex: 2,
+    padding: spacing.s2,
+  },
   activityFooter: {
     fontFamily: fontMono,
     fontSize: fontSize.bodyS,

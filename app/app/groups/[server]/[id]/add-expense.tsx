@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { showAlert } from '@/lib/app-alert';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
+import { Button } from '@/components/Button';
 import {
   apiFor,
   Expense,
@@ -24,6 +25,11 @@ import {
 } from '@/lib/api';
 import { decimalToMinor, currentLocale } from '@/lib/i18n';
 import { ReceiptScanner, ReceiptScanResult } from '@/components/ReceiptScanner';
+import * as FileSystem from 'expo-file-system/legacy';
+import type { ReceiptSource } from '@/lib/receipt-file';
+import { consumePendingShare } from '@/lib/pending-share';
+import { openPdfExternally } from '@/lib/receipt-open';
+import { PdfView, canRenderPdfInline } from '@/components/PdfView';
 import { ExpenseSavedOverlay } from '@/components/ExpenseSavedOverlay';
 import { notifyGroupChanged } from '@/lib/group-refresh';
 import { ScanItemsAssign } from '@/components/ScanItemsAssign';
@@ -37,6 +43,7 @@ import {
 } from '@/components/ExpenseWizard';
 import {
   colors,
+  fontDisplay,
   fontMono,
   fontMonoMedium,
   fontSize,
@@ -61,12 +68,20 @@ export default function AddExpenseScreen() {
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
 
-  const [ocrAvailable, setOcrAvailable] = useState(false);
+  // null until the instance descriptor has answered — the shared-file effect
+  // below must not decide "no OCR" on the initial value.
+  const [ocrAvailable, setOcrAvailable] = useState<boolean | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
+  // A file handed over by the OS share sheet, for the scanner to start on.
+  const [initialScan, setInitialScan] = useState<{
+    source: ReceiptSource;
+    base64: string;
+    mimeType: string;
+  } | null>(null);
   const [savedSubtitle, setSavedSubtitle] = useState<string | null>(null);
   const [existingExpenses, setExistingExpenses] = useState<Expense[]>([]);
-  const [pendingReceiptImage, setPendingReceiptImage] = useState<
-    { base64: string; mime_type: string } | null
+  const [pendingReceiptFile, setPendingReceiptFile] = useState<
+    { base64: string; mime_type: string; name?: string } | null
   >(null);
   const [scanItemsState, setScanItemsState] =
     useState<ScanItemsState<ScannedReceiptItem> | null>(null);
@@ -123,15 +138,82 @@ export default function AddExpenseScreen() {
       .catch(() => setExistingExpenses([]));
   }, [id, serverUrl]);
 
+  // Shared-file entry (receipt-inbox → here). Consumed once, after the group
+  // and OCR availability are known: with OCR the scanner opens already
+  // analyzing the file; without it the file is attached as-is and the user
+  // enters the amount by hand.
+  const shareConsumedRef = useRef(false);
+  useEffect(() => {
+    if (!group || ocrAvailable === null || shareConsumedRef.current) return;
+    const share = consumePendingShare();
+    if (!share) return;
+    shareConsumedRef.current = true;
+    void (async () => {
+      let base64: string;
+      try {
+        base64 = await FileSystem.readAsStringAsync(share.uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+      } catch {
+        await showAlert({
+          title: t('receiptScanner.fileRejectedTitle'),
+          message: t('receiptScanner.fileUnreadable'),
+          buttons: [{ key: 'ok', label: t('common.ok') }],
+        });
+        return;
+      }
+      if (ocrAvailable) {
+        setInitialScan({
+          source:
+            share.mimeType === 'application/pdf'
+              ? { kind: 'pdf', uri: share.uri, name: share.name }
+              : { kind: 'image', uri: share.uri },
+          base64,
+          mimeType: share.mimeType,
+        });
+        setScannerOpen(true);
+      } else {
+        setPendingReceiptFile({ base64, mime_type: share.mimeType, name: share.name });
+        await showAlert({
+          title: t('addExpense.noOcrTitle'),
+          message: t('addExpense.noOcrBody'),
+          buttons: [{ key: 'ok', label: t('common.ok') }],
+        });
+      }
+    })();
+  }, [group, ocrAvailable, t]);
+
   const currentUserMemberId = useMemo(
     () => members.find((m) => m.user_id === user?.id)?.id ?? '',
     [members, user?.id],
   );
 
-  function handleReceiptScanned(result: ReceiptScanResult) {
+  function sharePendingReceipt() {
+    if (!pendingReceiptFile) return;
+    void openPdfExternally({
+      kind: 'base64',
+      base64: pendingReceiptFile.base64,
+      name: pendingReceiptFile.name,
+    }).then((ok) => {
+      if (ok) return;
+      void showAlert({
+        title: t('addExpense.receiptOpenFailedTitle'),
+        message: t('addExpense.receiptOpenFailedBody'),
+        buttons: [{ key: 'ok', label: t('common.ok') }],
+      });
+    });
+  }
+
+  function closeScanner() {
     setScannerOpen(false);
+    // A shared file is scanned once; a later manual open starts at the camera.
+    setInitialScan(null);
+  }
+
+  function handleReceiptScanned(result: ReceiptScanResult) {
+    closeScanner();
     const { receipt, applied } = result;
-    if (result.image) setPendingReceiptImage(result.image);
+    if (result.file) setPendingReceiptFile(result.file);
 
     wizardRef.current?.applyReceiptResult({
       amount: applied.amount_minor > 0 ? (applied.amount_minor / 100).toFixed(2) : undefined,
@@ -231,13 +313,13 @@ export default function AddExpenseScreen() {
 
       notifyGroupChanged(serverUrl, id);
 
-      if (pendingReceiptImage && created?.id) {
+      if (pendingReceiptFile && created?.id) {
         try {
           await api.uploadExpenseAttachment(
             id,
             created.id,
-            pendingReceiptImage.base64,
-            pendingReceiptImage.mime_type,
+            pendingReceiptFile.base64,
+            pendingReceiptFile.mime_type,
           );
         } catch (uploadErr) {
           console.warn('receipt attachment upload failed', uploadErr);
@@ -280,7 +362,7 @@ export default function AddExpenseScreen() {
         >
           <Text style={styles.receiptActionLabel}>{t('addExpense.viewItems')}</Text>
         </TouchableOpacity>
-        {pendingReceiptImage && (
+        {pendingReceiptFile && (
           <TouchableOpacity
             style={styles.receiptActionBtn}
             onPress={() => setReceiptViewerOpen(true)}
@@ -372,7 +454,7 @@ export default function AddExpenseScreen() {
       <Modal
         visible={scannerOpen}
         animationType="slide"
-        onRequestClose={() => setScannerOpen(false)}
+        onRequestClose={closeScanner}
         statusBarTranslucent
       >
         <ReceiptScanner
@@ -381,7 +463,8 @@ export default function AddExpenseScreen() {
           groupLanguage={group?.language}
           groupId={id}
           onScanned={handleReceiptScanned}
-          onCancel={() => setScannerOpen(false)}
+          onCancel={closeScanner}
+          initialScan={initialScan ?? undefined}
         />
       </Modal>
 
@@ -402,7 +485,7 @@ export default function AddExpenseScreen() {
       />
 
       <Modal
-        visible={receiptViewerOpen && !!pendingReceiptImage}
+        visible={receiptViewerOpen && !!pendingReceiptFile}
         animationType="fade"
         transparent
         onRequestClose={() => setReceiptViewerOpen(false)}
@@ -415,14 +498,54 @@ export default function AddExpenseScreen() {
           accessibilityRole="button"
           accessibilityLabel={t('common.close')}
         >
-          {pendingReceiptImage && (
-            <Image
-              style={styles.receiptImage}
-              resizeMode="contain"
-              source={{
-                uri: `data:${pendingReceiptImage.mime_type};base64,${pendingReceiptImage.base64}`,
-              }}
-            />
+          {pendingReceiptFile && (
+            pendingReceiptFile.mime_type === 'application/pdf' && canRenderPdfInline ? (
+              <View style={styles.receiptPdfWrap}>
+                <View style={styles.receiptPdfBar}>
+                  <Text style={styles.receiptPdfName} numberOfLines={1}>
+                    {pendingReceiptFile.name ?? t('addExpense.receiptDocument')}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => sharePendingReceipt()}
+                    accessibilityLabel={t('common.share')}
+                    style={styles.receiptPdfBarBtn}
+                  >
+                    <Feather name="share" size={22} color={colors.paper} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setReceiptViewerOpen(false)}
+                    accessibilityLabel={t('common.close')}
+                    style={styles.receiptPdfBarBtn}
+                  >
+                    <Feather name="x" size={24} color={colors.paper} />
+                  </TouchableOpacity>
+                </View>
+                <PdfView
+                  source={{
+                    uri: `data:application/pdf;base64,${pendingReceiptFile.base64}`,
+                  }}
+                  style={styles.receiptPdf}
+                />
+              </View>
+            ) : pendingReceiptFile.mime_type === 'application/pdf' ? (
+              <View style={styles.receiptDocCard}>
+                <Feather name="file-text" size={48} color={colors.lead} />
+                <Text style={styles.receiptDocName} numberOfLines={2}>
+                  {pendingReceiptFile.name ?? t('addExpense.receiptDocument')}
+                </Text>
+                <Button kind="secondary" onPress={() => sharePendingReceipt()}>
+                  {t('addExpense.openReceipt')}
+                </Button>
+              </View>
+            ) : (
+              <Image
+                style={styles.receiptImage}
+                resizeMode="contain"
+                source={{
+                  uri: `data:${pendingReceiptFile.mime_type};base64,${pendingReceiptFile.base64}`,
+                }}
+              />
+            )
           )}
         </TouchableOpacity>
       </Modal>
@@ -504,6 +627,35 @@ const styles = StyleSheet.create({
     padding: spacing.s4,
   },
   receiptImage: { width: '100%', height: '100%' },
+  receiptPdfWrap: { flex: 1, alignSelf: 'stretch' },
+  receiptPdfBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.s3,
+    paddingHorizontal: spacing.s4,
+    paddingVertical: spacing.s3,
+  },
+  receiptPdfName: {
+    flex: 1,
+    fontFamily: fontDisplay,
+    fontSize: fontSize.bodyS,
+    color: colors.paper,
+  },
+  receiptPdfBarBtn: { padding: spacing.s2 },
+  receiptPdf: { flex: 1, alignSelf: 'stretch', backgroundColor: 'transparent' },
+  receiptDocCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.s4,
+    padding: spacing.s6,
+  },
+  receiptDocName: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.paper,
+    letterSpacing: 0.3,
+    textAlign: 'center',
+  },
   dupWrap: {
     paddingHorizontal: spacing.s5,
     paddingTop: spacing.s3,
