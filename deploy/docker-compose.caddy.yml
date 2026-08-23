@@ -1,0 +1,34 @@
+# Automatic HTTPS with Caddy. Requires:
+#   - CHARA_DOMAIN in .env (e.g. chara.example.com)
+#   - that domain's DNS pointing at this machine
+#   - ports 80 and 443 reachable from the internet (router port-forward)
+#
+#   docker compose -f docker-compose.yml -f docker-compose.caddy.yml up -d
+services:
+  chara-caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      CHARA_DOMAIN: ${CHARA_DOMAIN:?set CHARA_DOMAIN in .env (e.g. chara.example.com)}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - chara-api
+
+  chara-api:
+    # With Caddy in front there is no need to expose the API on the host.
+    ports: !reset []
+    environment:
+      # Caddy talks to the API over the compose network; trust its
+      # X-Forwarded-For so per-IP rate limits see real client IPs.
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+
+volumes:
+  caddy_data:
+  caddy_config:

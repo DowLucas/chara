@@ -218,6 +218,7 @@
     "urlLabel": "Server-URL",
     "urlPlaceholder": "https://din-server.eksempel",
     "validateInvalidUrl": "Den URL ser ikke rigtig ud. Brug formen https://din-server.eksempel.",
+    "validateHttpNotAllowed": "Almindelig http:// virker kun for servere på dit hjemmenetværk (f.eks. http://192.168.1.10:8080). Brug https:// til alt andet.",
     "validateNotChara": "Det ligner ikke en Chara-server.",
     "validateUnreachable": "Kunne ikke nå serveren."
   },

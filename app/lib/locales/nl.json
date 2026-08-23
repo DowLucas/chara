@@ -218,6 +218,7 @@
     "urlLabel": "Server-URL",
     "urlPlaceholder": "https://your-server.example",
     "validateInvalidUrl": "Die URL ziet er niet goed uit. Gebruik de vorm https://your-server.example.",
+    "validateHttpNotAllowed": "Gewoon http:// werkt alleen voor servers in je thuisnetwerk (bijv. http://192.168.1.10:8080). Gebruik anders https://.",
     "validateNotChara": "Dat ziet er niet uit als een Chara-server.",
     "validateUnreachable": "Kon die server niet bereiken."
   },

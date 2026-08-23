@@ -43,8 +43,8 @@ Chara fills that gap.
   side by side.
 - **Receipt scanning** — optional AI-assisted line-item extraction.
 - **Auth that fits the deployment** — magic link everywhere; Google / Apple
-  Sign-In on the hosted tier; OIDC (Authentik, Keycloak, Authelia, …) on
-  self-hosted instances.
+  Sign-In on the hosted tier. OIDC (Authentik, Keycloak, Authelia, …) for
+  self-hosted instances is planned.
 - **Push notifications**, internationalization, and a privacy-respecting design.
 
 > Chara is pre-1.0 and under active development. See
@@ -57,7 +57,7 @@ Chara fills that gap.
 |------|------------|
 | [`backend/`](backend/) | Go API — Chi router, sqlc, River job queue, Postgres. See [`backend/README.md`](backend/README.md). |
 | [`app/`](app/) | Expo (React Native) app — iOS, Android, Web. See [`app/README.md`](app/README.md). |
-| [`deploy/`](deploy/) | Self-host Docker Compose + Dockerfile. |
+| [`deploy/`](deploy/) | Self-host: guided `setup.sh`, Docker Compose stack, Caddy add-on. See [`deploy/README.md`](deploy/README.md). |
 | [`docs/`](docs/) | Product strategy, technical architecture, roadmap, and UX diagrams. |
 
 ## Stack
@@ -73,19 +73,19 @@ Chara fills that gap.
 
 ## Self-hosting
 
-A complete stack — API, Postgres, and MinIO — is defined in
-[`deploy/docker-compose.yml`](deploy/docker-compose.yml).
+One machine with Docker (x86 or ARM — a Raspberry Pi is fine) and ~10 minutes:
 
 ```sh
-cd deploy
-cp .env.example .env       # set JWT_SECRET, POSTGRES_PASSWORD, MINIO_ROOT_*, BASE_URL
-docker compose up -d
-curl http://localhost:8080/api/health/liveness
+git clone https://github.com/DowLucas/chara.git
+cd chara/deploy
+./setup.sh
 ```
 
-Point the app at your server's URL and sign in with a magic link or your OIDC
-provider. All deployment secrets (`JWT_SECRET`, database credentials, S3 keys)
-are supplied via environment variables and are never committed.
+The script asks three questions, generates every secret, starts the API +
+Postgres + MinIO from the published `ghcr.io/dowlucas/chara-backend` image
+(optionally with Caddy for automatic HTTPS), and prints the address to type into
+the app under **use my server →**. Full walkthrough, manual setup, updates and
+backups: [`deploy/README.md`](deploy/README.md).
 
 ## Local development
 

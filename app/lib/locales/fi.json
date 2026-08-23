@@ -218,6 +218,7 @@
     "urlLabel": "Palvelimen osoite",
     "urlPlaceholder": "https://oma-palvelin.example",
     "validateInvalidUrl": "Tämä osoite ei näytä oikealta. Käytä muotoa https://oma-palvelin.example.",
+    "validateHttpNotAllowed": "Tavallinen http:// toimii vain kotiverkkosi palvelimille (esim. http://192.168.1.10:8080). Käytä muuten https://.",
     "validateNotChara": "Tämä ei näytä Chara-palvelimelta.",
     "validateUnreachable": "Palvelimeen ei saatu yhteyttä."
   },

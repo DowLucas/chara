@@ -1,5 +1,10 @@
-# Multi-stage build
-FROM golang:1.25-alpine AS builder
+# Multi-stage build. Cross-compiles for the target platform on the build host
+# (no QEMU emulation of the Go compiler), so `docker buildx --platform
+# linux/amd64,linux/arm64` is fast.
+FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder
+
+ARG TARGETOS
+ARG TARGETARCH
 
 WORKDIR /build
 
@@ -16,7 +21,7 @@ RUN go mod download
 COPY . .
 
 # Build binary with stripping and trimpath
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} go build \
     -ldflags="-s -w" \
     -trimpath \
     -o api ./cmd/api

@@ -179,6 +179,10 @@ const config: ExpoConfig = {
       // them. Without this, EAS iOS builds break at the Install pods phase.
       'expo-build-properties',
       {
+        // Self-hosters on a home network point the app at http://192.168.x.x.
+        // Android 9+ blocks cleartext by default; the app itself only accepts
+        // plain http for loopback/RFC1918 hosts (app/lib/server-url.ts).
+        android: { usesCleartextTraffic: true },
         ios: {
           extraPods: [
             { name: 'GoogleUtilities', modular_headers: true },
