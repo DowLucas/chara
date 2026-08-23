@@ -1,12 +1,14 @@
 /**
  * Pure logic for files handed to Chara by the OS share sheet.
  *
- * Security: the share extension writes the incoming file into the App Group
- * container and opens the host app by URL. That URL can be fired by ANY
- * installed app, so the app must never join a caller-supplied string onto a
- * container path — `chara://receipt-inbox?f=../../…` would read outside the
- * container. We accept only an opaque fixed-shape token and resolve it
- * strictly against one directory. Same posture as lib/deep-link.ts.
+ * The share handoff is untrusted input: any installed app can fire the URL
+ * that opens Chara. With expo-share-intent the URL carries only a lookup key
+ * (the module resolves the real path from the App Group's UserDefaults, never
+ * from the URL), so no caller-supplied path reaches this code — but the files
+ * it copies into the App Group container are never deleted by the library,
+ * and that container survives app termination. The sweep below bounds how
+ * long a shared receipt can sit there, readable by every target that shares
+ * the group. Same posture as lib/deep-link.ts.
  *
  * Kept free of React and I/O so every branch is unit-testable.
  */
@@ -18,36 +20,30 @@ import { checkReceiptFile } from './receipt-file';
  *  receipt doesn't linger in a container three targets can read. */
 export const SHARE_FILE_TTL_MS = 60 * 60 * 1000;
 
-/** Tokens are minted by the share extension: exactly 24 lowercase hex chars.
- *  Anchored, so no separator, traversal sequence, or null byte can pass. */
-const TOKEN_RE = /^[0-9a-f]{24}$/;
-
-export function isValidShareToken(token: string | null | undefined): boolean {
-  return typeof token === 'string' && TOKEN_RE.test(token);
-}
-
-/** Resolve a token to its path inside `dir`, or null if the token is not a
- *  well-formed token. Never returns a path for untrusted input. */
-export function resolveSharePath(dir: string, token: string): string | null {
-  if (!isValidShareToken(token)) return null;
-  return dir.endsWith('/') ? `${dir}${token}` : `${dir}/${token}`;
-}
-
 /** Partition the container's contents into what to keep and what to delete.
  *  A future timestamp counts as expired: a clock change must not pin a file
  *  in the container permanently. */
 export function sweepShareFiles(
-  files: Array<{ token: string; savedAtMs: number }>,
+  files: Array<{ name: string; savedAtMs: number }>,
   nowMs: number,
 ): { keep: string[]; remove: string[] } {
   const keep: string[] = [];
   const remove: string[] = [];
   for (const f of files) {
     const age = nowMs - f.savedAtMs;
-    if (age >= 0 && age <= SHARE_FILE_TTL_MS) keep.push(f.token);
-    else remove.push(f.token);
+    if (age >= 0 && age <= SHARE_FILE_TTL_MS) keep.push(f.name);
+    else remove.push(f.name);
   }
   return { keep, remove };
+}
+
+/** The share extension names what it copies `<UUID>.<ext>` (or
+ *  `screenshot_<UUID>.png`). The sweep touches nothing else in the container:
+ *  the widget's preferences live there too. */
+const ARTIFACT_RE = /^(screenshot_)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.[a-z0-9]+$/i;
+
+export function isShareArtifact(name: string): boolean {
+  return ARTIFACT_RE.test(name);
 }
 
 export type SharedFile = { uri: string; mimeType: string; name: string };

@@ -918,6 +918,16 @@
     "analyticsLabel": "Anonyme Nutzungsstatistik senden",
     "title": "Datenschutz"
   },
+  "receiptInbox": {
+    "multipleFiles": "Nur die erste Datei wurde verwendet ({{count}} weitere ignoriert).",
+    "noGroupsBody": "Erstelle zuerst eine Gruppe und teile den Beleg dann erneut.",
+    "noGroupsTitle": "Noch keine Gruppen",
+    "signedOutBody": "Melde dich zuerst bei Chara an und teile den Beleg dann erneut.",
+    "signedOutTitle": "Nicht angemeldet",
+    "unsupportedBody": "Chara kann PDFs und Fotos lesen. Exportiere den Beleg als PDF.",
+    "unsupportedTitle": "Diese Datei geht nicht",
+    "whichGroup": "welche Gruppe?"
+  },
   "receiptScanner": {
     "analyzing": "Analysiere Beleg…",
     "analyzingHint": "Lese Händler, Datum und Summen.",

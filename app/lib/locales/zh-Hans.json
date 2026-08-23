@@ -918,6 +918,16 @@
     "analyticsLabel": "发送匿名使用统计",
     "title": "隐私"
   },
+  "receiptInbox": {
+    "multipleFiles": "仅使用了第一个文件（已忽略另外 {{count}} 个）。",
+    "noGroupsBody": "请先创建一个群组，然后再次分享收据。",
+    "noGroupsTitle": "还没有群组",
+    "signedOutBody": "请先登录 Chara，然后再次分享收据。",
+    "signedOutTitle": "未登录",
+    "unsupportedBody": "Chara 可以读取 PDF 和照片。请尝试将收据导出为 PDF。",
+    "unsupportedTitle": "无法使用该文件",
+    "whichGroup": "哪个群组？"
+  },
   "receiptScanner": {
     "analyzing": "识别中……",
     "analyzingHint": "正在识别商家、日期和金额。",

@@ -918,6 +918,16 @@
     "analyticsLabel": "Send anonym bruksstatistikk",
     "title": "Personvern"
   },
+  "receiptInbox": {
+    "multipleFiles": "Bare den første filen ble brukt ({{count}} til ble ignorert).",
+    "noGroupsBody": "Opprett en gruppe først, og del kvitteringen på nytt.",
+    "noGroupsTitle": "Ingen grupper ennå",
+    "signedOutBody": "Logg inn i Chara først, og del kvitteringen på nytt.",
+    "signedOutTitle": "Ikke logget inn",
+    "unsupportedBody": "Chara kan lese PDF-er og bilder. Prøv å eksportere kvitteringen som PDF.",
+    "unsupportedTitle": "Kan ikke bruke den filen",
+    "whichGroup": "hvilken gruppe?"
+  },
   "receiptScanner": {
     "analyzing": "Analyserer kvittering …",
     "analyzingHint": "Leser butikk, dato og totaler.",

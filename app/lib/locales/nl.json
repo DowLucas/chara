@@ -918,6 +918,16 @@
     "analyticsLabel": "Anonieme gebruiksstatistieken sturen",
     "title": "Privacy"
   },
+  "receiptInbox": {
+    "multipleFiles": "Alleen het eerste bestand is gebruikt ({{count}} andere genegeerd).",
+    "noGroupsBody": "Maak eerst een groep aan en deel de bon dan opnieuw.",
+    "noGroupsTitle": "Nog geen groepen",
+    "signedOutBody": "Log eerst in bij Chara en deel de bon dan opnieuw.",
+    "signedOutTitle": "Niet ingelogd",
+    "unsupportedBody": "Chara kan pdf's en foto's lezen. Probeer de bon als pdf te exporteren.",
+    "unsupportedTitle": "Dat bestand werkt niet",
+    "whichGroup": "welke groep?"
+  },
   "receiptScanner": {
     "analyzing": "Bon analyseren…",
     "analyzingHint": "De winkel, datum en totalen uitlezen.",

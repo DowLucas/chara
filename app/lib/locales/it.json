@@ -942,6 +942,16 @@
     "analyticsLabel": "Invia statistiche d'uso anonime",
     "title": "Privacy"
   },
+  "receiptInbox": {
+    "multipleFiles": "È stato usato solo il primo file ({{count}} altri ignorati).",
+    "noGroupsBody": "Crea prima un gruppo, poi condividi di nuovo lo scontrino.",
+    "noGroupsTitle": "Nessun gruppo ancora",
+    "signedOutBody": "Accedi prima a Chara, poi condividi di nuovo lo scontrino.",
+    "signedOutTitle": "Non hai effettuato l'accesso",
+    "unsupportedBody": "Chara legge PDF e foto. Prova a esportare lo scontrino come PDF.",
+    "unsupportedTitle": "File non utilizzabile",
+    "whichGroup": "quale gruppo?"
+  },
   "receiptScanner": {
     "analyzing": "Sto leggendo lo scontrino…",
     "analyzingHint": "Cerco negozio, data e totali.",

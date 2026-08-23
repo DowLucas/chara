@@ -942,6 +942,16 @@
     "analyticsLabel": "Enviar analíticas de uso anónimas",
     "title": "Privacidad"
   },
+  "receiptInbox": {
+    "multipleFiles": "Solo se usó el primer archivo ({{count}} más ignorados).",
+    "noGroupsBody": "Crea un grupo primero y luego vuelve a compartir el recibo.",
+    "noGroupsTitle": "Aún no hay grupos",
+    "signedOutBody": "Inicia sesión en Chara primero y luego vuelve a compartir el recibo.",
+    "signedOutTitle": "Sesión no iniciada",
+    "unsupportedBody": "Chara puede leer PDF y fotos. Prueba a exportar el recibo como PDF.",
+    "unsupportedTitle": "No se puede usar ese archivo",
+    "whichGroup": "¿qué grupo?"
+  },
   "receiptScanner": {
     "analyzing": "Analizando recibo…",
     "analyzingHint": "Leyendo el comercio, la fecha y los totales.",

@@ -918,6 +918,16 @@
     "analyticsLabel": "匿名の利用状況を送信",
     "title": "プライバシー"
   },
+  "receiptInbox": {
+    "multipleFiles": "最初のファイルだけを使用しました（他 {{count}} 件は無視）。",
+    "noGroupsBody": "先にグループを作成してから、もう一度レシートを共有してください。",
+    "noGroupsTitle": "グループがまだありません",
+    "signedOutBody": "先に Chara にサインインしてから、もう一度レシートを共有してください。",
+    "signedOutTitle": "サインインしていません",
+    "unsupportedBody": "Chara は PDF と写真を読み取れます。レシートを PDF で書き出してみてください。",
+    "unsupportedTitle": "このファイルは使えません",
+    "whichGroup": "どのグループ？"
+  },
   "receiptScanner": {
     "analyzing": "レシートを解析中…",
     "analyzingHint": "店舗名・日付・合計を読み取り中。",

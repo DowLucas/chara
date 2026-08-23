@@ -1022,6 +1022,16 @@
     "analyticsLabel": "إرسال تحليلات استخدام مجهولة الهوية",
     "title": "الخصوصية"
   },
+  "receiptInbox": {
+    "multipleFiles": "تم استخدام الملف الأول فقط (تم تجاهل {{count}} ملفات أخرى).",
+    "noGroupsBody": "أنشئ مجموعة أولاً، ثم شارك الإيصال مرة أخرى.",
+    "noGroupsTitle": "لا توجد مجموعات بعد",
+    "signedOutBody": "سجّل الدخول إلى Chara أولاً، ثم شارك الإيصال مرة أخرى.",
+    "signedOutTitle": "لم يتم تسجيل الدخول",
+    "unsupportedBody": "يمكن لـ Chara قراءة ملفات PDF والصور. جرّب تصدير الإيصال بصيغة PDF.",
+    "unsupportedTitle": "لا يمكن استخدام هذا الملف",
+    "whichGroup": "أي مجموعة؟"
+  },
   "receiptScanner": {
     "analyzing": "جاري تحليل الإيصال…",
     "analyzingHint": "قراءة اسم التاجر والتاريخ والإجماليات.",

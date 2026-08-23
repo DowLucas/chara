@@ -942,6 +942,16 @@
     "analyticsLabel": "Envoyer des statistiques anonymes d'utilisation",
     "title": "Confidentialité"
   },
+  "receiptInbox": {
+    "multipleFiles": "Seul le premier fichier a été utilisé ({{count}} autres ignorés).",
+    "noGroupsBody": "Créez d'abord un groupe, puis partagez à nouveau le reçu.",
+    "noGroupsTitle": "Pas encore de groupe",
+    "signedOutBody": "Connectez-vous d'abord à Chara, puis partagez à nouveau le reçu.",
+    "signedOutTitle": "Non connecté",
+    "unsupportedBody": "Chara lit les PDF et les photos. Essayez d'exporter le reçu en PDF.",
+    "unsupportedTitle": "Fichier inutilisable",
+    "whichGroup": "quel groupe ?"
+  },
   "receiptScanner": {
     "analyzing": "Analyse du reçu…",
     "analyzingHint": "Lecture du commerçant, de la date et des totaux.",

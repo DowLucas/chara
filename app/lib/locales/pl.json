@@ -970,6 +970,16 @@
     "analyticsLabel": "Wysyłaj anonimowe statystyki użycia",
     "title": "Prywatność"
   },
+  "receiptInbox": {
+    "multipleFiles": "Użyto tylko pierwszego pliku ({{count}} kolejnych pominięto).",
+    "noGroupsBody": "Najpierw utwórz grupę, a potem udostępnij paragon ponownie.",
+    "noGroupsTitle": "Brak grup",
+    "signedOutBody": "Najpierw zaloguj się do Chary, a potem udostępnij paragon ponownie.",
+    "signedOutTitle": "Nie zalogowano",
+    "unsupportedBody": "Chara czyta pliki PDF i zdjęcia. Spróbuj wyeksportować paragon jako PDF.",
+    "unsupportedTitle": "Nie można użyć tego pliku",
+    "whichGroup": "która grupa?"
+  },
   "receiptScanner": {
     "analyzing": "Analizowanie paragonu…",
     "analyzingHint": "Odczytywanie sprzedawcy, daty i sum.",

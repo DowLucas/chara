@@ -918,6 +918,16 @@
     "analyticsLabel": "Lähetä anonyymiä käyttödataa",
     "title": "Tietosuoja"
   },
+  "receiptInbox": {
+    "multipleFiles": "Vain ensimmäinen tiedosto käytettiin ({{count}} muuta ohitettiin).",
+    "noGroupsBody": "Luo ensin ryhmä ja jaa kuitti sitten uudelleen.",
+    "noGroupsTitle": "Ei vielä ryhmiä",
+    "signedOutBody": "Kirjaudu ensin Charaan ja jaa kuitti sitten uudelleen.",
+    "signedOutTitle": "Et ole kirjautunut",
+    "unsupportedBody": "Chara lukee PDF-tiedostoja ja valokuvia. Kokeile viedä kuitti PDF-muodossa.",
+    "unsupportedTitle": "Tiedostoa ei voi käyttää",
+    "whichGroup": "mihin ryhmään?"
+  },
   "receiptScanner": {
     "analyzing": "Analysoidaan kuittia…",
     "analyzingHint": "Luetaan liike, päivämäärä ja summat.",

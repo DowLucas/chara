@@ -918,6 +918,16 @@
     "analyticsLabel": "Skicka anonym användningsstatistik",
     "title": "Sekretess"
   },
+  "receiptInbox": {
+    "multipleFiles": "Bara den första filen användes ({{count}} till ignorerades).",
+    "noGroupsBody": "Skapa en grupp först och dela sedan kvittot igen.",
+    "noGroupsTitle": "Inga grupper än",
+    "signedOutBody": "Logga in i Chara först och dela sedan kvittot igen.",
+    "signedOutTitle": "Inte inloggad",
+    "unsupportedBody": "Chara kan läsa PDF-filer och foton. Prova att exportera kvittot som PDF.",
+    "unsupportedTitle": "Kan inte använda den filen",
+    "whichGroup": "vilken grupp?"
+  },
   "receiptScanner": {
     "analyzing": "Läser av kvittot…",
     "analyzingHint": "Hämtar butik, datum och summor.",
