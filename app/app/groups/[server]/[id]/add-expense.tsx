@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Image,
-  Linking,
   Modal,
   StyleSheet,
   Text,
@@ -29,6 +28,7 @@ import { ReceiptScanner, ReceiptScanResult } from '@/components/ReceiptScanner';
 import * as FileSystem from 'expo-file-system/legacy';
 import type { ReceiptSource } from '@/lib/receipt-file';
 import { consumePendingShare } from '@/lib/pending-share';
+import { openPdfExternally } from '@/lib/receipt-open';
 import { ExpenseSavedOverlay } from '@/components/ExpenseSavedOverlay';
 import { notifyGroupChanged } from '@/lib/group-refresh';
 import { ScanItemsAssign } from '@/components/ScanItemsAssign';
@@ -490,9 +490,12 @@ export default function AddExpenseScreen() {
                 <Button
                   kind="secondary"
                   onPress={() => {
-                    void Linking.openURL(
-                      `data:application/pdf;base64,${pendingReceiptFile.base64}`,
-                    ).catch(() => {
+                    void openPdfExternally({
+                      kind: 'base64',
+                      base64: pendingReceiptFile.base64,
+                      name: pendingReceiptFile.name,
+                    }).then((ok) => {
+                      if (ok) return;
                       void showAlert({
                         title: t('addExpense.receiptOpenFailedTitle'),
                         message: t('addExpense.receiptOpenFailedBody'),

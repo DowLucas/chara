@@ -210,9 +210,11 @@ const config: ExpoConfig = {
     [
       'expo-splash-screen',
       {
-        backgroundColor: '#F0E5CC',
-        image: './assets/chara-logo.png',
-        imageWidth: 200,
+        // Background matches the paper tone at the art's edges so the
+        // full-bleed illustration blends seamlessly into the window color.
+        backgroundColor: '#F0EAD0',
+        image: './assets/splash-art.png',
+        imageWidth: 300,
         resizeMode: 'contain',
       },
     ],

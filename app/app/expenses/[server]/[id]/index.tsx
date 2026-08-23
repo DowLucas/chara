@@ -12,6 +12,7 @@ import { ActionSheet, ActionSheetOption, openNativeActionSheet } from '@/compone
 import { MoneyText } from '@/components/MoneyText';
 import { SettlementImpactSheet } from '@/components/SettlementImpactSheet';
 import { showAlert } from '@/lib/app-alert';
+import { openPdfExternally } from '@/lib/receipt-open';
 import { hapticWarning } from '@/lib/haptics';
 import { Trans, useTranslation } from 'react-i18next';
 import {
@@ -464,6 +465,13 @@ export default function ExpenseDetailScreen() {
                     : {};
                   if (a.mime_type.startsWith('image/')) {
                     setViewer({ uri, headers });
+                  } else if (a.mime_type === 'application/pdf') {
+                    // Stage the bytes in cache and hand them to the OS viewer
+                    // — Linking would punt the presigned URL to the browser.
+                    const ok = await openPdfExternally({ kind: 'url', url: uri, headers });
+                    // Web (no share sheet) or a failed download: the browser
+                    // is still better than nothing.
+                    if (!ok) void Linking.openURL(uri).catch(() => {});
                   } else {
                     // Non-images can't pass headers via Linking, so fall back
                     // to opening the absolute API URL — caller is responsible
