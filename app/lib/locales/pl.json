@@ -288,7 +288,8 @@
     "ok": "OK",
     "save": "Zapisz",
     "saving": "Zapisywanie…",
-    "requestFailed": "Coś poszło nie tak. Spróbuj ponownie."
+    "requestFailed": "Coś poszło nie tak. Spróbuj ponownie.",
+    "share": "Udostępnij"
   },
   "createGroup": {
     "body": "Coś, co twoi znajomi rozpoznają.",

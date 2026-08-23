@@ -276,7 +276,8 @@
     "ok": "OK",
     "save": "Save",
     "saving": "Saving…",
-    "requestFailed": "Something went wrong. Please try again."
+    "requestFailed": "Something went wrong. Please try again.",
+    "share": "Share"
   },
   "createGroup": {
     "body": "Something your friends will recognise.",

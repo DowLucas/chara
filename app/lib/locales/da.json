@@ -276,7 +276,8 @@
     "ok": "OK",
     "save": "Gem",
     "saving": "Gemmer…",
-    "requestFailed": "Noget gik galt. Prøv igen."
+    "requestFailed": "Noget gik galt. Prøv igen.",
+    "share": "Del"
   },
   "createGroup": {
     "body": "Noget, dine venner vil genkende.",

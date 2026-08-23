@@ -276,7 +276,8 @@
     "ok": "OK",
     "save": "Spara",
     "saving": "Sparar…",
-    "requestFailed": "Något gick fel. Försök igen."
+    "requestFailed": "Något gick fel. Försök igen.",
+    "share": "Dela"
   },
   "createGroup": {
     "body": "Något som dina vänner känner igen.",

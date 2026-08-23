@@ -276,7 +276,8 @@
     "ok": "好",
     "save": "保存",
     "saving": "保存中……",
-    "requestFailed": "出了点问题，请重试。"
+    "requestFailed": "出了点问题，请重试。",
+    "share": "分享"
   },
   "createGroup": {
     "body": "起个朋友一眼就能认出的名字。",

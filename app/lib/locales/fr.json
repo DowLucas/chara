@@ -282,7 +282,8 @@
     "ok": "OK",
     "save": "Enregistrer",
     "saving": "Enregistrement…",
-    "requestFailed": "Une erreur s’est produite. Veuillez réessayer."
+    "requestFailed": "Une erreur s’est produite. Veuillez réessayer.",
+    "share": "Partager"
   },
   "createGroup": {
     "body": "Un nom que tes amis reconnaîtront.",

@@ -276,7 +276,8 @@
     "ok": "OK",
     "save": "Lagre",
     "saving": "Lagrer …",
-    "requestFailed": "Noe gikk galt. Prøv igjen."
+    "requestFailed": "Noe gikk galt. Prøv igjen.",
+    "share": "Del"
   },
   "createGroup": {
     "body": "Noe vennene dine kjenner igjen.",

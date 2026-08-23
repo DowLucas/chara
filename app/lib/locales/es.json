@@ -282,7 +282,8 @@
     "ok": "OK",
     "save": "Guardar",
     "saving": "Guardando…",
-    "requestFailed": "Algo salió mal. Inténtalo de nuevo."
+    "requestFailed": "Algo salió mal. Inténtalo de nuevo.",
+    "share": "Compartir"
   },
   "createGroup": {
     "body": "Algo que tus amigos reconozcan.",

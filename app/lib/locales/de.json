@@ -276,7 +276,8 @@
     "ok": "OK",
     "save": "Speichern",
     "saving": "Speichert…",
-    "requestFailed": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
+    "requestFailed": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    "share": "Teilen"
   },
   "createGroup": {
     "body": "Etwas, das deine Freunde wiedererkennen.",

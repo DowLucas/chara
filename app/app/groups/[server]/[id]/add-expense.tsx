@@ -29,6 +29,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import type { ReceiptSource } from '@/lib/receipt-file';
 import { consumePendingShare } from '@/lib/pending-share';
 import { openPdfExternally } from '@/lib/receipt-open';
+import { PdfView, canRenderPdfInline } from '@/components/PdfView';
 import { ExpenseSavedOverlay } from '@/components/ExpenseSavedOverlay';
 import { notifyGroupChanged } from '@/lib/group-refresh';
 import { ScanItemsAssign } from '@/components/ScanItemsAssign';
@@ -42,6 +43,7 @@ import {
 } from '@/components/ExpenseWizard';
 import {
   colors,
+  fontDisplay,
   fontMono,
   fontMonoMedium,
   fontSize,
@@ -185,6 +187,22 @@ export default function AddExpenseScreen() {
     () => members.find((m) => m.user_id === user?.id)?.id ?? '',
     [members, user?.id],
   );
+
+  function sharePendingReceipt() {
+    if (!pendingReceiptFile) return;
+    void openPdfExternally({
+      kind: 'base64',
+      base64: pendingReceiptFile.base64,
+      name: pendingReceiptFile.name,
+    }).then((ok) => {
+      if (ok) return;
+      void showAlert({
+        title: t('addExpense.receiptOpenFailedTitle'),
+        message: t('addExpense.receiptOpenFailedBody'),
+        buttons: [{ key: 'ok', label: t('common.ok') }],
+      });
+    });
+  }
 
   function closeScanner() {
     setScannerOpen(false);
@@ -481,29 +499,41 @@ export default function AddExpenseScreen() {
           accessibilityLabel={t('common.close')}
         >
           {pendingReceiptFile && (
-            pendingReceiptFile.mime_type === 'application/pdf' ? (
+            pendingReceiptFile.mime_type === 'application/pdf' && canRenderPdfInline ? (
+              <View style={styles.receiptPdfWrap}>
+                <View style={styles.receiptPdfBar}>
+                  <Text style={styles.receiptPdfName} numberOfLines={1}>
+                    {pendingReceiptFile.name ?? t('addExpense.receiptDocument')}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => sharePendingReceipt()}
+                    accessibilityLabel={t('common.share')}
+                    style={styles.receiptPdfBarBtn}
+                  >
+                    <Feather name="share" size={22} color={colors.paper} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setReceiptViewerOpen(false)}
+                    accessibilityLabel={t('common.close')}
+                    style={styles.receiptPdfBarBtn}
+                  >
+                    <Feather name="x" size={24} color={colors.paper} />
+                  </TouchableOpacity>
+                </View>
+                <PdfView
+                  source={{
+                    uri: `data:application/pdf;base64,${pendingReceiptFile.base64}`,
+                  }}
+                  style={styles.receiptPdf}
+                />
+              </View>
+            ) : pendingReceiptFile.mime_type === 'application/pdf' ? (
               <View style={styles.receiptDocCard}>
                 <Feather name="file-text" size={48} color={colors.lead} />
                 <Text style={styles.receiptDocName} numberOfLines={2}>
                   {pendingReceiptFile.name ?? t('addExpense.receiptDocument')}
                 </Text>
-                <Button
-                  kind="secondary"
-                  onPress={() => {
-                    void openPdfExternally({
-                      kind: 'base64',
-                      base64: pendingReceiptFile.base64,
-                      name: pendingReceiptFile.name,
-                    }).then((ok) => {
-                      if (ok) return;
-                      void showAlert({
-                        title: t('addExpense.receiptOpenFailedTitle'),
-                        message: t('addExpense.receiptOpenFailedBody'),
-                        buttons: [{ key: 'ok', label: t('common.ok') }],
-                      });
-                    });
-                  }}
-                >
+                <Button kind="secondary" onPress={() => sharePendingReceipt()}>
                   {t('addExpense.openReceipt')}
                 </Button>
               </View>
@@ -597,6 +627,22 @@ const styles = StyleSheet.create({
     padding: spacing.s4,
   },
   receiptImage: { width: '100%', height: '100%' },
+  receiptPdfWrap: { flex: 1, alignSelf: 'stretch' },
+  receiptPdfBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.s3,
+    paddingHorizontal: spacing.s4,
+    paddingVertical: spacing.s3,
+  },
+  receiptPdfName: {
+    flex: 1,
+    fontFamily: fontDisplay,
+    fontSize: fontSize.bodyS,
+    color: colors.paper,
+  },
+  receiptPdfBarBtn: { padding: spacing.s2 },
+  receiptPdf: { flex: 1, alignSelf: 'stretch', backgroundColor: 'transparent' },
   receiptDocCard: {
     alignItems: 'center',
     justifyContent: 'center',

@@ -73,6 +73,8 @@
     "react-dom": "19.1.0",
     "react-i18next": "^17.0.7",
     "react-native": "0.81.5",
+    "react-native-blob-util": "^0.24.10",
+    "react-native-pdf": "^7.0.5",
     "react-native-qrcode-svg": "^6.3.21",
     "react-native-safe-area-context": "~5.6.2",
     "react-native-screens": "~4.16.0",

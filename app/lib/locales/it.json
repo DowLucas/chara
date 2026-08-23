@@ -282,7 +282,8 @@
     "ok": "OK",
     "save": "Salva",
     "saving": "Salvataggio…",
-    "requestFailed": "Qualcosa è andato storto. Riprova."
+    "requestFailed": "Qualcosa è andato storto. Riprova.",
+    "share": "Condividi"
   },
   "createGroup": {
     "body": "Qualcosa che i tuoi amici riconoscano al volo.",

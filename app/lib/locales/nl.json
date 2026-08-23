@@ -276,7 +276,8 @@
     "ok": "OK",
     "save": "Opslaan",
     "saving": "Opslaan…",
-    "requestFailed": "Er is iets misgegaan. Probeer het opnieuw."
+    "requestFailed": "Er is iets misgegaan. Probeer het opnieuw.",
+    "share": "Delen"
   },
   "createGroup": {
     "body": "Iets wat je vrienden herkennen.",

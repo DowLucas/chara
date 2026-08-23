@@ -276,7 +276,8 @@
     "ok": "OK",
     "save": "Tallenna",
     "saving": "Tallennetaan…",
-    "requestFailed": "Jotain meni pieleen. Yritä uudelleen."
+    "requestFailed": "Jotain meni pieleen. Yritä uudelleen.",
+    "share": "Jaa"
   },
   "createGroup": {
     "body": "Jotain, minkä kaverit tunnistavat.",
