@@ -14,8 +14,15 @@ let Pdf: React.ComponentType<{
 }> | null = null;
 
 if (Platform.OS !== 'web') {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  Pdf = require('react-native-pdf').default;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    Pdf = require('react-native-pdf').default;
+  } catch {
+    // Native module not in this binary (e.g. JS updated over Metro against
+    // an app built before react-native-pdf was added). Callers check
+    // canRenderPdfInline and fall back to the share-sheet path.
+    Pdf = null;
+  }
 }
 
 /** True when this platform can render PDFs inline. */
