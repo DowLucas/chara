@@ -1,0 +1,3 @@
+{$CHARA_DOMAIN} {
+	reverse_proxy chara-api:8080
+}

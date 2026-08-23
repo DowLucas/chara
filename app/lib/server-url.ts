@@ -10,6 +10,13 @@
 
 export type NormalizationError = { kind: 'invalid'; reason: string };
 
+/**
+ * Stable reason for the "plain http on a public host" rejection so screens
+ * can show a targeted hint (use https, or a LAN address) instead of the
+ * generic invalid-URL message.
+ */
+export const HTTP_NOT_PRIVATE_REASON = 'http is only allowed for loopback or private hosts';
+
 const HTTPS_DEFAULT_PORT = '443';
 const HTTP_DEFAULT_PORT = '80';
 
@@ -190,7 +197,7 @@ export function normalizeServerUrl(input: string): string | NormalizationError {
   const hostForCheck = hostname;
 
   if (scheme === 'http' && !isPrivateOrLoopbackHost(hostForCheck)) {
-    return invalid('http is only allowed for loopback or private hosts');
+    return invalid(HTTP_NOT_PRIVATE_REASON);
   }
 
   // Port handling.

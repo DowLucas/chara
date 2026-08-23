@@ -1,4 +1,5 @@
 import {
+  HTTP_NOT_PRIVATE_REASON,
   displayHostFor,
   isMainHostedServer,
   normalizeServerUrl,
@@ -94,6 +95,11 @@ describe('normalizeServerUrl — rejections', () => {
   it('rejects http on a non-private public IP', () => {
     const r = normalizeServerUrl('http://8.8.8.8');
     expect((r as any).kind).toBe('invalid');
+  });
+
+  it('reports the http-not-private rejection with a stable reason', () => {
+    const r = normalizeServerUrl('http://chara.example.com');
+    expect(r).toEqual({ kind: 'invalid', reason: HTTP_NOT_PRIVATE_REASON });
   });
 
   it('rejects a non-empty path', () => {

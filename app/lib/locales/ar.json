@@ -246,6 +246,7 @@
     "urlLabel": "عنوان URL للخادم",
     "urlPlaceholder": "https://your-server.example",
     "validateInvalidUrl": "هذا العنوان لا يبدو صحيحًا. استخدم الصيغة https://your-server.example.",
+    "validateHttpNotAllowed": "‏http:// العادي يعمل فقط مع الخوادم في شبكتك المنزلية (مثل http://192.168.1.10:8080). لغير ذلك استخدم https://.",
     "validateNotChara": "لا يبدو أن هذا خادم Chara.",
     "validateUnreachable": "تعذر الوصول إلى هذا الخادم."
   },

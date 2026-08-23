@@ -234,6 +234,7 @@
     "urlLabel": "URL serwera",
     "urlPlaceholder": "https://twoj-serwer.example",
     "validateInvalidUrl": "Ten URL nie wygląda dobrze. Użyj formatu https://twoj-serwer.example.",
+    "validateHttpNotAllowed": "Zwykłe http:// działa tylko dla serwerów w Twojej sieci domowej (np. http://192.168.1.10:8080). W innych przypadkach użyj https://.",
     "validateNotChara": "To nie wygląda na serwer Chara.",
     "validateUnreachable": "Nie udało się połączyć z tym serwerem."
   },

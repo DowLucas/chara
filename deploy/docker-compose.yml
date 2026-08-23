@@ -1,3 +1,14 @@
+# Chara self-host stack: API + Postgres + MinIO.
+#
+#   cp .env.example .env   # or run ./setup.sh, which fills it in for you
+#   docker compose up -d
+#
+# Optional add-ons (combine with -f):
+#   docker-compose.caddy.yml  — automatic HTTPS via Caddy (recommended)
+#   docker-compose.build.yml  — build the API from source instead of pulling
+#
+# See README.md in this directory for the full walkthrough.
+
 services:
   chara-postgres:
     image: postgres:16-alpine
@@ -5,7 +16,7 @@ services:
     environment:
       POSTGRES_DB: chara
       POSTGRES_USER: chara
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run ./setup.sh or set POSTGRES_PASSWORD in .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -15,26 +26,24 @@ services:
       retries: 10
 
   chara-minio:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?run ./setup.sh or set MINIO_ROOT_USER in .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?run ./setup.sh or set MINIO_ROOT_PASSWORD in .env}
     volumes:
       - minio_data:/data
     ports:
       - "127.0.0.1:9001:9001"  # MinIO console (dev convenience, loopback only)
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD", "mc", "ready", "local"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   chara-api:
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile
+    image: ghcr.io/dowlucas/chara-backend:${CHARA_VERSION:-latest}
     restart: unless-stopped
     depends_on:
       chara-postgres:
@@ -42,24 +51,31 @@ services:
       chara-minio:
         condition: service_healthy
     ports:
-      - "${API_PORT:-8080}:8080"
+      - "${API_BIND:-0.0.0.0}:${API_PORT:-8080}:8080"
     environment:
       DATABASE_URL: postgres://chara:${POSTGRES_PASSWORD}@chara-postgres:5432/chara?sslmode=disable
       INSTANCE_MODE: selfhost
-      JWT_SECRET: ${JWT_SECRET}
-      BASE_URL: ${BASE_URL:-http://localhost:8080}
+      JWT_SECRET: ${JWT_SECRET:?run ./setup.sh or set JWT_SECRET in .env}
+      BASE_URL: ${BASE_URL:?run ./setup.sh or set BASE_URL in .env}
       S3_ENDPOINT: http://chara-minio:9000
       S3_BUCKET: chara
       S3_ACCESS_KEY: ${MINIO_ROOT_USER}
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      # Magic-link email. SMTP_HOST is required unless DEV_MODE=true
+      # (test mode: sign-in completes without any email being sent).
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
-      SMTP_FROM: ${SMTP_FROM:-noreply@chara.app}
-      OIDC_ISSUER_URL: ${OIDC_ISSUER_URL:-}
-      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
-      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      SMTP_FROM: ${SMTP_FROM:-${SMTP_USER:-}}
+      DEV_MODE: ${DEV_MODE:-false}
+      # Reverse proxies whose X-Forwarded-For should be trusted (CIDRs).
+      # The bundled Caddy override sets this automatically.
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
+      # Receipt scanning (optional). Unset = feature hidden in the app.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      # Only needed if you also host the web build of the app somewhere.
+      ALLOWED_CORS_ORIGINS: ${ALLOWED_CORS_ORIGINS:-}
       # Operator broadcast (POST /api/admin/notify). Unset = endpoint disabled.
       ADMIN_API_TOKEN: ${ADMIN_API_TOKEN:-}
       # Optional Expo push access token (low-volume works without one).

@@ -222,6 +222,7 @@
     "urlLabel": "服务器地址",
     "urlPlaceholder": "https://your-server.example",
     "validateInvalidUrl": "地址格式不正确，请使用 https://your-server.example 这样的格式。",
+    "validateHttpNotAllowed": "普通的 http:// 只适用于家庭网络中的服务器（例如 http://192.168.1.10:8080）。其他情况请使用 https://。",
     "validateNotChara": "这看起来不是 Chara 服务器。",
     "validateUnreachable": "无法连接到该服务器。"
   },

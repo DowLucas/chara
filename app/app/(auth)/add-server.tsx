@@ -19,7 +19,7 @@ import { ContentContainer } from '@/components/ContentContainer';
 import { IconButton } from '@/components/IconButton';
 import { publicApi } from '@/lib/api';
 import { checkProtocolCompat } from '@/lib/protocol';
-import { normalizeServerUrl } from '@/lib/server-url';
+import { HTTP_NOT_PRIVATE_REASON, normalizeServerUrl } from '@/lib/server-url';
 import { runDiscoveryHandshake } from '@/lib/discovery';
 import type { AccountInstanceInfo } from '@/lib/accounts-store';
 import {
@@ -106,7 +106,11 @@ export default function AddServerScreen() {
     }
     const normalized = normalizeServerUrl(raw);
     if (typeof normalized !== 'string') {
-      setError(t('addServer.validateInvalidUrl'));
+      setError(
+        normalized.reason === HTTP_NOT_PRIVATE_REASON
+          ? t('addServer.validateHttpNotAllowed')
+          : t('addServer.validateInvalidUrl'),
+      );
       return;
     }
 

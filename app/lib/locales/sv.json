@@ -222,6 +222,7 @@
     "urlLabel": "Serveradress",
     "urlPlaceholder": "https://min-server.exempel.se",
     "validateInvalidUrl": "Adressen ser inte rätt ut. Använd formen https://min-server.exempel.se.",
+    "validateHttpNotAllowed": "Vanlig http:// fungerar bara för servrar i ditt hemnätverk (t.ex. http://192.168.1.10:8080). Använd https:// för allt annat.",
     "validateNotChara": "Det här ser inte ut som en Chara-server.",
     "validateUnreachable": "Kunde inte nå servern."
   },
