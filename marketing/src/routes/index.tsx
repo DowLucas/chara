@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { HankoSeal } from "@/components/HankoSeal";
 import { StoreBadges, APP_STORE_URL, PLAY_STORE_URL } from "@/components/StoreBadges";
 
+import sceneHeroRiver from "@/assets/scene-hero-river.png";
 import sceneDinner from "@/assets/scene-dinner.png";
 import sceneRent from "@/assets/scene-rent.png";
 import sceneRoom from "@/assets/scene-room.png";
@@ -50,10 +51,10 @@ function Hero() {
     <section className="relative overflow-hidden" aria-labelledby="hero-claim">
       <div className="relative h-[min(92svh,720px)] min-h-[540px]">
         <img
-          src={sceneDinner}
+          src={sceneHeroRiver}
           alt={t("hero.alt")}
           className="absolute inset-0 w-full h-full object-cover select-none"
-          style={{ objectPosition: "center 26%" }}
+          style={{ objectPosition: "center 40%" }}
           draggable={false}
           fetchPriority="high"
         />
@@ -97,24 +98,12 @@ function Hero() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: EASE, delay: 0.34 }}
-            className="mt-8 flex flex-wrap gap-3 justify-center"
+            className="mt-8 flex flex-col items-center gap-4"
           >
-            <a
-              href={APP_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[15px] font-medium px-6 py-[15px] rounded-[6px] bg-shu text-indigo leading-none hover:opacity-90 transition-opacity"
-            >
-              {t("hero.ctaIos")}
-            </a>
-            <a
-              href={PLAY_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[15px] font-medium px-6 py-[15px] rounded-[6px] border-[0.5px] border-bone text-bone leading-none hover:bg-bone hover:text-indigo transition-colors"
-            >
-              {t("hero.ctaAndroid")}
-            </a>
+            <StoreBadges size="lg" className="justify-center" />
+            <p className="mono text-[11px] tracking-[0.06em] text-bone-mute">
+              {t("hero.aiNote")}
+            </p>
           </motion.div>
         </div>
       </div>
@@ -148,9 +137,6 @@ function Price() {
             {t("price.unitAfter") ? (
               <span className="text-[0.37em] tracking-[-0.02em] text-shu"> {t("price.unitAfter")}</span>
             ) : null}
-          </div>
-          <div className="mt-4 mono text-xs font-medium tracking-[0.08em] text-bone-mute">
-            {t("price.caption")}
           </div>
         </div>
         <div>
@@ -394,14 +380,14 @@ function Compare() {
       </p>
 
       <div className="mt-16 overflow-x-auto">
-        <table className="w-full border-collapse">
+        <table className="w-full border-collapse min-w-[720px]">
           <thead>
             <tr className="border-y border-bone/20">
-              <th className="text-left py-5 px-4 mono text-[11px] uppercase tracking-[0.2em] text-bone-mute font-normal w-1/4">{t("compare.colFeature")}</th>
-              <th className="text-left py-5 px-4 mono text-[11px] uppercase tracking-[0.2em] text-bone-mute font-normal w-1/4">{t("compare.colSplitwise")}</th>
-              <th className="text-left py-5 px-4 mono text-[11px] uppercase tracking-[0.2em] text-bone-mute font-normal w-1/4">{t("compare.colSteven")}</th>
+              <th className="text-left py-5 pr-4 mono text-[11px] uppercase tracking-[0.2em] text-bone-mute font-normal w-[28%]">{t("compare.colFeature")}</th>
+              <th className="text-left py-5 px-4 mono text-[11px] uppercase tracking-[0.2em] text-bone-mute font-normal w-[24%]">{t("compare.colSplitwise")}</th>
+              <th className="text-left py-5 px-4 mono text-[11px] uppercase tracking-[0.2em] text-bone-mute font-normal w-[24%]">{t("compare.colSteven")}</th>
               <th
-                className="text-left py-5 px-4 mono text-[11px] uppercase tracking-[0.2em] font-normal w-1/4 keyblock-sumi"
+                className="text-left py-5 px-4 mono text-[11px] uppercase tracking-[0.2em] font-normal w-[24%]"
                 style={{ background: "var(--ochre)", color: "var(--sumi)" }}
               >
                 {t("compare.colChara")}
@@ -409,19 +395,27 @@ function Compare() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r, i) => (
-              <tr key={r.k} className={i % 2 === 0 ? "" : "bg-bone/[0.02]"}>
-                <td className="py-5 px-4 text-bone text-sm align-top border-b border-bone/10">{r.k}</td>
-                <td className="py-5 px-4 text-bone-mute text-sm align-top border-b border-bone/10">{r.sw}</td>
-                <td className="py-5 px-4 text-bone-mute text-sm align-top border-b border-bone/10">{r.st}</td>
-                <td
-                  className="py-5 px-4 text-sm align-top font-medium border-x border-b border-sumi/30"
-                  style={{ background: "color-mix(in oklab, var(--ochre) 22%, var(--indigo))", color: "var(--bone)" }}
-                >
-                  {r.ch}
-                </td>
-              </tr>
-            ))}
+            {rows.map((r) => {
+              const notYet = /^(Not yet|Inte än|New\.|Ny\.)/.test(r.ch);
+              return (
+                <tr key={r.k}>
+                  <td className="py-4 pr-4 text-bone text-[15px] align-top border-b border-bone/10">{r.k}</td>
+                  <td className="py-4 px-4 text-bone-mute text-sm leading-[1.5] align-top border-b border-bone/10">{r.sw}</td>
+                  <td className="py-4 px-4 text-bone-mute text-sm leading-[1.5] align-top border-b border-bone/10">{r.st}</td>
+                  <td
+                    className={`py-4 px-4 text-sm leading-[1.5] align-top border-b border-sumi/30 ${notYet ? "" : "font-medium"}`}
+                    style={{
+                      background: notYet
+                        ? "color-mix(in oklab, var(--ochre) 7%, var(--indigo))"
+                        : "color-mix(in oklab, var(--ochre) 22%, var(--indigo))",
+                      color: notYet ? "var(--bone-dim)" : "var(--bone)",
+                    }}
+                  >
+                    {r.ch}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -433,6 +427,42 @@ function Compare() {
 /* ============================================================
    Self-host strip — terminal cream card with bokashi edge.
 ============================================================ */
+const INSTALL_COMMAND = "git clone https://github.com/DowLucas/chara.git\ncd chara/deploy\n./setup.sh";
+
+function CopyCommandButton() {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        navigator.clipboard?.writeText(INSTALL_COMMAND).then(
+          () => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          },
+          () => {},
+        );
+      }}
+      aria-label={t("selfHost.copyCommand")}
+      className="flex items-center gap-1.5 mono text-[10px] uppercase tracking-[0.2em] text-bone-mute hover:text-bone transition-colors"
+    >
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+        {copied ? (
+          <polyline points="20 6 9 17 4 12" />
+        ) : (
+          <>
+            <rect x="9" y="9" width="13" height="13" rx="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </>
+        )}
+      </svg>
+      {copied ? t("selfHost.copied") : t("selfHost.copy")}
+    </button>
+  );
+}
+
 function SelfHost() {
   const { t } = useTranslation();
   const items = t("selfHost.items", { returnObjects: true }) as Array<{ h: string; b: string }>;
@@ -461,19 +491,29 @@ function SelfHost() {
                 <span className="block w-2.5 h-2.5 bg-bone/40" />
                 <span className="block w-2.5 h-2.5 bg-bone/40" />
               </div>
-              <span className="mono text-[10px] uppercase tracking-[0.2em] text-bone-mute">~/chara</span>
+              <CopyCommandButton />
             </div>
-            <pre className="px-6 py-8 text-[13px] leading-[1.85] mono whitespace-pre overflow-x-auto"><code><span className="text-bone-mute">$</span> curl -fsSL chara.dev/install | sh
-<span className="text-bone-mute">$</span> cd chara
-<span className="text-bone-mute">$</span> docker compose up -d
-
-<span className="text-ochre">✓</span> postgres        {t("selfHost.terminalReady")}
-<span className="text-ochre">✓</span> chara-web       {t("selfHost.terminalReady")}  :3000
-<span className="text-ochre">✓</span> chara-worker    {t("selfHost.terminalReady")}
-<span className="text-ochre">✓</span> minio           {t("selfHost.terminalReady")}  :9000
-
-<span className="text-bone-mute">→</span> {t("selfHost.terminalOpen")}  http://localhost:3000
-</code></pre>
+            <pre className="px-6 py-8 text-[13px] leading-[1.85] mono whitespace-pre overflow-x-auto">
+              <code>
+                {INSTALL_COMMAND.split("\n").map((line) => (
+                  <div key={line}>
+                    <span className="text-bone-mute">$</span> {line}
+                  </div>
+                ))}
+                <div>&nbsp;</div>
+                {["database", "chara", "file storage", "https"].map((svc) => (
+                  <div key={svc}>
+                    <span className="text-ochre">✓</span> {svc.padEnd(15, " ")}
+                    {t("selfHost.terminalReady")}
+                  </div>
+                ))}
+                <div>&nbsp;</div>
+                <div>
+                  <span className="text-bone-mute">→</span> {t("selfHost.terminalOpen")}{"  "}
+                  https://chara.yourhome.net
+                </div>
+              </code>
+            </pre>
           </div>
         </div>
       </div>
