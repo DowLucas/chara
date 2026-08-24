@@ -39,5 +39,5 @@ export const Route = createFileRoute("/cookies")({
 });
 
 function H2({ children }: { children: React.ReactNode }) {
-  return <h2 className="mt-12 mb-3 text-2xl font-semibold tracking-[-0.025em] text-sumi">{children}</h2>;
+  return <h2 className="mt-12 mb-3 text-2xl font-semibold tracking-[-0.025em] text-bone">{children}</h2>;
 }

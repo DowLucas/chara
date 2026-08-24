@@ -78,13 +78,13 @@ export const Route = createFileRoute("/privacy")({
         <div className="overflow-x-auto -mx-2">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="border-b border-sumi/30">
+              <tr className="border-b border-bone/30">
                 <th className="text-left py-2 px-2 font-semibold">Subprocessor</th>
                 <th className="text-left py-2 px-2 font-semibold">Purpose</th>
                 <th className="text-left py-2 px-2 font-semibold">Region</th>
               </tr>
             </thead>
-            <tbody className="[&>tr]:border-b [&>tr]:border-sumi/15">
+            <tbody className="[&>tr]:border-b [&>tr]:border-bone/15">
               <tr><td className="py-2 px-2">Dow Technology private infrastructure (Stockholm, Sweden)</td><td className="py-2 px-2">Primary hosting, database, file storage</td><td className="py-2 px-2">Sweden / EU</td></tr>
               <tr><td className="py-2 px-2">Cloudflare</td><td className="py-2 px-2">DNS, edge, email routing</td><td className="py-2 px-2">US / global</td></tr>
               <tr><td className="py-2 px-2">Brevo (Sendinblue SAS)</td><td className="py-2 px-2">Transactional email delivery (magic links)</td><td className="py-2 px-2">France / EU</td></tr>
@@ -135,5 +135,5 @@ export const Route = createFileRoute("/privacy")({
 });
 
 function H2({ children }: { children: React.ReactNode }) {
-  return <h2 className="mt-12 mb-3 text-2xl font-semibold tracking-[-0.025em] text-sumi">{children}</h2>;
+  return <h2 className="mt-12 mb-3 text-2xl font-semibold tracking-[-0.025em] text-bone">{children}</h2>;
 }

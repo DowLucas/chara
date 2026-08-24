@@ -207,7 +207,7 @@ function PlateCard({
         <div className="mono text-[11px] uppercase tracking-[0.2em] flex flex-wrap items-center gap-x-4 gap-y-2 text-bone">
           <span className="tabular-nums">{release.plate}</span>
           <span aria-hidden="true" className="h-px w-8 bg-ochre opacity-80" />
-          <span className="tabular-nums font-semibold text-sumi text-[12px]">{release.version}</span>
+          <span className="tabular-nums font-semibold text-ochre text-[12px]">{release.version}</span>
           <span aria-hidden="true" className="h-px w-8 bg-ochre opacity-80" />
           <span className="font-medium">{release.date}</span>
           {highlight && (
@@ -263,7 +263,7 @@ function PlateCard({
           <span className="mono text-[10px] uppercase tracking-[0.22em] text-bone">
             ōban · {release.date}
           </span>
-          <span className="mono text-[10px] uppercase tracking-[0.22em] text-sumi font-semibold">
+          <span className="mono text-[10px] uppercase tracking-[0.22em] text-ochre font-semibold">
             {release.version}
           </span>
         </div>

@@ -403,7 +403,7 @@ function Compare() {
                   <td className="py-4 px-4 text-bone-mute text-sm leading-[1.5] align-top border-b border-bone/10">{r.sw}</td>
                   <td className="py-4 px-4 text-bone-mute text-sm leading-[1.5] align-top border-b border-bone/10">{r.st}</td>
                   <td
-                    className={`py-4 px-4 text-sm leading-[1.5] align-top border-b border-sumi/30 ${notYet ? "" : "font-medium"}`}
+                    className={`py-4 px-4 text-sm leading-[1.5] align-top border-b border-bone/30 ${notYet ? "" : "font-medium"}`}
                     style={{
                       background: notYet
                         ? "color-mix(in oklab, var(--ochre) 7%, var(--indigo))"
