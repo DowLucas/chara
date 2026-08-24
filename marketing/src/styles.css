@@ -37,6 +37,7 @@
   --color-sumi: var(--sumi);
   --color-ochre: var(--ochre);
   --color-shu: var(--shu);
+  --color-moss: var(--moss);
 
   /* Semantic surface map — every component speaks these */
   --color-background: var(--indigo);
@@ -61,16 +62,17 @@
 }
 
 :root {
-  /* Warm washi canvas. The print is laid on cream. */
-  --indigo:       oklch(0.93 0.025 86);    /* warm cream — washi ground */
-  --indigo-deep:  oklch(0.87 0.022 86);    /* deeper cream */
-  --indigo-soft:  oklch(0.96 0.020 86);    /* lighter cream */
-  --bone:         oklch(0.18 0.015 60);   /* sumi ink — key text */
-  --bone-dim:     oklch(0.45 0.020 60);   /* muted ink */
-  --bone-mute:    oklch(0.60 0.025 60);   /* faint ink */
-  --sumi:         oklch(0.08 0.01 60);    /* keyblock black */
-  --ochre:        oklch(0.745 0.140 72);  /* earth ochre */
-  --shu:          oklch(0.560 0.215 30);  /* vermillion — seal only */
+  /* Cinema — dark full-bleed direction (design 2b). The page is the print. */
+  --indigo:       #1A130F;   /* near-black umber — canvas */
+  --indigo-deep:  #140E0B;   /* deeper umber */
+  --indigo-soft:  #241B15;   /* lifted umber — cards, popovers */
+  --bone:         #F0E5CC;   /* warm cream — key text */
+  --bone-dim:     #C7B69F;   /* muted cream */
+  --bone-mute:    #A89684;   /* faint cream */
+  --sumi:         #0C0805;   /* keyblock black */
+  --ochre:        #E8B046;   /* lantern gold — single accent */
+  --shu:          #D45050;   /* vermillion — seal, primary CTA */
+  --moss:         #A8B86A;   /* moss green — "included" ticks */
 
   --radius: 0px;
 }

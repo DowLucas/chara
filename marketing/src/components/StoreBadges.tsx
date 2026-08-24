@@ -5,9 +5,9 @@
  * thin white hairline. Linked to the live Chara store listings.
  */
 
-const APP_STORE_URL =
+export const APP_STORE_URL =
   "https://apps.apple.com/se/app/chara-split-bills/id6773089720?l=en-GB";
-const PLAY_STORE_URL =
+export const PLAY_STORE_URL =
   "https://play.google.com/store/apps/details?id=chara.app";
 
 type Size = "sm" | "md" | "lg";

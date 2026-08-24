@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { useState } from "react";
+import { motion } from "motion/react";
 import { useTranslation } from "react-i18next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { HankoSeal } from "@/components/HankoSeal";
-import { StoreBadges } from "@/components/StoreBadges";
+import { StoreBadges, APP_STORE_URL, PLAY_STORE_URL } from "@/components/StoreBadges";
 
 import sceneDinner from "@/assets/scene-dinner.png";
 import sceneRent from "@/assets/scene-rent.png";
@@ -40,209 +40,135 @@ export const Route = createFileRoute("/")({
 const EASE = [0.2, 0.7, 0.2, 1] as const;
 
 /* ============================================================
-   Hero — Mitate of Hokusai's Great Wave mass distribution:
-   heavy lower-left content, void upper-right.
+   Hero — Cinema (design 2b): the print edge to edge, headline
+   centred low, everything read against the photograph.
 ============================================================ */
 function Hero() {
   const { t } = useTranslation();
-  const reduce = useReducedMotion();
-
-  const [mx, setMx] = useState(0);
-  const [my, setMy] = useState(0);
-  const wrap = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (reduce) return;
-    const el = wrap.current;
-    if (!el) return;
-    const onMove = (e: MouseEvent) => {
-      const r = el.getBoundingClientRect();
-      const nx = (e.clientX - r.left) / r.width - 0.5;
-      const ny = (e.clientY - r.top) / r.height - 0.5;
-      setMx(nx * 8);
-      setMy(ny * 8);
-    };
-    el.addEventListener("mousemove", onMove);
-    return () => el.removeEventListener("mousemove", onMove);
-  }, [reduce]);
-
-  const balance = useCountUp(12480, 1200, reduce ?? false);
 
   return (
-    <section
-      ref={wrap}
-      className="relative overflow-hidden"
-      aria-labelledby="hero-claim"
-    >
-      {/* faint registration rules */}
-      <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 h-full w-px bg-bone/[0.04]" />
-        <div className="absolute left-0 right-0 top-[58%] h-px bg-bone/[0.04]" />
-      </div>
+    <section className="relative overflow-hidden" aria-labelledby="hero-claim">
+      <div className="relative h-[min(92svh,720px)] min-h-[540px]">
+        <img
+          src={sceneDinner}
+          alt={t("hero.alt")}
+          className="absolute inset-0 w-full h-full object-cover select-none"
+          style={{ objectPosition: "center 26%" }}
+          draggable={false}
+          fetchPriority="high"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(180deg, color-mix(in oklab, var(--indigo) 82%, transparent) 0%, color-mix(in oklab, var(--indigo) 18%, transparent) 30%, color-mix(in oklab, var(--indigo) 55%, transparent) 62%, color-mix(in oklab, var(--indigo) 97%, transparent) 100%)",
+          }}
+        />
 
-      <div className="mx-auto max-w-[1400px] px-6 sm:px-10 lg:px-16 pt-14 lg:pt-20 pb-20 lg:pb-28 relative">
-        <div className="grid grid-cols-12 gap-x-8 lg:gap-x-12 gap-y-14 items-start">
-
-          {/* LEFT — claim mass */}
-          <div className="col-span-12 lg:col-span-6 relative z-10">
-            <motion.h1
-              id="hero-claim"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: EASE, delay: 0.05 }}
-              className="font-semibold tracking-[-0.045em] text-bone text-[48px] sm:text-[56px] md:text-[68px] lg:text-[80px] xl:text-[90px] 2xl:text-[100px] leading-[0.9]"
-            >
-              {t("hero.headlineA")}<br />
-              {t("hero.headlineB")}<br />
-              <span className="italic font-normal whitespace-nowrap" style={{ color: "var(--ochre)" }}>
-                {"Chara won’t."}
-              </span>
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: EASE, delay: 0.18 }}
-              className="mt-10 max-w-[34rem] text-bone-dim text-lg leading-[1.55]"
-            >
-              {t("hero.body")}
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: EASE, delay: 0.3 }}
-              className="mt-12 flex flex-col gap-5"
-            >
-              <StoreBadges size="lg" />
-              <p className="max-w-md text-[13px] leading-[1.6] text-bone-mute border-l border-ochre/50 pl-4">
-                {t("hero.switchOnRamp")}
-              </p>
-              <a
-                href="#how-it-works"
-                className="mono text-[11px] uppercase tracking-[0.22em] text-bone-mute hover:text-bone transition-colors self-start"
-              >
-                {t("hero.ctaSecondary")} →
-              </a>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, ease: EASE, delay: 0.45 }}
-              className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-px bg-bone/10 border-y border-bone/15 max-w-2xl"
-            >
-              <Stat n={t("hero.stat1n")} k={t("hero.stat1k")} />
-              <Stat n={t("hero.stat2n")} k={t("hero.stat2k")} />
-              <Stat n={t("hero.stat3n")} k={t("hero.stat3k")} />
-              <Stat n={t("hero.stat4n")} k={t("hero.stat4k")} />
-            </motion.div>
-
-
-
-          </div>
-
-          {/* RIGHT — the print, full bleed of its column, card tucked into its lower-left */}
-          <motion.figure
-            className="col-span-12 lg:col-span-6 relative self-start"
-            style={{ x: mx, y: my }}
-            transition={{ type: "tween", duration: 0.6, ease: EASE }}
+        <div className="absolute left-0 right-0 bottom-[52px] text-center px-6 sm:px-12">
+          <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: EASE, delay: 0.05 }}
+            className="mono text-xs font-medium tracking-[0.1em] text-ochre"
           >
-            {/* caption above */}
-            <div className="flex items-end justify-between mb-3 mono text-[10px] uppercase tracking-[0.22em] text-bone-mute">
-              <span>{t("hero.captionTopA")}</span>
-              <span>{t("hero.captionTopB")}</span>
-            </div>
-
-            <div className="relative keyblock-sumi bg-indigo overflow-hidden">
-              <img
-                src={sceneDinner}
-                alt={t("hero.cardAlt")}
-                className="block w-full h-auto select-none"
-                draggable={false}
-                width={1200}
-                height={800}
-                fetchPriority="high"
-              />
-
-              {/* Balance card — tucked INSIDE the print on its lower-left corner */}
-              <div
-                className="paper-grain absolute left-3 bottom-3 sm:left-4 sm:bottom-4 bg-indigo text-bone border border-bone p-4 sm:p-5 w-[58%] max-w-[280px]"
-                style={{ boxShadow: "6px 6px 0 rgba(0,0,0,0.35)" }}
-              >
-                <div className="flex items-center justify-between mono text-[9px] uppercase tracking-[0.22em] text-bone-mute">
-                  <span>{t("hero.cardTrip")}</span>
-                  <span>JPY</span>
-                </div>
-                <div className="mt-2 flex items-baseline gap-1.5">
-                  <span className="mono text-bone-mute text-base font-medium">¥</span>
-                  <span
-                    className="mono tabular-nums font-semibold leading-none text-bone"
-                    style={{ fontSize: "clamp(28px, 3.4vw, 44px)", letterSpacing: "-0.04em" }}
-                  >
-                    {balance.toFixed(2)}
-                  </span>
-                </div>
-                <div className="mt-2 mono text-[10px] uppercase tracking-[0.18em] text-bone-dim">
-                  {t("hero.cardOwes")}
-                </div>
-                <div className="mt-3 border-t border-bone/15 pt-2.5">
-                  <span className="mono text-[9px] uppercase tracking-[0.22em] text-bone-mute">{t("hero.cardSettled")}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* caption below */}
-            <figcaption className="mt-3 flex items-center justify-between mono text-[10px] uppercase tracking-[0.22em] text-bone-mute">
-              <span>{t("hero.captionBottomA")}</span>
-              <span className="text-ochre">{t("hero.captionBottomB")}</span>
-            </figcaption>
-
-          </motion.figure>
+            {t("hero.eyebrow")}
+          </motion.div>
+          <motion.h1
+            id="hero-claim"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: EASE, delay: 0.14 }}
+            className="mt-5 mx-auto max-w-[1080px] font-semibold text-bone text-[clamp(44px,7.4vw,100px)] leading-[0.9] tracking-[-0.052em] text-balance"
+          >
+            {t("hero.headline")}{" "}
+            <span className="text-shu">{t("hero.headlineAccent")}</span>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: EASE, delay: 0.24 }}
+            className="mt-6 mx-auto max-w-[620px] text-bone-dim text-lg leading-[1.5] text-pretty"
+          >
+            {t("hero.body")}
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: EASE, delay: 0.34 }}
+            className="mt-8 flex flex-wrap gap-3 justify-center"
+          >
+            <a
+              href={APP_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[15px] font-medium px-6 py-[15px] rounded-[6px] bg-shu text-indigo leading-none hover:opacity-90 transition-opacity"
+            >
+              {t("hero.ctaIos")}
+            </a>
+            <a
+              href={PLAY_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[15px] font-medium px-6 py-[15px] rounded-[6px] border-[0.5px] border-bone text-bone leading-none hover:bg-bone hover:text-indigo transition-colors"
+            >
+              {t("hero.ctaAndroid")}
+            </a>
+          </motion.div>
         </div>
       </div>
     </section>
   );
 }
 
-function RowLine({ tag, label, amt }: { tag: string; label: string; amt: string }) {
-  return (
-    <>
-      <div className="mono text-[11px] tabular-nums text-sumi/50 self-center">{tag}</div>
-      <div className="text-sm text-sumi self-center">{label}</div>
-      <div className="mono text-sm tabular-nums text-right text-sumi self-center">{amt}</div>
-    </>
-  );
-}
+/* ============================================================
+   Price — one enormous number under the fold (design 2b):
+   free stated as the whole feature list.
+============================================================ */
+function Price() {
+  const { t } = useTranslation();
+  const rows = t("price.rows", { returnObjects: true }) as Array<{ k: string; v: string }>;
 
-function Stat({ n, k }: { n: string; k: string }) {
   return (
-    <div className="bg-indigo px-4 py-5">
-      <div className="mono text-bone text-lg font-medium">{n}</div>
-      <div className="mono text-[10px] uppercase tracking-[0.18em] text-bone-mute mt-1">{k}</div>
-    </div>
+    <motion.section
+      initial={{ opacity: 0, y: 14 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.6, ease: EASE }}
+      className="border-b border-bone/15"
+    >
+      <div className="mx-auto max-w-[1320px] px-8 lg:px-14 py-20 grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-x-16 gap-y-14 items-center">
+        <div>
+          <div className="mono font-medium text-bone leading-[0.8] tracking-[-0.06em] text-[clamp(120px,19vw,260px)]">
+            {t("price.amount")}
+            <span className="text-[0.37em] tracking-[-0.02em] text-shu"> {t("price.unit")}</span>
+          </div>
+          <div className="mt-4 mono text-xs font-medium tracking-[0.08em] text-bone-mute">
+            {t("price.caption")}
+          </div>
+        </div>
+        <div>
+          <h2 className="mb-5 text-[clamp(36px,3.7vw,50px)] font-semibold tracking-[-0.04em] leading-[1.02] text-bone">
+            {t("price.title")}
+          </h2>
+          <div className="flex flex-col">
+            {rows.map((r, i) => (
+              <div
+                key={r.k}
+                className={`flex justify-between items-baseline py-[15px] ${
+                  i < rows.length - 1 ? "border-b-[0.5px] border-bone/15" : ""
+                }`}
+              >
+                <span className="text-[16.5px] leading-none text-bone">{r.k}</span>
+                <span className="mono text-sm font-medium leading-none text-moss">{r.v}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </motion.section>
   );
-}
-
-function useCountUp(target: number, duration: number, reduce: boolean) {
-  const [v, setV] = useState(reduce ? target : 0);
-  useEffect(() => {
-    if (reduce) return;
-    let raf = 0;
-    const start = performance.now();
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / duration);
-      // cubic-bezier(0.2,0.7,0.2,1) approximation
-      const eased = 1 - Math.pow(1 - p, 3);
-      setV(target * eased);
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, duration, reduce]);
-  return v;
 }
 
 /* ============================================================
@@ -383,23 +309,21 @@ function Features() {
   const items = t("features.items", { returnObjects: true }) as Array<{ g: string; h: string; b: string }>;
   return (
     <Section id="features">
-      <div className="grid grid-cols-12 gap-8">
-        <div className="col-span-12 lg:col-span-5">
-          <h2 className="text-[clamp(40px,5.2vw,80px)] font-semibold tracking-[-0.035em] leading-[0.98] text-bone">
-            {t("features.titleA")}<br />{t("features.titleB")}
-          </h2>
-        </div>
-        <p className="col-span-12 lg:col-span-6 lg:col-start-7 self-end text-bone-dim text-[15px] leading-[1.65] max-w-md">
-          {t("features.intro")}
-        </p>
+      <div className="flex items-baseline justify-between gap-8">
+        <h2 className="text-[clamp(32px,3.2vw,44px)] font-semibold tracking-[-0.038em] leading-[1.02] text-bone">
+          {t("features.title")}
+        </h2>
+        <span className="mono text-xs font-medium tracking-[0.06em] text-bone-mute shrink-0">
+          {t("features.tag")}
+        </span>
       </div>
 
-      <div className="mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-bone/15 border-y border-bone/20">
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-bone/15">
         {items.map((it) => (
-          <article key={it.h} className="bg-indigo p-8 lg:p-10 group">
-            <div className="mono text-5xl text-ochre leading-none">{it.g}</div>
-            <h3 className="mt-10 text-xl text-bone tracking-[-0.02em]">{it.h}</h3>
-            <p className="mt-4 text-bone-mute text-sm leading-[1.65]">{it.b}</p>
+          <article key={it.h} className="bg-indigo px-8 py-[30px]">
+            <div className="mono text-lg font-medium text-ochre leading-none">{it.g}</div>
+            <h3 className="mt-3.5 mb-[7px] text-[21px] font-semibold leading-[1.14] tracking-[-0.026em] text-bone">{it.h}</h3>
+            <p className="m-0 text-bone-mute text-sm leading-[1.55]">{it.b}</p>
           </article>
         ))}
       </div>
@@ -721,6 +645,7 @@ function LandingPage() {
     <div className="min-h-screen bg-indigo text-bone">
       <SiteHeader />
       <Hero />
+      <Price />
       <Value />
       <Features />
       <Diptych />
