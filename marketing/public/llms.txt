@@ -1,0 +1,15 @@
+# Chara
+
+> Open-source, self-hostable bill splitting. No ads, no daily cap, no bank linking. Built in Stockholm.
+
+Chara is a tool for tracking shared expenses between people who choose to share a group. It does not move money — settlement happens in your existing payment apps. The software is MIT-licensed and can be self-hosted; a hosted service is also available.
+
+## Pages
+
+- [Home](/): Product overview, features, and self-hosting story.
+- [Privacy](/privacy): What Chara collects, why, and how data is protected.
+- [Terms](/terms): Terms of service for the Chara hosted platform.
+- [Security](/security): Security posture, encryption, and disclosure policy.
+- [Data Processing Addendum](/dpa): GDPR DPA for organisations.
+- [Cookies](/cookies): Cookie usage on the marketing site.
+- [Support](/support): How to get help.
