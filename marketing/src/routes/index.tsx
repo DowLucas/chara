@@ -141,8 +141,13 @@ function Price() {
       <div className="mx-auto max-w-[1320px] px-8 lg:px-14 py-20 grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-x-16 gap-y-14 items-center">
         <div>
           <div className="mono font-medium text-bone leading-[0.8] tracking-[-0.06em] text-[clamp(120px,19vw,260px)]">
+            {t("price.unitBefore") ? (
+              <span className="text-[0.37em] tracking-[-0.02em] text-shu">{t("price.unitBefore")}</span>
+            ) : null}
             {t("price.amount")}
-            <span className="text-[0.37em] tracking-[-0.02em] text-shu"> {t("price.unit")}</span>
+            {t("price.unitAfter") ? (
+              <span className="text-[0.37em] tracking-[-0.02em] text-shu"> {t("price.unitAfter")}</span>
+            ) : null}
           </div>
           <div className="mt-4 mono text-xs font-medium tracking-[0.08em] text-bone-mute">
             {t("price.caption")}
