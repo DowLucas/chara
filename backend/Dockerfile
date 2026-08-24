@@ -1,7 +1,7 @@
 # Multi-stage build. Cross-compiles for the target platform on the build host
 # (no QEMU emulation of the Go compiler), so `docker buildx --platform
 # linux/amd64,linux/arm64` is fast.
-FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS builder
 
 ARG TARGETOS
 ARG TARGETARCH
