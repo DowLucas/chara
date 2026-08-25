@@ -67,8 +67,38 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   return brandedErrorResponse();
 }
 
+/**
+ * Container healthcheck. Answered before the SSR handler and deliberately NOT
+ * passed to logAccess.
+ *
+ * The Dockerfile used to probe `/` every 30s, which the access log recorded as
+ * an ordinary page view: on 2026-08-25 that was 1371 of 2168 requests in a day,
+ * and together with the Uptime Kuma monitor it made the analytics dashboard 95%
+ * robots. It also skewed p95 render time downwards, because a healthcheck
+ * against a warm SSR cache returns in ~3ms and no real visitor ever does.
+ *
+ * Returning early is the point: it proves the process is listening and serving
+ * without rendering the page, so the check stays cheap as well as invisible.
+ */
+function healthResponse(): Response {
+  return new Response("ok", {
+    status: 200,
+    headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
+  });
+}
+
+function isHealthCheck(request: Request): boolean {
+  try {
+    return new URL(request.url).pathname === "/api/health";
+  } catch {
+    return false;
+  }
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    if (isHealthCheck(request)) return healthResponse();
+
     const startedAt = performance.now();
     try {
       const handler = await getServerEntry();
