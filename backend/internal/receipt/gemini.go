@@ -135,6 +135,56 @@ type geminiContent struct {
 type geminiGenerationConfig struct {
 	ResponseMIMEType string  `json:"response_mime_type,omitempty"`
 	Temperature      float64 `json:"temperature,omitempty"`
+	ResponseSchema   any     `json:"response_schema,omitempty"`
+}
+
+// responseSchema constrains Gemini's JSON decoding. Without it,
+// response_mime_type alone still lets the model emit structurally invalid
+// JSON — a missing closing brace, or a stray trailing one after the
+// {"error":"unreadable"} sentinel — with finishReason STOP, which surfaces
+// to the client as a 502.
+//
+// "items" must appear in the required list alongside the scalar fields:
+// requiring the scalars but not items makes the model drop the array
+// entirely. Leaving the list off altogether is worse still — the model then
+// omits currency on some receipts, which fails the [currency.Normalize]
+// allowlist as an unsupported "".
+//
+// Requiring the scalars costs nothing on an unreadable image: the model
+// returns them empty alongside {"error":"unreadable"}, and an empty total
+// already maps to [ErrUnreadable]. Field semantics are carried by
+// [extractionPrompt]; this schema only pins the shape.
+func responseSchema() map[string]any {
+	str := map[string]any{"type": "string"}
+	return map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"title":    str,
+			"merchant": str,
+			"category": str,
+			"date":     str,
+			"currency": str,
+			"total":    str,
+			"subtotal": str,
+			"tax":      str,
+			"tip":      str,
+			"error":    str,
+			"items": map[string]any{
+				"type": "array",
+				"items": map[string]any{
+					"type": "object",
+					"properties": map[string]any{
+						"description": str,
+						"qty":         map[string]any{"type": "integer"},
+						"unit_price":  str,
+						"total":       str,
+					},
+					"required": []string{"description", "total"},
+				},
+			},
+		},
+		"required": []string{"title", "merchant", "currency", "total", "items"},
+	}
 }
 
 type geminiRequest struct {
@@ -212,6 +262,7 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 		GenerationConfig: &geminiGenerationConfig{
 			ResponseMIMEType: "application/json",
 			Temperature:      0,
+			ResponseSchema:   responseSchema(),
 		},
 	}
 	body, err := json.Marshal(reqBody)

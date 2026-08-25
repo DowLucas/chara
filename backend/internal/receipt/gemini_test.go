@@ -391,6 +391,69 @@ func TestGeminiScanner_Scan_APIKeySentViaHeaderNotURL(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// Gemini returns structurally invalid JSON — a missing closing brace, or a
+// stray trailing one after {"error":"unreadable"} — often enough to matter
+// when generationConfig only sets response_mime_type. finishReason is STOP,
+// so this is malformed output rather than truncation, and the scan fails as
+// a 502. Sending an explicit response_schema constrains decoding and fixes
+// it. See the deliberate absence of "required" below.
+func TestGeminiScanner_Scan_SendsResponseSchema(t *testing.T) {
+	var captured map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		require.NoError(t, err)
+		require.NoError(t, json.Unmarshal(body, &captured))
+
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(geminiTextResponse(t,
+			`{"title":"T","merchant":"M","date":"2026-05-20","currency":"SEK","total":"10.00"}`,
+		))
+	}))
+	defer srv.Close()
+
+	_, err := NewGemini("test-key", WithGeminiBaseURL(srv.URL)).
+		Scan(context.Background(), []byte{1}, "image/jpeg", "", nil)
+	require.NoError(t, err)
+
+	cfg, ok := captured["generationConfig"].(map[string]any)
+	require.True(t, ok, "generationConfig must be present")
+	schema, ok := cfg["response_schema"].(map[string]any)
+	require.True(t, ok, "response_schema must be sent alongside response_mime_type")
+	assert.Equal(t, "object", schema["type"])
+
+	props, ok := schema["properties"].(map[string]any)
+	require.True(t, ok)
+	for _, k := range []string{
+		"title", "merchant", "category", "date", "currency",
+		"total", "subtotal", "tax", "tip", "error", "items",
+	} {
+		assert.Contains(t, props, k, "schema must declare %q", k)
+	}
+
+	// "items" must be required alongside the scalars. Requiring the scalars
+	// alone makes the model drop the items array; omitting the required list
+	// entirely makes it drop currency on some receipts, which then fails the
+	// currency allowlist as an unsupported "".
+	required := schema["required"].([]any)
+	got := make([]string, 0, len(required))
+	for _, r := range required {
+		got = append(got, r.(string))
+	}
+	assert.ElementsMatch(t,
+		[]string{"title", "merchant", "currency", "total", "items"}, got)
+
+	items, ok := props["items"].(map[string]any)
+	require.True(t, ok)
+	assert.Equal(t, "array", items["type"])
+	itemSchema, ok := items["items"].(map[string]any)
+	require.True(t, ok)
+	itemProps, ok := itemSchema["properties"].(map[string]any)
+	require.True(t, ok)
+	for _, k := range []string{"description", "qty", "unit_price", "total"} {
+		assert.Contains(t, itemProps, k, "item schema must declare %q", k)
+	}
+}
+
 func TestGeminiScanner_Scan_EmptyImageRejected(t *testing.T) {
 	_, err := NewGemini("k").Scan(context.Background(), nil, "image/jpeg", "", nil)
 	require.Error(t, err)
