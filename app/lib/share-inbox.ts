@@ -88,3 +88,19 @@ export function classifyShareIntent(
     extraFilesIgnored: files.length - 1,
   };
 }
+
+/** The iOS share extension hands the file over by opening the host app at
+ *  `<scheme>://dataUrl=<scheme>ShareKey#<type>` (ShareExtensionViewController).
+ *  That is a handoff signal, not a route: Expo Router would try to match
+ *  `dataUrl=…` and render its built-in "Unmatched Route" screen. `+native-intent`
+ *  uses this to swallow the URL and let ShareIntentListener do the navigating —
+ *  it alone knows whether the file is even supported.
+ *
+ *  Scheme-agnostic so the `charadev` variant is covered too; anchored at the
+ *  authority so a normal deep link carrying a `dataUrl` query param is not
+ *  mistaken for one. */
+const SHARE_INTENT_URL_RE = /^[a-z][a-z0-9+.-]*:\/\/dataUrl=/i;
+
+export function isShareIntentUrl(url: string | null | undefined): boolean {
+  return !!url && SHARE_INTENT_URL_RE.test(url);
+}

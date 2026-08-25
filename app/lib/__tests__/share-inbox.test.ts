@@ -12,6 +12,7 @@ import {
   SHARE_FILE_TTL_MS,
   classifyShareIntent,
   isShareArtifact,
+  isShareIntentUrl,
   sweepShareFiles,
 } from '../share-inbox';
 
@@ -124,5 +125,40 @@ describe('classifyShareIntent', () => {
       file: { uri: 'file:///tmp/kvitto.pdf', mimeType: 'application/pdf', name: 'kvitto.pdf' },
       extraFilesIgnored: 0,
     });
+  });
+});
+
+describe('isShareIntentUrl', () => {
+  // iOS ShareExtensionViewController opens the host app with
+  // `<scheme>://dataUrl=<scheme>ShareKey#<type>`. Expo Router tries to match
+  // `dataUrl=…` as a route and lands on its built-in "Unmatched Route" screen,
+  // so +native-intent has to recognise and swallow these.
+  it.each([
+    'chara://dataUrl=charaShareKey#file',
+    'chara://dataUrl=charaShareKey#media',
+    'charadev://dataUrl=charadevShareKey#file',
+    'CHARA://dataUrl=charaShareKey#weburl',
+  ])('recognises the share handoff URL %s', (url) => {
+    expect(isShareIntentUrl(url)).toBe(true);
+  });
+
+  it.each([
+    'chara://join?invite=abc',
+    'chara://verify?token=abc&server=https%3A%2F%2Fx',
+    'chara://groups/https%3A%2F%2Fx/42',
+    'https://chara.app/i/abc',
+    '/receipt-inbox',
+    '',
+  ])('leaves the normal deep link %s alone', (url) => {
+    expect(isShareIntentUrl(url)).toBe(false);
+  });
+
+  it('does not match a route that merely mentions dataUrl', () => {
+    expect(isShareIntentUrl('chara://groups/x/1?dataUrl=charaShareKey')).toBe(false);
+  });
+
+  it('tolerates a null or undefined path', () => {
+    expect(isShareIntentUrl(null)).toBe(false);
+    expect(isShareIntentUrl(undefined)).toBe(false);
   });
 });
