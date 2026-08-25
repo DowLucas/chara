@@ -66,6 +66,15 @@ triggers `backend-image.yml`, which publishes `ghcr.io/dowlucas/chara-backend:la
 Watchtower then recreates `chara-backend`. Delivery also requires the job queue
 (`RECURRING_ENABLED` not `false`) — otherwise the endpoint returns `503`.
 
+> **Watchtower does not re-read `env_file`.** It recreates the container from the
+> config baked in at the last `docker compose up`, so a token added/changed in
+> `.env` *after* that point never reaches the container — the endpoint then
+> returns `404` (route hidden) even though `.env` looks correct. After any change
+> to `ADMIN_API_TOKEN` in `.env`, you **must** run `docker compose up -d backend`
+> yourself (a plain `restart` or an image update via Watchtower is not enough).
+> Verify with `sudo docker exec chara-backend sh -c 'test -n "$ADMIN_API_TOKEN" && echo SET || echo EMPTY'`.
+> (The compose *service* is `backend`; `chara-backend` is only the container name.)
+
 ## Sending a notification
 
 ### Via GitHub (recommended)
@@ -92,7 +101,8 @@ Notes:
 ## Rotating / disabling
 
 - **Rotate**: re-run steps 1–2 with the same commands (the script upserts, and
-  `gh secret set` overwrites). Recreate the container to load the new value:
-  `cd /opt/stacks/chara && sudo docker compose up -d chara-backend`.
+  `gh secret set` overwrites). Recreate the container to load the new value
+  (Watchtower won't — see the callout under step 4):
+  `cd /opt/stacks/chara && sudo docker compose up -d backend`.
 - **Disable**: remove `ADMIN_API_TOKEN` from the prod `.env` and recreate the
   container — the endpoint returns `404` again.
