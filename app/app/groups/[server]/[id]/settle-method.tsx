@@ -33,6 +33,7 @@ import {
   getSwishPhonePromptDismissed,
   setSwishPhonePromptDismissed,
 } from '@/lib/preferences';
+import { settlementMethodFor } from '@/lib/settlement-method';
 import {
   colors,
   fontDisplay,
@@ -139,7 +140,7 @@ export default function SettleMethodScreen() {
     { id: 'manual', enabled: true,  primary: false },
   ];
 
-  async function recordSettlement(noteSuffix?: string, amountOverride?: string) {
+  async function recordSettlement(rail: MethodId, amountOverride?: string) {
     if (!id || !from || !to || !amount || !currency || !serverUrl) return false;
     setSubmitting(true);
     try {
@@ -148,7 +149,7 @@ export default function SettleMethodScreen() {
         to_member_id: to,
         amount: amountOverride ?? amount,
         currency,
-        note: noteSuffix,
+        method: settlementMethodFor(rail),
       });
       setCompletedAt(new Date());
       setStage('done');

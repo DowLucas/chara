@@ -18,6 +18,7 @@ import type {
   UpdateRecurringInput,
 } from './api-types-recurring';
 import { MAIN_HOSTED_SERVER_URL } from './server-url';
+import type { SettlementMethod } from './settlement-method';
 import i18n from './i18n';
 
 const TOKEN_KEY = 'auth_token';
@@ -812,6 +813,10 @@ export interface SettleInput {
   amount: string;
   currency: string;
   note?: string;
+  /** How the payment was made. Drives per-rail analytics and the
+   *  false-settle rate that decides whether verified settlement is worth
+   *  building. Omitted → the server records 'manual'. */
+  method?: SettlementMethod;
   /** Optional FX snapshot. All-or-none — partial input is 400'd by the
    *  backend. Only set when the user paid in a different currency than
    *  the canonical settlement currency. */
