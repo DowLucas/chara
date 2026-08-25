@@ -808,6 +808,11 @@ export interface Settlement {
 }
 
 export interface SettleInput {
+  /** Client-generated ULID doubling as the idempotency key. Retrying a
+   *  settle whose response was lost with the same id returns the original
+   *  settlement instead of recording the payment twice. Omit to let the
+   *  server mint one (older servers ignore this field entirely). */
+  id?: string;
   from_member_id: string;
   to_member_id: string;
   amount: string;

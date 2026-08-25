@@ -4,6 +4,10 @@ INSERT INTO settlements (
     original_amount, original_currency, fx_rate, fx_as_of
 )
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+-- The id may be client-supplied (idempotency key). A repeat of the same
+-- settle request must not insert a second row; the handler treats the
+-- resulting pgx.ErrNoRows as "already recorded" and returns the stored row.
+ON CONFLICT (id) DO NOTHING
 RETURNING *;
 
 -- name: ListSettlementsByGroup :many

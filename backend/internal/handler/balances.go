@@ -129,6 +129,11 @@ func settlementToResponse(s db.Settlement) SettlementResponse {
 // ── Request types ─────────────────────────────────────────────────────────────
 
 type settleReq struct {
+	// ID is an optional client-generated ULID acting as the idempotency key.
+	// A settle request whose response is lost gets retried by the client;
+	// re-sending the same id returns the stored settlement instead of
+	// recording the payment twice. Omitted → the server mints one.
+	ID           *string      `json:"id"`
 	FromMemberID string       `json:"from_member_id"`
 	ToMemberID   string       `json:"to_member_id"`
 	Amount       money.Amount `json:"amount"`
@@ -376,6 +381,15 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	settlementID := ulid.New()
+	if req.ID != nil {
+		if !ulid.Validate(*req.ID) {
+			writeError(w, http.StatusBadRequest, "id must be a ULID")
+			return
+		}
+		settlementID = *req.ID
+	}
+
 	tx, err := h.pool.Begin(r.Context())
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error")
@@ -385,7 +399,7 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 	q := db.New(tx)
 
 	settlement, err := q.CreateSettlement(r.Context(), db.CreateSettlementParams{
-		ID:               ulid.New(),
+		ID:               settlementID,
 		GroupID:          groupID,
 		FromMember:       req.FromMemberID,
 		ToMember:         req.ToMemberID,
@@ -399,6 +413,25 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 		FxRate:           fxRate,
 		FxAsOf:           fxAsOf,
 	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		// ON CONFLICT DO NOTHING matched: this id is already recorded, so
+		// this is a retry. Return the stored settlement without writing a
+		// second activity event. The tx is rolled back by the defer.
+		existing, getErr := h.queries.GetSettlement(r.Context(), settlementID)
+		if getErr != nil {
+			writeError(w, http.StatusInternalServerError, "could not load settlement")
+			return
+		}
+		// The id exists, but in a different group than the one the caller
+		// posted to — refuse rather than hand back a settlement from a group
+		// they may not be a member of.
+		if existing.GroupID != groupID {
+			writeError(w, http.StatusConflict, "settlement id already used")
+			return
+		}
+		writeJSON(w, http.StatusOK, settlementToResponse(existing))
+		return
+	}
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not create settlement")
 		return

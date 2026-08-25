@@ -17,6 +17,7 @@ INSERT INTO settlements (
     original_amount, original_currency, fx_rate, fx_as_of
 )
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+ON CONFLICT (id) DO NOTHING
 RETURNING id, group_id, from_member, to_member, amount, currency, note, created_by_id, created_at, method, external_ref, reverted_at, original_amount, original_currency, fx_rate, fx_as_of
 `
 
@@ -36,6 +37,9 @@ type CreateSettlementParams struct {
 	FxAsOf           pgtype.Date    `db:"fx_as_of" json:"fx_as_of"`
 }
 
+// The id may be client-supplied (idempotency key). A repeat of the same
+// settle request must not insert a second row; the handler treats the
+// resulting pgx.ErrNoRows as "already recorded" and returns the stored row.
 func (q *Queries) CreateSettlement(ctx context.Context, arg CreateSettlementParams) (Settlement, error) {
 	row := q.db.QueryRow(ctx, createSettlement,
 		arg.ID,
