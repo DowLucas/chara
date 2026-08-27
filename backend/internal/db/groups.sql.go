@@ -29,7 +29,7 @@ func (q *Queries) CountGroupMembers(ctx context.Context, groupID string) (int64,
 const createGroup = `-- name: CreateGroup :one
 INSERT INTO groups (id, name, currency, language, created_by, invite_token, invite_token_created_by_user_id)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked, invite_token_created_by_user_id, category_slugs
+RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked, invite_token_created_by_user_id, category_slugs, exclude_from_stats
 `
 
 type CreateGroupParams struct {
@@ -66,12 +66,13 @@ func (q *Queries) CreateGroup(ctx context.Context, arg CreateGroupParams) (Group
 		&i.IsLocked,
 		&i.InviteTokenCreatedByUserID,
 		&i.CategorySlugs,
+		&i.ExcludeFromStats,
 	)
 	return i, err
 }
 
 const getGroupByID = `-- name: GetGroupByID :one
-SELECT id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked, invite_token_created_by_user_id, category_slugs FROM groups WHERE id = $1
+SELECT id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked, invite_token_created_by_user_id, category_slugs, exclude_from_stats FROM groups WHERE id = $1
 `
 
 func (q *Queries) GetGroupByID(ctx context.Context, id string) (Group, error) {
@@ -90,12 +91,13 @@ func (q *Queries) GetGroupByID(ctx context.Context, id string) (Group, error) {
 		&i.IsLocked,
 		&i.InviteTokenCreatedByUserID,
 		&i.CategorySlugs,
+		&i.ExcludeFromStats,
 	)
 	return i, err
 }
 
 const getGroupByInviteToken = `-- name: GetGroupByInviteToken :one
-SELECT id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked, invite_token_created_by_user_id, category_slugs FROM groups WHERE invite_token = $1 AND NOT is_archived
+SELECT id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked, invite_token_created_by_user_id, category_slugs, exclude_from_stats FROM groups WHERE invite_token = $1 AND NOT is_archived
 `
 
 func (q *Queries) GetGroupByInviteToken(ctx context.Context, inviteToken string) (Group, error) {
@@ -114,12 +116,13 @@ func (q *Queries) GetGroupByInviteToken(ctx context.Context, inviteToken string)
 		&i.IsLocked,
 		&i.InviteTokenCreatedByUserID,
 		&i.CategorySlugs,
+		&i.ExcludeFromStats,
 	)
 	return i, err
 }
 
 const getGroupByInviteTokenAny = `-- name: GetGroupByInviteTokenAny :one
-SELECT id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked, invite_token_created_by_user_id, category_slugs FROM groups WHERE invite_token = $1
+SELECT id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked, invite_token_created_by_user_id, category_slugs, exclude_from_stats FROM groups WHERE invite_token = $1
 `
 
 // Same as GetGroupByInviteToken but does NOT filter by is_archived. Used by
@@ -142,6 +145,7 @@ func (q *Queries) GetGroupByInviteTokenAny(ctx context.Context, inviteToken stri
 		&i.IsLocked,
 		&i.InviteTokenCreatedByUserID,
 		&i.CategorySlugs,
+		&i.ExcludeFromStats,
 	)
 	return i, err
 }
@@ -292,7 +296,7 @@ func (q *Queries) HardDeleteGroup(ctx context.Context, id string) error {
 }
 
 const listArchivedGroupsByUserID = `-- name: ListArchivedGroupsByUserID :many
-SELECT g.id, g.name, g.currency, g.created_by, g.invite_token, g.is_archived, g.created_at, g.updated_at, g.language, g.is_locked, g.invite_token_created_by_user_id, g.category_slugs FROM groups g
+SELECT g.id, g.name, g.currency, g.created_by, g.invite_token, g.is_archived, g.created_at, g.updated_at, g.language, g.is_locked, g.invite_token_created_by_user_id, g.category_slugs, g.exclude_from_stats FROM groups g
 JOIN group_members gm ON gm.group_id = g.id
 WHERE gm.user_id = $1 AND gm.removed_at IS NULL AND g.is_archived
 ORDER BY g.updated_at DESC
@@ -322,6 +326,7 @@ func (q *Queries) ListArchivedGroupsByUserID(ctx context.Context, userID pgtype.
 			&i.IsLocked,
 			&i.InviteTokenCreatedByUserID,
 			&i.CategorySlugs,
+			&i.ExcludeFromStats,
 		); err != nil {
 			return nil, err
 		}
@@ -334,7 +339,7 @@ func (q *Queries) ListArchivedGroupsByUserID(ctx context.Context, userID pgtype.
 }
 
 const listGroupsByUserID = `-- name: ListGroupsByUserID :many
-SELECT g.id, g.name, g.currency, g.created_by, g.invite_token, g.is_archived, g.created_at, g.updated_at, g.language, g.is_locked, g.invite_token_created_by_user_id, g.category_slugs FROM groups g
+SELECT g.id, g.name, g.currency, g.created_by, g.invite_token, g.is_archived, g.created_at, g.updated_at, g.language, g.is_locked, g.invite_token_created_by_user_id, g.category_slugs, g.exclude_from_stats FROM groups g
 JOIN group_members gm ON gm.group_id = g.id
 WHERE gm.user_id = $1 AND gm.removed_at IS NULL AND NOT g.is_archived
 ORDER BY g.updated_at DESC
@@ -362,6 +367,7 @@ func (q *Queries) ListGroupsByUserID(ctx context.Context, userID pgtype.Text) ([
 			&i.IsLocked,
 			&i.InviteTokenCreatedByUserID,
 			&i.CategorySlugs,
+			&i.ExcludeFromStats,
 		); err != nil {
 			return nil, err
 		}
@@ -457,7 +463,7 @@ SET invite_token = $2,
     invite_token_created_by_user_id = $3,
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked, invite_token_created_by_user_id, category_slugs
+RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked, invite_token_created_by_user_id, category_slugs, exclude_from_stats
 `
 
 type RegenerateInviteTokenParams struct {
@@ -482,6 +488,7 @@ func (q *Queries) RegenerateInviteToken(ctx context.Context, arg RegenerateInvit
 		&i.IsLocked,
 		&i.InviteTokenCreatedByUserID,
 		&i.CategorySlugs,
+		&i.ExcludeFromStats,
 	)
 	return i, err
 }
@@ -489,7 +496,7 @@ func (q *Queries) RegenerateInviteToken(ctx context.Context, arg RegenerateInvit
 const setGroupLocked = `-- name: SetGroupLocked :one
 UPDATE groups SET is_locked = $2, updated_at = NOW()
 WHERE id = $1
-RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked, invite_token_created_by_user_id, category_slugs
+RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked, invite_token_created_by_user_id, category_slugs, exclude_from_stats
 `
 
 type SetGroupLockedParams struct {
@@ -513,6 +520,7 @@ func (q *Queries) SetGroupLocked(ctx context.Context, arg SetGroupLockedParams) 
 		&i.IsLocked,
 		&i.InviteTokenCreatedByUserID,
 		&i.CategorySlugs,
+		&i.ExcludeFromStats,
 	)
 	return i, err
 }
@@ -526,7 +534,7 @@ SET name           = COALESCE($2, name),
     category_slugs = COALESCE($6, category_slugs),
     updated_at     = NOW()
 WHERE id = $1
-RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked, invite_token_created_by_user_id, category_slugs
+RETURNING id, name, currency, created_by, invite_token, is_archived, created_at, updated_at, language, is_locked, invite_token_created_by_user_id, category_slugs, exclude_from_stats
 `
 
 type UpdateGroupParams struct {
@@ -561,6 +569,7 @@ func (q *Queries) UpdateGroup(ctx context.Context, arg UpdateGroupParams) (Group
 		&i.IsLocked,
 		&i.InviteTokenCreatedByUserID,
 		&i.CategorySlugs,
+		&i.ExcludeFromStats,
 	)
 	return i, err
 }

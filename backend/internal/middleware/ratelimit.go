@@ -47,6 +47,26 @@ func InviteRateLimit(perIPPerMinute, perTokenPerMinute int) func(http.Handler) h
 	}
 }
 
+// IPRateLimit is a single per-IP bucket for public, input-less endpoints
+// (currently GET /api/public/stats). Those are already served from a
+// process-local cache, so this is not protecting the database so much as
+// bounding the cost of someone pointing a loop at an unauthenticated URL.
+//
+// Same in-process, restart-losing tradeoff as InviteRateLimit.
+func IPRateLimit(perIPPerMinute int) func(http.Handler) http.Handler {
+	ipLimiter := newBucketSet(perIPPerMinute)
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ip := clientIP(r); ip != "" && !ipLimiter.allow(ip) {
+				http.Error(w, "rate limit exceeded", http.StatusTooManyRequests)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 // bucketSet is a keyed collection of token-bucket rate limiters. Each key
 // gets its own *rate.Limiter sized at perMinute events per minute (with the
 // same burst — i.e. you can spend the whole minute's budget in a burst).

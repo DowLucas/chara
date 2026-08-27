@@ -136,6 +136,8 @@ type Group struct {
 	IsLocked                   bool               `db:"is_locked" json:"is_locked"`
 	InviteTokenCreatedByUserID pgtype.Text        `db:"invite_token_created_by_user_id" json:"invite_token_created_by_user_id"`
 	CategorySlugs              []string           `db:"category_slugs" json:"category_slugs"`
+	// When true, this group's expenses are omitted from GET /api/public/stats. Used to keep demo/seed data out of publicly advertised totals.
+	ExcludeFromStats bool `db:"exclude_from_stats" json:"exclude_from_stats"`
 }
 
 type GroupMember struct {

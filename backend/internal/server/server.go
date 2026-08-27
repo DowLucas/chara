@@ -112,6 +112,17 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 		r.Use(middleware.InviteRateLimit(30, 60))
 		r.Get("/api/invites/{token}/preview", invitesH.Preview)
 	})
+	// Public aggregate usage stats, consumed by the marketing site. No auth
+	// and no input: the response is a fixed set of instance-wide totals with
+	// nothing per-group or per-user in it (see PublicStatsHandler). Cached in
+	// the handler for 5 minutes; the rate limit bounds abuse of the URL
+	// rather than protecting the database.
+	statsH := handler.NewPublicStatsHandler(queries)
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.IPRateLimit(60))
+		r.Get("/api/public/stats", statsH.Stats)
+	})
+
 	r.Get("/api/health/liveness", healthH.Liveness)
 	r.Get("/api/health/readiness", healthH.Readiness)
 
