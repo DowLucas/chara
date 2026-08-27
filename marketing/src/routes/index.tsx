@@ -6,7 +6,6 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { HankoSeal } from "@/components/HankoSeal";
 import { StoreBadges, APP_STORE_URL, PLAY_STORE_URL } from "@/components/StoreBadges";
-import { EyebrowIndex } from "@/components/EyebrowIndex";
 import {
   usePublicStats,
   hasPublishableStats,
@@ -693,9 +692,14 @@ function SelfHostPlate() {
 
 /* ============================================================
    LiveLedger — real totals from the hosted instance, fetched at
-   runtime. Everything else on this page is copy; the open-source
-   and self-host argument is a claim about honesty, so the one
-   section that is not copy belongs next to it.
+   runtime. Sits directly under the Hero: everything else on the
+   page is copy, so the one section that is not copy is the first
+   thing after the claim.
+
+   Deliberately compact and centred rather than a full section
+   with its own display headline — directly beneath the Hero's
+   clamp(44px,7.4vw,100px) claim, a second large heading reads as
+   two competing openings. The numbers carry it instead.
 ============================================================ */
 function LiveLedger() {
   const { t, i18n } = useTranslation();
@@ -709,7 +713,9 @@ function LiveLedger() {
   const value = useCountUp((stats?.value_usd_minor ?? 0) / 100, 1400, reduce ?? false);
 
   // No data, or data not worth showing: render nothing at all. An absent
-  // section beats one reading "0 expenses" or stuck in a skeleton.
+  // section beats one reading "0 expenses" or stuck in a skeleton. This
+  // matters more here than lower down the page — the section is high enough
+  // that a broken state would be the second thing a visitor sees.
   if (!hasPublishableStats(stats)) return null;
 
   const nf = new Intl.NumberFormat(i18n.language);
@@ -720,52 +726,45 @@ function LiveLedger() {
   });
   const since = formatSince(stats.since, i18n.language);
 
+  const figures = [
+    { v: nf.format(Math.round(expenses)), k: t("ledger.expensesLabel") },
+    { v: cf.format(Math.round(value)), k: t("ledger.valueLabel") },
+  ];
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 14 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.6, ease: EASE }}
-      className="relative border-y border-bone/10"
+      className="relative border-b border-bone/10"
+      aria-labelledby="ledger-eyebrow"
     >
-      <div className="mx-auto max-w-[1320px] px-8 lg:px-14 py-24 lg:py-32">
-        <EyebrowIndex index="№ 07" label={t("ledger.eyebrow")} />
-
-        <div className="mt-10 grid grid-cols-12 gap-x-8 gap-y-12 items-end">
-          <div className="col-span-12 lg:col-span-5">
-            <h2 className="text-[clamp(32px,3.6vw,52px)] font-semibold tracking-[-0.03em] leading-[1.02] text-bone">
-              {t("ledger.title")}
-            </h2>
-            <p className="mt-6 text-bone-dim text-[15px] leading-[1.65] max-w-md">
-              {t("ledger.body")}
-            </p>
-          </div>
-
-          <div className="col-span-12 lg:col-span-7">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-bone/10 border-y border-bone/15">
-              <div className="bg-indigo px-6 py-8">
-                <div className="mono text-bone text-[clamp(28px,3vw,44px)] font-medium tabular-nums leading-none">
-                  {nf.format(Math.round(expenses))}
-                </div>
-                <div className="mono text-[10px] uppercase tracking-[0.18em] text-bone-mute mt-3">
-                  {t("ledger.expensesLabel")}
-                </div>
-              </div>
-              <div className="bg-indigo px-6 py-8">
-                <div className="mono text-bone text-[clamp(28px,3vw,44px)] font-medium tabular-nums leading-none">
-                  {cf.format(Math.round(value))}
-                </div>
-                <div className="mono text-[10px] uppercase tracking-[0.18em] text-bone-mute mt-3">
-                  {t("ledger.valueLabel")}
-                </div>
-              </div>
-            </div>
-
-            <p className="mt-6 mono text-[10px] uppercase tracking-[0.22em] text-bone-mute">
-              {since ? t("ledger.caption", { since }) : t("ledger.captionNoDate")}
-            </p>
-          </div>
+      <div className="mx-auto max-w-[1320px] px-8 lg:px-14 py-16 lg:py-20 text-center">
+        <div id="ledger-eyebrow" className="mono text-xs uppercase tracking-[0.18em] text-ochre">
+          {t("ledger.eyebrow")}
         </div>
+
+        <p className="mt-5 mx-auto max-w-[620px] text-bone-dim text-[15px] leading-[1.6] text-pretty">
+          {t("ledger.body")}
+        </p>
+
+        <dl className="mt-10 mx-auto max-w-2xl grid grid-cols-2 gap-px bg-bone/10 border-y border-bone/15">
+          {figures.map((f) => (
+            <div key={f.k} className="bg-indigo px-6 py-8">
+              <dd className="mono text-bone text-[clamp(30px,4.2vw,52px)] font-medium tabular-nums leading-none">
+                {f.v}
+              </dd>
+              <dt className="mono text-[10px] uppercase tracking-[0.18em] text-bone-mute mt-3">
+                {f.k}
+              </dt>
+            </div>
+          ))}
+        </dl>
+
+        <p className="mt-6 mono text-[10px] uppercase tracking-[0.22em] text-bone-mute">
+          {since ? t("ledger.caption", { since }) : t("ledger.captionNoDate")}
+        </p>
       </div>
     </motion.section>
   );
@@ -776,6 +775,7 @@ function LandingPage() {
     <div className="min-h-screen bg-indigo text-bone">
       <SiteHeader />
       <Hero />
+      <LiveLedger />
       <Price />
       <Value />
       <Features />
@@ -784,7 +784,6 @@ function LandingPage() {
       <Compare />
       <SelfHost />
       <SelfHostPlate />
-      <LiveLedger />
       <FAQ />
       <FinalCTA />
       <SiteFooter />

@@ -175,8 +175,7 @@ export const sv: Translations = {
   },
   ledger: {
     eyebrow: "Den öppna liggaren",
-    title: "Siffrorna är äkta, och de är små.",
-    body: "Chara lanserades i år och körs på en server i Stockholm. I stället för att runda upp dem eller utelämna dem står de här, hämtade direkt ur databasen var femte minut. Demo- och testdata räknas inte med.",
+    body: "Siffrorna är äkta, och de är små. Chara lanserades i år och körs på en server i Stockholm — hämtade direkt ur databasen var femte minut, demo- och testdata borträknat.",
     expensesLabel: "Utgifter delade",
     valueLabel: "Värde reglerat",
     caption: "Live från Chara-instansen · sedan {{since}}",
