@@ -172,6 +172,15 @@ export const en = {
     place: "Stockholm · 2026",
     license: "AGPL-3.0",
   },
+  ledger: {
+    eyebrow: "The open ledger",
+    title: "The numbers are real, and they are small.",
+    body: "Chara launched this year and runs on one server in Stockholm. Rather than round these up or leave them off, here they are, read straight from the database every five minutes. Demo and seed data is excluded.",
+    expensesLabel: "Expenses split",
+    valueLabel: "Value settled",
+    caption: "Live from the Chara instance · since {{since}}",
+    captionNoDate: "Live from the Chara instance",
+  },
   lang: { en: "EN", sv: "SV" },
 };
 

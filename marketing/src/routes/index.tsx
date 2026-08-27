@@ -1,11 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { useTranslation } from "react-i18next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { HankoSeal } from "@/components/HankoSeal";
 import { StoreBadges, APP_STORE_URL, PLAY_STORE_URL } from "@/components/StoreBadges";
+import { EyebrowIndex } from "@/components/EyebrowIndex";
+import {
+  usePublicStats,
+  hasPublishableStats,
+  formatSince,
+  useCountUp,
+} from "@/lib/public-stats";
 
 import sceneHeroRiver from "@/assets/scene-hero-river.png";
 import sceneDinner from "@/assets/scene-dinner.png";
@@ -684,6 +691,85 @@ function SelfHostPlate() {
   );
 }
 
+/* ============================================================
+   LiveLedger — real totals from the hosted instance, fetched at
+   runtime. Everything else on this page is copy; the open-source
+   and self-host argument is a claim about honesty, so the one
+   section that is not copy belongs next to it.
+============================================================ */
+function LiveLedger() {
+  const { t, i18n } = useTranslation();
+  const reduce = useReducedMotion();
+  const stats = usePublicStats();
+
+  // Hooks run unconditionally, so the count-ups are wired before the bail-out
+  // below. Both read 0 until the fetch lands, which is fine — at that point
+  // the section is not in the tree.
+  const expenses = useCountUp(stats?.expenses ?? 0, 1100, reduce ?? false);
+  const value = useCountUp((stats?.value_usd_minor ?? 0) / 100, 1400, reduce ?? false);
+
+  // No data, or data not worth showing: render nothing at all. An absent
+  // section beats one reading "0 expenses" or stuck in a skeleton.
+  if (!hasPublishableStats(stats)) return null;
+
+  const nf = new Intl.NumberFormat(i18n.language);
+  const cf = new Intl.NumberFormat(i18n.language, {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  });
+  const since = formatSince(stats.since, i18n.language);
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 14 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.6, ease: EASE }}
+      className="relative border-y border-bone/10"
+    >
+      <div className="mx-auto max-w-[1320px] px-8 lg:px-14 py-24 lg:py-32">
+        <EyebrowIndex index="№ 07" label={t("ledger.eyebrow")} />
+
+        <div className="mt-10 grid grid-cols-12 gap-x-8 gap-y-12 items-end">
+          <div className="col-span-12 lg:col-span-5">
+            <h2 className="text-[clamp(32px,3.6vw,52px)] font-semibold tracking-[-0.03em] leading-[1.02] text-bone">
+              {t("ledger.title")}
+            </h2>
+            <p className="mt-6 text-bone-dim text-[15px] leading-[1.65] max-w-md">
+              {t("ledger.body")}
+            </p>
+          </div>
+
+          <div className="col-span-12 lg:col-span-7">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-bone/10 border-y border-bone/15">
+              <div className="bg-indigo px-6 py-8">
+                <div className="mono text-bone text-[clamp(28px,3vw,44px)] font-medium tabular-nums leading-none">
+                  {nf.format(Math.round(expenses))}
+                </div>
+                <div className="mono text-[10px] uppercase tracking-[0.18em] text-bone-mute mt-3">
+                  {t("ledger.expensesLabel")}
+                </div>
+              </div>
+              <div className="bg-indigo px-6 py-8">
+                <div className="mono text-bone text-[clamp(28px,3vw,44px)] font-medium tabular-nums leading-none">
+                  {cf.format(Math.round(value))}
+                </div>
+                <div className="mono text-[10px] uppercase tracking-[0.18em] text-bone-mute mt-3">
+                  {t("ledger.valueLabel")}
+                </div>
+              </div>
+            </div>
+
+            <p className="mt-6 mono text-[10px] uppercase tracking-[0.22em] text-bone-mute">
+              {since ? t("ledger.caption", { since }) : t("ledger.captionNoDate")}
+            </p>
+          </div>
+        </div>
+      </div>
+    </motion.section>
+  );
+}
 
 function LandingPage() {
   return (
@@ -698,6 +784,7 @@ function LandingPage() {
       <Compare />
       <SelfHost />
       <SelfHostPlate />
+      <LiveLedger />
       <FAQ />
       <FinalCTA />
       <SiteFooter />

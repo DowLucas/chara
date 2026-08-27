@@ -173,5 +173,14 @@ export const sv: Translations = {
     place: "Stockholm · 2026",
     license: "AGPL-3.0",
   },
+  ledger: {
+    eyebrow: "Den öppna liggaren",
+    title: "Siffrorna är äkta, och de är små.",
+    body: "Chara lanserades i år och körs på en server i Stockholm. I stället för att runda upp dem eller utelämna dem står de här, hämtade direkt ur databasen var femte minut. Demo- och testdata räknas inte med.",
+    expensesLabel: "Utgifter delade",
+    valueLabel: "Värde reglerat",
+    caption: "Live från Chara-instansen · sedan {{since}}",
+    captionNoDate: "Live från Chara-instansen",
+  },
   lang: { en: "EN", sv: "SV" },
 };
