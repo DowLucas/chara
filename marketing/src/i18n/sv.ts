@@ -175,11 +175,9 @@ export const sv: Translations = {
   },
   ledger: {
     eyebrow: "Den öppna liggaren",
-    body: "Siffrorna är äkta, och de är små. Chara lanserades i år och körs på en server i Stockholm — hämtade direkt ur databasen var femte minut, demo- och testdata borträknat.",
     expensesLabel: "Utgifter delade",
     valueLabel: "Värde reglerat",
-    caption: "Live från Chara-instansen · sedan {{since}}",
-    captionNoDate: "Live från Chara-instansen",
+    caption: "Sedan {{since}}",
   },
   lang: { en: "EN", sv: "SV" },
 };

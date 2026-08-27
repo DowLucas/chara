@@ -174,11 +174,9 @@ export const en = {
   },
   ledger: {
     eyebrow: "The open ledger",
-    body: "The numbers are real, and they are small. Chara launched this year and runs on one server in Stockholm — read straight from the database every five minutes, demo and seed data excluded.",
     expensesLabel: "Expenses split",
     valueLabel: "Value settled",
-    caption: "Live from the Chara instance · since {{since}}",
-    captionNoDate: "Live from the Chara instance",
+    caption: "Since {{since}}",
   },
   lang: { en: "EN", sv: "SV" },
 };

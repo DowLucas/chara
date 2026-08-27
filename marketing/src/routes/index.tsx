@@ -700,6 +700,11 @@ function SelfHostPlate() {
    with its own display headline — directly beneath the Hero's
    clamp(44px,7.4vw,100px) claim, a second large heading reads as
    two competing openings. The numbers carry it instead.
+
+   There is no explanatory body line on purpose. It said the
+   figures were live, which the caption already says, and hedged
+   about their size, which reads as a flinch. Eyebrow, figures,
+   date.
 ============================================================ */
 function LiveLedger() {
   const { t, i18n } = useTranslation();
@@ -745,10 +750,6 @@ function LiveLedger() {
           {t("ledger.eyebrow")}
         </div>
 
-        <p className="mt-5 mx-auto max-w-[620px] text-bone-dim text-[15px] leading-[1.6] text-pretty">
-          {t("ledger.body")}
-        </p>
-
         <dl className="mt-10 mx-auto max-w-2xl grid grid-cols-2 gap-px bg-bone/10 border-y border-bone/15">
           {figures.map((f) => (
             <div key={f.k} className="bg-indigo px-6 py-8">
@@ -762,9 +763,11 @@ function LiveLedger() {
           ))}
         </dl>
 
-        <p className="mt-6 mono text-[10px] uppercase tracking-[0.22em] text-bone-mute">
-          {since ? t("ledger.caption", { since }) : t("ledger.captionNoDate")}
-        </p>
+        {since && (
+          <p className="mt-6 mono text-[10px] uppercase tracking-[0.22em] text-bone-mute">
+            {t("ledger.caption", { since })}
+          </p>
+        )}
       </div>
     </motion.section>
   );
