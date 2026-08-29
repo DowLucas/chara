@@ -46,6 +46,16 @@ func New(pool *pgxpool.Pool, workers *river.Workers) (*river.Client[pgx.Tx], err
 				},
 				&river.PeriodicJobOpts{RunOnStart: true},
 			),
+			// Daily, and deliberately NOT RunOnStart: a prune has no
+			// urgency, and running it on every boot would make a crash
+			// loop hammer a delete over the whole table.
+			river.NewPeriodicJob(
+				river.PeriodicInterval(24*time.Hour),
+				func() (river.JobArgs, *river.InsertOpts) {
+					return AIGenerationsPruneArgs{}, nil
+				},
+				nil,
+			),
 		},
 	})
 	if err != nil {
@@ -63,6 +73,7 @@ func RegisterWorkers(pool *pgxpool.Pool, queries *db.Queries, baseURL string, ex
 	river.AddWorker(workers, &PushNotifyWorker{Pool: pool, Queries: queries, Expo: expo, BaseURL: baseURL})
 	river.AddWorker(workers, &SettleReminderWorker{Pool: pool, Queries: queries, Expo: expo, BaseURL: baseURL})
 	river.AddWorker(workers, &BroadcastPushWorker{Pool: pool, Queries: queries, Expo: expo})
+	river.AddWorker(workers, &AIGenerationsPruneWorker{Queries: queries})
 	return workers
 }
 
