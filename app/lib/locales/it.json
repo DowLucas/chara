@@ -178,7 +178,9 @@
     "saveErrorBody": "Non sono riuscito a salvare la spesa. Riprova.",
     "saveErrorTitle": "Errore",
     "saving": "Salvataggio…",
-    "scanReceipt": "Scansiona scontrino",
+    "scanReceipt": "Scansiona uno scontrino",
+    "scanShort": "Scansiona",
+    "speakShort": "Parla",
     "split": {
       "equal": "dividi in parti uguali",
       "exact": "dividi per importo",
@@ -201,6 +203,7 @@
     "totalSplit": "totale diviso",
     "viewItems": "Vedi articoli",
     "viewReceipt": "Vedi scontrino",
+    "voiceButton": "Dire la spesa",
     "when": {
       "pick": "scegli una data",
       "today": "oggi",
@@ -391,6 +394,14 @@
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
   },
+  "groupCategories": {
+    "editorHint": "Solo le categorie attivate compaiono quando aggiungi una spesa e nel suggerimento della scansione dello scontrino. Almeno una deve restare attivata.",
+    "errorTitle": "Impossibile salvare le categorie",
+    "loadError": "Impossibile caricare le categorie.",
+    "saveCta": "Salva",
+    "saving": "Salvataggio…",
+    "title": "Categorie"
+  },
   "groupColor": {
     "custom": "Colore personalizzato",
     "reset": "Ripristina predefinito",
@@ -418,14 +429,6 @@
     "open": "Apri gruppo",
     "share": "Condividi link di invito",
     "shareMessage": "Vieni nel gruppo \"{{name}}\" su Chara: {{link}}"
-  },
-  "groupCategories": {
-    "editorHint": "Solo le categorie attivate compaiono quando aggiungi una spesa e nel suggerimento della scansione dello scontrino. Almeno una deve restare attivata.",
-    "errorTitle": "Impossibile salvare le categorie",
-    "loadError": "Impossibile caricare le categorie.",
-    "saveCta": "Salva",
-    "saving": "Salvataggio…",
-    "title": "Categorie"
   },
   "groupDetail": {
     "activity": "Attività",
@@ -619,17 +622,17 @@
     },
     "title": "Impostazioni"
   },
-  "groupsTab": {
-    "joinGroup": "Entra in un gruppo",
-    "newGroup": "Nuovo gruppo",
-    "newGroupLabel": "Nuovo gruppo",
-    "scanQrLabel": "Scansiona il QR per entrare"
-  },
   "groupStats": {
     "byCategory": "per categoria",
     "emptyBody": "Aggiungi delle spese e qui comparirà una ripartizione per categoria.",
     "emptyTitle": "Ancora nessuna spesa",
     "title": "Statistiche"
+  },
+  "groupsTab": {
+    "joinGroup": "Entra in un gruppo",
+    "newGroup": "Nuovo gruppo",
+    "newGroupLabel": "Nuovo gruppo",
+    "scanQrLabel": "Scansiona il QR per entrare"
   },
   "home": {
     "balancesAcrossCurrencies": "{{count}} valute",
@@ -1254,6 +1257,44 @@
     "chooseGroup": "Scegli un gruppo",
     "home": "Home",
     "you": "Profilo"
+  },
+  "voiceExpense": {
+    "capBody": "L'inserimento vocale è limitato ogni mese per tenere sotto controllo i costi. Lasciaci la tua email e ti diremo quando il limite aumenta.",
+    "discardRest": "Scarta il resto",
+    "draftsLabel": "{{count}} spese trovate",
+    "draftsLabel_one": "{{count}} spesa trovata",
+    "draftsLabel_other": "{{count}} spese trovate",
+    "err_network": "Qualcosa è andato storto. Riprova.",
+    "err_no_expense": "Lì non c’è nessuna spesa. Prova a dire un importo e per chi era.",
+    "err_settlement": "Sembra un rimborso, non una nuova spesa.",
+    "err_unintelligible": "Non si capiva. Prova in un posto più tranquillo, o scrivilo.",
+    "example": "«Ho pagato 480 per la cena con Giulia e Marco»",
+    "exampleLabel": "Prova a dire",
+    "flag_generic": "indovinato",
+    "flag_paid_by": "chi ha pagato, indovinato",
+    "flag_participants": "chi partecipa, indovinato",
+    "flag_split": "divisione diversa da quella detta",
+    "goToSettle": "Salda invece",
+    "hint": "Tocca il microfono e descrivi cosa hai pagato.",
+    "micDenied": "Chara ha bisogno del microfono per aggiungere una spesa a voce. Puoi attivarlo nelle Impostazioni.",
+    "micDeniedTitle": "Microfono disattivato",
+    "moreFromRecording": "{{count}} altre dalla registrazione",
+    "moreFromRecording_one": "{{count}} altra dalla registrazione",
+    "moreFromRecording_other": "{{count}} altre dalla registrazione",
+    "regenerate": "Riprova",
+    "regenerateDisabled": "Modifica il testo e riprova",
+    "secondsLeft": "{{count}} secondi rimasti",
+    "secondsLeft_one": "{{count}} secondo rimasto",
+    "secondsLeft_other": "{{count}} secondi rimasti",
+    "startRecording": "Avvia registrazione",
+    "stop": "Fatto",
+    "title": "Dire la spesa",
+    "transcriptHint": "Modifica il testo se le parole sono sbagliate",
+    "transcriptLabel": "Quello che hai detto · tocca per correggere",
+    "tryAgain": "Riprova",
+    "typeInstead": "oppure scrivilo",
+    "uploading": "Sto elaborando…",
+    "useDrafts": "Usa questi"
   },
   "waitlist": {
     "body": "Stiamo limitando le scansioni delle ricevute mentre definiamo i piani di hosting. Lasciaci la tua email e ti avviseremo quando arriverà più capacità.",

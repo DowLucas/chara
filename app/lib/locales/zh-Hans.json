@@ -172,7 +172,9 @@
     "saveErrorBody": "保存失败，请重试。",
     "saveErrorTitle": "出错了",
     "saving": "保存中……",
-    "scanReceipt": "扫描小票 · 或在下方填写",
+    "scanReceipt": "扫描小票",
+    "scanShort": "扫描",
+    "speakShort": "说话",
     "split": {
       "equal": "均分",
       "exact": "按金额分",
@@ -195,6 +197,7 @@
     "totalSplit": "已分摊",
     "viewItems": "查看商品",
     "viewReceipt": "查看收据",
+    "voiceButton": "说出这笔支出",
     "when": {
       "pick": "选择日期",
       "today": "今天",
@@ -385,6 +388,14 @@
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
   },
+  "groupCategories": {
+    "editorHint": "只有已启用的分类会在添加支出和收据扫描建议中显示。至少需保留一个分类处于启用状态。",
+    "errorTitle": "无法保存分类",
+    "loadError": "无法加载分类。",
+    "saveCta": "保存",
+    "saving": "保存中…",
+    "title": "分类"
+  },
   "groupColor": {
     "custom": "自定义颜色",
     "reset": "恢复默认",
@@ -412,14 +423,6 @@
     "open": "打开群组",
     "share": "分享邀请链接",
     "shareMessage": "来加入“{{name}}”：{{link}}"
-  },
-  "groupCategories": {
-    "editorHint": "只有已启用的分类会在添加支出和收据扫描建议中显示。至少需保留一个分类处于启用状态。",
-    "errorTitle": "无法保存分类",
-    "loadError": "无法加载分类。",
-    "saveCta": "保存",
-    "saving": "保存中…",
-    "title": "分类"
   },
   "groupDetail": {
     "activity": "动态",
@@ -605,17 +608,17 @@
     },
     "title": "群组设置"
   },
-  "groupsTab": {
-    "joinGroup": "加入群组",
-    "newGroup": "新建群组",
-    "newGroupLabel": "新建群组",
-    "scanQrLabel": "扫码加入群组"
-  },
   "groupStats": {
     "byCategory": "按分类",
     "emptyBody": "记一笔支出后，这里会显示按分类统计的明细。",
     "emptyTitle": "暂无消费",
     "title": "统计"
+  },
+  "groupsTab": {
+    "joinGroup": "加入群组",
+    "newGroup": "新建群组",
+    "newGroupLabel": "新建群组",
+    "scanQrLabel": "扫码加入群组"
   },
   "home": {
     "balancesAcrossCurrencies": "{{count}} 种币种",
@@ -1214,6 +1217,41 @@
     "chooseGroup": "选择群组",
     "home": "首页",
     "you": "我的"
+  },
+  "voiceExpense": {
+    "capBody": "为控制成本，语音记账每月有使用上限。留下邮箱，上限提高时我们会通知你。",
+    "discardRest": "放弃其余",
+    "draftsLabel": "找到 {{count}} 笔支出",
+    "draftsLabel_other": "找到 {{count}} 笔支出",
+    "err_network": "出了点问题。请重试。",
+    "err_no_expense": "这里面没有支出。试着说出金额和分给谁。",
+    "err_settlement": "这听起来是还钱，不是一笔新支出。",
+    "err_unintelligible": "没听清。换个安静的地方，或者手动输入。",
+    "example": "“我付了480和小李、小王吃晚饭”",
+    "exampleLabel": "试着这样说",
+    "flag_generic": "推测",
+    "flag_paid_by": "付款人为推测",
+    "flag_participants": "参与者为推测",
+    "flag_split": "分账方式与所说不同",
+    "goToSettle": "改为结算",
+    "hint": "点按麦克风，说说你付了什么。",
+    "micDenied": "Chara 需要麦克风权限才能用语音添加支出。你可以在设置中开启。",
+    "micDeniedTitle": "麦克风已关闭",
+    "moreFromRecording": "录音里还有 {{count}} 笔",
+    "moreFromRecording_other": "录音里还有 {{count}} 笔",
+    "regenerate": "重试",
+    "regenerateDisabled": "修改文字后重试",
+    "secondsLeft": "还剩 {{count}} 秒",
+    "secondsLeft_other": "还剩 {{count}} 秒",
+    "startRecording": "开始录音",
+    "stop": "完成",
+    "title": "说出这笔支出",
+    "transcriptHint": "如果识别有误，可以修改这段文字",
+    "transcriptLabel": "你说的内容 · 点按可修改",
+    "tryAgain": "重试",
+    "typeInstead": "或者手动输入",
+    "uploading": "正在识别…",
+    "useDrafts": "使用这些"
   },
   "waitlist": {
     "body": "在确定托管方案之前，我们暂时限制小票扫描次数。留下您的邮箱，我们将在容量增加时通知您。",

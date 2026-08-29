@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Image,
   Modal,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -13,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { showAlert } from '@/lib/app-alert';
+import { Text as AppText } from '@/components/Text';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
@@ -33,6 +35,21 @@ import { PdfView, canRenderPdfInline } from '@/components/PdfView';
 import { ExpenseSavedOverlay } from '@/components/ExpenseSavedOverlay';
 import { notifyGroupChanged } from '@/lib/group-refresh';
 import { ScanItemsAssign } from '@/components/ScanItemsAssign';
+import { VoiceExpenseCapture } from '@/components/VoiceExpenseCapture';
+import { VoiceDraftBanner } from '@/components/VoiceDraftBanner';
+import {
+  makeQueue,
+  currentDraft,
+  remainingCount,
+  advance,
+  discardRest,
+  changedFields,
+  toWizardSplit,
+  type VoiceDraft,
+  type VoiceQueue,
+} from '@/lib/voice-drafts';
+import * as analytics from '@/lib/analytics';
+import { isPopupJustClosed } from '@/lib/popup-guard';
 import { buildScanItemsState, type Itemization, type ScanItemsState } from '@/lib/scan-items';
 import { draftKey } from '@/lib/expense-draft';
 import { useAccount } from '@/lib/accounts';
@@ -72,6 +89,11 @@ export default function AddExpenseScreen() {
   // below must not decide "no OCR" on the initial value.
   const [ocrAvailable, setOcrAvailable] = useState<boolean | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
+  // Voice is native-only for now: browser capture needs MediaRecorder
+  // rather than expo-audio's native path.
+  const [voiceAvailable, setVoiceAvailable] = useState(false);
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  const [voiceQueue, setVoiceQueue] = useState<VoiceQueue | null>(null);
   // A file handed over by the OS share sheet, for the scanner to start on.
   const [initialScan, setInitialScan] = useState<{
     source: ReceiptSource;
@@ -126,8 +148,14 @@ export default function AddExpenseScreen() {
     if (!serverUrl) return;
     api
       .instanceInfo()
-      .then((info) => setOcrAvailable(info.features.ocr))
-      .catch(() => setOcrAvailable(false));
+      .then((info) => {
+        setOcrAvailable(info.features.ocr);
+        setVoiceAvailable(Platform.OS !== 'web' && info.features.voice_expense === true);
+      })
+      .catch(() => {
+        setOcrAvailable(false);
+        setVoiceAvailable(false);
+      });
   }, [serverUrl]);
 
   useEffect(() => {
@@ -202,6 +230,75 @@ export default function AddExpenseScreen() {
         buttons: [{ key: 'ok', label: t('common.ok') }],
       });
     });
+  }
+
+  // Report drafts the user walked away from. Reads the queue through a ref
+  // so the unmount effect does not re-subscribe on every queue transition.
+  const voiceQueueRef = useRef<VoiceQueue | null>(null);
+  voiceQueueRef.current = voiceQueue;
+  useEffect(
+    () => () => {
+      const q = voiceQueueRef.current;
+      if (!q) return;
+      const remaining = q.drafts.length - q.index;
+      if (remaining > 0) {
+        analytics.track('voice_queue_abandoned', { saved: q.index, remaining });
+      }
+    },
+    [],
+  );
+
+  /** Single dismissal path for the voice modal, so the X, the Android back
+   *  button and the settle redirect all behave identically. */
+  function closeVoice() {
+    setVoiceOpen(false);
+  }
+
+  function openVoice() {
+    // Dismissing another sheet by tapping this row must not chain-open it.
+    if (isPopupJustClosed()) return;
+    setVoiceOpen(true);
+  }
+
+  /** Convert a draft into the shape the wizard's handle expects. */
+  function toWizardInput(d: VoiceDraft) {
+    return {
+      title: d.title,
+      amountMinor: d.amount_minor,
+      currency: d.currency,
+      category: d.category,
+      date: d.date
+        ? (() => {
+            const parsed = new Date(d.date + 'T00:00:00');
+            return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+          })()
+        : undefined,
+      paidById: d.paid_by_id,
+      participants: d.participants,
+      split: toWizardSplit(d),
+    };
+  }
+
+  function handleVoiceGenerated(result: { drafts: VoiceDraft[]; generationId: string }) {
+    setVoiceOpen(false);
+    const q = makeQueue(result.drafts, result.generationId);
+    setVoiceQueue(q);
+    const first = currentDraft(q);
+    if (first) wizardRef.current?.applyVoiceDraft(toWizardInput(first));
+  }
+
+  /** Move to the next queued draft, or clear the queue when spent. */
+  function advanceVoiceQueue(): boolean {
+    if (!voiceQueue) return false;
+    const next = advance(voiceQueue);
+    const draft = currentDraft(next);
+    if (!draft) {
+      setVoiceQueue(null);
+      return false;
+    }
+    setVoiceQueue(next);
+    wizardRef.current?.applyVoiceDraft(toWizardInput(draft));
+    return true;
   }
 
   function closeScanner() {
@@ -287,6 +384,25 @@ export default function AddExpenseScreen() {
     if (!id) return;
     setSaving(true);
     try {
+      // When a voice draft is in the wizard, report which of its fields
+      // the user changed. That is what turns generations into per-field
+      // acceptance rates; it is best-effort and never blocks the save.
+      const voiceDraft = voiceQueue ? currentDraft(voiceQueue) : null;
+      const voiceTracking = voiceDraft
+        ? {
+            generation_id: voiceQueue!.generationId,
+            changed_fields: changedFields(voiceDraft, {
+              title: payload.title,
+              amountMinor: Math.round(parseFloat(payload.amount) * 100),
+              currency: payload.currency,
+              paidById: payload.paid_by_id,
+              splitMethod: payload.split_method,
+              participants:
+                payload.participants ?? (payload.splits ?? []).map((sp) => sp.member_id),
+            }),
+          }
+        : {};
+
       const base = {
         title: payload.title,
         amount: payload.amount,
@@ -296,6 +412,7 @@ export default function AddExpenseScreen() {
         expense_date: payload.expense_date,
         split_method: payload.split_method,
         ...(payload.fx ?? {}),
+        ...voiceTracking,
       };
 
       let created;
@@ -324,6 +441,19 @@ export default function AddExpenseScreen() {
         } catch (uploadErr) {
           console.warn('receipt attachment upload failed', uploadErr);
         }
+        // Consume it: with a voice queue the screen stays mounted across
+        // saves, so leaving this set would re-attach the same image to
+        // every following expense.
+        setPendingReceiptFile(null);
+      }
+
+      if (voiceQueue && voiceDraft) {
+        analytics.track('voice_draft_saved', {
+          index: voiceQueue.index,
+          total_drafts: voiceQueue.drafts.length,
+          changed_field_count: (voiceTracking as { changed_fields?: string[] }).changed_fields
+            ?.length ?? 0,
+        });
       }
 
       const amountMinor = Math.round(parseFloat(payload.amount) * 100);
@@ -384,17 +514,53 @@ export default function AddExpenseScreen() {
         )}
       </View>
     </View>
-  ) : ocrAvailable ? (
-    <TouchableOpacity
-      style={styles.scanRow}
-      onPress={() => setScannerOpen(true)}
-      accessibilityRole="button"
-      accessibilityLabel={t('addExpense.scanReceipt')}
-    >
-      <Feather name="camera" size={18} color={colors.graphite} />
-      <Text style={styles.scanLabel}>{t('addExpense.scanReceipt')}</Text>
-    </TouchableOpacity>
   ) : null;
+
+  const nextQueued = voiceQueue ? voiceQueue.drafts[voiceQueue.index + 1] : undefined;
+  // A queue with nothing behind the current draft no longer needs the
+  // banner — and must not keep hiding the mic, or a user who records once
+  // and does not save is stranded with no way to try again.
+  const voiceQueueActive = Boolean(voiceQueue && nextQueued);
+  // Both shortcuts are optional ways in; the form below always works. They
+  // share one compact row so neither reads as a required first step, which
+  // is what a full-width button implied.
+  const showScanPill = ocrAvailable && !appliedScan;
+  const showVoicePill = voiceAvailable && !voiceQueueActive;
+
+  const voiceSlot = (
+    <>
+      {showScanPill || showVoicePill ? (
+        <View style={styles.shortcutRow}>
+          {showScanPill ? (
+            <ShortcutPill
+              icon="camera"
+              label={t('addExpense.scanShort')}
+              accessibilityLabel={t('addExpense.scanReceipt')}
+              onPress={() => setScannerOpen(true)}
+            />
+          ) : null}
+          {showVoicePill ? (
+            <ShortcutPill
+              icon="mic"
+              label={t('addExpense.speakShort')}
+              accessibilityLabel={t('addExpense.voiceButton')}
+              onPress={openVoice}
+            />
+          ) : null}
+        </View>
+      ) : null}
+      {voiceQueue && nextQueued ? (
+        <VoiceDraftBanner
+          remaining={remainingCount(voiceQueue)}
+          nextPhrase={nextQueued.source_phrase}
+          onDiscardRest={() => {
+            analytics.track('voice_draft_discarded', { remaining: remainingCount(voiceQueue) });
+            setVoiceQueue(discardRest(voiceQueue));
+          }}
+        />
+      ) : null}
+    </>
+  );
 
   const preCtaSlot = duplicate ? (
     <View style={[styles.dupWrap, { paddingBottom: 4 }]}>
@@ -447,7 +613,12 @@ export default function AddExpenseScreen() {
         draftKey={id ? draftKey(serverUrl, id) : undefined}
         onValuesChange={setLiveValues}
         onScanChange={setAppliedScan}
-        topSlot={topSlot}
+        topSlot={
+          <>
+            {topSlot}
+            {voiceSlot}
+          </>
+        }
         preCtaSlot={preCtaSlot}
       />
 
@@ -465,6 +636,31 @@ export default function AddExpenseScreen() {
           onScanned={handleReceiptScanned}
           onCancel={closeScanner}
           initialScan={initialScan ?? undefined}
+        />
+      </Modal>
+
+      <Modal
+        visible={voiceOpen}
+        animationType="slide"
+        // Android hardware-back must go through the same path as the X, or
+        // it skips markPopupClosed() (see the tap-through guard in
+        // CLAUDE.md) and leaves the recorder running.
+        onRequestClose={closeVoice}
+        statusBarTranslucent
+      >
+        <VoiceExpenseCapture
+          serverUrl={serverUrl}
+          groupId={id ?? ''}
+          groupCurrency={group?.currency ?? 'SEK'}
+          members={members}
+          onGenerated={handleVoiceGenerated}
+          onGoToSettle={() => {
+            setVoiceOpen(false);
+            router.push(
+              `/groups/${encodeURIComponent(serverUrl)}/${id}/settle`,
+            );
+          }}
+          onCancel={() => setVoiceOpen(false)}
         />
       </Modal>
 
@@ -555,6 +751,9 @@ export default function AddExpenseScreen() {
         subtitle={savedSubtitle ?? undefined}
         onContinue={() => {
           setSavedSubtitle(null);
+          // With drafts still queued, stay on the screen and load the next
+          // one rather than dropping the user back into the group.
+          if (advanceVoiceQueue()) return;
           router.back();
         }}
       />
@@ -562,22 +761,62 @@ export default function AddExpenseScreen() {
   );
 }
 
+/**
+ * A compact optional shortcut into the expense form.
+ *
+ * Icon plus a one-word label rather than icon alone: a camera or a mic
+ * glyph above an expense form has no established meaning, and a first-time
+ * user should not have to guess. Keeps the hairline border, radius and
+ * mono caption the full-width rows used, so it reads as the same family
+ * at a smaller size.
+ */
+function ShortcutPill({
+  icon,
+  label,
+  accessibilityLabel,
+  onPress,
+}: {
+  icon: React.ComponentProps<typeof Feather>['name'];
+  label: string;
+  accessibilityLabel: string;
+  onPress(): void;
+}) {
+  return (
+    <TouchableOpacity
+      style={styles.shortcutPill}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      activeOpacity={0.7}
+    >
+      <Feather name={icon} size={16} color={colors.graphite} />
+      <AppText style={styles.shortcutLabel} numberOfLines={1}>
+        {label}
+      </AppText>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper },
-  scanRow: {
+  shortcutRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+    flexWrap: 'wrap',
+    gap: spacing.s2,
     marginHorizontal: spacing.s5,
     marginTop: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+  },
+  shortcutPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderWidth: 0.5,
     borderColor: colors.graphite,
     borderRadius: 8,
-    justifyContent: 'center',
   },
-  scanLabel: {
+  shortcutLabel: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
     color: colors.graphite,

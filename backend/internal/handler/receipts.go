@@ -9,7 +9,10 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/DowLucas/chara/internal/aiusage"
+	"github.com/DowLucas/chara/internal/auth"
 	"github.com/DowLucas/chara/internal/billing"
 	"github.com/DowLucas/chara/internal/db"
 	"github.com/DowLucas/chara/internal/middleware"
@@ -35,14 +38,34 @@ type ReceiptHandler struct {
 	counter   *billing.Counter
 	freeCap   int
 	overrides CapOverrides
+	usage     *aiusage.Recorder
 	groups    GroupCategoriesLookup
 }
 
-// CapOverrides resolves a per-user OCR cap override. The billing counter
-// already takes the cap as a per-call argument; this is the per-user lookup
-// the global FreeOCRCap always anticipated. *db.Queries satisfies it.
+// CapOverrides resolves a per-user, per-feature cap override. The billing
+// counter already takes the cap as a per-call argument; this is the
+// per-user lookup the global free caps always anticipated.
+//
+// An invalid (zero-value) result means "no override, use the global cap";
+// cap >= 0 is an explicit cap; cap < 0 means unlimited. Use
+// [NewCapOverrides] to adapt *db.Queries.
 type CapOverrides interface {
-	GetOCRCapOverride(ctx context.Context, userID string) (pgtype.Int4, error)
+	GetFeatureCap(ctx context.Context, userID, feature string) (pgtype.Int4, error)
+}
+
+// dbCapOverrides adapts *db.Queries to CapOverrides, mapping the "no row"
+// case to an invalid pgtype.Int4 so callers need not know about pgx.
+type dbCapOverrides struct{ queries *db.Queries }
+
+// NewCapOverrides wires the real DB-backed cap lookup for production use.
+func NewCapOverrides(queries *db.Queries) CapOverrides { return dbCapOverrides{queries: queries} }
+
+func (d dbCapOverrides) GetFeatureCap(ctx context.Context, userID, feature string) (pgtype.Int4, error) {
+	cap, err := d.queries.GetFeatureCap(ctx, db.GetFeatureCapParams{UserID: userID, Feature: feature})
+	if err != nil {
+		return pgtype.Int4{}, err
+	}
+	return pgtype.Int4{Int32: cap, Valid: true}, nil
 }
 
 // GroupCategoriesLookup resolves a group's configured (or default) category
@@ -106,6 +129,14 @@ func (h *ReceiptHandler) WithGroupCategories(g GroupCategoriesLookup) *ReceiptHa
 	return h
 }
 
+// WithUsageRecorder wires per-call cost/quality recording. Optional — a nil
+// recorder disables it, which is the selfhost and unit-test path. Returns
+// the receiver for chaining.
+func (h *ReceiptHandler) WithUsageRecorder(r *aiusage.Recorder) *ReceiptHandler {
+	h.usage = r
+	return h
+}
+
 type scanRequest struct {
 	ImageBase64 string `json:"image_base64"`
 	MIMEType    string `json:"mime_type"`
@@ -121,21 +152,21 @@ type scanRequest struct {
 }
 
 type scanResponse struct {
-	Title         string             `json:"title"`
-	Merchant      string             `json:"merchant"`
-	Date          string             `json:"date,omitempty"`
-	Currency      string             `json:"currency"`
+	Title    string `json:"title"`
+	Merchant string `json:"merchant"`
+	Date     string `json:"date,omitempty"`
+	Currency string `json:"currency"`
 	// Category is one of the fixed EXPENSE_CATEGORIES ids the mobile app
 	// renders, or omitted when the scanner had no confident guess.
-	Category      string             `json:"category,omitempty"`
-	TotalMinor    int64              `json:"total_minor"`
-	SubtotalMinor int64              `json:"subtotal_minor,omitempty"`
-	TaxMinor      int64              `json:"tax_minor,omitempty"`
-	TipMinor      int64              `json:"tip_minor,omitempty"`
+	Category      string `json:"category,omitempty"`
+	TotalMinor    int64  `json:"total_minor"`
+	SubtotalMinor int64  `json:"subtotal_minor,omitempty"`
+	TaxMinor      int64  `json:"tax_minor,omitempty"`
+	TipMinor      int64  `json:"tip_minor,omitempty"`
 	// DepositMinor is container deposit ("pant") included in the total but
 	// not in Items. Clients offer it as an evenly-shared extra charge.
-	DepositMinor  int64              `json:"deposit_minor,omitempty"`
-	Items         []scanResponseItem `json:"items,omitempty"`
+	DepositMinor int64              `json:"deposit_minor,omitempty"`
+	Items        []scanResponseItem `json:"items,omitempty"`
 
 	// Hosted-only fields. Omitted on selfhost instances where the counter
 	// is disabled. The client uses these to update its cached counter
@@ -143,6 +174,12 @@ type scanResponse struct {
 	Tier           string `json:"tier,omitempty"`
 	Remaining      *int   `json:"remaining,omitempty"`
 	PeriodResetsAt string `json:"period_resets_at,omitempty"`
+
+	// GenerationID identifies the aiusage row for this scan. Clients pass
+	// it back on expense create, with the fields they changed, so we can
+	// measure how often the AI's output survives contact with the user.
+	// Empty when telemetry is disabled.
+	GenerationID string `json:"generation_id,omitempty"`
 }
 
 type scanResponseItem struct {
@@ -250,7 +287,7 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 		cap := h.freeCap
 		unlimited := false
 		if h.overrides != nil {
-			ov, oErr := h.overrides.GetOCRCapOverride(r.Context(), claims.UserID)
+			ov, oErr := h.overrides.GetFeatureCap(r.Context(), claims.UserID, OCRFeatureKey)
 			if oErr != nil && !errors.Is(oErr, pgx.ErrNoRows) {
 				writeError(w, http.StatusInternalServerError, "usage counter unavailable")
 				return
@@ -281,9 +318,15 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var allowedCategories []string
+	// Only a group we have CONFIRMED the caller belongs to may be recorded
+	// on the telemetry row: ai_generations.group_id carries a foreign key,
+	// so an unknown id fails the insert, logs an error on every scan, and
+	// hands the client a generation_id with no row behind it.
+	var verifiedGroupID string
 	if req.GroupID != "" && h.groups != nil && claims != nil && claims.UserID != "" {
 		if slugs, err := h.groups.GetGroupCategorySlugs(r.Context(), req.GroupID, claims.UserID); err == nil {
 			allowedCategories = slugs
+			verifiedGroupID = req.GroupID
 		}
 		// A lookup failure — unknown/deleted group, the caller isn't a
 		// member (GetGroupMemberByUserAndGroup returns ErrNoRows), or a
@@ -294,6 +337,7 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 		// group's category configuration.
 	}
 
+	start := time.Now()
 	res, scanErr := h.scanner.Scan(r.Context(), imgData, req.MIMEType, req.Language, allowedCategories)
 	if scanErr != nil {
 		// Free the slot we reserved so the user isn't billed for a failure.
@@ -302,6 +346,20 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 			// caller already cancelled the request.
 			_ = h.counter.Refund(context.Background(), *reservation)
 		}
+		outcome, errClass := aiusage.OutcomeError, "scanner_failed"
+		if errors.Is(scanErr, receipt.ErrUnreadable) {
+			outcome, errClass = aiusage.OutcomeUnintelligible, ""
+		}
+		h.usage.Record(r.Context(), aiusage.Record{
+			UserID:       claimsUserID(claims),
+			Feature:      OCRFeatureKey,
+			GroupID:      verifiedGroupID,
+			Model:        receipt.DefaultGeminiModel,
+			RequestBytes: len(imgData),
+			LatencyMS:    int(time.Since(start).Milliseconds()),
+			Outcome:      outcome,
+			ErrorClass:   errClass,
+		})
 		if errors.Is(scanErr, receipt.ErrUnreadable) {
 			writeError(w, http.StatusUnprocessableEntity, "could not read a receipt from this image")
 			return
@@ -347,8 +405,31 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 		body.PeriodResetsAt = meterResult.PeriodResetsAt.UTC().Format("2006-01-02T15:04:05Z")
 	}
 
+	body.GenerationID = h.usage.Record(r.Context(), aiusage.Record{
+		UserID:       claimsUserID(claims),
+		Feature:      OCRFeatureKey,
+		GroupID:      verifiedGroupID,
+		Model:        receipt.DefaultGeminiModel,
+		RequestBytes: len(imgData),
+		InputTokens:  res.Usage.InputTokens,
+		OutputTokens: res.Usage.OutputTokens,
+		LatencyMS:    int(time.Since(start).Milliseconds()),
+		Outcome:      aiusage.OutcomeOK,
+		ExpenseCount: 1,
+	})
+
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(body)
+}
+
+// claimsUserID tolerates a nil claims pointer: the selfhost and unit-test
+// paths reach the scanner unauthenticated, and telemetry must not panic
+// there.
+func claimsUserID(c *auth.Claims) string {
+	if c == nil {
+		return ""
+	}
+	return c.UserID
 }
 
 func writeCapReached(w http.ResponseWriter, res billing.Result) {

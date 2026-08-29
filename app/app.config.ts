@@ -25,7 +25,7 @@ const IS_DEV_VARIANT = process.env.APP_VARIANT === 'dev';
 const config: ExpoConfig = {
   name: IS_DEV_VARIANT ? 'Chara Dev' : 'Chara',
   slug: 'chara',
-  version: '1.3.2',
+  version: '1.4.0',
   scheme: IS_DEV_VARIANT ? 'charadev' : 'chara',
   orientation: 'portrait',
   icon: './assets/icon.png',
@@ -52,6 +52,8 @@ const config: ExpoConfig = {
         'Allow Chara to access your camera to scan group QR codes and capture receipt photos.',
       NSPhotoLibraryUsageDescription:
         'Allow Chara to access your photo library to upload a profile picture or attach a receipt photo.',
+      NSMicrophoneUsageDescription:
+        'Allow Chara to use the microphone so you can add an expense by describing it out loud.',
       // Schemes Chara may call Linking.canOpenURL on. iOS hides apps not
       // listed here behind a `false` return, even if the app is installed.
       LSApplicationQueriesSchemes: ['swish'],
@@ -143,6 +145,10 @@ const config: ExpoConfig = {
       backgroundColor: '#F0E5CC',
     },
     package: IS_DEV_VARIANT ? 'chara.app.dev' : 'chara.app',
+    // RECORD_AUDIO backs the voice-expense mic. Listed explicitly rather
+    // than relying on the expo-audio plugin's default so the manifest is
+    // readable at review time.
+    permissions: ['RECORD_AUDIO'],
     // Android App Links — the system fetches
     // https://<HOSTED_API_HOST>/.well-known/assetlinks.json and, when it
     // verifies the app's signing cert, routes matching https /i/* URLs straight
@@ -170,6 +176,16 @@ const config: ExpoConfig = {
   },
   plugins: [
     'expo-router',
+    [
+      'expo-audio',
+      {
+        // Must match the top-level NSMicrophoneUsageDescription above —
+        // the plugin overrides Info.plist at prebuild time, so a different
+        // string here makes the merged plist inconsistent at App Review.
+        microphonePermission:
+          'Allow Chara to use the microphone so you can add an expense by describing it out loud.',
+      },
+    ],
     [
       // Generates the iOS Share Extension target and the Android ACTION_SEND
       // intent filters. The extension only stashes the incoming file in the

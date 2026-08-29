@@ -463,6 +463,51 @@ share sheet ("open a PDF anywhere → Share → Chara").
   is native — Expo Go can't exercise it; needs a dev client on iOS/Android),
   and no Xcode build of the generated Share Extension (Linux host).
 
+### Voice expenses: speak an expense, get drafts ✅
+
+Hold the mic on add-expense, say *"I paid 480 for dinner with Anna and Sara,
+and Anna paid 120 for the taxi"*, and get two prefilled drafts. Audio goes to
+Gemini in one call that returns both a transcript and structured expenses.
+
+- **Trust boundary**: `internal/voice/resolve.go` revalidates everything the
+  model claims about money — member ids against the real roster, amounts via
+  `money.ParseDecimal`, and splits **recomputed** by `internal/split` rather
+  than copied. Wrong input degrades (exact → equal, invented payer → the
+  speaker, off-catalog category → none) instead of failing. The endpoint
+  writes nothing; creation still goes through `POST /groups/{id}/expenses`.
+- **Backend**: `POST /api/voice/expenses`. Roster lookup fails **closed** with
+  403 — unlike the scanner's advisory category lookup, it returns the group's
+  membership list. Metered under a new `voice` feature key at 5/month
+  (`FreeVoiceCap`); a 45s clip costs roughly 2× a receipt scan because Gemini
+  bills audio at ~32 tokens/second. The clarify re-post is text-only and
+  deliberately **not** metered. `MaxVoiceAudioBytes` (2 MB) is the
+  authoritative bound — the server cannot measure duration without decoding.
+  `voice_expense` in `/.well-known/chara-instance`; no `PROTOCOL_VERSION` bump.
+- **AI usage tracking** (covers receipt OCR too, which previously recorded
+  nothing): `ai_generations` stores tokens, latency and outcome per call plus
+  `degraded_split_count` / `unresolved_member_count` — the resolver catching
+  the model, which is the drift signal client analytics cannot produce.
+  `ai_generation_expenses` links saved expenses to the generation with the
+  fields the user changed, giving per-field acceptance rates. No content is
+  stored: no transcript, audio, names or amounts. Pruned at 180 days by a
+  River job. `users.ocr_cap_override` generalised to `user_feature_caps`.
+- **App**: `expo-audio` recording AAC mono 16 kHz @24 kbps — **not** the Opus
+  the design called for, because AVAudioRecorder cannot produce Opus on iOS;
+  same byte budget. The file is deleted the moment it is base64-encoded.
+  Multi-expense results queue behind a banner and reuse the saved overlay as
+  the advance point; a failed save leaves the queue intact. The transcript is
+  editable, and a text-only path reaches the same review screen.
+- **i18n**: all 15 locales, with per-language plural categories (Polish
+  one/few/many/other, Arabic zero/one/two/few/many/other).
+- **Tests**: `internal/voice` 38 (17 resolver table cases), handler 16 unit +
+  8 integration (cap, both refund paths, unmetered re-post, non-member),
+  `aiusage` 4, prune job 4, `voice-drafts` 14 client-side. A `geminieval`
+  eval covers six spoken cases.
+- **Not verified**: **the eval fixtures are not recorded** — they are audio
+  and need a person (`internal/voice/testdata/README.md` has the script and
+  the ffmpeg line); each missing clip skips its test. No device run: the mic
+  is a native module, so it needs a dev client, and this host is Linux.
+
 ### Week 10 — Web client (Expo for Web) 🔲
 
 - [ ] Sign-in flow with magic link

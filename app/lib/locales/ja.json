@@ -173,6 +173,8 @@
     "saveErrorTitle": "エラー",
     "saving": "保存中…",
     "scanReceipt": "レシートをスキャン",
+    "scanShort": "スキャン",
+    "speakShort": "話す",
     "split": {
       "equal": "均等に分割",
       "exact": "金額で分割",
@@ -195,6 +197,7 @@
     "totalSplit": "分割合計",
     "viewItems": "商品を見る",
     "viewReceipt": "レシートを見る",
+    "voiceButton": "支出を話す",
     "when": {
       "pick": "日付を選ぶ",
       "today": "今日",
@@ -385,6 +388,14 @@
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
   },
+  "groupCategories": {
+    "editorHint": "有効なカテゴリーのみが、支出の追加時やレシートスキャンの提案に表示されます。少なくとも1つは有効にしておく必要があります。",
+    "errorTitle": "カテゴリーを保存できませんでした",
+    "loadError": "カテゴリーを読み込めませんでした。",
+    "saveCta": "保存",
+    "saving": "保存中…",
+    "title": "カテゴリー"
+  },
   "groupColor": {
     "custom": "カスタムカラー",
     "reset": "デフォルトに戻す",
@@ -412,14 +423,6 @@
     "open": "グループを開く",
     "share": "招待リンクを共有",
     "shareMessage": "Charaで「{{name}}」に参加: {{link}}"
-  },
-  "groupCategories": {
-    "editorHint": "有効なカテゴリーのみが、支出の追加時やレシートスキャンの提案に表示されます。少なくとも1つは有効にしておく必要があります。",
-    "errorTitle": "カテゴリーを保存できませんでした",
-    "loadError": "カテゴリーを読み込めませんでした。",
-    "saveCta": "保存",
-    "saving": "保存中…",
-    "title": "カテゴリー"
   },
   "groupDetail": {
     "activity": "アクティビティ",
@@ -1214,6 +1217,41 @@
     "chooseGroup": "グループを選択",
     "home": "ホーム",
     "you": "あなた"
+  },
+  "voiceExpense": {
+    "capBody": "コストを抑えるため、音声入力には毎月の上限があります。メールアドレスを教えていただければ、上限が増えたらお知らせします。",
+    "discardRest": "残りを破棄",
+    "draftsLabel": "{{count}}件の支出",
+    "draftsLabel_other": "{{count}}件の支出",
+    "err_network": "問題が発生しました。もう一度お試しください。",
+    "err_no_expense": "支出が見つかりませんでした。金額と誰の分か伝えてみてください。",
+    "err_settlement": "それは新しい支出ではなく、返済のようです。",
+    "err_unintelligible": "聞き取れませんでした。静かな場所で試すか、入力してください。",
+    "example": "「田中さんと佐藤さんとの夕食に480払った」",
+    "exampleLabel": "こう言ってみて",
+    "flag_generic": "推測",
+    "flag_paid_by": "支払者を推測",
+    "flag_participants": "対象者を推測",
+    "flag_split": "言われた分け方にできず",
+    "goToSettle": "精算する",
+    "hint": "マイクをタップして、何に払ったか話してください。",
+    "micDenied": "音声で支出を追加するにはマイクへのアクセスが必要です。設定からオンにできます。",
+    "micDeniedTitle": "マイクがオフです",
+    "moreFromRecording": "録音からあと{{count}}件",
+    "moreFromRecording_other": "録音からあと{{count}}件",
+    "regenerate": "もう一度",
+    "regenerateDisabled": "テキストを修正してからもう一度",
+    "secondsLeft": "残り{{count}}秒",
+    "secondsLeft_other": "残り{{count}}秒",
+    "startRecording": "録音を開始",
+    "stop": "完了",
+    "title": "支出を話す",
+    "transcriptHint": "聞き取りが違っていたら、テキストを修正できます",
+    "transcriptLabel": "話した内容 · タップで修正",
+    "tryAgain": "もう一度",
+    "typeInstead": "入力してもいい",
+    "uploading": "読み取り中…",
+    "useDrafts": "これを使う"
   },
   "waitlist": {
     "body": "ホスティングプランを検討中のため、レシートスキャンの利用は当面制限しています。メールアドレスを登録いただければ、容量が増えた際にお知らせします。",

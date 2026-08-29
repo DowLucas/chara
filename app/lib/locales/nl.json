@@ -172,7 +172,9 @@
     "saveErrorBody": "Kon de uitgave niet opslaan. Probeer het opnieuw.",
     "saveErrorTitle": "Fout",
     "saving": "Opslaan…",
-    "scanReceipt": "Bon scannen",
+    "scanReceipt": "Een bon scannen",
+    "scanShort": "Scannen",
+    "speakShort": "Spreken",
     "split": {
       "equal": "gelijk verdelen",
       "exact": "verdelen op bedrag",
@@ -195,6 +197,7 @@
     "totalSplit": "totaal verdeeld",
     "viewItems": "Items bekijken",
     "viewReceipt": "Bon bekijken",
+    "voiceButton": "De uitgave inspreken",
     "when": {
       "pick": "kies een datum",
       "today": "vandaag",
@@ -385,6 +388,14 @@
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
   },
+  "groupCategories": {
+    "editorHint": "Alleen ingeschakelde categorieën verschijnen bij het toevoegen van een uitgave en in de suggestie van de bonscan. Minstens één moet ingeschakeld blijven.",
+    "errorTitle": "Kon categorieën niet opslaan",
+    "loadError": "Kon categorieën niet laden.",
+    "saveCta": "Opslaan",
+    "saving": "Opslaan…",
+    "title": "Categorieën"
+  },
   "groupColor": {
     "custom": "Eigen kleur",
     "reset": "Terug naar standaard",
@@ -412,14 +423,6 @@
     "open": "Groep openen",
     "share": "Uitnodigingslink delen",
     "shareMessage": "Word lid van \"{{name}}\" op Chara: {{link}}"
-  },
-  "groupCategories": {
-    "editorHint": "Alleen ingeschakelde categorieën verschijnen bij het toevoegen van een uitgave en in de suggestie van de bonscan. Minstens één moet ingeschakeld blijven.",
-    "errorTitle": "Kon categorieën niet opslaan",
-    "loadError": "Kon categorieën niet laden.",
-    "saveCta": "Opslaan",
-    "saving": "Opslaan…",
-    "title": "Categorieën"
   },
   "groupDetail": {
     "activity": "Activiteit",
@@ -605,17 +608,17 @@
     },
     "title": "Instellingen"
   },
-  "groupsTab": {
-    "joinGroup": "Lid worden",
-    "newGroup": "Nieuwe groep",
-    "newGroupLabel": "Nieuwe groep",
-    "scanQrLabel": "Scan QR om lid te worden van groep"
-  },
   "groupStats": {
     "byCategory": "per categorie",
     "emptyBody": "Voeg uitgaven toe en hier verschijnt een overzicht per categorie.",
     "emptyTitle": "Nog niets uitgegeven",
     "title": "Statistieken"
+  },
+  "groupsTab": {
+    "joinGroup": "Lid worden",
+    "newGroup": "Nieuwe groep",
+    "newGroupLabel": "Nieuwe groep",
+    "scanQrLabel": "Scan QR om lid te worden van groep"
   },
   "home": {
     "balancesAcrossCurrencies": "{{count}} valuta's",
@@ -1214,6 +1217,44 @@
     "chooseGroup": "Kies een groep",
     "home": "Home",
     "you": "Profiel"
+  },
+  "voiceExpense": {
+    "capBody": "Spraakinvoer is elke maand beperkt om de kosten in de hand te houden. Laat je e-mail achter, dan laten we het weten als de limiet omhooggaat.",
+    "discardRest": "Rest weggooien",
+    "draftsLabel": "{{count}} uitgaven gevonden",
+    "draftsLabel_one": "{{count}} uitgave gevonden",
+    "draftsLabel_other": "{{count}} uitgaven gevonden",
+    "err_network": "Er ging iets mis. Probeer het opnieuw.",
+    "err_no_expense": "Daar zit geen uitgave in. Noem een bedrag en voor wie het was.",
+    "err_settlement": "Dat klinkt als terugbetalen, niet als een nieuwe uitgave.",
+    "err_unintelligible": "Niet verstaan. Probeer het ergens rustiger, of typ het.",
+    "example": "‘Ik betaalde 480 voor het diner met Sanne en Daan’",
+    "exampleLabel": "Zeg bijvoorbeeld",
+    "flag_generic": "geraden",
+    "flag_paid_by": "betaler geraden",
+    "flag_participants": "deelnemers geraden",
+    "flag_split": "verdeling anders dan gezegd",
+    "goToSettle": "In plaats daarvan afrekenen",
+    "hint": "Tik op de microfoon en beschrijf waarvoor je betaalde.",
+    "micDenied": "Chara heeft toegang tot de microfoon nodig om met je stem een uitgave toe te voegen. Je kunt dit aanzetten in Instellingen.",
+    "micDeniedTitle": "Microfoon uit",
+    "moreFromRecording": "nog {{count}} uit je opname",
+    "moreFromRecording_one": "nog {{count}} uit je opname",
+    "moreFromRecording_other": "nog {{count}} uit je opname",
+    "regenerate": "Opnieuw",
+    "regenerateDisabled": "Pas de tekst aan en probeer opnieuw",
+    "secondsLeft": "nog {{count}} seconden",
+    "secondsLeft_one": "nog {{count}} seconde",
+    "secondsLeft_other": "nog {{count}} seconden",
+    "startRecording": "Opname starten",
+    "stop": "Klaar",
+    "title": "De uitgave inspreken",
+    "transcriptHint": "Pas de tekst aan als de woorden niet kloppen",
+    "transcriptLabel": "Wat je zei · tik om te wijzigen",
+    "tryAgain": "Opnieuw",
+    "typeInstead": "of typ het",
+    "uploading": "Bezig met uitzoeken…",
+    "useDrafts": "Deze gebruiken"
   },
   "waitlist": {
     "body": "We houden bonnetjes scannen voorlopig beperkt terwijl we hostingplannen uitwerken. Laat je e-mail achter, dan laten we weten wanneer er meer capaciteit komt.",

@@ -44,6 +44,7 @@ export const Route = createFileRoute("/privacy")({
           <li><strong>Expense entries</strong> — amount, currency, date, description, payer, split, and group members.</li>
           <li><strong>Settlements</strong> — who paid whom and when.</li>
           <li><strong>Receipts</strong> — any photos or PDFs you choose to attach. If you opt in to receipt scanning, the image is sent to Google's Gemini API for text extraction; the extracted text is stored next to the receipt.</li>
+          <li><strong>Voice input</strong> — if you choose to add an expense by speaking, you start and stop the recording yourself, it stops automatically after 45 seconds, and it only happens in the group you are adding to. The recording is sent to Google's Gemini API to be transcribed and turned into a draft expense. On your device the clip is deleted as soon as it has been sent, including if you cancel. On our side we hold it in memory for that single request: it is never written to disk, never stored in our file storage, and never written to our logs. The transcript is returned to your device so you can correct it, and is not stored on our servers. Only the resulting expense — the one you review and save — is stored.</li>
           <li><strong>Activity log</strong> — for each group we record what changed so the group has a coherent history.</li>
         </ul>
         <p>Stored for operations:</p>
@@ -69,9 +70,9 @@ export const Route = createFileRoute("/privacy")({
         <ul className="list-disc pl-6 space-y-2">
           <li><strong>Contract</strong> (GDPR Art. 6(1)(b)) — to provide the service you signed up for.</li>
           <li><strong>Legitimate interest</strong> (Art. 6(1)(f)) — request logs for security, abuse prevention, and debugging.</li>
-          <li><strong>Consent</strong> (Art. 6(1)(a)) — push notifications, product analytics, and the optional Gemini receipt-scanning feature.</li>
+          <li><strong>Consent</strong> (Art. 6(1)(a)) — push notifications, product analytics, and the optional Gemini-backed features: receipt scanning and voice input.</li>
         </ul>
-        <p>Where processing is based on consent, you have the right to withdraw your consent at any time without penalty. You can do so in <strong>Settings → Privacy</strong> (analytics), <strong>Settings → Notifications</strong> (push), or by simply not using the receipt-scanning feature. Withdrawal does not affect the lawfulness of processing carried out before withdrawal.</p>
+        <p>Where processing is based on consent, you have the right to withdraw your consent at any time without penalty. You can do so in <strong>Settings → Privacy</strong> (analytics), <strong>Settings → Notifications</strong> (push), or by simply not using the receipt-scanning and voice features. Withdrawal does not affect the lawfulness of processing carried out before withdrawal.</p>
 
         <H2>4 · Who sees your data</H2>
         <p>The people you share groups with see the expenses in those groups. Outside that, we use these subprocessors:</p>
@@ -90,7 +91,7 @@ export const Route = createFileRoute("/privacy")({
               <tr><td className="py-2 px-2">Brevo (Sendinblue SAS)</td><td className="py-2 px-2">Transactional email delivery (magic links)</td><td className="py-2 px-2">France / EU</td></tr>
               <tr><td className="py-2 px-2">Expo (EAS)</td><td className="py-2 px-2">Mobile app builds, push notification delivery</td><td className="py-2 px-2">US</td></tr>
               <tr><td className="py-2 px-2">PostHog Cloud EU</td><td className="py-2 px-2">Product analytics</td><td className="py-2 px-2">Germany / EU</td></tr>
-              <tr><td className="py-2 px-2">Google (Gemini API)</td><td className="py-2 px-2">Optional receipt OCR</td><td className="py-2 px-2">US</td></tr>
+              <tr><td className="py-2 px-2">Google (Gemini API)</td><td className="py-2 px-2">Optional receipt OCR and voice input (audio is transient — not retained by us)</td><td className="py-2 px-2">US</td></tr>
               <tr><td className="py-2 px-2">Apple Sign In</td><td className="py-2 px-2">Optional sign-in</td><td className="py-2 px-2">US</td></tr>
               <tr><td className="py-2 px-2">Google Sign In</td><td className="py-2 px-2">Optional sign-in</td><td className="py-2 px-2">US</td></tr>
               <tr><td className="py-2 px-2">European Central Bank</td><td className="py-2 px-2">Public FX rates (no PII sent)</td><td className="py-2 px-2">EU</td></tr>
@@ -115,7 +116,7 @@ export const Route = createFileRoute("/privacy")({
         <H2>7 · Your rights</H2>
         <p>Under GDPR you can access your data, correct it, export it, restrict processing, object, withdraw consent, and delete your account. Email <code>privacy@dowtech.dev</code>; we respond to verified requests within 30 days. You may also complain to your local supervisory authority — in Sweden, that's Integritetsskyddsmyndigheten (IMY).</p>
         <p>You can delete your account from inside the app: <strong>Profile → Delete Account</strong>. All open balances on a server must be settled before deletion is allowed on that server.</p>
-        <p><strong>Automated decision-making.</strong> We do not use your data for automated decision-making or profiling that produces legal or similarly significant effects. The optional receipt OCR feature extracts text from images you submit; it does not make decisions about you.</p>
+        <p><strong>Automated decision-making.</strong> We do not use your data for automated decision-making or profiling that produces legal or similarly significant effects. The optional receipt OCR and voice features extract text from images or audio you submit and propose a draft expense; nothing is saved until you review and confirm it, and they do not make decisions about you.</p>
 
         <H2>8 · Security</H2>
         <p>Transport is TLS, terminated at the network edge. Database and object storage volumes are encrypted at rest using industry-standard encryption. Access to production environments is restricted to authorized administrative personnel. Magic-link tokens are random and hashed at rest. See the security overview for the full picture.</p>

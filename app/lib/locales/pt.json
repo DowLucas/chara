@@ -178,7 +178,9 @@
     "saveErrorBody": "Não foi possível salvar a despesa. Tente novamente.",
     "saveErrorTitle": "Erro",
     "saving": "Salvando…",
-    "scanReceipt": "Escanear recibo — ou preencha abaixo",
+    "scanReceipt": "Digitalizar um recibo",
+    "scanShort": "Digitalizar",
+    "speakShort": "Falar",
     "split": {
       "equal": "dividir igualmente",
       "exact": "dividir por valor",
@@ -201,6 +203,7 @@
     "totalSplit": "total dividido",
     "viewItems": "Ver itens",
     "viewReceipt": "Ver recibo",
+    "voiceButton": "Dizer a despesa",
     "when": {
       "pick": "escolher uma data",
       "today": "hoje",
@@ -391,6 +394,14 @@
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
   },
+  "groupCategories": {
+    "editorHint": "Somente categorias ativadas aparecem ao adicionar uma despesa e na sugestão da leitura de recibo. Pelo menos uma deve permanecer ativada.",
+    "errorTitle": "Não foi possível salvar as categorias",
+    "loadError": "Não foi possível carregar as categorias.",
+    "saveCta": "Salvar",
+    "saving": "Salvando…",
+    "title": "Categorias"
+  },
   "groupColor": {
     "custom": "Cor personalizada",
     "reset": "Voltar ao padrão",
@@ -418,14 +429,6 @@
     "open": "Abrir grupo",
     "share": "Compartilhar link de convite",
     "shareMessage": "Entre em \"{{name}}\" no Chara: {{link}}"
-  },
-  "groupCategories": {
-    "editorHint": "Somente categorias ativadas aparecem ao adicionar uma despesa e na sugestão da leitura de recibo. Pelo menos uma deve permanecer ativada.",
-    "errorTitle": "Não foi possível salvar as categorias",
-    "loadError": "Não foi possível carregar as categorias.",
-    "saveCta": "Salvar",
-    "saving": "Salvando…",
-    "title": "Categorias"
   },
   "groupDetail": {
     "activity": "Atividade",
@@ -619,17 +622,17 @@
     },
     "title": "Configurações"
   },
-  "groupsTab": {
-    "joinGroup": "Entrar em um grupo",
-    "newGroup": "Novo grupo",
-    "newGroupLabel": "Novo grupo",
-    "scanQrLabel": "Escanear QR para entrar no grupo"
-  },
   "groupStats": {
     "byCategory": "por categoria",
     "emptyBody": "Adicione despesas e um resumo por categoria vai aparecer aqui.",
     "emptyTitle": "Nenhum gasto ainda",
     "title": "Estatísticas"
+  },
+  "groupsTab": {
+    "joinGroup": "Entrar em um grupo",
+    "newGroup": "Novo grupo",
+    "newGroupLabel": "Novo grupo",
+    "scanQrLabel": "Escanear QR para entrar no grupo"
   },
   "home": {
     "balancesAcrossCurrencies": "{{count}} moedas",
@@ -1254,6 +1257,44 @@
     "chooseGroup": "Escolha um grupo",
     "home": "Início",
     "you": "Perfil"
+  },
+  "voiceExpense": {
+    "capBody": "A entrada por voz tem um limite mensal para manter os custos sustentáveis. Deixa o teu email e avisamos quando o limite subir.",
+    "discardRest": "Descartar o resto",
+    "draftsLabel": "{{count}} despesas encontradas",
+    "draftsLabel_one": "{{count}} despesa encontrada",
+    "draftsLabel_other": "{{count}} despesas encontradas",
+    "err_network": "Algo correu mal. Tenta de novo.",
+    "err_no_expense": "Não há despesa nenhuma aí. Diz um valor e para quem era.",
+    "err_settlement": "Isso parece pagar de volta, não uma despesa nova.",
+    "err_unintelligible": "Não deu para perceber. Tenta num sítio mais calmo, ou escreve.",
+    "example": "«Paguei 480 do jantar com a Ana e o João»",
+    "exampleLabel": "Experimenta dizer",
+    "flag_generic": "adivinhado",
+    "flag_paid_by": "quem pagou, adivinhado",
+    "flag_participants": "quem participa, adivinhado",
+    "flag_split": "divisão diferente do que disseste",
+    "goToSettle": "Acertar contas",
+    "hint": "Toca no microfone e descreve o que pagaste.",
+    "micDenied": "A Chara precisa de acesso ao microfone para adicionar uma despesa por voz. Podes ativar nas Definições.",
+    "micDeniedTitle": "Microfone desligado",
+    "moreFromRecording": "mais {{count}} da tua gravação",
+    "moreFromRecording_one": "mais {{count}} da tua gravação",
+    "moreFromRecording_other": "mais {{count}} da tua gravação",
+    "regenerate": "Tentar de novo",
+    "regenerateDisabled": "Edita o texto e tenta de novo",
+    "secondsLeft": "faltam {{count}} segundos",
+    "secondsLeft_one": "falta {{count}} segundo",
+    "secondsLeft_other": "faltam {{count}} segundos",
+    "startRecording": "Começar a gravar",
+    "stop": "Pronto",
+    "title": "Dizer a despesa",
+    "transcriptHint": "Edita o texto se as palavras ficaram erradas",
+    "transcriptLabel": "O que disseste · toca para corrigir",
+    "tryAgain": "Tentar de novo",
+    "typeInstead": "ou escreve",
+    "uploading": "A processar…",
+    "useDrafts": "Usar estes"
   },
   "waitlist": {
     "body": "Estamos limitando o escaneamento de recibos enquanto definimos os planos de hospedagem. Deixe seu e-mail e avisaremos quando houver mais capacidade.",

@@ -172,7 +172,9 @@
     "saveErrorBody": "Kunne ikke gemme udgiften. Prøv igen.",
     "saveErrorTitle": "Fejl",
     "saving": "Gemmer…",
-    "scanReceipt": "Scan kvittering",
+    "scanReceipt": "Scan en kvittering",
+    "scanShort": "Scan",
+    "speakShort": "Tal",
     "split": {
       "equal": "delt ligeligt",
       "exact": "delt efter beløb",
@@ -195,6 +197,7 @@
     "totalSplit": "samlet fordeling",
     "viewItems": "Vis varer",
     "viewReceipt": "Vis kvittering",
+    "voiceButton": "Tal udgiften ind",
     "when": {
       "pick": "vælg dato",
       "today": "i dag",
@@ -385,6 +388,14 @@
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
   },
+  "groupCategories": {
+    "editorHint": "Kun aktiverede kategorier vises, når du tilføjer en udgift, og i kvitteringsscanningens forslag. Mindst én skal forblive aktiveret.",
+    "errorTitle": "Kunne ikke gemme kategorier",
+    "loadError": "Kunne ikke indlæse kategorier.",
+    "saveCta": "Gem",
+    "saving": "Gemmer…",
+    "title": "Kategorier"
+  },
   "groupColor": {
     "custom": "Brugerdefineret farve",
     "reset": "Nulstil til standard",
@@ -412,14 +423,6 @@
     "open": "Åbn gruppe",
     "share": "Del invitationslink",
     "shareMessage": "Kom med i \"{{name}}\" på Chara: {{link}}"
-  },
-  "groupCategories": {
-    "editorHint": "Kun aktiverede kategorier vises, når du tilføjer en udgift, og i kvitteringsscanningens forslag. Mindst én skal forblive aktiveret.",
-    "errorTitle": "Kunne ikke gemme kategorier",
-    "loadError": "Kunne ikke indlæse kategorier.",
-    "saveCta": "Gem",
-    "saving": "Gemmer…",
-    "title": "Kategorier"
   },
   "groupDetail": {
     "activity": "Aktivitet",
@@ -605,17 +608,17 @@
     },
     "title": "Indstillinger"
   },
-  "groupsTab": {
-    "joinGroup": "Kom med i gruppe",
-    "newGroup": "Ny gruppe",
-    "newGroupLabel": "Ny gruppe",
-    "scanQrLabel": "Scan QR for at komme med i gruppe"
-  },
   "groupStats": {
     "byCategory": "efter kategori",
     "emptyBody": "Tilføj udgifter, så dukker en opdeling pr. kategori op her.",
     "emptyTitle": "Intet forbrug endnu",
     "title": "Statistik"
+  },
+  "groupsTab": {
+    "joinGroup": "Kom med i gruppe",
+    "newGroup": "Ny gruppe",
+    "newGroupLabel": "Ny gruppe",
+    "scanQrLabel": "Scan QR for at komme med i gruppe"
   },
   "home": {
     "balancesAcrossCurrencies": "{{count}} valutaer",
@@ -1214,6 +1217,44 @@
     "chooseGroup": "Vælg en gruppe",
     "home": "Forside",
     "you": "Profil"
+  },
+  "voiceExpense": {
+    "capBody": "Taleindtastning er begrænset hver måned for at holde omkostningerne nede. Læg din e-mail, så siger vi til, når grænsen hæves.",
+    "discardRest": "Kassér resten",
+    "draftsLabel": "{{count}} udgifter fundet",
+    "draftsLabel_one": "{{count}} udgift fundet",
+    "draftsLabel_other": "{{count}} udgifter fundet",
+    "err_network": "Noget gik galt. Prøv igen.",
+    "err_no_expense": "Ingen udgift i den. Prøv at nævne et beløb og hvem den var til.",
+    "err_settlement": "Det lyder som en tilbagebetaling snarere end en ny udgift.",
+    "err_unintelligible": "Kunne ikke opfatte det. Prøv et roligere sted, eller skriv i stedet.",
+    "example": "»Jeg betalte 480 for middagen med Anna og Sara«",
+    "exampleLabel": "Prøv at sige",
+    "flag_generic": "gæt",
+    "flag_paid_by": "gættede hvem der betalte",
+    "flag_participants": "gættede hvem der er med",
+    "flag_split": "delingen blev ikke som du sagde",
+    "goToSettle": "Gør op i stedet",
+    "hint": "Tryk på mikrofonen, og beskriv hvad du betalte for.",
+    "micDenied": "Chara har brug for adgang til mikrofonen for at tilføje en udgift med stemmen. Du kan slå det til i Indstillinger.",
+    "micDeniedTitle": "Mikrofonen er slået fra",
+    "moreFromRecording": "{{count}} mere fra optagelsen",
+    "moreFromRecording_one": "{{count}} mere fra optagelsen",
+    "moreFromRecording_other": "{{count}} mere fra optagelsen",
+    "regenerate": "Prøv igen",
+    "regenerateDisabled": "Ret teksten, og prøv igen",
+    "secondsLeft": "{{count}} sekunder tilbage",
+    "secondsLeft_one": "{{count}} sekund tilbage",
+    "secondsLeft_other": "{{count}} sekunder tilbage",
+    "startRecording": "Start optagelse",
+    "stop": "Færdig",
+    "title": "Tal udgiften ind",
+    "transcriptHint": "Ret teksten, hvis ordene blev forkerte",
+    "transcriptLabel": "Det du sagde · tryk for at rette",
+    "tryAgain": "Prøv igen",
+    "typeInstead": "eller skriv i stedet",
+    "uploading": "Regner ud…",
+    "useDrafts": "Brug disse"
   },
   "waitlist": {
     "body": "Vi holder kvitteringsscanninger begrænsede, mens vi finder ud af hostingplaner. Skriv din e-mail, så giver vi besked, når der kommer mere kapacitet.",

@@ -107,3 +107,42 @@ func TestAmount_String(t *testing.T) {
 	assert.Equal(t, "0.00", money.Amount(0).String())
 	assert.Equal(t, "-1.00", money.Amount(-100).String())
 }
+
+func TestParseDecimal(t *testing.T) {
+	cases := []struct {
+		in   string
+		want money.Amount
+	}{
+		{"", 0},
+		{"0", 0},
+		{"0.00", 0},
+		{"1", 100},
+		{"12", 1200},
+		{"12.34", 1234},
+		{"12.345", 1234}, // extra digits truncated, not rounded
+		{"-3.21", -321},
+		{"12.", 1200},
+		{"12.5", 1250},
+		{"12.50", 1250},
+		{"12.567", 1256},
+		{"-2.00", -200},
+		{"  480.00  ", 48000},
+	}
+	for _, c := range cases {
+		got, err := money.ParseDecimal(c.in)
+		if err != nil {
+			t.Fatalf("ParseDecimal(%q) returned error: %v", c.in, err)
+		}
+		if got != c.want {
+			t.Errorf("ParseDecimal(%q) = %d, want %d", c.in, got, c.want)
+		}
+	}
+}
+
+func TestParseDecimalRejectsGarbage(t *testing.T) {
+	for _, in := range []string{"abc", "1.2.3", "12,50"} {
+		if _, err := money.ParseDecimal(in); err == nil {
+			t.Errorf("ParseDecimal(%q) = nil error, want error", in)
+		}
+	}
+}

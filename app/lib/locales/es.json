@@ -178,7 +178,9 @@
     "saveErrorBody": "No se pudo guardar el gasto. Inténtalo de nuevo.",
     "saveErrorTitle": "Error",
     "saving": "Guardando…",
-    "scanReceipt": "Escanear recibo — o rellenar abajo",
+    "scanReceipt": "Escanear un recibo",
+    "scanShort": "Escanear",
+    "speakShort": "Hablar",
     "split": {
       "equal": "dividir equitativamente",
       "exact": "dividir por monto",
@@ -201,6 +203,7 @@
     "totalSplit": "total dividido",
     "viewItems": "Ver artículos",
     "viewReceipt": "Ver recibo",
+    "voiceButton": "Decir el gasto",
     "when": {
       "pick": "elegir una fecha",
       "today": "hoy",
@@ -391,6 +394,14 @@
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
   },
+  "groupCategories": {
+    "editorHint": "Solo las categorías activadas aparecen al añadir un gasto y en la sugerencia del escaneo de recibos. Debe quedar al menos una activada.",
+    "errorTitle": "No se pudieron guardar las categorías",
+    "loadError": "No se pudieron cargar las categorías.",
+    "saveCta": "Guardar",
+    "saving": "Guardando…",
+    "title": "Categorías"
+  },
   "groupColor": {
     "custom": "Color personalizado",
     "reset": "Restablecer al predeterminado",
@@ -418,14 +429,6 @@
     "open": "Abrir grupo",
     "share": "Compartir enlace de invitación",
     "shareMessage": "Únete a \"{{name}}\" en Chara: {{link}}"
-  },
-  "groupCategories": {
-    "editorHint": "Solo las categorías activadas aparecen al añadir un gasto y en la sugerencia del escaneo de recibos. Debe quedar al menos una activada.",
-    "errorTitle": "No se pudieron guardar las categorías",
-    "loadError": "No se pudieron cargar las categorías.",
-    "saveCta": "Guardar",
-    "saving": "Guardando…",
-    "title": "Categorías"
   },
   "groupDetail": {
     "activity": "Actividad",
@@ -619,17 +622,17 @@
     },
     "title": "Ajustes"
   },
-  "groupsTab": {
-    "joinGroup": "Unirse a grupo",
-    "newGroup": "Nuevo grupo",
-    "newGroupLabel": "Nuevo grupo",
-    "scanQrLabel": "Escanea QR para unirte al grupo"
-  },
   "groupStats": {
     "byCategory": "por categoría",
     "emptyBody": "Añade gastos y aquí aparecerá un desglose por categoría.",
     "emptyTitle": "Aún no hay gastos",
     "title": "Estadísticas"
+  },
+  "groupsTab": {
+    "joinGroup": "Unirse a grupo",
+    "newGroup": "Nuevo grupo",
+    "newGroupLabel": "Nuevo grupo",
+    "scanQrLabel": "Escanea QR para unirte al grupo"
   },
   "home": {
     "balancesAcrossCurrencies": "{{count}} monedas",
@@ -1254,6 +1257,44 @@
     "chooseGroup": "Elige un grupo",
     "home": "Inicio",
     "you": "Perfil"
+  },
+  "voiceExpense": {
+    "capBody": "La entrada por voz está limitada cada mes para mantener los costes sostenibles. Déjanos tu correo y te avisamos cuando suba el límite.",
+    "discardRest": "Descartar el resto",
+    "draftsLabel": "{{count}} gastos encontrados",
+    "draftsLabel_one": "{{count}} gasto encontrado",
+    "draftsLabel_other": "{{count}} gastos encontrados",
+    "err_network": "Algo salió mal. Inténtalo de nuevo.",
+    "err_no_expense": "Ahí no hay ningún gasto. Di un importe y para quién era.",
+    "err_settlement": "Eso suena a devolver dinero, no a un gasto nuevo.",
+    "err_unintelligible": "No se entendió. Prueba en un sitio más tranquilo o escríbelo.",
+    "example": "«Pagué 480 de la cena con Lucía y Marta»",
+    "exampleLabel": "Prueba a decir",
+    "flag_generic": "adivinado",
+    "flag_paid_by": "quién pagó, adivinado",
+    "flag_participants": "quiénes participan, adivinado",
+    "flag_split": "reparto distinto al que dijiste",
+    "goToSettle": "Saldar en su lugar",
+    "hint": "Toca el micrófono y describe lo que pagaste.",
+    "micDenied": "Chara necesita acceso al micrófono para añadir un gasto por voz. Puedes activarlo en Ajustes.",
+    "micDeniedTitle": "Micrófono desactivado",
+    "moreFromRecording": "{{count}} más de tu grabación",
+    "moreFromRecording_one": "{{count}} más de tu grabación",
+    "moreFromRecording_other": "{{count}} más de tu grabación",
+    "regenerate": "Reintentar",
+    "regenerateDisabled": "Edita el texto y reinténtalo",
+    "secondsLeft": "quedan {{count}} segundos",
+    "secondsLeft_one": "queda {{count}} segundo",
+    "secondsLeft_other": "quedan {{count}} segundos",
+    "startRecording": "Empezar a grabar",
+    "stop": "Listo",
+    "title": "Di el gasto",
+    "transcriptHint": "Edita el texto si las palabras no son correctas",
+    "transcriptLabel": "Lo que dijiste · toca para corregir",
+    "tryAgain": "Reintentar",
+    "typeInstead": "o escríbelo",
+    "uploading": "Procesando…",
+    "useDrafts": "Usar estos"
   },
   "waitlist": {
     "body": "Estamos manteniendo limitados los escaneos de recibos mientras decidimos los planes de alojamiento. Deja tu correo y te avisaremos cuando haya más capacidad.",

@@ -9,14 +9,20 @@ package receipt
 import (
 	"context"
 	"errors"
-	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/DowLucas/chara/internal/category"
 	"github.com/DowLucas/chara/internal/currency"
 	"github.com/DowLucas/chara/internal/money"
 )
+
+// Usage is the token accounting the provider reports for one call. Zero
+// means the provider did not report it — usageMetadata is optional in the
+// Gemini API. Recorded for cost analysis; see internal/aiusage.
+type Usage struct {
+	InputTokens  int `json:"input_tokens"`
+	OutputTokens int `json:"output_tokens"`
+}
 
 // Receipt is the structured result of a single scan.
 //
@@ -58,6 +64,11 @@ type Receipt struct {
 	// line; deposit / "pant" rows are reported in DepositMinor instead;
 	// subtotal/tax/tip lines are not repeated here.
 	Items []Item `json:"items,omitempty"`
+
+	// Usage is token accounting for the call that produced this receipt.
+	// Deliberately not part of the client payload — the handler strips it
+	// into internal/aiusage, and a client has no use for it.
+	Usage Usage `json:"-"`
 }
 
 // Item is a single line on a receipt. All amounts are in the receipt's
@@ -133,54 +144,6 @@ type Scanner interface {
 // either the image is not a receipt, is too blurry, or the response failed
 // to parse. The handler maps this to 422.
 var ErrUnreadable = errors.New("receipt: could not extract structured data from image")
-
-// parseDecimalToMinor converts a decimal string like "12.50" to 1250 minor
-// units, assuming a 2-decimal currency. Returns (0, nil) for the empty
-// string so that "field absent" stays distinguishable from "field is zero".
-//
-// Currencies with non-two-decimal minor units (JPY, KRW, BHD, …) are not
-// supported in v1; the same constraint exists in [money.Amount].
-func parseDecimalToMinor(s string) (money.Amount, error) {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return 0, nil
-	}
-	// Tolerate "12" or "12.5" by normalising to two decimal places.
-	neg := strings.HasPrefix(s, "-")
-	if neg {
-		s = s[1:]
-	}
-	parts := strings.SplitN(s, ".", 2)
-	major, err := strconv.ParseInt(parts[0], 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("receipt: invalid major part %q: %w", parts[0], err)
-	}
-	var minor int64
-	if len(parts) == 2 {
-		frac := parts[1]
-		switch {
-		case len(frac) == 0:
-			// "12." → minor=0
-		case len(frac) == 1:
-			n, err := strconv.ParseInt(frac, 10, 64)
-			if err != nil {
-				return 0, fmt.Errorf("receipt: invalid minor part %q: %w", frac, err)
-			}
-			minor = n * 10
-		case len(frac) >= 2:
-			n, err := strconv.ParseInt(frac[:2], 10, 64)
-			if err != nil {
-				return 0, fmt.Errorf("receipt: invalid minor part %q: %w", frac, err)
-			}
-			minor = n
-		}
-	}
-	v := major*100 + minor
-	if neg {
-		v = -v
-	}
-	return money.Amount(v), nil
-}
 
 // normaliseCurrency uppercases and validates against the project allowlist.
 // Returns ("", false) if the code is unknown.

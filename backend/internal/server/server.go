@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 
+	"github.com/DowLucas/chara/internal/aiusage"
 	"github.com/DowLucas/chara/internal/auth"
 	"github.com/DowLucas/chara/internal/billing"
 	"github.com/DowLucas/chara/internal/config"
@@ -21,6 +22,7 @@ import (
 	"github.com/DowLucas/chara/internal/middleware"
 	"github.com/DowLucas/chara/internal/receipt"
 	"github.com/DowLucas/chara/internal/storage"
+	"github.com/DowLucas/chara/internal/voice"
 	"github.com/DowLucas/chara/internal/wellknown"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -28,6 +30,18 @@ import (
 )
 
 const version = "0.1.0"
+
+// FreeVoiceCap is the anti-abuse cap on free voice generations per UTC
+// month. Lower headroom than it looks next to FreeOCRCap: Gemini bills
+// audio at roughly 32 tokens per second, so a 45s clip costs on the order
+// of twice a receipt scan.
+const FreeVoiceCap = 5
+
+// FreeVoiceRepostCap bounds the clarify re-post, which is deliberately not
+// charged against FreeVoiceCap. Generous on purpose: a user correcting
+// their own transcript will never reach it, while a script looping text
+// prompts through our Gemini key will.
+const FreeVoiceRepostCap = 50
 
 // FreeOCRCap is the anti-abuse cap on free OCR scans per UTC month for
 // hosted-instance users in v1.0/v1.1. v1.2 will replace this with a
@@ -258,14 +272,29 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 		// (FreeOCRCap = 3/month, v1.0 anti-abuse). Self-hosters pay the
 		// Gemini bill themselves, so no metering: pass a nil counter.
 		if cfg.HasGemini() {
+			// Usage recording is wired on BOTH hosted and selfhost: the
+			// rows stay in the operator's own database and nothing is
+			// transmitted, so a self-hoster gets the same cost visibility
+			// we do.
 			receiptH := handler.NewReceiptHandler(receipt.NewGemini(cfg.GeminiAPIKey)).
-				WithGroupCategories(handler.NewGroupCategoriesLookup(queries))
+				WithGroupCategories(handler.NewGroupCategoriesLookup(queries)).
+				WithUsageRecorder(aiusage.NewRecorder(handler.NewAIUsageStore(queries)))
 			if cfg.IsHosted() {
 				receiptH = receiptH.
 					WithCounter(billing.NewCounter(queries), FreeOCRCap).
-					WithCapOverrides(queries)
+					WithCapOverrides(handler.NewCapOverrides(queries))
 			}
 			r.Post("/api/receipts/scan", receiptH.Scan)
+
+			voiceH := handler.NewVoiceHandler(voice.NewGemini(cfg.GeminiAPIKey)).
+				WithGroupContext(handler.NewVoiceContextLookup(queries)).
+				WithUsageRecorder(aiusage.NewRecorder(handler.NewAIUsageStore(queries)))
+			if cfg.IsHosted() {
+				voiceH = voiceH.
+					WithCounter(billing.NewCounter(queries), FreeVoiceCap, FreeVoiceRepostCap).
+					WithCapOverrides(handler.NewCapOverrides(queries))
+			}
+			r.Post("/api/voice/expenses", voiceH.Generate)
 		}
 	})
 

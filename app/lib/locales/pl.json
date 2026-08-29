@@ -184,7 +184,9 @@
     "saveErrorBody": "Nie udało się zapisać wydatku. Spróbuj ponownie.",
     "saveErrorTitle": "Błąd",
     "saving": "Zapisywanie…",
-    "scanReceipt": "Zeskanuj paragon — lub wypełnij poniżej",
+    "scanReceipt": "Zeskanuj paragon",
+    "scanShort": "Skanuj",
+    "speakShort": "Mów",
     "split": {
       "equal": "podzielone równo",
       "exact": "podzielone kwotowo",
@@ -207,6 +209,7 @@
     "totalSplit": "łączny podział",
     "viewItems": "Zobacz pozycje",
     "viewReceipt": "Zobacz paragon",
+    "voiceButton": "Powiedz wydatek",
     "when": {
       "pick": "wybierz datę",
       "today": "dziś",
@@ -397,6 +400,14 @@
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
   },
+  "groupCategories": {
+    "editorHint": "Podczas dodawania wydatku i w sugestii ze skanu paragonu widoczne są tylko włączone kategorie. Co najmniej jedna musi pozostać włączona.",
+    "errorTitle": "Nie udało się zapisać kategorii",
+    "loadError": "Nie udało się wczytać kategorii.",
+    "saveCta": "Zapisz",
+    "saving": "Zapisywanie…",
+    "title": "Kategorie"
+  },
   "groupColor": {
     "custom": "Kolor własny",
     "reset": "Przywróć domyślny",
@@ -424,14 +435,6 @@
     "open": "Otwórz grupę",
     "share": "Udostępnij link zaproszenia",
     "shareMessage": "Dołącz do „{{name}}” w Chara: {{link}}"
-  },
-  "groupCategories": {
-    "editorHint": "Podczas dodawania wydatku i w sugestii ze skanu paragonu widoczne są tylko włączone kategorie. Co najmniej jedna musi pozostać włączona.",
-    "errorTitle": "Nie udało się zapisać kategorii",
-    "loadError": "Nie udało się wczytać kategorii.",
-    "saveCta": "Zapisz",
-    "saving": "Zapisywanie…",
-    "title": "Kategorie"
   },
   "groupDetail": {
     "activity": "Aktywność",
@@ -637,17 +640,17 @@
     },
     "title": "Ustawienia"
   },
-  "groupsTab": {
-    "joinGroup": "Dołącz do grupy",
-    "newGroup": "Nowa grupa",
-    "newGroupLabel": "Nowa grupa",
-    "scanQrLabel": "Zeskanuj QR, aby dołączyć do grupy"
-  },
   "groupStats": {
     "byCategory": "według kategorii",
     "emptyBody": "Dodaj wydatki, a rozkład według kategorii pojawi się tutaj.",
     "emptyTitle": "Brak wydatków",
     "title": "Statystyki"
+  },
+  "groupsTab": {
+    "joinGroup": "Dołącz do grupy",
+    "newGroup": "Nowa grupa",
+    "newGroupLabel": "Nowa grupa",
+    "scanQrLabel": "Zeskanuj QR, aby dołączyć do grupy"
   },
   "home": {
     "balancesAcrossCurrencies": "{{count}} walut",
@@ -1298,6 +1301,50 @@
     "chooseGroup": "Wybierz grupę",
     "home": "Główna",
     "you": "Profil"
+  },
+  "voiceExpense": {
+    "capBody": "Wprowadzanie głosowe jest co miesiąc ograniczone, aby utrzymać koszty. Zostaw e-mail, a damy znać, gdy limit wzrośnie.",
+    "discardRest": "Odrzuć resztę",
+    "draftsLabel": "znaleziono {{count}} wydatku",
+    "draftsLabel_few": "znaleziono {{count}} wydatki",
+    "draftsLabel_many": "znaleziono {{count}} wydatków",
+    "draftsLabel_one": "znaleziono {{count}} wydatek",
+    "draftsLabel_other": "znaleziono {{count}} wydatku",
+    "err_network": "Coś poszło nie tak. Spróbuj ponownie.",
+    "err_no_expense": "Nie ma tam wydatku. Podaj kwotę i dla kogo była.",
+    "err_settlement": "To brzmi jak zwrot pieniędzy, a nie nowy wydatek.",
+    "err_unintelligible": "Nie udało się zrozumieć. Spróbuj w cichszym miejscu albo wpisz to.",
+    "example": "„Zapłaciłem 480 za kolację z Anią i Kasią”",
+    "exampleLabel": "Spróbuj powiedzieć",
+    "flag_generic": "zgadnięte",
+    "flag_paid_by": "zgadnięto, kto zapłacił",
+    "flag_participants": "zgadnięto, kto bierze udział",
+    "flag_split": "podział inny niż powiedziano",
+    "goToSettle": "Zamiast tego rozlicz się",
+    "hint": "Dotknij mikrofonu i opisz, za co zapłaciłeś.",
+    "micDenied": "Chara potrzebuje dostępu do mikrofonu, aby dodać wydatek głosem. Możesz to włączyć w Ustawieniach.",
+    "micDeniedTitle": "Mikrofon wyłączony",
+    "moreFromRecording": "jeszcze {{count}} z nagrania",
+    "moreFromRecording_few": "jeszcze {{count}} z nagrania",
+    "moreFromRecording_many": "jeszcze {{count}} z nagrania",
+    "moreFromRecording_one": "jeszcze {{count}} z nagrania",
+    "moreFromRecording_other": "jeszcze {{count}} z nagrania",
+    "regenerate": "Spróbuj ponownie",
+    "regenerateDisabled": "Popraw tekst i spróbuj ponownie",
+    "secondsLeft": "zostało {{count}} sekundy",
+    "secondsLeft_few": "zostały {{count}} sekundy",
+    "secondsLeft_many": "zostało {{count}} sekund",
+    "secondsLeft_one": "została {{count}} sekunda",
+    "secondsLeft_other": "zostało {{count}} sekundy",
+    "startRecording": "Rozpocznij nagrywanie",
+    "stop": "Gotowe",
+    "title": "Powiedz wydatek",
+    "transcriptHint": "Popraw tekst, jeśli słowa są błędne",
+    "transcriptLabel": "Co powiedziałeś · dotknij, aby poprawić",
+    "tryAgain": "Spróbuj ponownie",
+    "typeInstead": "albo wpisz to",
+    "uploading": "Przetwarzanie…",
+    "useDrafts": "Użyj tych"
   },
   "waitlist": {
     "body": "Utrzymujemy limity skanów paragonów, dopóki nie rozstrzygniemy planów hostingu. Zostaw swój e-mail, a damy znać, gdy pojawi się więcej miejsca.",

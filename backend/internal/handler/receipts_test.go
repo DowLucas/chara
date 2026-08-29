@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/DowLucas/chara/internal/aiusage"
 	"github.com/DowLucas/chara/internal/auth"
 	"github.com/DowLucas/chara/internal/middleware"
 	"github.com/DowLucas/chara/internal/receipt"
@@ -412,4 +413,133 @@ func TestReceiptScan_RejectsInvalidJSONBody(t *testing.T) {
 	rr := httptest.NewRecorder()
 	newReceiptsRouter(&fakeScanner{}).ServeHTTP(rr, req)
 	require.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+// fakeUsageStore captures aiusage records so tests can assert on what the
+// handler decided to record without a database.
+type fakeUsageStore struct {
+	got []aiusage.Record
+	ids []string
+}
+
+func (f *fakeUsageStore) Insert(_ context.Context, id string, rec aiusage.Record) error {
+	f.ids = append(f.ids, id)
+	f.got = append(f.got, rec)
+	return nil
+}
+
+func recordingReceiptsRouter(scanner receipt.Scanner, store aiusage.Store) http.Handler {
+	h := NewReceiptHandler(scanner).WithUsageRecorder(aiusage.NewRecorder(store))
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/receipts/scan", h.Scan)
+	return mux
+}
+
+func TestReceiptScan_RecordsGenerationAndReturnsID(t *testing.T) {
+	fake := &fakeScanner{resp: &receipt.Receipt{
+		Merchant: "ICA Maxi", Currency: "SEK", TotalMinor: 28450,
+		Usage: receipt.Usage{InputTokens: 1300, OutputTokens: 250},
+	}}
+	store := &fakeUsageStore{}
+	router := recordingReceiptsRouter(fake, store)
+
+	rr := postScanWithContext(t, router, map[string]string{
+		"image_base64": base64.StdEncoding.EncodeToString([]byte("fake-jpeg-bytes")),
+		"mime_type":    "image/jpeg",
+		"group_id":     "g1",
+	}, authedContext("u1"))
+
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+	var got scanResponse
+	require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &got))
+	assert.NotEmpty(t, got.GenerationID, "response must carry a generation_id")
+
+	require.Len(t, store.got, 1)
+	rec := store.got[0]
+	assert.Equal(t, OCRFeatureKey, rec.Feature)
+	assert.Equal(t, aiusage.OutcomeOK, rec.Outcome)
+	assert.Equal(t, "u1", rec.UserID)
+	// No group lookup is wired here, so membership was never confirmed and
+	// the id must NOT be recorded — ai_generations.group_id has an FK, and
+	// an unverified id would fail the insert on every scan.
+	assert.Empty(t, rec.GroupID)
+	assert.Equal(t, 1300, rec.InputTokens)
+	assert.Equal(t, 250, rec.OutputTokens)
+	assert.Equal(t, 1, rec.ExpenseCount)
+	assert.Equal(t, len("fake-jpeg-bytes"), rec.RequestBytes)
+	assert.Equal(t, got.GenerationID, store.ids[0])
+}
+
+// An unreadable image is a distinct outcome from a transport failure: the
+// user gets different copy, and the ratio between them tells us whether a
+// capture bug or a prompt problem is to blame.
+// The counterpart: when the caller's membership IS confirmed, the group
+// belongs on the telemetry row.
+func TestReceiptScan_RecordsVerifiedGroupID(t *testing.T) {
+	fake := &fakeScanner{resp: &receipt.Receipt{Merchant: "X", Currency: "SEK", TotalMinor: 100}}
+	store := &fakeUsageStore{}
+	groups := &fakeGroupCategories{slugs: map[string][]string{"g1": {"food"}}}
+	h := NewReceiptHandler(fake).
+		WithGroupCategories(groups).
+		WithUsageRecorder(aiusage.NewRecorder(store))
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/receipts/scan", h.Scan)
+
+	postScanWithContext(t, mux, map[string]string{
+		"image_base64": base64.StdEncoding.EncodeToString([]byte("b")),
+		"mime_type":    "image/jpeg",
+		"group_id":     "g1",
+	}, authedContext("u1"))
+
+	require.Len(t, store.got, 1)
+	assert.Equal(t, "g1", store.got[0].GroupID)
+}
+
+func TestReceiptScan_RecordsUnreadableOutcome(t *testing.T) {
+	fake := &fakeScanner{err: receipt.ErrUnreadable}
+	store := &fakeUsageStore{}
+	router := recordingReceiptsRouter(fake, store)
+
+	rr := postScanWithContext(t, router, map[string]string{
+		"image_base64": base64.StdEncoding.EncodeToString([]byte("fake-jpeg-bytes")),
+		"mime_type":    "image/jpeg",
+	}, authedContext("u1"))
+
+	require.Equal(t, http.StatusUnprocessableEntity, rr.Code)
+	require.Len(t, store.got, 1)
+	assert.Equal(t, aiusage.OutcomeUnintelligible, store.got[0].Outcome)
+	assert.Empty(t, store.got[0].ErrorClass)
+}
+
+func TestReceiptScan_RecordsScannerFailureAsError(t *testing.T) {
+	fake := &fakeScanner{err: errors.New("gemini exploded")}
+	store := &fakeUsageStore{}
+	router := recordingReceiptsRouter(fake, store)
+
+	rr := postScanWithContext(t, router, map[string]string{
+		"image_base64": base64.StdEncoding.EncodeToString([]byte("fake-jpeg-bytes")),
+		"mime_type":    "image/jpeg",
+	}, authedContext("u1"))
+
+	require.Equal(t, http.StatusBadGateway, rr.Code)
+	require.Len(t, store.got, 1)
+	assert.Equal(t, aiusage.OutcomeError, store.got[0].Outcome)
+	assert.NotEmpty(t, store.got[0].ErrorClass)
+}
+
+// Without a recorder the handler must behave exactly as before, and must
+// not invent a generation_id it cannot back with a row.
+func TestReceiptScan_NoRecorderOmitsGenerationID(t *testing.T) {
+	fake := &fakeScanner{resp: &receipt.Receipt{Merchant: "X", Currency: "SEK", TotalMinor: 100}}
+	router := newReceiptsRouter(fake)
+
+	rr := postScan(t, router, map[string]string{
+		"image_base64": base64.StdEncoding.EncodeToString([]byte("b")),
+		"mime_type":    "image/jpeg",
+	})
+
+	require.Equal(t, http.StatusOK, rr.Code)
+	var got scanResponse
+	require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &got))
+	assert.Empty(t, got.GenerationID)
 }

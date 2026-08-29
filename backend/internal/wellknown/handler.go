@@ -34,6 +34,11 @@ type Features struct {
 	// nudge, so it tracks RecurringEnabled. Absent on older builds → the app
 	// hides the reminder button (version-skew safe).
 	SettleReminders bool `json:"settle_reminders"`
+	// VoiceExpense advertises POST /api/voice/expenses. Tracks the Gemini
+	// key exactly as OCR does: without one the endpoint cannot work, and
+	// the app hides the mic rather than offering a button that always
+	// fails. Absent on older builds → the app hides it (version-skew safe).
+	VoiceExpense bool `json:"voice_expense"`
 }
 
 func Handler(cfg *config.Config, version string) http.HandlerFunc {
@@ -77,6 +82,7 @@ func buildInfo(cfg *config.Config, version string) InstanceInfo {
 			// doc comment.
 			Push:            cfg.RecurringEnabled,
 			SettleReminders: cfg.RecurringEnabled,
+			VoiceExpense:    cfg.HasGemini(),
 		},
 	}
 }

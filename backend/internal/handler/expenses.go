@@ -185,6 +185,16 @@ type createExpenseReq struct {
 	FxRate           *string       `json:"fx_rate,omitempty"`
 	FxAsOf           *string       `json:"fx_as_of,omitempty"`
 	FxSource         *string       `json:"fx_source,omitempty"`
+
+	// GenerationID links this expense back to the AI generation that
+	// proposed it, with ChangedFields naming what the user altered from
+	// the draft. Together they give per-field acceptance rates.
+	//
+	// Both are optional and best-effort: an unknown or stale id is ignored
+	// rather than failing the create. The expense is the user's data; the
+	// telemetry link is not, and losing the link beats losing the expense.
+	GenerationID  string   `json:"generation_id"`
+	ChangedFields []string `json:"changed_fields"`
 }
 
 type updateExpenseReq struct {
@@ -581,17 +591,32 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		addMember(req.PaidByID)
 
 		if _, err := h.rc.Insert(r.Context(), jobs.PushNotifyArgs{
-			EventKind:        "expense_added",
-			GroupID:          groupID,
-			GroupName:        group.Name,
+			EventKind:          "expense_added",
+			GroupID:            groupID,
+			GroupName:          group.Name,
 			ActorUserID:        claims.UserID,
 			ActorName:          actorMember.Name,
 			RecipientMemberIDs: involvedMemberIDs,
 			Title:              req.Title,
-			AmountMinor:      canonicalAmount,
-			Currency:         canonicalCurrency,
+			AmountMinor:        canonicalAmount,
+			Currency:           canonicalCurrency,
 		}, nil); err != nil {
 			slog.Warn("expenses: enqueue push notification failed", "error", err, "group_id", groupID)
+		}
+	}
+
+	if req.GenerationID != "" {
+		if err := h.queries.LinkAIGenerationExpense(r.Context(), db.LinkAIGenerationExpenseParams{
+			GenerationID:  req.GenerationID,
+			ExpenseID:     created.Row.ID,
+			ChangedFields: req.ChangedFields,
+			// Scoped to the caller's own generation — see the query.
+			UserID: claims.UserID,
+		}); err != nil {
+			// A stale id violates the foreign key. The expense is already
+			// committed and is what the user asked for, so warn and move on.
+			slog.Warn("expenses: link ai generation failed",
+				"error", err, "generation_id", req.GenerationID)
 		}
 	}
 

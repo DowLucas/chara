@@ -144,6 +144,28 @@ export interface ExpenseWizardHandle {
      *  so it lands in the unassigned remainder for the user to distribute. */
     depositMinor?: number;
   }): void;
+  /** Apply a voice-generated draft. Unlike applyReceiptResult this also
+   *  sets the payer, participants and split, because speech carries all
+   *  three ("I paid 480 for dinner with Anna and Sara"). Ids the current
+   *  roster does not contain are ignored — the server already filtered,
+   *  but a stale members prop must not corrupt the split. */
+  applyVoiceDraft(input: {
+    title: string;
+    amountMinor: number;
+    currency: string;
+    category?: string;
+    date?: Date;
+    paidById: string;
+    participants: string[];
+    /** How the split should be represented, decided by
+     *  lib/voice-drafts.toWizardSplit so the rule is unit-testable rather
+     *  than buried in this component. */
+    split: {
+      method: 'equal' | 'exact' | 'percentage';
+      exactByMember?: Record<string, string>;
+      pctByMember?: Record<string, string>;
+    };
+  }): void;
 }
 
 export interface ExpenseWizardProps {
@@ -889,8 +911,61 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
           for (const m of members) nextIncluded[m.id] = (amounts[m.id] ?? 0) > 0;
           setIncluded(nextIncluded);
         },
+        applyVoiceDraft(input) {
+          const known = new Set(members.map((m) => m.id));
+
+          setTitle(input.title);
+          setAmount((input.amountMinor / 100).toFixed(2));
+          if (input.currency) setSelectedCurrency(input.currency);
+          if (input.date) setDate(input.date);
+          // Set OR clear: the wizard is not remounted between queued
+          // drafts, so leaving a previous category in place files the next
+          // expense under it. "Dinner then taxi" would book the taxi as
+          // food, which the user has no reason to expect.
+          if (input.category && (enabledCategories as readonly string[]).includes(input.category)) {
+            setCategory(input.category);
+            setCategoryTouched(true);
+          } else {
+            setCategory(DEFAULT_CATEGORY);
+            setCategoryTouched(false);
+          }
+
+          // Payer and participants only from the live roster. The server
+          // validated against its own copy; this guards a stale members prop.
+          if (known.has(input.paidById)) setPayerMemberId(input.paidById);
+
+          const participants = input.participants.filter((id) => known.has(id));
+          if (participants.length > 0) {
+            const nextIncluded: Record<string, boolean> = {};
+            for (const m of members) nextIncluded[m.id] = participants.includes(m.id);
+            setIncluded(nextIncluded);
+          }
+
+          // Keep the split's MEANING, not just the amounts it produced —
+          // the same reason applyScanItemsAssignment stores the itemisation
+          // rather than its derived totals. A user who said "Alex owes 25%"
+          // must see 25%, and that proportion has to keep holding if the
+          // amount changes.
+          const onRoster = (byMember: Record<string, string> | undefined) => {
+            const next: Record<string, string> = {};
+            for (const [id, v] of Object.entries(byMember ?? {})) {
+              if (known.has(id)) next[id] = v;
+            }
+            return next;
+          };
+
+          if (input.split.method === 'percentage') {
+            setPctByMember(onRoster(input.split.pctByMember));
+            setMethod('percentage');
+          } else if (input.split.method === 'exact') {
+            setExactByMember(onRoster(input.split.exactByMember));
+            setMethod('exact');
+          } else {
+            setMethod('equal');
+          }
+        },
       }),
-      [members],
+      [members, enabledCategories],
     );
 
     async function handleSubmit() {

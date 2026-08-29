@@ -196,6 +196,12 @@ type geminiResponse struct {
 	Candidates []struct {
 		Content geminiContent `json:"content"`
 	} `json:"candidates"`
+	// UsageMetadata is optional — a pointer so "not reported" stays
+	// distinguishable from "reported as zero".
+	UsageMetadata *struct {
+		PromptTokenCount     int `json:"promptTokenCount"`
+		CandidatesTokenCount int `json:"candidatesTokenCount"`
+	} `json:"usageMetadata,omitempty"`
 	Error *struct {
 		Code    int    `json:"code"`
 		Message string `json:"message"`
@@ -323,22 +329,22 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 		return nil, fmt.Errorf("receipt: unsupported currency %q", extracted.Currency)
 	}
 
-	total, err := parseDecimalToMinor(extracted.Total)
+	total, err := money.ParseDecimal(extracted.Total)
 	if err != nil {
 		return nil, fmt.Errorf("receipt: total: %w", err)
 	}
 	if total <= 0 {
 		return nil, ErrUnreadable
 	}
-	subtotal, err := parseDecimalToMinor(extracted.Subtotal)
+	subtotal, err := money.ParseDecimal(extracted.Subtotal)
 	if err != nil {
 		return nil, fmt.Errorf("receipt: subtotal: %w", err)
 	}
-	tax, err := parseDecimalToMinor(extracted.Tax)
+	tax, err := money.ParseDecimal(extracted.Tax)
 	if err != nil {
 		return nil, fmt.Errorf("receipt: tax: %w", err)
 	}
-	tip, err := parseDecimalToMinor(extracted.Tip)
+	tip, err := money.ParseDecimal(extracted.Tip)
 	if err != nil {
 		return nil, fmt.Errorf("receipt: tip: %w", err)
 	}
@@ -346,7 +352,7 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 	// unparseable value degrades to "not present" rather than failing an
 	// otherwise good scan — notably a refund row the parser may render with
 	// a leading minus.
-	deposit, err := parseDecimalToMinor(extracted.Deposit)
+	deposit, err := money.ParseDecimal(extracted.Deposit)
 	if err != nil {
 		deposit = 0
 	}
@@ -368,7 +374,7 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 		if desc == "" {
 			continue
 		}
-		totalMinor, err := parseDecimalToMinor(raw.Total)
+		totalMinor, err := money.ParseDecimal(raw.Total)
 		if err != nil || totalMinor <= 0 {
 			continue
 		}
@@ -376,7 +382,7 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 		if qty <= 0 {
 			qty = 1
 		}
-		unitMinor, err := parseDecimalToMinor(raw.UnitPrice)
+		unitMinor, err := money.ParseDecimal(raw.UnitPrice)
 		if err != nil || unitMinor <= 0 {
 			// Fall back to total when unit price is missing — single-qty
 			// lines often omit it.
@@ -394,7 +400,7 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 		})
 	}
 
-	return &Receipt{
+	out := &Receipt{
 		Title:         title,
 		Merchant:      merchant,
 		Date:          strings.TrimSpace(extracted.Date),
@@ -406,7 +412,14 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 		TipMinor:      tip,
 		DepositMinor:  deposit,
 		Items:         items,
-	}, nil
+	}
+	if parsed.UsageMetadata != nil {
+		out.Usage = Usage{
+			InputTokens:  parsed.UsageMetadata.PromptTokenCount,
+			OutputTokens: parsed.UsageMetadata.CandidatesTokenCount,
+		}
+	}
+	return out, nil
 }
 
 // stripCodeFence removes a leading ```json ... ``` fence if Gemini decides

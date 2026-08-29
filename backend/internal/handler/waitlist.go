@@ -44,6 +44,7 @@ type waitlistResponse struct {
 // Add new entries here when introducing a new soft gate.
 var allowedWaitlistTriggers = map[string]struct{}{
 	"ocr_cap":           {},
+	"voice_cap":         {},
 	"recurring_request": {},
 	"export_request":    {},
 }

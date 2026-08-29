@@ -13,6 +13,7 @@ import (
 
 	"github.com/DowLucas/chara/internal/db"
 	"github.com/DowLucas/chara/internal/server"
+	"github.com/DowLucas/chara/internal/ulid"
 	"github.com/DowLucas/chara/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -1529,4 +1530,125 @@ func TestExpenses_Category_DefaultsToGeneralWhenOmitted(t *testing.T) {
 	var created map[string]any
 	require.NoError(t, json.NewDecoder(cr.Body).Decode(&created))
 	assert.Equal(t, "general", created["category"])
+}
+
+// ── AI generation linkage ─────────────────────────────────────────────────────
+
+// seedAIGeneration inserts a minimal ai_generations row so a create can
+// reference it.
+func seedAIGeneration(t *testing.T, env *testutil.Env, userID, feature string) string {
+	t.Helper()
+	id := ulid.New()
+	_, err := env.Pool.Exec(context.Background(),
+		`INSERT INTO ai_generations (id, user_id, feature, model, latency_ms, outcome)
+		 VALUES ($1, $2, $3, 'test-model', 10, 'ok')`, id, userID, feature)
+	require.NoError(t, err)
+	return id
+}
+
+func TestExpenses_Create_LinksGenerationWhenSupplied(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	genID := seedAIGeneration(t, env, alice.ID, "voice")
+
+	body := fmt.Sprintf(`{
+		"title": "Dinner",
+		"amount": "90.00",
+		"currency": "SEK",
+		"paid_by_id": %q,
+		"split_method": "equal",
+		"participants": [%q, %q],
+		"generation_id": %q,
+		"changed_fields": ["amount", "paid_by"]
+	}`, aliceMemberID, aliceMemberID, bobMemberID, genID)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", body, alice.Token))
+	require.Equal(t, http.StatusCreated, rr.Code, rr.Body.String())
+
+	var resp map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+
+	var expenseID string
+	var changed []string
+	err := env.Pool.QueryRow(context.Background(),
+		`SELECT expense_id, changed_fields FROM ai_generation_expenses WHERE generation_id = $1`,
+		genID).Scan(&expenseID, &changed)
+	require.NoError(t, err)
+	assert.Equal(t, resp["id"], expenseID)
+	assert.Equal(t, []string{"amount", "paid_by"}, changed)
+}
+
+// A stale or invented generation_id must not fail the create. The expense
+// is the user's data; the telemetry link is not, and losing it is strictly
+// better than losing their expense.
+func TestExpenses_Create_IgnoresUnknownGenerationID(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+
+	body := fmt.Sprintf(`{
+		"title": "Dinner",
+		"amount": "90.00",
+		"currency": "SEK",
+		"paid_by_id": %q,
+		"split_method": "equal",
+		"participants": [%q, %q],
+		"generation_id": "01JUNKJUNKJUNKJUNKJUNKJUNK"
+	}`, aliceMemberID, aliceMemberID, bobMemberID)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", body, alice.Token))
+	require.Equal(t, http.StatusCreated, rr.Code, rr.Body.String())
+
+	var count int
+	require.NoError(t, env.Pool.QueryRow(context.Background(),
+		`SELECT COUNT(*) FROM ai_generation_expenses`).Scan(&count))
+	assert.Zero(t, count, "an unknown generation id must not produce a link row")
+}
+
+// The overwhelming majority of expenses are typed by hand and carry no
+// generation id at all — that path must stay untouched.
+func TestExpenses_Create_WithoutGenerationIDWritesNoLink(t *testing.T) {
+	env, alice, _, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+
+	body := fmt.Sprintf(`{
+		"title": "Dinner",
+		"amount": "90.00",
+		"currency": "SEK",
+		"paid_by_id": %q,
+		"split_method": "equal",
+		"participants": [%q, %q]
+	}`, aliceMemberID, aliceMemberID, bobMemberID)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", body, alice.Token))
+	require.Equal(t, http.StatusCreated, rr.Code, rr.Body.String())
+
+	var count int
+	require.NoError(t, env.Pool.QueryRow(context.Background(),
+		`SELECT COUNT(*) FROM ai_generation_expenses`).Scan(&count))
+	assert.Zero(t, count)
+}
+
+// A generation belonging to someone else must not be linkable: the join
+// table exists to measure how often OUR AI output is accepted, and letting
+// a client attach expenses to another user's row pollutes exactly that.
+func TestExpenses_Create_IgnoresAnotherUsersGenerationID(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	bobsGeneration := seedAIGeneration(t, env, bob.ID, "voice")
+
+	body := fmt.Sprintf(`{
+		"title": "Dinner",
+		"amount": "90.00",
+		"currency": "SEK",
+		"paid_by_id": %q,
+		"split_method": "equal",
+		"participants": [%q, %q],
+		"generation_id": %q,
+		"changed_fields": ["amount"]
+	}`, aliceMemberID, aliceMemberID, bobMemberID, bobsGeneration)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", body, alice.Token))
+	require.Equal(t, http.StatusCreated, rr.Code, rr.Body.String())
+
+	var count int
+	require.NoError(t, env.Pool.QueryRow(context.Background(),
+		`SELECT COUNT(*) FROM ai_generation_expenses WHERE generation_id = $1`,
+		bobsGeneration).Scan(&count))
+	assert.Zero(t, count, "alice must not link her expense to bob's generation")
 }

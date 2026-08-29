@@ -196,7 +196,9 @@
     "saveErrorBody": "تعذر حفظ المصروف. حاول مرة أخرى.",
     "saveErrorTitle": "خطأ",
     "saving": "حفظ…",
-    "scanReceipt": "مسح الإيصال",
+    "scanReceipt": "امسح إيصالًا",
+    "scanShort": "مسح",
+    "speakShort": "تحدّث",
     "split": {
       "equal": "تقسيم بالتساوي",
       "exact": "تقسيم حسب المبلغ",
@@ -219,6 +221,7 @@
     "totalSplit": "إجمالي التقسيم",
     "viewItems": "عرض العناصر",
     "viewReceipt": "عرض الإيصال",
+    "voiceButton": "قل المصروف",
     "when": {
       "pick": "اختر تاريخًا",
       "today": "اليوم",
@@ -409,6 +412,14 @@
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
   },
+  "groupCategories": {
+    "editorHint": "تظهر فقط الفئات المفعّلة عند إضافة مصروف وفي اقتراح مسح الإيصال. يجب أن تبقى فئة واحدة على الأقل مفعّلة.",
+    "errorTitle": "تعذّر حفظ الفئات",
+    "loadError": "تعذّر تحميل الفئات.",
+    "saveCta": "حفظ",
+    "saving": "جارٍ الحفظ…",
+    "title": "الفئات"
+  },
   "groupColor": {
     "custom": "لون مخصص",
     "reset": "إعادة إلى الافتراضي",
@@ -436,14 +447,6 @@
     "open": "فتح المجموعة",
     "share": "مشاركة رابط الدعوة",
     "shareMessage": "انضم إلى \"{{name}}\" على Chara: {{link}}"
-  },
-  "groupCategories": {
-    "editorHint": "تظهر فقط الفئات المفعّلة عند إضافة مصروف وفي اقتراح مسح الإيصال. يجب أن تبقى فئة واحدة على الأقل مفعّلة.",
-    "errorTitle": "تعذّر حفظ الفئات",
-    "loadError": "تعذّر تحميل الفئات.",
-    "saveCta": "حفظ",
-    "saving": "جارٍ الحفظ…",
-    "title": "الفئات"
   },
   "groupDetail": {
     "activity": "النشاط",
@@ -669,17 +672,17 @@
     },
     "title": "الإعدادات"
   },
-  "groupsTab": {
-    "joinGroup": "الانضمام إلى مجموعة",
-    "newGroup": "مجموعة جديدة",
-    "newGroupLabel": "مجموعة جديدة",
-    "scanQrLabel": "امسح رمز QR للانضمام إلى مجموعة"
-  },
   "groupStats": {
     "byCategory": "حسب الفئة",
     "emptyBody": "أضف مصروفات وسيظهر هنا تفصيل حسب الفئة.",
     "emptyTitle": "لا يوجد إنفاق بعد",
     "title": "الإحصاءات"
+  },
+  "groupsTab": {
+    "joinGroup": "الانضمام إلى مجموعة",
+    "newGroup": "مجموعة جديدة",
+    "newGroupLabel": "مجموعة جديدة",
+    "scanQrLabel": "امسح رمز QR للانضمام إلى مجموعة"
   },
   "home": {
     "balancesAcrossCurrencies": "{{count}} عملات",
@@ -1382,6 +1385,56 @@
     "chooseGroup": "اختر مجموعة",
     "home": "الرئيسية",
     "you": "الملف الشخصي"
+  },
+  "voiceExpense": {
+    "capBody": "الإدخال الصوتي محدود شهريًا للحفاظ على استدامة التكاليف. اترك بريدك الإلكتروني وسنخبرك عند رفع الحد.",
+    "discardRest": "تجاهل الباقي",
+    "draftsLabel": "عُثر على {{count}} مصروف",
+    "draftsLabel_few": "عُثر على {{count}} مصروفات",
+    "draftsLabel_many": "عُثر على {{count}} مصروفًا",
+    "draftsLabel_one": "عُثر على مصروف واحد",
+    "draftsLabel_other": "عُثر على {{count}} مصروف",
+    "draftsLabel_two": "عُثر على مصروفين",
+    "draftsLabel_zero": "لم يُعثر على مصروفات",
+    "err_network": "حدث خطأ ما. أعد المحاولة.",
+    "err_no_expense": "لا يوجد مصروف في ذلك. جرّب ذكر مبلغ ولمن كان.",
+    "err_settlement": "يبدو أن هذا سداد وليس مصروفًا جديدًا.",
+    "err_unintelligible": "تعذّر فهم ذلك. جرّب مكانًا أهدأ، أو اكتبه.",
+    "example": "«دفعت 480 للعشاء مع سارة وأحمد»",
+    "exampleLabel": "جرّب أن تقول",
+    "flag_generic": "تخمين",
+    "flag_paid_by": "تم تخمين من دفع",
+    "flag_participants": "تم تخمين المشاركين",
+    "flag_split": "التقسيم ليس كما قلت",
+    "goToSettle": "سوِّ الحساب بدلاً من ذلك",
+    "hint": "اضغط على الميكروفون وصف ما دفعته.",
+    "micDenied": "يحتاج Chara إلى الميكروفون لإضافة مصروف بالصوت. يمكنك تفعيله من الإعدادات.",
+    "micDeniedTitle": "الميكروفون مغلق",
+    "moreFromRecording": "{{count}} أخرى من تسجيلك",
+    "moreFromRecording_few": "{{count}} أخرى من تسجيلك",
+    "moreFromRecording_many": "{{count}} أخرى من تسجيلك",
+    "moreFromRecording_one": "واحد آخر من تسجيلك",
+    "moreFromRecording_other": "{{count}} أخرى من تسجيلك",
+    "moreFromRecording_two": "اثنان آخران من تسجيلك",
+    "moreFromRecording_zero": "لا مزيد من التسجيل",
+    "regenerate": "أعد المحاولة",
+    "regenerateDisabled": "عدّل النص ثم أعد المحاولة",
+    "secondsLeft": "بقيت {{count}} ثانية",
+    "secondsLeft_few": "بقيت {{count}} ثوانٍ",
+    "secondsLeft_many": "بقيت {{count}} ثانية",
+    "secondsLeft_one": "بقيت ثانية واحدة",
+    "secondsLeft_other": "بقيت {{count}} ثانية",
+    "secondsLeft_two": "بقيت ثانيتان",
+    "secondsLeft_zero": "لم تتبقَّ ثوانٍ",
+    "startRecording": "ابدأ التسجيل",
+    "stop": "تم",
+    "title": "قل المصروف",
+    "transcriptHint": "عدّل النص إذا لم تُلتقط كلماتك بشكل صحيح",
+    "transcriptLabel": "ما قلته · اضغط للتصحيح",
+    "tryAgain": "أعد المحاولة",
+    "typeInstead": "أو اكتبه بدلاً من ذلك",
+    "uploading": "جارٍ التحليل…",
+    "useDrafts": "استخدم هذه"
   },
   "waitlist": {
     "body": "نُبقي مسح الإيصالات محدودًا بينما نحدّد خطط الاستضافة. اترك بريدك الإلكتروني وسنخبرك عند توفر سعة أكبر.",

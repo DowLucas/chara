@@ -5,6 +5,7 @@ import {
   APP_PROTOCOL_VERSION,
   PROTOCOL_HEADER,
 } from './protocol';
+import type { VoiceDraft } from './voice-drafts';
 import {
   accountFor,
   defaultAccount,
@@ -674,6 +675,11 @@ export interface CreateExpenseInput {
   fx_rate?: string;
   fx_as_of?: string;
   fx_source?: 'ecb' | 'manual';
+  /** Links this expense to the AI generation that proposed it. Optional and
+   *  best-effort — the server ignores an unknown id rather than failing. */
+  generation_id?: string;
+  /** Draft fields the user changed before saving, for acceptance metrics. */
+  changed_fields?: string[];
 }
 
 // PATCH /api/groups/{groupID}/expenses/{expenseID}.
@@ -973,6 +979,10 @@ export interface InstanceFeatures {
   /** POST /settle-reminders is available. Optional — absent on backends
    *  predating the feature, which the app treats as unsupported. */
   settle_reminders?: boolean;
+  /** POST /api/voice/expenses is available. Optional — absent on backends
+   *  predating the feature, which the app treats as unsupported, so the
+   *  mic stays hidden rather than offering a button that always fails. */
+  voice_expense?: boolean;
 }
 
 export interface InstanceInfo {
@@ -1054,10 +1064,68 @@ export function scanReceipt(
   });
 }
 
+// Voice expenses — POST /api/voice/expenses. Audio (or, on a clarify
+// re-post, a transcript plus answers) becomes validated expense drafts.
+// Drafts are proposals only: creating an expense still goes through
+// createExpense, which the server validates independently.
+export interface VoiceQuestionOption {
+  member_id: string;
+  label: string;
+}
+
+export interface VoiceQuestion {
+  id: string;
+  text: string;
+  options: VoiceQuestionOption[];
+}
+
+export interface VoiceExpensesResponse {
+  transcript: string;
+  expenses: VoiceDraft[];
+  questions?: VoiceQuestion[];
+  /** Pass back on createExpense to record per-field acceptance. */
+  generation_id?: string;
+  tier?: string;
+  remaining?: number;
+  period_resets_at?: string;
+}
+
+export interface VoiceExpensesInput {
+  /** Omitted on a clarify re-post, which carries `transcript` instead. */
+  audioBase64?: string;
+  mimeType?: string;
+  groupId: string;
+  /** The device's local day (YYYY-MM-DD) and IANA zone. The server cannot
+   *  know the user's day, and "yesterday" must resolve against theirs. */
+  localDate: string;
+  timezone: string;
+  clipMs?: number;
+  /** The recorder's app language, for the model's `reasoning` text. */
+  uiLanguage?: string;
+  /** Set for the clarify re-post. The server routes it to the text path,
+   *  which is cheaper and deliberately not metered. */
+  transcript?: string;
+  answers?: Array<{ question_id: string; member_id?: string; text: string }>;
+}
+
+function voiceBody(input: VoiceExpensesInput) {
+  return JSON.stringify({
+    group_id: input.groupId,
+    local_date: input.localDate,
+    timezone: input.timezone,
+    ...(input.audioBase64 ? { audio_base64: input.audioBase64 } : {}),
+    ...(input.mimeType ? { mime_type: input.mimeType } : {}),
+    ...(input.clipMs ? { clip_ms: input.clipMs } : {}),
+    ...(input.uiLanguage ? { ui_language: input.uiLanguage } : {}),
+    ...(input.transcript ? { transcript: input.transcript } : {}),
+    ...(input.answers?.length ? { answers: input.answers } : {}),
+  });
+}
+
 // Waitlist — captures emails when hosted users hit a soft gate during the
 // v1.0/v1.1 free beta. The server enforces the allowed-triggers list, so
 // adding a new trigger here also requires a backend handler change.
-export type WaitlistTrigger = 'ocr_cap' | 'recurring_request' | 'export_request';
+export type WaitlistTrigger = 'ocr_cap' | 'voice_cap' | 'recurring_request' | 'export_request';
 
 export interface WaitlistSubmission {
   email: string;
@@ -1095,6 +1163,48 @@ export function isOcrCapReached(err: unknown): OcrCapReachedBody | null {
   const body = err.body as Partial<OcrCapReachedBody> | null;
   if (!body || body.code !== 'ocr_cap_reached') return null;
   return body as OcrCapReachedBody;
+}
+
+/** The 429 body for the voice cap. Same shape as the OCR one — a separate
+ *  code because voice and OCR are independent budgets. */
+export interface VoiceCapReachedBody {
+  code: 'voice_cap_reached';
+  message: string;
+  remaining: number;
+  period_resets_at: string;
+  waitlist_prompt: boolean;
+}
+
+export function isVoiceCapReached(err: unknown): VoiceCapReachedBody | null {
+  if (!(err instanceof ApiError)) return null;
+  if (err.status !== 429) return null;
+  const body = err.body as Partial<VoiceCapReachedBody> | null;
+  if (!body || body.code !== 'voice_cap_reached') return null;
+  return body as VoiceCapReachedBody;
+}
+
+/** The 422 body for a voice extraction that produced nothing usable. The
+ *  code drives which copy the user sees — in particular `settlement`
+ *  points at the settle flow rather than reporting a failure. */
+export type VoiceFailureCode =
+  | 'unintelligible'
+  | 'no_expense'
+  | 'settlement'
+  | 'bad_request';
+
+export function voiceFailureCode(err: unknown): VoiceFailureCode | null {
+  if (!(err instanceof ApiError)) return null;
+  const body = err.body as { code?: string } | null;
+  const code = body?.code;
+  if (
+    code === 'unintelligible' ||
+    code === 'no_expense' ||
+    code === 'settlement' ||
+    code === 'bad_request'
+  ) {
+    return code;
+  }
+  return null;
 }
 
 // Receipt attachments
@@ -1579,6 +1689,14 @@ export function apiFor(serverUrl: string) {
           ...(language ? { language } : {}),
           ...(groupId ? { group_id: groupId } : {}),
         }),
+      }),
+
+    // Voice expenses (group-scoped — uses the group's home server).
+    // Intentionally has no flat-export twin: new code uses apiFor().
+    generateVoiceExpenses: (input: VoiceExpensesInput) =>
+      requestOn<VoiceExpensesResponse>(serverUrl, '/api/voice/expenses', {
+        method: 'POST',
+        body: voiceBody(input),
       }),
 
     // Waitlist signup — hosted-only soft-gate email capture during the

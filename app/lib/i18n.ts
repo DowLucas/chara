@@ -117,6 +117,18 @@ export function currentLocale(): string {
   return i18n.language || FALLBACK_LANGUAGE;
 }
 
+/**
+ * The language the UI is actually rendered in — the user's choice, or the
+ * device default i18next resolved to.
+ *
+ * Distinct from currentLocale(), which is a BCP-47 tag carrying the device
+ * REGION for Intl formatting. Use this when asking for content in the
+ * user's language; use currentLocale() when formatting numbers or dates.
+ */
+export function currentLanguage(): string {
+  return i18n.language || FALLBACK_LANGUAGE;
+}
+
 /** Convert a wire-format decimal string ("12.34", "12", "-6.00") to int64
  *  minor units (1234, 1200, -600). Assumes 2-decimal currencies; expand if
  *  you ever support JPY/KWD. Re-exported from a pure module so jest can
