@@ -195,6 +195,7 @@
     "totalSplit": "summa fördelat",
     "viewItems": "Visa varor",
     "viewReceipt": "Visa kvitto",
+    "voiceButton": "Säg utgiften",
     "when": {
       "pick": "välj datum",
       "today": "idag",
@@ -385,6 +386,14 @@
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
   },
+  "groupCategories": {
+    "editorHint": "Endast aktiverade kategorier visas när du lägger till en utgift och i kvittoskanningens förslag. Minst en måste förbli aktiverad.",
+    "errorTitle": "Det gick inte att spara kategorier",
+    "loadError": "Det gick inte att läsa in kategorier.",
+    "saveCta": "Spara",
+    "saving": "Sparar…",
+    "title": "Kategorier"
+  },
   "groupColor": {
     "custom": "Egen färg",
     "reset": "Återställ standard",
@@ -412,14 +421,6 @@
     "open": "Öppna grupp",
     "share": "Dela inbjudningslänk",
     "shareMessage": "Gå med i ”{{name}}” på Chara: {{link}}"
-  },
-  "groupCategories": {
-    "editorHint": "Endast aktiverade kategorier visas när du lägger till en utgift och i kvittoskanningens förslag. Minst en måste förbli aktiverad.",
-    "errorTitle": "Det gick inte att spara kategorier",
-    "loadError": "Det gick inte att läsa in kategorier.",
-    "saveCta": "Spara",
-    "saving": "Sparar…",
-    "title": "Kategorier"
   },
   "groupDetail": {
     "activity": "Aktivitet",
@@ -605,17 +606,17 @@
     },
     "title": "Inställningar"
   },
-  "groupsTab": {
-    "joinGroup": "Gå med i grupp",
-    "newGroup": "Ny grupp",
-    "newGroupLabel": "Ny grupp",
-    "scanQrLabel": "Skanna QR för att gå med"
-  },
   "groupStats": {
     "byCategory": "per kategori",
     "emptyBody": "Lägg till utgifter så visas en fördelning per kategori här.",
     "emptyTitle": "Inga utgifter än",
     "title": "Statistik"
+  },
+  "groupsTab": {
+    "joinGroup": "Gå med i grupp",
+    "newGroup": "Ny grupp",
+    "newGroupLabel": "Ny grupp",
+    "scanQrLabel": "Skanna QR för att gå med"
   },
   "home": {
     "balancesAcrossCurrencies": "{{count}} valutor",
@@ -1214,6 +1215,37 @@
     "chooseGroup": "Välj en grupp",
     "home": "Hem",
     "you": "Profil"
+  },
+  "voiceExpense": {
+    "discardRest": "Släng resten",
+    "err_network": "Något gick fel. Försök igen.",
+    "err_no_expense": "Ingen utgift i den. Prova att säga ett belopp och vem den var för.",
+    "err_settlement": "Det låter som en återbetalning snarare än en ny utgift.",
+    "err_unintelligible": "Uppfattade inte det. Prova någonstans tystare, eller skriv i stället.",
+    "example": "”Jag betalade 480 för middag med Anna och Sara, och Anna betalade 120 för taxin”",
+    "goToSettle": "Gör upp i stället",
+    "hint": "Tryck på mikrofonen och beskriv vad du betalade för.",
+    "micDenied": "Chara behöver tillgång till mikrofonen för att lägga till en utgift med rösten. Du kan slå på det i Inställningar.",
+    "micDeniedTitle": "Mikrofonen är av",
+    "regenerate": "Försök igen med detta",
+    "startRecording": "Börja spela in",
+    "stop": "Klar",
+    "title": "Säg utgiften",
+    "transcriptLabel": "Det du sa",
+    "transcriptPlaceholder": "Skriv vad du betalade för",
+    "tryAgain": "Försök igen",
+    "typeInstead": "eller skriv i stället",
+    "uploading": "Räknar ut…",
+    "useDrafts": "Använd dessa",
+    "secondsLeft": "{{count}} sekunder kvar",
+    "secondsLeft_one": "{{count}} sekund kvar",
+    "secondsLeft_other": "{{count}} sekunder kvar",
+    "draftsLabel": "{{count}} utgifter hittade",
+    "draftsLabel_one": "{{count}} utgift hittad",
+    "draftsLabel_other": "{{count}} utgifter hittade",
+    "moreFromRecording": "{{count}} till från inspelningen",
+    "moreFromRecording_one": "{{count}} till från inspelningen",
+    "moreFromRecording_other": "{{count}} till från inspelningen"
   },
   "waitlist": {
     "body": "Vi håller kvittoskanningar begränsade medan vi funderar på hostingplaner. Lämna din e-post så hör vi av oss när mer kapacitet rullar ut.",

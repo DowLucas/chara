@@ -195,6 +195,7 @@
     "totalSplit": "total split",
     "viewItems": "View items",
     "viewReceipt": "View receipt",
+    "voiceButton": "Say the expense",
     "when": {
       "pick": "pick a date",
       "today": "today",
@@ -385,6 +386,14 @@
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
   },
+  "groupCategories": {
+    "editorHint": "Only enabled categories show up when adding an expense and in the receipt-scan suggestion. At least one must stay enabled.",
+    "errorTitle": "Couldn't save categories",
+    "loadError": "Couldn't load categories.",
+    "saveCta": "Save",
+    "saving": "Saving…",
+    "title": "Categories"
+  },
   "groupColor": {
     "custom": "Custom color",
     "reset": "Reset to default",
@@ -412,14 +421,6 @@
     "open": "Open group",
     "share": "Share invite link",
     "shareMessage": "Join \"{{name}}\" on Chara: {{link}}"
-  },
-  "groupCategories": {
-    "editorHint": "Only enabled categories show up when adding an expense and in the receipt-scan suggestion. At least one must stay enabled.",
-    "errorTitle": "Couldn't save categories",
-    "loadError": "Couldn't load categories.",
-    "saveCta": "Save",
-    "saving": "Saving…",
-    "title": "Categories"
   },
   "groupDetail": {
     "activity": "Activity",
@@ -605,17 +606,17 @@
     },
     "title": "Settings"
   },
-  "groupsTab": {
-    "joinGroup": "Join group",
-    "newGroup": "New group",
-    "newGroupLabel": "New group",
-    "scanQrLabel": "Scan QR to join group"
-  },
   "groupStats": {
     "byCategory": "by category",
     "emptyBody": "Add expenses and a per-category breakdown will appear here.",
     "emptyTitle": "No spend yet",
     "title": "Statistics"
+  },
+  "groupsTab": {
+    "joinGroup": "Join group",
+    "newGroup": "New group",
+    "newGroupLabel": "New group",
+    "scanQrLabel": "Scan QR to join group"
   },
   "home": {
     "balancesAcrossCurrencies": "{{count}} currencies",
@@ -1214,6 +1215,37 @@
     "chooseGroup": "Choose a group",
     "home": "Home",
     "you": "Profile"
+  },
+  "voiceExpense": {
+    "discardRest": "Discard rest",
+    "err_network": "Something went wrong. Try again.",
+    "err_no_expense": "No expense in that one. Try naming an amount and who it was for.",
+    "err_settlement": "That sounds like paying someone back rather than a new expense.",
+    "err_unintelligible": "Couldn’t make that out. Try somewhere quieter, or type it instead.",
+    "example": "“I paid 480 for dinner with Anna and Sara, and Anna paid 120 for the taxi”",
+    "goToSettle": "Settle up instead",
+    "hint": "Tap the mic and describe what you paid for.",
+    "micDenied": "Chara needs microphone access to add an expense by voice. You can turn it on in Settings.",
+    "micDeniedTitle": "Microphone off",
+    "regenerate": "Try again with this",
+    "startRecording": "Start recording",
+    "stop": "Done",
+    "title": "Say the expense",
+    "transcriptLabel": "What you said",
+    "transcriptPlaceholder": "Type what you paid for",
+    "tryAgain": "Try again",
+    "typeInstead": "or type it instead",
+    "uploading": "Working it out…",
+    "useDrafts": "Use these",
+    "secondsLeft": "{{count}} seconds left",
+    "secondsLeft_one": "{{count}} second left",
+    "secondsLeft_other": "{{count}} seconds left",
+    "draftsLabel": "{{count}} expenses found",
+    "draftsLabel_one": "{{count}} expense found",
+    "draftsLabel_other": "{{count}} expenses found",
+    "moreFromRecording": "{{count}} more from your recording",
+    "moreFromRecording_one": "{{count}} more from your recording",
+    "moreFromRecording_other": "{{count}} more from your recording"
   },
   "waitlist": {
     "body": "Receipt scans are rate-limited to keep service costs sustainable. Leave your email and we'll let you know when scans increase.",

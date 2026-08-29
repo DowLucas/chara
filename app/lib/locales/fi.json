@@ -195,6 +195,7 @@
     "totalSplit": "jaettava yhteensä",
     "viewItems": "Näytä tuotteet",
     "viewReceipt": "Näytä kuitti",
+    "voiceButton": "Sano kulu",
     "when": {
       "pick": "valitse päivä",
       "today": "tänään",
@@ -385,6 +386,14 @@
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
   },
+  "groupCategories": {
+    "editorHint": "Vain käytössä olevat kategoriat näkyvät kulua lisättäessä ja kuittiskannauksen ehdotuksessa. Vähintään yhden on pysyttävä käytössä.",
+    "errorTitle": "Kategorioiden tallennus epäonnistui",
+    "loadError": "Kategorioiden lataus epäonnistui.",
+    "saveCta": "Tallenna",
+    "saving": "Tallennetaan…",
+    "title": "Kategoriat"
+  },
   "groupColor": {
     "custom": "Mukautettu väri",
     "reset": "Palauta oletus",
@@ -412,14 +421,6 @@
     "open": "Avaa ryhmä",
     "share": "Jaa kutsulinkki",
     "shareMessage": "Liity ryhmään ”{{name}}” Charassa: {{link}}"
-  },
-  "groupCategories": {
-    "editorHint": "Vain käytössä olevat kategoriat näkyvät kulua lisättäessä ja kuittiskannauksen ehdotuksessa. Vähintään yhden on pysyttävä käytössä.",
-    "errorTitle": "Kategorioiden tallennus epäonnistui",
-    "loadError": "Kategorioiden lataus epäonnistui.",
-    "saveCta": "Tallenna",
-    "saving": "Tallennetaan…",
-    "title": "Kategoriat"
   },
   "groupDetail": {
     "activity": "Tapahtumat",
@@ -605,17 +606,17 @@
     },
     "title": "Asetukset"
   },
-  "groupsTab": {
-    "joinGroup": "Liity ryhmään",
-    "newGroup": "Uusi ryhmä",
-    "newGroupLabel": "Uusi ryhmä",
-    "scanQrLabel": "Liity ryhmään QR-koodia skannaamalla"
-  },
   "groupStats": {
     "byCategory": "kategorioittain",
     "emptyBody": "Lisää kuluja, niin kategoriakohtainen erittely näkyy täällä.",
     "emptyTitle": "Ei vielä kuluja",
     "title": "Tilastot"
+  },
+  "groupsTab": {
+    "joinGroup": "Liity ryhmään",
+    "newGroup": "Uusi ryhmä",
+    "newGroupLabel": "Uusi ryhmä",
+    "scanQrLabel": "Liity ryhmään QR-koodia skannaamalla"
   },
   "home": {
     "balancesAcrossCurrencies": "{{count}} valuuttaa",
@@ -1214,6 +1215,37 @@
     "chooseGroup": "Valitse ryhmä",
     "home": "Etusivu",
     "you": "Profiili"
+  },
+  "voiceExpense": {
+    "discardRest": "Hylkää loput",
+    "err_network": "Jokin meni pieleen. Yritä uudelleen.",
+    "err_no_expense": "Siinä ei ollut kulua. Kerro summa ja kenelle se oli.",
+    "err_settlement": "Tuo kuulostaa takaisinmaksulta, ei uudelta kululta.",
+    "err_unintelligible": "Puheesta ei saanut selvää. Kokeile rauhallisemmassa paikassa tai kirjoita se.",
+    "example": "”Maksoin 480 illallisesta Annan ja Saran kanssa, ja Anna maksoi 120 taksista”",
+    "goToSettle": "Selvitä saldo sen sijaan",
+    "hint": "Napauta mikrofonia ja kerro, mistä maksoit.",
+    "micDenied": "Chara tarvitsee mikrofonin, jotta kulun voi lisätä puhumalla. Voit sallia sen Asetuksissa.",
+    "micDeniedTitle": "Mikrofoni pois käytöstä",
+    "regenerate": "Yritä tällä uudelleen",
+    "startRecording": "Aloita nauhoitus",
+    "stop": "Valmis",
+    "title": "Sano kulu",
+    "transcriptLabel": "Mitä sanoit",
+    "transcriptPlaceholder": "Kirjoita, mistä maksoit",
+    "tryAgain": "Yritä uudelleen",
+    "typeInstead": "tai kirjoita se",
+    "uploading": "Selvitetään…",
+    "useDrafts": "Käytä näitä",
+    "secondsLeft": "{{count}} sekuntia jäljellä",
+    "secondsLeft_one": "{{count}} sekunti jäljellä",
+    "secondsLeft_other": "{{count}} sekuntia jäljellä",
+    "draftsLabel": "{{count}} kulua löytyi",
+    "draftsLabel_one": "{{count}} kulu löytyi",
+    "draftsLabel_other": "{{count}} kulua löytyi",
+    "moreFromRecording": "{{count}} lisää nauhoituksesta",
+    "moreFromRecording_one": "{{count}} lisää nauhoituksesta",
+    "moreFromRecording_other": "{{count}} lisää nauhoituksesta"
   },
   "waitlist": {
     "body": "Pidämme kuittiskannaukset rajattuina, kun mietimme hosting-suunnitelmia. Jätä sähköpostisi, niin kerromme kun lisäkapasiteettia tulee.",

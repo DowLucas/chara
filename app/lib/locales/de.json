@@ -195,6 +195,7 @@
     "totalSplit": "Aufgeteilte Summe",
     "viewItems": "Artikel ansehen",
     "viewReceipt": "Beleg ansehen",
+    "voiceButton": "Ausgabe sprechen",
     "when": {
       "pick": "Datum auswählen",
       "today": "heute",
@@ -385,6 +386,14 @@
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
   },
+  "groupCategories": {
+    "editorHint": "Nur aktivierte Kategorien erscheinen beim Hinzufügen einer Ausgabe und im Beleg-Scan-Vorschlag. Mindestens eine muss aktiviert bleiben.",
+    "errorTitle": "Kategorien konnten nicht gespeichert werden",
+    "loadError": "Kategorien konnten nicht geladen werden.",
+    "saveCta": "Speichern",
+    "saving": "Wird gespeichert…",
+    "title": "Kategorien"
+  },
   "groupColor": {
     "custom": "Eigene Farbe",
     "reset": "Auf Standard zurücksetzen",
@@ -412,14 +421,6 @@
     "open": "Gruppe öffnen",
     "share": "Einladungslink teilen",
     "shareMessage": "Tritt „{{name}}“ auf Chara bei: {{link}}"
-  },
-  "groupCategories": {
-    "editorHint": "Nur aktivierte Kategorien erscheinen beim Hinzufügen einer Ausgabe und im Beleg-Scan-Vorschlag. Mindestens eine muss aktiviert bleiben.",
-    "errorTitle": "Kategorien konnten nicht gespeichert werden",
-    "loadError": "Kategorien konnten nicht geladen werden.",
-    "saveCta": "Speichern",
-    "saving": "Wird gespeichert…",
-    "title": "Kategorien"
   },
   "groupDetail": {
     "activity": "Aktivität",
@@ -605,17 +606,17 @@
     },
     "title": "Einstellungen"
   },
-  "groupsTab": {
-    "joinGroup": "Gruppe beitreten",
-    "newGroup": "Neue Gruppe",
-    "newGroupLabel": "Neue Gruppe",
-    "scanQrLabel": "QR scannen, um beizutreten"
-  },
   "groupStats": {
     "byCategory": "nach Kategorie",
     "emptyBody": "Trag Ausgaben ein, dann erscheint hier eine Aufschlüsselung nach Kategorie.",
     "emptyTitle": "Noch nichts ausgegeben",
     "title": "Statistik"
+  },
+  "groupsTab": {
+    "joinGroup": "Gruppe beitreten",
+    "newGroup": "Neue Gruppe",
+    "newGroupLabel": "Neue Gruppe",
+    "scanQrLabel": "QR scannen, um beizutreten"
   },
   "home": {
     "balancesAcrossCurrencies": "{{count}} Währungen",
@@ -1214,6 +1215,37 @@
     "chooseGroup": "Gruppe wählen",
     "home": "Start",
     "you": "Profil"
+  },
+  "voiceExpense": {
+    "discardRest": "Rest verwerfen",
+    "err_network": "Etwas ist schiefgelaufen. Versuch es erneut.",
+    "err_no_expense": "Darin steckt keine Ausgabe. Nenne einen Betrag und für wen sie war.",
+    "err_settlement": "Das klingt nach einer Rückzahlung, nicht nach einer neuen Ausgabe.",
+    "err_unintelligible": "Das war nicht zu verstehen. Versuch es an einem ruhigeren Ort oder tippe es ein.",
+    "example": "„Ich habe 480 fürs Abendessen mit Anna und Sara bezahlt, und Anna 120 fürs Taxi“",
+    "goToSettle": "Stattdessen ausgleichen",
+    "hint": "Tippe auf das Mikrofon und beschreibe, wofür du bezahlt hast.",
+    "micDenied": "Chara braucht Zugriff auf das Mikrofon, um eine Ausgabe per Sprache anzulegen. Du kannst das in den Einstellungen erlauben.",
+    "micDeniedTitle": "Mikrofon aus",
+    "regenerate": "Damit noch mal versuchen",
+    "startRecording": "Aufnahme starten",
+    "stop": "Fertig",
+    "title": "Ausgabe sprechen",
+    "transcriptLabel": "Was du gesagt hast",
+    "transcriptPlaceholder": "Schreib, wofür du bezahlt hast",
+    "tryAgain": "Erneut versuchen",
+    "typeInstead": "oder stattdessen tippen",
+    "uploading": "Wird ausgewertet…",
+    "useDrafts": "Übernehmen",
+    "secondsLeft": "noch {{count}} Sekunden",
+    "secondsLeft_one": "noch {{count}} Sekunde",
+    "secondsLeft_other": "noch {{count}} Sekunden",
+    "draftsLabel": "{{count}} Ausgaben gefunden",
+    "draftsLabel_one": "{{count}} Ausgabe gefunden",
+    "draftsLabel_other": "{{count}} Ausgaben gefunden",
+    "moreFromRecording": "{{count}} weitere aus der Aufnahme",
+    "moreFromRecording_one": "{{count}} weitere aus der Aufnahme",
+    "moreFromRecording_other": "{{count}} weitere aus der Aufnahme"
   },
   "waitlist": {
     "body": "Wir begrenzen Belegscans, solange wir unsere Hosting-Pläne klären. Gib deine E-Mail an, dann melden wir uns, sobald mehr Kapazität bereitsteht.",

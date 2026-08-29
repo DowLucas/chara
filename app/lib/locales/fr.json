@@ -201,6 +201,7 @@
     "totalSplit": "total partagé",
     "viewItems": "Voir les articles",
     "viewReceipt": "Voir le reçu",
+    "voiceButton": "Dis la dépense",
     "when": {
       "pick": "choisir une date",
       "today": "aujourd'hui",
@@ -391,6 +392,14 @@
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
   },
+  "groupCategories": {
+    "editorHint": "Seules les catégories activées apparaissent lors de l'ajout d'une dépense et dans la suggestion du scan de reçu. Au moins une doit rester activée.",
+    "errorTitle": "Impossible d'enregistrer les catégories",
+    "loadError": "Impossible de charger les catégories.",
+    "saveCta": "Enregistrer",
+    "saving": "Enregistrement…",
+    "title": "Catégories"
+  },
   "groupColor": {
     "custom": "Couleur personnalisée",
     "reset": "Réinitialiser",
@@ -418,14 +427,6 @@
     "open": "Ouvrir le groupe",
     "share": "Partager le lien d'invitation",
     "shareMessage": "Rejoins « {{name}} » sur Chara : {{link}}"
-  },
-  "groupCategories": {
-    "editorHint": "Seules les catégories activées apparaissent lors de l'ajout d'une dépense et dans la suggestion du scan de reçu. Au moins une doit rester activée.",
-    "errorTitle": "Impossible d'enregistrer les catégories",
-    "loadError": "Impossible de charger les catégories.",
-    "saveCta": "Enregistrer",
-    "saving": "Enregistrement…",
-    "title": "Catégories"
   },
   "groupDetail": {
     "activity": "Activité",
@@ -619,17 +620,17 @@
     },
     "title": "Paramètres"
   },
-  "groupsTab": {
-    "joinGroup": "Rejoindre un groupe",
-    "newGroup": "Nouveau groupe",
-    "newGroupLabel": "Nouveau groupe",
-    "scanQrLabel": "Scanner un QR pour rejoindre un groupe"
-  },
   "groupStats": {
     "byCategory": "par catégorie",
     "emptyBody": "Ajoute des dépenses et une répartition par catégorie apparaîtra ici.",
     "emptyTitle": "Pas encore de dépenses",
     "title": "Statistiques"
+  },
+  "groupsTab": {
+    "joinGroup": "Rejoindre un groupe",
+    "newGroup": "Nouveau groupe",
+    "newGroupLabel": "Nouveau groupe",
+    "scanQrLabel": "Scanner un QR pour rejoindre un groupe"
   },
   "home": {
     "balancesAcrossCurrencies": "{{count}} devises",
@@ -1254,6 +1255,37 @@
     "chooseGroup": "Choisir un groupe",
     "home": "Accueil",
     "you": "Profil"
+  },
+  "voiceExpense": {
+    "discardRest": "Abandonner le reste",
+    "err_network": "Un problème est survenu. Réessaie.",
+    "err_no_expense": "Aucune dépense là-dedans. Donne un montant et pour qui c’était.",
+    "err_settlement": "On dirait un remboursement, pas une nouvelle dépense.",
+    "err_unintelligible": "Impossible de comprendre. Essaie dans un endroit plus calme, ou écris-le.",
+    "example": "« J’ai payé 480 pour le dîner avec Anna et Sara, et Anna a payé 120 pour le taxi »",
+    "goToSettle": "Régler les comptes",
+    "hint": "Appuie sur le micro et décris ce que tu as payé.",
+    "micDenied": "Chara a besoin du micro pour ajouter une dépense à la voix. Tu peux l’autoriser dans les Réglages.",
+    "micDeniedTitle": "Micro désactivé",
+    "regenerate": "Réessayer avec ça",
+    "startRecording": "Démarrer l’enregistrement",
+    "stop": "Terminé",
+    "title": "Dis la dépense",
+    "transcriptLabel": "Ce que tu as dit",
+    "transcriptPlaceholder": "Écris ce que tu as payé",
+    "tryAgain": "Réessayer",
+    "typeInstead": "ou écris-le",
+    "uploading": "Analyse en cours…",
+    "useDrafts": "Utiliser",
+    "secondsLeft": "{{count}} secondes restantes",
+    "secondsLeft_one": "{{count}} seconde restante",
+    "secondsLeft_other": "{{count}} secondes restantes",
+    "draftsLabel": "{{count}} dépenses trouvées",
+    "draftsLabel_one": "{{count}} dépense trouvée",
+    "draftsLabel_other": "{{count}} dépenses trouvées",
+    "moreFromRecording": "{{count}} autres dans ton enregistrement",
+    "moreFromRecording_one": "{{count}} autre dans ton enregistrement",
+    "moreFromRecording_other": "{{count}} autres dans ton enregistrement"
   },
   "waitlist": {
     "body": "On limite les scans de reçus le temps de finaliser nos plans d'hébergement. Laisse ton e-mail et on te préviendra quand plus de capacité arrivera.",

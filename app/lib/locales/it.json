@@ -201,6 +201,7 @@
     "totalSplit": "totale diviso",
     "viewItems": "Vedi articoli",
     "viewReceipt": "Vedi scontrino",
+    "voiceButton": "Dì la spesa",
     "when": {
       "pick": "scegli una data",
       "today": "oggi",
@@ -391,6 +392,14 @@
     "rateInvalid": "—",
     "rateLabel": "1 {{from}} ="
   },
+  "groupCategories": {
+    "editorHint": "Solo le categorie attivate compaiono quando aggiungi una spesa e nel suggerimento della scansione dello scontrino. Almeno una deve restare attivata.",
+    "errorTitle": "Impossibile salvare le categorie",
+    "loadError": "Impossibile caricare le categorie.",
+    "saveCta": "Salva",
+    "saving": "Salvataggio…",
+    "title": "Categorie"
+  },
   "groupColor": {
     "custom": "Colore personalizzato",
     "reset": "Ripristina predefinito",
@@ -418,14 +427,6 @@
     "open": "Apri gruppo",
     "share": "Condividi link di invito",
     "shareMessage": "Vieni nel gruppo \"{{name}}\" su Chara: {{link}}"
-  },
-  "groupCategories": {
-    "editorHint": "Solo le categorie attivate compaiono quando aggiungi una spesa e nel suggerimento della scansione dello scontrino. Almeno una deve restare attivata.",
-    "errorTitle": "Impossibile salvare le categorie",
-    "loadError": "Impossibile caricare le categorie.",
-    "saveCta": "Salva",
-    "saving": "Salvataggio…",
-    "title": "Categorie"
   },
   "groupDetail": {
     "activity": "Attività",
@@ -619,17 +620,17 @@
     },
     "title": "Impostazioni"
   },
-  "groupsTab": {
-    "joinGroup": "Entra in un gruppo",
-    "newGroup": "Nuovo gruppo",
-    "newGroupLabel": "Nuovo gruppo",
-    "scanQrLabel": "Scansiona il QR per entrare"
-  },
   "groupStats": {
     "byCategory": "per categoria",
     "emptyBody": "Aggiungi delle spese e qui comparirà una ripartizione per categoria.",
     "emptyTitle": "Ancora nessuna spesa",
     "title": "Statistiche"
+  },
+  "groupsTab": {
+    "joinGroup": "Entra in un gruppo",
+    "newGroup": "Nuovo gruppo",
+    "newGroupLabel": "Nuovo gruppo",
+    "scanQrLabel": "Scansiona il QR per entrare"
   },
   "home": {
     "balancesAcrossCurrencies": "{{count}} valute",
@@ -1254,6 +1255,37 @@
     "chooseGroup": "Scegli un gruppo",
     "home": "Home",
     "you": "Profilo"
+  },
+  "voiceExpense": {
+    "discardRest": "Scarta il resto",
+    "err_network": "Qualcosa è andato storto. Riprova.",
+    "err_no_expense": "Lì non c’è nessuna spesa. Prova a dire un importo e per chi era.",
+    "err_settlement": "Sembra un rimborso, non una nuova spesa.",
+    "err_unintelligible": "Non si capiva. Prova in un posto più tranquillo, o scrivilo.",
+    "example": "«Ho pagato 480 per la cena con Anna e Sara, e Anna ha pagato 120 per il taxi»",
+    "goToSettle": "Salda invece",
+    "hint": "Tocca il microfono e descrivi cosa hai pagato.",
+    "micDenied": "Chara ha bisogno del microfono per aggiungere una spesa a voce. Puoi attivarlo nelle Impostazioni.",
+    "micDeniedTitle": "Microfono disattivato",
+    "regenerate": "Riprova con questo",
+    "startRecording": "Avvia registrazione",
+    "stop": "Fatto",
+    "title": "Dì la spesa",
+    "transcriptLabel": "Quello che hai detto",
+    "transcriptPlaceholder": "Scrivi cosa hai pagato",
+    "tryAgain": "Riprova",
+    "typeInstead": "oppure scrivilo",
+    "uploading": "Sto elaborando…",
+    "useDrafts": "Usa questi",
+    "secondsLeft": "{{count}} secondi rimasti",
+    "secondsLeft_one": "{{count}} secondo rimasto",
+    "secondsLeft_other": "{{count}} secondi rimasti",
+    "draftsLabel": "{{count}} spese trovate",
+    "draftsLabel_one": "{{count}} spesa trovata",
+    "draftsLabel_other": "{{count}} spese trovate",
+    "moreFromRecording": "{{count}} altre dalla registrazione",
+    "moreFromRecording_one": "{{count}} altra dalla registrazione",
+    "moreFromRecording_other": "{{count}} altre dalla registrazione"
   },
   "waitlist": {
     "body": "Stiamo limitando le scansioni delle ricevute mentre definiamo i piani di hosting. Lasciaci la tua email e ti avviseremo quando arriverà più capacità.",
