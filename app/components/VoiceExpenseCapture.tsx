@@ -117,7 +117,9 @@ export function VoiceExpenseCapture({
 
   const [state, setState] = useState<CaptureState>({ kind: 'idle' });
   const [transcriptDraft, setTranscriptDraft] = useState('');
-  const [transcriptEdited, setTranscriptEdited] = useState(false);
+  // Compared against the transcript as returned, not a sticky flag: typing
+  // a change and undoing it should disable the button again.
+  const [originalTranscript, setOriginalTranscript] = useState('');
   const [answers, setAnswers] = useState<Record<string, { member_id: string; text: string }>>({});
   const [capBody, setCapBody] = useState<{ periodResetsAt?: string } | null>(null);
 
@@ -191,6 +193,7 @@ export function VoiceExpenseCapture({
         });
 
         setTranscriptDraft(res.transcript);
+        setOriginalTranscript(res.transcript);
         setState({
           kind: 'review',
           transcript: res.transcript,
@@ -267,12 +270,14 @@ export function VoiceExpenseCapture({
     }
   }, [dismiss, recorder, stopAndSend, t]);
 
+  const transcriptEdited = transcriptDraft.trim() !== originalTranscript.trim();
+
   const regenerate = useCallback(() => {
-    if (transcriptEdited) analytics.track('voice_transcript_edited', {});
+    analytics.track('voice_transcript_edited', {});
     const answered = Object.keys(answers).length;
     if (answered > 0) analytics.track('voice_question_answered', { question_count: answered });
     void submit({ transcript: transcriptDraft });
-  }, [answers, submit, transcriptDraft, transcriptEdited]);
+  }, [answers, submit, transcriptDraft]);
 
   // ── render ────────────────────────────────────────────────────────────
 
@@ -315,14 +320,12 @@ export function VoiceExpenseCapture({
         return (
           <ReviewView
             transcript={transcriptDraft}
+            transcriptEdited={transcriptEdited}
             drafts={state.drafts}
             questions={state.questions}
             answers={answers}
             groupCurrency={groupCurrency}
-            onTranscriptChange={(v) => {
-              setTranscriptDraft(v);
-              setTranscriptEdited(true);
-            }}
+            onTranscriptChange={setTranscriptDraft}
             onAnswer={(qid, memberId, label) =>
               setAnswers((a) => ({ ...a, [qid]: { member_id: memberId, text: label } }))
             }
@@ -456,6 +459,7 @@ function RecordingView({
 
 function ReviewView({
   transcript,
+  transcriptEdited,
   drafts,
   questions,
   answers,
@@ -466,6 +470,8 @@ function ReviewView({
   onUse,
 }: {
   transcript: string;
+  /** Whether the user has actually changed the text. Gates the redo. */
+  transcriptEdited: boolean;
   drafts: VoiceDraft[];
   questions: VoiceQuestion[];
   answers: Record<string, { member_id: string; text: string }>;
@@ -487,6 +493,8 @@ function ReviewView({
         placeholder={t('voiceExpense.example')}
         placeholderTextColor={colors.lead}
         accessibilityLabel={t('voiceExpense.transcriptLabel')}
+        // A visual affordance helps nobody using VoiceOver; say it too.
+        accessibilityHint={t('voiceExpense.transcriptHint')}
       />
 
       {questions.map((q) => (
@@ -538,12 +546,18 @@ function ReviewView({
       ) : null}
 
       <View style={styles.reviewActions}>
-        <Button kind="secondary" onPress={onRegenerate}>
-        <Text>{t('voiceExpense.regenerate')}</Text>
-      </Button>
-        {drafts.length > 0 ? <Button onPress={onUse}>
-        <Text>{t('voiceExpense.useDrafts')}</Text>
-      </Button> : null}
+        <Button kind="secondary" onPress={onRegenerate} disabled={!transcriptEdited}>
+          <Text>
+            {transcriptEdited
+              ? t('voiceExpense.regenerate')
+              : t('voiceExpense.regenerateDisabled')}
+          </Text>
+        </Button>
+        {drafts.length > 0 ? (
+          <Button onPress={onUse}>
+            <Text>{t('voiceExpense.useDrafts')}</Text>
+          </Button>
+        ) : null}
       </View>
     </ScrollView>
   );
@@ -662,11 +676,17 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     textTransform: 'uppercase',
   },
+  // Deliberately NOT a bone card: the draft and question cards on this
+  // same screen are bone, so filling this made an editable field look like
+  // the read-only things beside it. The app's Field convention is a ruled
+  // input on paper, and the contrast is what signals "you can type here".
   transcriptInput: {
     fontFamily: fontBody,
     fontSize: fontSize.body,
     color: colors.graphite,
-    backgroundColor: colors.bone,
+    backgroundColor: colors.paper,
+    borderWidth: 1,
+    borderColor: colors.ruleSoft,
     borderRadius: 10,
     padding: spacing.s4,
     minHeight: 88,
