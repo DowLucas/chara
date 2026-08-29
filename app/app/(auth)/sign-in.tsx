@@ -628,7 +628,7 @@ export default function SignInScreen() {
           <Text
             style={styles.legalFooterLink}
             onPress={() => {
-              void Linking.openURL('https://getchara.lovable.app/terms').catch(() => {});
+              void Linking.openURL('https://getchara.dowtech.dev/terms').catch(() => {});
             }}
           >
             Terms of Service
@@ -637,7 +637,7 @@ export default function SignInScreen() {
           <Text
             style={styles.legalFooterLink}
             onPress={() => {
-              void Linking.openURL('https://getchara.lovable.app/privacy').catch(() => {});
+              void Linking.openURL('https://getchara.dowtech.dev/privacy').catch(() => {});
             }}
           >
             Privacy Policy

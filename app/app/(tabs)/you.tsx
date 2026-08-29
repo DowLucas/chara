@@ -549,13 +549,13 @@ export default function YouScreen() {
           <NavRow
             label={t('legal.privacyPolicy')}
             onPress={() => {
-              void Linking.openURL('https://getchara.lovable.app/privacy').catch(() => {});
+              void Linking.openURL('https://getchara.dowtech.dev/privacy').catch(() => {});
             }}
           />
           <NavRow
             label={t('legal.termsOfService')}
             onPress={() => {
-              void Linking.openURL('https://getchara.lovable.app/terms').catch(() => {});
+              void Linking.openURL('https://getchara.dowtech.dev/terms').catch(() => {});
             }}
           />
         </View>

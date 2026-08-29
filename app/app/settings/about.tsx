@@ -11,7 +11,7 @@ import { ContentContainer } from '@/components/ContentContainer';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 
 const SOURCE_URL = 'https://github.com/lucasdow/chara';
-const WEBSITE_URL = 'https://chara.app';
+const WEBSITE_URL = 'https://getchara.dowtech.dev';
 
 export default function AboutScreen() {
   const insets = useSafeAreaInsets();
@@ -47,11 +47,11 @@ export default function AboutScreen() {
             <LinkRow label={t('about.source')} onPress={() => Linking.openURL(SOURCE_URL)} />
             <LinkRow
               label={t('legal.privacyPolicy')}
-              onPress={() => Linking.openURL('https://getchara.lovable.app/privacy')}
+              onPress={() => Linking.openURL('https://getchara.dowtech.dev/privacy')}
             />
             <LinkRow
               label={t('legal.termsOfService')}
-              onPress={() => Linking.openURL('https://getchara.lovable.app/terms')}
+              onPress={() => Linking.openURL('https://getchara.dowtech.dev/terms')}
             />
           </View>
         </ContentContainer>
