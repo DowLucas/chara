@@ -192,6 +192,13 @@ func (h *VoiceHandler) Generate(w http.ResponseWriter, r *http.Request) {
 	}
 	vc, err := h.groups.VoiceContext(r.Context(), req.GroupID, claimsUserID(claims))
 	if err != nil {
+		// The client always gets a bare 403, so group_id cannot be used to
+		// tell "not a member" apart from "no such group". The real cause is
+		// logged server-side — without this a database fault is
+		// indistinguishable from an access denial, which is miserable to
+		// debug and easy to mistake for a permissions bug.
+		slog.Warn("voice: group context lookup failed",
+			"error", err, "group_id", req.GroupID, "user_id", claimsUserID(claims))
 		writeVoiceError(w, http.StatusForbidden, "forbidden", "not a member of this group")
 		return
 	}

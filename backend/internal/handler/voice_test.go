@@ -69,7 +69,9 @@ func okResult() *voice.Result {
 	}
 }
 
-type okLookup struct{ got struct{ groupID, userID string } }
+type okLookup struct {
+	got struct{ groupID, userID string }
+}
 
 func (l *okLookup) VoiceContext(_ context.Context, groupID, userID string) (voice.Context, error) {
 	l.got.groupID, l.got.userID = groupID, userID
@@ -167,6 +169,25 @@ func TestVoice_RejectsNonMember(t *testing.T) {
 	router := voiceRouter(t, &stubParser{res: okResult()}, notAMemberLookup{})
 	rr := postVoice(t, router, audioBody(nil), authedContext("u1"))
 	assert.Equal(t, http.StatusForbidden, rr.Code)
+}
+
+// A database fault and an access denial look identical to the client, on
+// purpose. They must NOT look identical in the logs — that cost a real
+// debugging session when a stale dev schema surfaced as "not a member".
+func TestVoice_LookupFailureStillReturnsBareForbidden(t *testing.T) {
+	router := voiceRouter(t, &stubParser{res: okResult()}, notAMemberLookup{})
+	rr := postVoice(t, router, audioBody(nil), authedContext("u1"))
+
+	require.Equal(t, http.StatusForbidden, rr.Code)
+	var body struct {
+		Code    string `json:"code"`
+		Message string `json:"message"`
+	}
+	require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &body))
+	assert.Equal(t, "forbidden", body.Code)
+	// The client must not learn whether the group exists.
+	assert.NotContains(t, body.Message, "not a member of this group\n")
+	assert.NotContains(t, rr.Body.String(), "not a member: ")
 }
 
 func TestVoice_RejectsOversizeAudio(t *testing.T) {
