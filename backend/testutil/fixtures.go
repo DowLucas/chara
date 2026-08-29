@@ -289,3 +289,21 @@ func SeedRecurringExpense(
 	_ = row
 	return out
 }
+
+// CreateSettlementWithID inserts a settlement with a caller-chosen id. Used by
+// idempotency tests that need a known settlement id to already exist.
+func CreateSettlementWithID(t *testing.T, pool *pgxpool.Pool, id, groupID, fromMemberID, toMemberID string, amountMinorUnits int64, currency, createdByUserID string) db.Settlement {
+	t.Helper()
+	s, err := db.New(pool).CreateSettlement(context.Background(), db.CreateSettlementParams{
+		ID:          id,
+		GroupID:     groupID,
+		FromMember:  fromMemberID,
+		ToMember:    toMemberID,
+		Amount:      amountMinorUnits,
+		Currency:    currency,
+		Method:      "manual",
+		CreatedByID: createdByUserID,
+	})
+	require.NoError(t, err)
+	return s
+}

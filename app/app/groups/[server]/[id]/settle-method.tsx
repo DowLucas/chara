@@ -33,6 +33,8 @@ import {
   getSwishPhonePromptDismissed,
   setSwishPhonePromptDismissed,
 } from '@/lib/preferences';
+import { settlementMethodFor } from '@/lib/settlement-method';
+import { newUlid } from '@/lib/ulid';
 import {
   colors,
   fontDisplay,
@@ -78,6 +80,10 @@ export default function SettleMethodScreen() {
   const [stage, setStage] = useState<'pick' | 'awaiting' | 'done'>('pick');
   const [submitting, setSubmitting] = useState(false);
   const [completedAt, setCompletedAt] = useState<Date | null>(null);
+  // One id per screen instance — reused by every recordSettlement attempt so
+  // a retry after a dropped response settles the debt once, not twice. A
+  // fresh settle means a fresh mount, hence a fresh key.
+  const [settlementId] = useState(() => newUlid());
   // Swish deep-link held across the awaiting stage so the "Open Swish
   // again" button can re-fire the same URL the user already approved.
   const [swishUrl, setSwishUrl] = useState<string | null>(null);
@@ -139,16 +145,17 @@ export default function SettleMethodScreen() {
     { id: 'manual', enabled: true,  primary: false },
   ];
 
-  async function recordSettlement(noteSuffix?: string, amountOverride?: string) {
+  async function recordSettlement(rail: MethodId, amountOverride?: string) {
     if (!id || !from || !to || !amount || !currency || !serverUrl) return false;
     setSubmitting(true);
     try {
       await api.settle(id, {
+        id: settlementId,
         from_member_id: from,
         to_member_id: to,
         amount: amountOverride ?? amount,
         currency,
-        note: noteSuffix,
+        method: settlementMethodFor(rail),
       });
       setCompletedAt(new Date());
       setStage('done');

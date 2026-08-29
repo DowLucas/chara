@@ -1108,3 +1108,130 @@ func TestSettle_Create_WritesActivityWithPayload(t *testing.T) {
 	}
 	assert.True(t, found, "expected settlement_added activity entry")
 }
+
+// ── Idempotency (client-supplied settlement id) ───────────────────────────────
+
+// TestSettle_Create_IsIdempotentOnRepeatedClientID guards the retry hazard:
+// a settle request that reaches the server but whose response is lost (flaky
+// connectivity) gets retried by the client. Without an idempotency key the
+// server cannot tell a retry from a genuine second payment, so it records two
+// settlements and the balance lands wrong in the payer's favour.
+func TestSettle_Create_IsIdempotentOnRepeatedClientID(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	clientID := ulid.New()
+	body := fmt.Sprintf(
+		`{"id":%q,"from_member_id":%q,"to_member_id":%q,"amount":"45.00","currency":"SEK"}`,
+		clientID, bobMemberID, aliceMemberID,
+	)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, bob.Token))
+	require.Equal(t, http.StatusCreated, rr.Code, rr.Body.String())
+	var first map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&first))
+	assert.Equal(t, clientID, first["id"])
+
+	// The retry: byte-identical request, same client id.
+	rr = env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, bob.Token))
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+	var second map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&second))
+	assert.Equal(t, clientID, second["id"], "retry must return the original settlement, not a new one")
+
+	// Exactly one settlement stored.
+	rr = env.Do(t, env.AuthRequest(t, "GET", "/api/groups/"+groupID+"/settlements", "", alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code)
+	var settlements []map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&settlements))
+	assert.Len(t, settlements, 1, "retry must not create a second settlement")
+
+	// And the debt is settled exactly once — not overshot into a reverse balance.
+	rr = env.Do(t, env.AuthRequest(t, "GET", "/api/groups/"+groupID+"/balances", "", alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code)
+	var balances []map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&balances))
+	for _, b := range balances {
+		assert.Equal(t, "0.00", b["net_balance"])
+	}
+}
+
+// TestSettle_Create_RejectsMalformedClientID keeps the id column a ULID.
+// Accepting arbitrary strings would let a client squat on ids the server
+// would later want to mint itself.
+func TestSettle_Create_RejectsMalformedClientID(t *testing.T) {
+	env, _, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+
+	body := fmt.Sprintf(
+		`{"id":"not-a-ulid","from_member_id":%q,"to_member_id":%q,"amount":"10.00","currency":"SEK"}`,
+		bobMemberID, aliceMemberID,
+	)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, bob.Token))
+	assert.Equal(t, http.StatusBadRequest, rr.Code, rr.Body.String())
+}
+
+// TestSettle_Create_RejectsClientIDFromAnotherGroup is the security half of
+// idempotency: replaying a settlement id that exists in a group the caller is
+// not a member of must not hand back that group's settlement.
+func TestSettle_Create_RejectsClientIDFromAnotherGroup(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	// Alice's private group, which Bob is not a member of.
+	otherGroup, otherAliceMem := testutil.CreateGroup(t, env.Pool, "Alice Solo", "SEK", alice.ID, "Alice")
+	// Seed the id in the other group directly so we don't depend on
+	// self-settle being legal through the handler.
+	clientID := ulid.New()
+	testutil.CreateSettlementWithID(t, env.Pool, clientID, otherGroup.ID, otherAliceMem.ID, otherAliceMem.ID, 100, "SEK", alice.ID)
+
+	body := fmt.Sprintf(
+		`{"id":%q,"from_member_id":%q,"to_member_id":%q,"amount":"45.00","currency":"SEK"}`,
+		clientID, bobMemberID, aliceMemberID,
+	)
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, bob.Token))
+	require.Equal(t, http.StatusConflict, rr.Code, rr.Body.String())
+	assert.NotContains(t, rr.Body.String(), otherGroup.ID, "must not leak the other group's settlement")
+}
+
+// TestSettle_Create_RejectsRetryOfRevertedSettlement closes the gap between
+// idempotency and revert. The retry path returns the stored settlement, but a
+// reverted one no longer settles anything: member_balances filters
+// reverted_at IS NULL, so handing it back with 200 tells the client the debt
+// is paid while the balance is still open.
+//
+// Reachable because the client mints one id per screen mount and reuses it
+// across attempts: Bob settles, the response is lost, Alice reverts inside the
+// 24h window, then Bob retries from the same screen.
+func TestSettle_Create_RejectsRetryOfRevertedSettlement(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	clientID := ulid.New()
+	body := fmt.Sprintf(
+		`{"id":%q,"from_member_id":%q,"to_member_id":%q,"amount":"45.00","currency":"SEK"}`,
+		clientID, bobMemberID, aliceMemberID,
+	)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, bob.Token))
+	require.Equal(t, http.StatusCreated, rr.Code, rr.Body.String())
+
+	// Alice reverts before Bob's retry lands.
+	rr = env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settlements/"+clientID+"/revert", "", alice.Token))
+	require.Equal(t, http.StatusNoContent, rr.Code, rr.Body.String())
+
+	// The retry must not report success — the debt is open again.
+	rr = env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, bob.Token))
+	require.Equal(t, http.StatusConflict, rr.Code, rr.Body.String())
+
+	// And the revert still stands: Bob owes Alice the full 45 again.
+	rr = env.Do(t, env.AuthRequest(t, "GET", "/api/groups/"+groupID+"/balances", "", alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code)
+	var balances []map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&balances))
+	nets := map[string]any{}
+	for _, b := range balances {
+		nets[b["member_id"].(string)] = b["net_balance"]
+	}
+	assert.Equal(t, "-45.00", nets[bobMemberID])
+	assert.Equal(t, "45.00", nets[aliceMemberID])
+}
