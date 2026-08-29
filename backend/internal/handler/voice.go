@@ -12,6 +12,7 @@ import (
 
 	"github.com/DowLucas/chara/internal/aiusage"
 	"github.com/DowLucas/chara/internal/billing"
+	"github.com/DowLucas/chara/internal/language"
 	"github.com/DowLucas/chara/internal/middleware"
 	"github.com/DowLucas/chara/internal/voice"
 	"github.com/jackc/pgx/v5"
@@ -126,6 +127,10 @@ type voiceRequest struct {
 	LocalDate string `json:"local_date"`
 	Timezone  string `json:"timezone"`
 	ClipMS    int    `json:"clip_ms"`
+	// UILanguage is the recorder's app language, used only for the model's
+	// `reasoning` text. Validated through language.Normalize like every
+	// other client string that reaches the prompt.
+	UILanguage string `json:"ui_language"`
 
 	// Transcript and Answers drive the clarify re-post. A non-empty
 	// Transcript makes this a text follow-up: no audio, and NOT metered.
@@ -148,7 +153,10 @@ type voiceDraftPct struct {
 }
 
 type voiceDraft struct {
-	SourcePhrase string            `json:"source_phrase"`
+	SourcePhrase string `json:"source_phrase"`
+	// Reasoning is shown on the review screen so a misread of who is on
+	// the split is visible before saving. Not stored with the expense.
+	Reasoning    string            `json:"reasoning,omitempty"`
 	Title        string            `json:"title"`
 	AmountMinor  int64             `json:"amount_minor"`
 	Currency     string            `json:"currency"`
@@ -244,6 +252,9 @@ func (h *VoiceHandler) Generate(w http.ResponseWriter, r *http.Request) {
 	// the request; a crafted one simply never reaches the prompt.
 	vc.LocalDate = sanitizeLocalDate(req.LocalDate)
 	vc.Timezone = sanitizeTimezone(req.Timezone)
+	if code, ok := language.Normalize(req.UILanguage); ok {
+		vc.UILanguage = code
+	}
 
 	var audio []byte
 	if !isRepost {
@@ -441,6 +452,7 @@ func toVoiceDrafts(in []voice.Draft) []voiceDraft {
 		}
 		out[i] = voiceDraft{
 			SourcePhrase:  d.SourcePhrase,
+			Reasoning:     d.Reasoning,
 			Title:         d.Title,
 			AmountMinor:   int64(d.AmountMinor),
 			Currency:      d.Currency,

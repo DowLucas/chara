@@ -6,6 +6,7 @@ import {
   discardRest,
   changedFields,
   toWizardSplit,
+  splitSummary,
   type VoiceDraft,
 } from '../voice-drafts';
 
@@ -207,5 +208,66 @@ describe('toWizardSplit', () => {
     );
     expect(got.method).toBe('exact');
     expect(got.exactByMember).toEqual({ m1: '750.00', m2: '250.00' });
+  });
+});
+
+describe('splitSummary', () => {
+  const members = [
+    { id: 'm1', name: 'Lucas' },
+    { id: 'm2', name: 'Anna' },
+    { id: 'm3', name: 'Sara' },
+  ];
+  const d = (over: Partial<VoiceDraft> = {}): VoiceDraft => ({
+    source_phrase: 'x',
+    title: 'X',
+    amount_minor: 100000,
+    currency: 'EUR',
+    paid_by_id: 'm1',
+    split_method: 'equal',
+    participants: ['m2', 'm3'],
+    ...over,
+  });
+
+  it('names who is actually on the split', () => {
+    // The reported case: "the rest of the guys" excluded the speaker, and
+    // nothing on the card said so.
+    const got = splitSummary(d(), members);
+    expect(got.memberNames).toEqual(['Anna', 'Sara']);
+    expect(got.payerName).toBe('Lucas');
+  });
+
+  it('gives a per-person amount for an equal split', () => {
+    expect(splitSummary(d(), members).perPersonMinor).toBe(50000);
+  });
+
+  it('omits a per-person amount when it would not divide evenly', () => {
+    // 1000.01 across two is 500.01 / 500.00 — quoting one number would lie.
+    const got = splitSummary(d({ amount_minor: 100001 }), members);
+    expect(got.perPersonMinor).toBeUndefined();
+  });
+
+  it('has no per-person amount for exact or percentage splits', () => {
+    expect(splitSummary(d({ split_method: 'exact' }), members).perPersonMinor).toBeUndefined();
+    expect(splitSummary(d({ split_method: 'percentage' }), members).perPersonMinor).toBeUndefined();
+  });
+
+  it('keeps roster order rather than the order the model listed people', () => {
+    const got = splitSummary(d({ participants: ['m3', 'm2'] }), members);
+    expect(got.memberNames).toEqual(['Anna', 'Sara']);
+  });
+
+  it('skips ids the roster does not know', () => {
+    const got = splitSummary(d({ participants: ['m2', 'm99'] }), members);
+    expect(got.memberNames).toEqual(['Anna']);
+  });
+
+  it('survives an unknown payer without inventing a name', () => {
+    expect(splitSummary(d({ paid_by_id: 'm99' }), members).payerName).toBe('');
+  });
+
+  it('handles an empty roster', () => {
+    const got = splitSummary(d(), []);
+    expect(got.memberNames).toEqual([]);
+    expect(got.perPersonMinor).toBeUndefined();
   });
 });

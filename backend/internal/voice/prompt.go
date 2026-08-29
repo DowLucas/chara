@@ -25,6 +25,7 @@ LANGUAGE — read this before anything else:
 
 For each expense return:
 - source_phrase: the exact words from the transcript that produced this expense. Required — the app shows it to the user next to the draft.
+- reasoning: ONE short sentence, max ~15 words, saying how you read the sentence — above all WHO IS INCLUDED on the split and why, since that is where a misreading hides. "Split between Anna and Sara only; you said 'the rest of the guys'." Name people rather than ids. WRITE THIS FIELD IN {{UI_LANGUAGE}} — only the person recording sees it, on a screen already in that language.
 - title: a SHORT natural description, 2-5 words, no trailing period. WRITE THIS FIELD IN {{LANGUAGE}} regardless of what language the speaker used — everyone in the group reads the same expense list, so the title must not follow whoever happened to record it.
 - amount: the amount as a decimal string, e.g. "480.00". No currency symbol, no thousands separator, and a period for the decimal point as stated above.
 - currency: the ISO 4217 code. Use the group currency below unless the speaker names a different one ("40 euros" is "EUR").
@@ -58,6 +59,13 @@ If you can hear it clearly but it contains no expense, respond with {"error":"no
 // payer, and given names alone it would guess.
 func buildPrompt(vc Context, answers []Answer) string {
 	p := strings.Replace(basePrompt, "{{LANGUAGE}}", languageLabel(vc.Language), 1)
+	// The recorder's own app language, falling back to the group's when
+	// the client did not send one.
+	uiLang := vc.UILanguage
+	if uiLang == "" {
+		uiLang = vc.Language
+	}
+	p = strings.Replace(p, "{{UI_LANGUAGE}}", languageLabel(uiLang), 1)
 	p = strings.Replace(p, "{{CATEGORIES}}", strings.Join(quoteAll(vc.Categories), ", "), 1)
 
 	var b strings.Builder
@@ -126,6 +134,7 @@ func responseSchema() map[string]any {
 					"type": "object",
 					"properties": map[string]any{
 						"source_phrase":          str,
+						"reasoning":              str,
 						"title":                  str,
 						"amount":                 str,
 						"currency":               str,
@@ -158,7 +167,7 @@ func responseSchema() map[string]any {
 						},
 					},
 					"required": []string{
-						"source_phrase", "title", "amount", "currency",
+						"source_phrase", "reasoning", "title", "amount", "currency",
 						"paid_by_member_id", "split_method", "participant_member_ids",
 					},
 				},

@@ -646,6 +646,7 @@ export default function AddExpenseScreen() {
           serverUrl={serverUrl}
           groupId={id ?? ''}
           groupCurrency={group?.currency ?? 'SEK'}
+          members={members}
           onGenerated={handleVoiceGenerated}
           onGoToSettle={() => {
             setVoiceOpen(false);

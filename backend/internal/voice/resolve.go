@@ -13,6 +13,7 @@ import (
 // here is trusted; resolveDrafts is what turns it into a [Draft].
 type rawDraft struct {
 	SourcePhrase   string       `json:"source_phrase"`
+	Reasoning      string       `json:"reasoning"`
 	Title          string       `json:"title"`
 	Amount         string       `json:"amount"`
 	Currency       string       `json:"currency"`
@@ -61,6 +62,7 @@ func resolveDrafts(raws []rawDraft, vc Context) (drafts []Draft, degraded, unres
 
 		d := Draft{
 			SourcePhrase: raw.SourcePhrase,
+			Reasoning:    raw.Reasoning,
 			Title:        raw.Title,
 			AmountMinor:  amount,
 			Date:         resolveDate(raw.Date, vc.LocalDate),

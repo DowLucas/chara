@@ -40,7 +40,12 @@ type Context struct {
 	Currency  string
 	// Language is an ISO 639-1 code; generated titles are written in it so
 	// every member of a group sees the same wording.
-	Language   string
+	Language string
+	// UILanguage is the app language of the person recording, used only
+	// for `reasoning` — text they alone see, on a screen already rendered
+	// in it. Distinct from Language, which everyone in the group reads.
+	// Empty falls back to Language.
+	UILanguage string
 	Categories []string
 	Members    []Member
 	// CallerMemberID is the member doing the talking. This is what binds
@@ -101,6 +106,11 @@ type Draft struct {
 	// what makes a multi-expense result trustworthy enough to accept
 	// without re-checking every field.
 	SourcePhrase string
+	// Reasoning is the model's one-line account of how it read the
+	// utterance — above all, who it put on the split. A review aid shown
+	// before saving; deliberately not persisted with the expense, where
+	// it would go stale the first time anyone edited it.
+	Reasoning    string
 	Title        string
 	Currency     string
 	Category     string

@@ -24,6 +24,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -402,4 +403,37 @@ func TestVoiceEval_Text_PartialPercentageKeepsProportions(t *testing.T) {
 	}
 	assert.Equal(t, 2500, byID["m2"], "Alex must be 25%%, not a pinned amount")
 	assert.Equal(t, 7500, byID["m1"], "the unstated remainder belongs to the speaker")
+}
+
+// Reported: "I paid 1000 euros and the rest of the guys split it equally"
+// excludes the speaker — defensible, but invisible on the review card. The
+// reasoning has to make that reading explicit, in the recorder's own
+// language rather than the group's.
+func TestVoiceEval_Text_ReasoningExplainsWhoIsOnTheSplit(t *testing.T) {
+	key := os.Getenv("GEMINI_API_KEY")
+	if key == "" {
+		t.Skip("GEMINI_API_KEY not set")
+	}
+	vc := evalContext()
+	vc.Language = "en"
+	vc.UILanguage = "sv" // the recorder's app language
+
+	got, err := NewGemini(key).ParseText(context.Background(),
+		"I paid 1000 euros and the rest of the guys split it equally", vc, nil)
+	require.NoError(t, err)
+	require.Len(t, got.Drafts, 1)
+
+	d := got.Drafts[0]
+	assert.NotEmpty(t, d.Reasoning, "reasoning must be present")
+	t.Logf("participants=%v reasoning=%q title=%q", d.Participants, d.Reasoning, d.Title)
+
+	// It should name at least one person, which is what makes an exclusion
+	// visible at a glance.
+	named := false
+	for _, n := range []string{"Anna", "Sara", "Johan", "Lucas"} {
+		if strings.Contains(d.Reasoning, n) {
+			named = true
+		}
+	}
+	assert.True(t, named, "reasoning %q names nobody, so it cannot show who was excluded", d.Reasoning)
 }

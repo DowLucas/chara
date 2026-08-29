@@ -23,6 +23,23 @@ export interface VoiceDraftPct {
   basis_points: number;
 }
 
+/** Minimal member shape splitSummary needs. */
+export interface RosterMember {
+  id: string;
+  name: string;
+}
+
+/** What the review card states about a draft's split. */
+export interface SplitSummary {
+  /** Names of everyone on the split, in roster order. */
+  memberNames: string[];
+  /** Name of whoever paid, or "" if the roster does not know them. */
+  payerName: string;
+  /** Set only when an equal split divides exactly — quoting a single
+   *  figure for 1000.01 across two people would be a lie. */
+  perPersonMinor?: number;
+}
+
 export interface VoiceDraft {
   /** The words from the transcript that produced this draft. Shown to the
    *  user against the draft — that traceability is what makes accepting a
@@ -43,6 +60,9 @@ export interface VoiceDraft {
   percentages?: VoiceDraftPct[];
   /** Field names the server's resolver had to guess at, for the UI to flag. */
   low_confidence?: string[];
+  /** The model's one-line account of how it read the utterance — above all
+   *  who it put on the split. Review aid only; never saved. */
+  reasoning?: string;
 }
 
 export interface VoiceQueue {
@@ -104,6 +124,33 @@ export function toWizardSplit(draft: VoiceDraft): WizardSplit {
   }
 
   return { method: 'equal' };
+}
+
+/**
+ * Describe a draft's split in the terms a reviewer needs: who is on it,
+ * who paid, and — when it is honest to say so — what each person owes.
+ *
+ * The card previously showed only a title, an amount and the source
+ * phrase, so an interpretation like "the rest of the guys" (which excludes
+ * the speaker) was invisible until you opened the wizard.
+ */
+export function splitSummary(draft: VoiceDraft, members: RosterMember[]): SplitSummary {
+  const included = new Set(draft.participants);
+  // Roster order, not the order the model happened to list them in, so the
+  // same group always reads the same way.
+  const onSplit = members.filter((m) => included.has(m.id));
+
+  let perPersonMinor: number | undefined;
+  if (draft.split_method === 'equal' && onSplit.length > 0) {
+    const each = draft.amount_minor / onSplit.length;
+    if (Number.isInteger(each)) perPersonMinor = each;
+  }
+
+  return {
+    memberNames: onSplit.map((m) => m.name),
+    payerName: members.find((m) => m.id === draft.paid_by_id)?.name ?? '',
+    perPersonMinor,
+  };
 }
 
 export function makeQueue(drafts: VoiceDraft[], generationId: string): VoiceQueue {

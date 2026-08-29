@@ -32,8 +32,8 @@ import {
   voiceFailureCode,
   type VoiceQuestion,
 } from '@/lib/api';
-import type { VoiceDraft } from '@/lib/voice-drafts';
-import { formatMinorUnits } from '@/lib/i18n';
+import { splitSummary, type VoiceDraft, type RosterMember } from '@/lib/voice-drafts';
+import { formatMinorUnits, currentLanguage } from '@/lib/i18n';
 import { showAlert } from '@/lib/app-alert';
 import { useAccount } from '@/lib/accounts';
 import { markPopupClosed } from '@/lib/popup-guard';
@@ -97,6 +97,8 @@ export interface VoiceExpenseCaptureProps {
   serverUrl: string;
   groupId: string;
   groupCurrency: string;
+  /** Needed to say WHO is on a split — the card can only show ids without it. */
+  members: RosterMember[];
   onGenerated(result: { drafts: VoiceDraft[]; generationId: string }): void;
   /** Route the user to this group's settle screen. Used only for the
    *  settlement case, which is a redirect rather than a failure. */
@@ -108,6 +110,7 @@ export function VoiceExpenseCapture({
   serverUrl,
   groupId,
   groupCurrency,
+  members,
   onGenerated,
   onGoToSettle,
   onCancel,
@@ -197,6 +200,9 @@ export function VoiceExpenseCapture({
           groupId,
           localDate: localDateString(),
           timezone: deviceTimezone(),
+          // Reasoning is for the recorder alone, on a screen already in
+          // their app language.
+          uiLanguage: currentLanguage(),
           ...(payload.audioBase64
             ? { audioBase64: payload.audioBase64, mimeType: MIME_TYPE, clipMs: payload.clipMs }
             : {}),
@@ -350,6 +356,7 @@ export function VoiceExpenseCapture({
             transcript={transcriptDraft}
             transcriptEdited={transcriptEdited}
             drafts={state.drafts}
+            members={members}
             questions={state.questions}
             answers={answers}
             groupCurrency={groupCurrency}
@@ -492,6 +499,7 @@ function ReviewView({
   transcript,
   transcriptEdited,
   drafts,
+  members,
   questions,
   answers,
   groupCurrency,
@@ -504,6 +512,7 @@ function ReviewView({
   /** Whether the user has actually changed the text. Gates the redo. */
   transcriptEdited: boolean;
   drafts: VoiceDraft[];
+  members: RosterMember[];
   questions: VoiceQuestion[];
   answers: Record<string, { member_id: string; text: string }>;
   groupCurrency: string;
@@ -571,6 +580,23 @@ function ReviewView({
               <Text style={styles.draftPhrase} numberOfLines={2}>
                 “{d.source_phrase}”
               </Text>
+              <DraftSplitLine draft={d} members={members} groupCurrency={groupCurrency} />
+              {d.reasoning ? (
+                <Text style={styles.draftReasoning} numberOfLines={3}>
+                  {d.reasoning}
+                </Text>
+              ) : null}
+              {d.low_confidence?.length ? (
+                <View style={styles.flagRow}>
+                  {d.low_confidence.map((f) => (
+                    <Text key={f} style={styles.flag}>
+                      {t(`voiceExpense.flag_${f}` as const, {
+                        defaultValue: t('voiceExpense.flag_generic'),
+                      })}
+                    </Text>
+                  ))}
+                </View>
+              ) : null}
             </View>
           ))}
         </>
@@ -591,6 +617,41 @@ function ReviewView({
         ) : null}
       </View>
     </ScrollView>
+  );
+}
+
+/**
+ * States the split in words: who is on it, how it divides, and — when it
+ * divides exactly — what each person owes.
+ *
+ * This is the line that would have made "the rest of the guys" (which
+ * excludes the speaker) visible before saving rather than after.
+ */
+function DraftSplitLine({
+  draft,
+  members,
+  groupCurrency,
+}: {
+  draft: VoiceDraft;
+  members: RosterMember[];
+  groupCurrency: string;
+}) {
+  const { t } = useTranslation();
+  const summary = splitSummary(draft, members);
+  if (summary.memberNames.length === 0) return null;
+
+  const method = t(`addExpense.split.${draft.split_method}` as const);
+  const each =
+    summary.perPersonMinor !== undefined
+      ? t('voiceExpense.eachAmount', {
+          amount: formatMinorUnits(summary.perPersonMinor, draft.currency || groupCurrency),
+        })
+      : null;
+
+  return (
+    <Text style={styles.draftSplit} numberOfLines={2}>
+      {[summary.memberNames.join(', '), method, each].filter(Boolean).join(' · ')}
+    </Text>
   );
 }
 
@@ -755,6 +816,27 @@ const styles = StyleSheet.create({
     fontSize: fontSize.caption,
     color: colors.lead,
     marginTop: spacing.s2,
+  },
+  // Mono: this line is names, a method and a number — closer to data than
+  // prose, and it should scan rather than read.
+  draftSplit: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.graphite,
+    marginTop: spacing.s2,
+  },
+  draftReasoning: {
+    fontFamily: fontBody,
+    fontSize: fontSize.caption,
+    color: colors.graphite,
+    marginTop: spacing.s2,
+  },
+  flagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.s2, marginTop: spacing.s2 },
+  flag: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.brick,
+    letterSpacing: 0.3,
   },
   reviewActions: { gap: spacing.s3, marginTop: spacing.s4 },
   errorText: {

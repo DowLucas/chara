@@ -153,3 +153,47 @@ func TestPromptNamesArabicAsAGroupLanguage(t *testing.T) {
 		t.Error("prompt does not name Arabic as the group language")
 	}
 }
+
+func TestPromptAsksForReasoningInTheUILanguage(t *testing.T) {
+	vc := testContext()
+	vc.Language = "en"   // group language — titles
+	vc.UILanguage = "sv" // the recorder's own app language — reasoning
+	p := buildPrompt(vc, nil)
+
+	if !strings.Contains(p, "reasoning") {
+		t.Error("prompt does not ask for a reasoning field")
+	}
+	if !strings.Contains(p, "Swedish") {
+		t.Error("prompt does not name the UI language for the reasoning")
+	}
+}
+
+// Reasoning explains an interpretation, so the inclusion decision is the
+// part that has to be covered — that is where a wrong reading hides.
+func TestPromptTellsReasoningToExplainWhoIsIncluded(t *testing.T) {
+	low := strings.ToLower(buildPrompt(testContext(), nil))
+	if !strings.Contains(low, "who is included") && !strings.Contains(low, "included") {
+		t.Error("prompt does not require reasoning to cover who is on the split")
+	}
+}
+
+func TestPromptFallsBackToTheGroupLanguageForReasoning(t *testing.T) {
+	vc := testContext()
+	vc.Language = "sv"
+	vc.UILanguage = "" // client did not send one
+	if !strings.Contains(buildPrompt(vc, nil), "Swedish") {
+		t.Error("with no UI language the reasoning should follow the group language")
+	}
+}
+
+func TestResponseSchemaRequiresReasoning(t *testing.T) {
+	props := responseSchema()["properties"].(map[string]any)
+	item := props["expenses"].(map[string]any)["items"].(map[string]any)
+	if _, ok := item["properties"].(map[string]any)["reasoning"]; !ok {
+		t.Fatal("schema has no reasoning property")
+	}
+	req, _ := item["required"].([]string)
+	if !hasStr(req, "reasoning") {
+		t.Errorf("reasoning is not required (got %v) — the model will drop it", req)
+	}
+}

@@ -1100,6 +1100,8 @@ export interface VoiceExpensesInput {
   localDate: string;
   timezone: string;
   clipMs?: number;
+  /** The recorder's app language, for the model's `reasoning` text. */
+  uiLanguage?: string;
   /** Set for the clarify re-post. The server routes it to the text path,
    *  which is cheaper and deliberately not metered. */
   transcript?: string;
@@ -1114,6 +1116,7 @@ function voiceBody(input: VoiceExpensesInput) {
     ...(input.audioBase64 ? { audio_base64: input.audioBase64 } : {}),
     ...(input.mimeType ? { mime_type: input.mimeType } : {}),
     ...(input.clipMs ? { clip_ms: input.clipMs } : {}),
+    ...(input.uiLanguage ? { ui_language: input.uiLanguage } : {}),
     ...(input.transcript ? { transcript: input.transcript } : {}),
     ...(input.answers?.length ? { answers: input.answers } : {}),
   });

@@ -408,3 +408,20 @@ func TestResolveDropsPercentagesWhenTheyDegrade(t *testing.T) {
 		t.Errorf("degraded draft kept percentages %v, want none", got[0].Percentages)
 	}
 }
+
+// Reasoning is model prose, carried through untouched. It is a review aid
+// shown before saving, never persisted with the expense.
+func TestResolveCarriesReasoning(t *testing.T) {
+	raws := []rawDraft{{
+		Title: "Middag", Amount: "1000.00", PaidByMemberID: "m1",
+		SplitMethod: "equal", Participants: []string{"m2", "m3"},
+		Reasoning: "Delas mellan Anna och Sara — du sa \"resten av gänget\".",
+	}}
+	got, _, _ := resolveDrafts(raws, testContext())
+	if len(got) != 1 {
+		t.Fatalf("got %d drafts, want 1", len(got))
+	}
+	if got[0].Reasoning == "" {
+		t.Error("reasoning was dropped")
+	}
+}
