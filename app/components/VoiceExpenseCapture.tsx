@@ -39,6 +39,7 @@ import { useAccount } from '@/lib/accounts';
 import { markPopupClosed } from '@/lib/popup-guard';
 import { VoiceVocalizer } from '@/components/VoiceVocalizer';
 import { dbfsToLevel } from '@/lib/voice-levels';
+import { releaseRecording } from '@/lib/voice-recording';
 import * as analytics from '@/lib/analytics';
 
 /** Hard stop for a recording. Gemini bills audio at roughly 32 tokens per
@@ -149,33 +150,55 @@ export function VoiceExpenseCapture({
   };
 
   /**
-   * Stop recording, delete the clip, and hand the audio session back.
+   * The clip's path, captured WHILE the recorder is alive.
    *
-   * Every exit path must run this. Leaving the recorder going keeps the
-   * file on disk — which would make the privacy policy's "never written to
-   * disk" claim false — and leaving allowsRecording set keeps iOS in
-   * record mode for the rest of the process, routing later playback to the
-   * earpiece and potentially holding the recording indicator on.
+   * Teardown cannot ask the recorder for it. useAudioRecorder holds the
+   * recorder in useReleasingSharedObject, whose unmount cleanup is
+   * registered above ours, and React runs cleanups in declaration order —
+   * so on unmount the native object is already released and any property
+   * read throws NativeSharedObjectNotFoundException.
+   */
+  const clipUri = useRef<string | null>(null);
+
+  const releaseSession = useCallback(
+    () =>
+      releaseRecording({
+        uri: clipUri.current,
+        deleteFile: (uri) => FileSystem.deleteAsync(uri, { idempotent: true }),
+        resetAudioMode: () => setAudioModeAsync({ allowsRecording: false }),
+      }).then(() => {
+        clipUri.current = null;
+      }),
+    [],
+  );
+
+  /**
+   * Stop recording and release everything. For paths where the component
+   * is still mounted — the close button, Android back, the settle
+   * redirect — so it is safe to touch the recorder here.
    */
   const teardownRecording = useCallback(async () => {
     clearAutoStop();
     try {
-      if (recorder.isRecording) await recorder.stop();
+      if (recorder.isRecording) {
+        await recorder.stop();
+        clipUri.current = recorder.uri ?? clipUri.current;
+      }
     } catch {
-      // Already stopped, or never started. Still release the session.
+      // Already stopped, released, or never started. The captured path and
+      // the audio session still need releasing.
     }
-    const uri = recorder.uri;
-    if (uri) await FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {});
-    await setAudioModeAsync({ allowsRecording: false }).catch(() => {});
-  }, [recorder]);
+    await releaseSession();
+  }, [recorder, releaseSession]);
 
-  // Cover the case where the screen goes away without any button press.
+  // Unmount: deliberately does NOT go through teardownRecording, because
+  // the recorder is gone by now. Only plain values from here on.
   useEffect(() => {
     return () => {
       clearAutoStop();
-      void teardownRecording();
+      void releaseSession();
     };
-  }, [teardownRecording]);
+  }, [releaseSession]);
 
   const dismiss = useCallback(
     (stage: string) => {
@@ -260,23 +283,23 @@ export function VoiceExpenseCapture({
     setState({ kind: 'uploading' });
     try {
       await recorder.stop();
-      const uri = recorder.uri;
+      const uri = recorder.uri ?? clipUri.current;
       if (!uri) {
         setState({ kind: 'error', code: 'unintelligible' });
         return;
       }
+      clipUri.current = uri;
       const audioBase64 = await FileSystem.readAsStringAsync(uri, {
         encoding: FileSystem.EncodingType.Base64,
       });
       // Audio is transient by design: drop the file and release the audio
       // session the moment it is encoded.
-      await FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {});
-      await setAudioModeAsync({ allowsRecording: false }).catch(() => {});
+      await releaseSession();
       await submit({ audioBase64, clipMs });
     } catch {
       setState({ kind: 'error', code: 'network' });
     }
-  }, [recorder, submit]);
+  }, [recorder, releaseSession, submit]);
 
   const startRecording = useCallback(async () => {
     const perm = await requestRecordingPermissionsAsync();
@@ -293,6 +316,8 @@ export function VoiceExpenseCapture({
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
       recorder.record();
+      // Capture it now, while the object is definitely alive.
+      clipUri.current = recorder.uri ?? null;
       startedAt.current = Date.now();
       analytics.track('voice_capture_started', { entry: 'add_expense' });
       setState({ kind: 'recording' });
