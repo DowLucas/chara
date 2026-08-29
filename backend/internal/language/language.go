@@ -28,13 +28,51 @@ var supported = map[string]string{
 	"ja": "Japanese",
 	"zh": "Chinese",
 	"ko": "Korean",
+	"ar": "Arabic",
 }
 
-// IsSupported reports whether the code is in the allowlist. Empty / unknown
-// returns false — callers should fall back to "en" themselves rather than
-// having IsSupported lie about it.
+// regionalAliases maps the regional codes the mobile app actually sends
+// (its locale files are named zh-Hans.json, nb-NO.json) onto the base code
+// this allowlist keeps. Without this the groups handler rejects a language
+// the app offers in its own picker, and the user silently gets English
+// AI-generated content instead.
+var regionalAliases = map[string]string{
+	"zh-hans": "zh",
+	"zh-hant": "zh",
+	"nb":      "no",
+	"nb-no":   "no",
+	"nn":      "no",
+}
+
+// Normalize resolves a code to its canonical allowlist entry, accepting
+// regional forms (zh-Hans → zh, nb-NO → no) and any casing or padding.
+// Returns ok=false for unknown codes; callers fall back to "en" themselves
+// rather than having this lie about it.
+//
+// Store the normalized value: keeping "zh-Hans" in the database would make
+// every later lookup depend on repeating this normalisation.
+func Normalize(code string) (string, bool) {
+	c := strings.ToLower(strings.TrimSpace(code))
+	if c == "" {
+		return "", false
+	}
+	if base, ok := regionalAliases[c]; ok {
+		c = base
+	} else if i := strings.IndexAny(c, "-_"); i > 0 {
+		// A region we have no explicit alias for (en-GB, pt-BR): the base
+		// tag is the right answer whenever it is itself supported.
+		c = c[:i]
+	}
+	if _, ok := supported[c]; !ok {
+		return "", false
+	}
+	return c, true
+}
+
+// IsSupported reports whether the code resolves to an allowlist entry.
+// Empty / unknown returns false.
 func IsSupported(code string) bool {
-	_, ok := supported[strings.ToLower(strings.TrimSpace(code))]
+	_, ok := Normalize(code)
 	return ok
 }
 
@@ -43,8 +81,8 @@ func IsSupported(code string) bool {
 // code unchanged when not found, which is harmless to interpolate into a
 // prompt.
 func Name(code string) string {
-	if n, ok := supported[strings.ToLower(strings.TrimSpace(code))]; ok {
-		return n
+	if c, ok := Normalize(code); ok {
+		return supported[c]
 	}
 	return code
 }

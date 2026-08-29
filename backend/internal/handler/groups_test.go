@@ -914,3 +914,71 @@ func TestGetGroupByInviteToken_ReturnsCreator(t *testing.T) {
 	require.True(t, fetched.InviteTokenCreatedByUserID.Valid)
 	assert.Equal(t, alice.ID, fetched.InviteTokenCreatedByUserID.String)
 }
+
+// ── Language allowlist ────────────────────────────────────────────────────────
+
+// The app ships an Arabic UI, but the backend allowlist had no "ar", and
+// this endpoint rejects rather than degrades — so an Arabic group could not
+// be created at all and those users silently got English AI titles.
+func TestCreateGroup_AcceptsArabic(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_ar"), "Alice")
+	token := env.MintToken(t, alice.ID, alice.Email)
+
+	req := env.AuthRequest(t, "POST", "/api/groups",
+		`{"name":"رحلة","currency":"SEK","language":"ar"}`, token)
+	rr := env.Do(t, req)
+
+	require.Equal(t, http.StatusCreated, rr.Code, rr.Body.String())
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&body))
+	assert.Equal(t, "ar", body["language"])
+}
+
+// The app's locale files are named zh-Hans.json and nb-NO.json, so those are
+// the codes it sends. They must be accepted and stored in canonical form —
+// persisting "zh-Hans" would make every later lookup repeat the mapping.
+func TestCreateGroup_NormalizesRegionalLanguageCodes(t *testing.T) {
+	cases := map[string]string{"zh-Hans": "zh", "nb-NO": "no", "pt-BR": "pt"}
+	for sent, want := range cases {
+		t.Run(sent, func(t *testing.T) {
+			env := setupEnv(t)
+			alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_"+want), "Alice")
+			token := env.MintToken(t, alice.ID, alice.Email)
+
+			body := fmt.Sprintf(`{"name":"Trip","currency":"SEK","language":%q}`, sent)
+			rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups", body, token))
+
+			require.Equal(t, http.StatusCreated, rr.Code, rr.Body.String())
+			var got map[string]any
+			require.NoError(t, json.NewDecoder(rr.Body).Decode(&got))
+			assert.Equal(t, want, got["language"], "stored language must be canonical")
+		})
+	}
+}
+
+func TestUpdateGroup_NormalizesRegionalLanguageCode(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_zh_patch"), "Alice")
+	group, _ := testutil.CreateGroup(t, env.Pool, "Trip", "SEK", alice.ID, "Alice")
+	token := env.MintToken(t, alice.ID, alice.Email)
+
+	rr := env.Do(t, env.AuthRequest(t, "PATCH", "/api/groups/"+group.ID,
+		`{"language":"zh-Hans"}`, token))
+
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+	var body map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&body))
+	assert.Equal(t, "zh", body["language"])
+}
+
+func TestCreateGroup_StillRejectsGarbageLanguage(t *testing.T) {
+	env := setupEnv(t)
+	alice := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "alice_bad_lang"), "Alice")
+	token := env.MintToken(t, alice.ID, alice.Email)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups",
+		`{"name":"Trip","currency":"SEK","language":"klingon"}`, token))
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}

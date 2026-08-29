@@ -171,11 +171,12 @@ func writeError(w http.ResponseWriter, code int, msg string) {
 	writeJSON(w, code, map[string]string{"error": msg})
 }
 
-// isSupportedLanguage is a thin alias so the handler reads cleanly. Empty
-// values are caller's responsibility to coerce to a default before this is
-// called.
-func isSupportedLanguage(code string) bool {
-	return language.IsSupported(code)
+// normalizeLanguage resolves a client-supplied code to its canonical
+// allowlist form (zh-Hans → zh, nb-NO → no) so the stored value is one
+// every later lookup can match without repeating the normalisation. Empty
+// values are the caller's responsibility to default before calling.
+func normalizeLanguage(code string) (string, bool) {
+	return language.Normalize(code)
 }
 
 // ErrGroupLocked sentinel is returned by requireGroupUnlocked when the group
@@ -258,10 +259,12 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if req.Language == "" {
 		req.Language = "en"
 	}
-	if !isSupportedLanguage(req.Language) {
+	normalizedLang, langOK := normalizeLanguage(req.Language)
+	if !langOK {
 		writeError(w, http.StatusBadRequest, "unsupported language code")
 		return
 	}
+	req.Language = normalizedLang
 
 	tx, err := h.pool.Begin(r.Context())
 	if err != nil {
@@ -477,14 +480,15 @@ func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if req.Language != nil {
-		if !isSupportedLanguage(*req.Language) {
+		normalized, ok := normalizeLanguage(*req.Language)
+		if !ok {
 			writeError(w, http.StatusBadRequest, "unsupported language code")
 			return
 		}
-		if *req.Language != prev.Language {
-			params.Language = pgtype.Text{String: *req.Language, Valid: true}
+		if normalized != prev.Language {
+			params.Language = pgtype.Text{String: normalized, Valid: true}
 			snapshot.Changed = append(snapshot.Changed, "language")
-			snapshot.Language = *req.Language
+			snapshot.Language = normalized
 			snapshot.OldLanguage = prev.Language
 		}
 	}
