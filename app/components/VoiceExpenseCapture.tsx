@@ -4,7 +4,6 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  ActivityIndicator,
   ScrollView,
   Linking,
   Animated,
@@ -346,7 +345,10 @@ export function VoiceExpenseCapture({
       case 'uploading':
         return (
           <View style={styles.centered}>
-            <ActivityIndicator color={colors.graphite} />
+            {/* The same bars they just watched while speaking, now running
+                on their own — the wait reads as the feature still working
+                rather than a generic spinner bolted on. */}
+            <VoiceVocalizer level={0} thinking />
             <Text style={styles.hint}>{t('voiceExpense.uploading')}</Text>
           </View>
         );
@@ -398,7 +400,9 @@ export function VoiceExpenseCapture({
         >
           <Feather name="x" size={22} color={colors.graphite} />
         </TouchableOpacity>
-        <Text style={styles.title}>{t('voiceExpense.title')}</Text>
+        <Text variant="title" style={styles.title}>
+          {t('voiceExpense.title')}
+        </Text>
         <View style={{ width: 22 }} />
       </View>
 
@@ -436,10 +440,14 @@ function IdleView({ onRecord, onType }: { onRecord(): void; onType(): void }) {
         accessibilityRole="button"
         accessibilityLabel={t('voiceExpense.startRecording')}
       >
-        <Feather name="mic" size={36} color={colors.paper} />
+        <Feather name="mic" size={36} color={colors.fgOnAccent} />
       </TouchableOpacity>
-      <Text style={styles.hint}>{t('voiceExpense.hint')}</Text>
-      <Text style={styles.exampleLabel}>{t('voiceExpense.exampleLabel')}</Text>
+      <Text variant="body" style={styles.hint}>
+        {t('voiceExpense.hint')}
+      </Text>
+      <Text variant="monoLabel" style={styles.exampleLabel}>
+        {t('voiceExpense.exampleLabel')}
+      </Text>
       <Text style={styles.example}>{t('voiceExpense.example')}</Text>
       <TouchableOpacity onPress={onType} accessibilityRole="button">
         <Text style={styles.link}>{t('voiceExpense.typeInstead')}</Text>
@@ -487,11 +495,11 @@ function RecordingView({
   return (
     <View style={styles.centered}>
       <Animated.View style={[styles.recordingDot, { opacity: pulse }]} />
-      <Text style={styles.timer}>{t('voiceExpense.secondsLeft', { count: remaining })}</Text>
+      <Text variant="monoBody" style={styles.timer}>
+        {t('voiceExpense.secondsLeft', { count: remaining })}
+      </Text>
       <VoiceVocalizer level={level} />
-      <Button onPress={onStop}>
-        <Text>{t('voiceExpense.stop')}</Text>
-      </Button>
+      <Button onPress={onStop}>{t('voiceExpense.stop')}</Button>
     </View>
   );
 }
@@ -525,7 +533,9 @@ function ReviewView({
   const { t } = useTranslation();
   return (
     <ScrollView contentContainerStyle={styles.reviewScroll} keyboardShouldPersistTaps="handled">
-      <Text style={styles.eyebrow}>{t('voiceExpense.transcriptLabel')}</Text>
+      <Text variant="monoLabel" style={styles.eyebrow}>
+        {t('voiceExpense.transcriptLabel')}
+      </Text>
       <TextInput
         style={styles.transcriptInput}
         value={transcript}
@@ -543,7 +553,9 @@ function ReviewView({
 
       {questions.map((q) => (
         <View key={q.id} style={styles.questionCard}>
-          <Text style={styles.questionText}>{q.text}</Text>
+          <Text variant="body" style={styles.questionText}>
+            {q.text}
+          </Text>
           <View style={styles.optionRow}>
             {q.options.map((o) => {
               const selected = answers[q.id]?.member_id === o.member_id;
@@ -575,7 +587,7 @@ function ReviewView({
                 <Text style={styles.draftTitle} numberOfLines={1}>
                   {d.title}
                 </Text>
-                <Text style={styles.draftAmount}>
+                <Text variant="monoBody" style={styles.draftAmount}>
                   {formatMinorUnits(d.amount_minor, d.currency || groupCurrency)}
                 </Text>
               </View>
@@ -608,16 +620,12 @@ function ReviewView({
 
       <View style={styles.reviewActions}>
         <Button kind="secondary" onPress={onRegenerate} disabled={!transcriptEdited}>
-          <Text>
-            {transcriptEdited
-              ? t('voiceExpense.regenerate')
-              : t('voiceExpense.regenerateDisabled')}
-          </Text>
+          {transcriptEdited
+            ? t('voiceExpense.regenerate')
+            : t('voiceExpense.regenerateDisabled')}
         </Button>
         {drafts.length > 0 ? (
-          <Button onPress={onUse}>
-            <Text>{t('voiceExpense.useDrafts')}</Text>
-          </Button>
+          <Button onPress={onUse}>{t('voiceExpense.useDrafts')}</Button>
         ) : null}
       </View>
     </ScrollView>
@@ -655,7 +663,9 @@ function DraftSplitList({
     <View style={styles.splitBlock}>
       {summary.payerName ? (
         <View style={styles.splitHeadRow}>
-          <Text style={styles.splitEyebrow}>{t('addExpense.paidByLabel')}</Text>
+          <Text variant="monoLabel" style={styles.splitEyebrow}>
+            {t('addExpense.paidByLabel')}
+          </Text>
           <Text style={styles.splitHeadValue} numberOfLines={1}>
             {summary.payerName}
           </Text>
@@ -663,7 +673,9 @@ function DraftSplitList({
       ) : null}
 
       <View style={styles.splitHeadRow}>
-        <Text style={styles.splitEyebrow}>{t('addExpense.splitLabel')}</Text>
+        <Text variant="monoLabel" style={styles.splitEyebrow}>
+          {t('addExpense.splitLabel')}
+        </Text>
         <Text style={styles.splitHeadValue} numberOfLines={1}>
           {t(`addExpense.split.${draft.split_method}` as const)}
         </Text>
@@ -679,7 +691,9 @@ function DraftSplitList({
               {m.name}
             </Text>
             {share !== undefined ? (
-              <Text style={styles.personAmount}>{formatMinorUnits(share, currency)}</Text>
+              <Text variant="monoCaption" style={styles.personAmount}>
+                {formatMinorUnits(share, currency)}
+              </Text>
             ) : null}
           </View>
         );
@@ -710,13 +724,9 @@ function ErrorView({
       <Text style={styles.errorText}>{message}</Text>
       {/* A repayment is a redirect, not a failure — offer the real action. */}
       {code === 'settlement' ? (
-        <Button onPress={onGoToSettle}>
-        <Text>{t('voiceExpense.goToSettle')}</Text>
-      </Button>
+        <Button onPress={onGoToSettle}>{t('voiceExpense.goToSettle')}</Button>
       ) : null}
-      <Button kind="secondary" onPress={onRetry}>
-        <Text>{t('voiceExpense.tryAgain')}</Text>
-      </Button>
+      <Button kind="secondary" onPress={onRetry}>{t('voiceExpense.tryAgain')}</Button>
     </View>
   );
 }
@@ -749,13 +759,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.s5,
     paddingBottom: spacing.s4,
   },
-  title: {
-    flex: 1,
-    textAlign: 'center',
-    fontFamily: fontDisplay,
-    fontSize: fontSize.body,
-    color: colors.graphite,
-  },
+  title: { flex: 1, textAlign: 'center', color: colors.graphite },
   centered: {
     flex: 1,
     alignItems: 'center',
@@ -769,16 +773,13 @@ const styles = StyleSheet.create({
     height: 88,
     borderRadius: 44,
     flexShrink: 0,
-    backgroundColor: colors.graphite,
+    // Primary action, so it takes the same accent Button's `primary` kind
+    // uses rather than inventing a graphite variant of it.
+    backgroundColor: colors.vermillion,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  hint: {
-    fontFamily: fontBody,
-    fontSize: fontSize.body,
-    color: colors.graphite,
-    textAlign: 'center',
-  },
+  hint: { color: colors.graphite, textAlign: 'center' },
   example: {
     fontFamily: fontBody,
     fontSize: fontSize.caption,
@@ -787,28 +788,11 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   link: { fontFamily: fontBody, fontSize: fontSize.caption, color: colors.lead },
-  exampleLabel: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-  },
+  exampleLabel: { color: colors.lead, textTransform: 'uppercase' },
   recordingDot: { width: 16, height: 16, borderRadius: 8, backgroundColor: colors.brick },
-  timer: {
-    fontFamily: fontMono,
-    fontSize: fontSize.body,
-    color: colors.graphite,
-    fontVariant: ['tabular-nums'],
-  },
+  timer: { color: colors.graphite, fontVariant: ['tabular-nums'] },
   reviewScroll: { padding: spacing.s4, gap: spacing.s3, paddingBottom: spacing.s6 },
-  eyebrow: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-  },
+  eyebrow: { color: colors.lead, textTransform: 'uppercase' },
   // Deliberately NOT a bone card: the draft and question cards on this
   // same screen are bone, so filling this made an editable field look like
   // the read-only things beside it. The app's Field convention is a ruled
@@ -828,7 +812,7 @@ const styles = StyleSheet.create({
     // the user is being asked to check.
   },
   questionCard: { backgroundColor: colors.bone, borderRadius: 10, padding: spacing.s4 },
-  questionText: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite },
+  questionText: { color: colors.graphite },
   optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.s2, marginTop: spacing.s3 },
   optionChip: {
     paddingHorizontal: spacing.s4,
@@ -853,12 +837,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.body,
     color: colors.graphite,
   },
-  draftAmount: {
-    fontFamily: fontMono,
-    fontSize: fontSize.body,
-    color: colors.graphite,
-    fontVariant: ['tabular-nums'],
-  },
+  draftAmount: { color: colors.graphite, fontVariant: ['tabular-nums'] },
   draftPhrase: {
     fontFamily: fontBody,
     fontSize: fontSize.caption,
@@ -867,13 +846,7 @@ const styles = StyleSheet.create({
   },
   splitBlock: { marginTop: spacing.s3, gap: 2 },
   splitHeadRow: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.s2 },
-  splitEyebrow: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-  },
+  splitEyebrow: { color: colors.lead, textTransform: 'uppercase' },
   splitHeadValue: {
     flex: 1,
     fontFamily: fontBody,
@@ -895,12 +868,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.caption,
     color: colors.graphite,
   },
-  personAmount: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.graphite,
-    fontVariant: ['tabular-nums'],
-  },
+  personAmount: { color: colors.graphite, fontVariant: ['tabular-nums'] },
   draftReasoning: {
     fontFamily: fontBody,
     fontSize: fontSize.caption,
