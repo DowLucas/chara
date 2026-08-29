@@ -1396,7 +1396,6 @@
     "draftsLabel_other": "عُثر على {{count}} مصروف",
     "draftsLabel_two": "عُثر على مصروفين",
     "draftsLabel_zero": "لم يُعثر على مصروفات",
-    "eachAmount": "{{amount}} لكل شخص",
     "err_network": "حدث خطأ ما. أعد المحاولة.",
     "err_no_expense": "لا يوجد مصروف في ذلك. جرّب ذكر مبلغ ولمن كان.",
     "err_settlement": "يبدو أن هذا سداد وليس مصروفًا جديدًا.",

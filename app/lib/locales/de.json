@@ -1224,7 +1224,6 @@
     "draftsLabel": "{{count}} Ausgaben gefunden",
     "draftsLabel_one": "{{count}} Ausgabe gefunden",
     "draftsLabel_other": "{{count}} Ausgaben gefunden",
-    "eachAmount": "je {{amount}}",
     "err_network": "Etwas ist schiefgelaufen. Versuch es erneut.",
     "err_no_expense": "Darin steckt keine Ausgabe. Nenne einen Betrag und für wen sie war.",
     "err_settlement": "Das klingt nach einer Rückzahlung, nicht nach einer neuen Ausgabe.",

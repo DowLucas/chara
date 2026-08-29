@@ -1224,7 +1224,6 @@
     "draftsLabel": "{{count}} udgifter fundet",
     "draftsLabel_one": "{{count}} udgift fundet",
     "draftsLabel_other": "{{count}} udgifter fundet",
-    "eachAmount": "{{amount}} hver",
     "err_network": "Noget gik galt. Prøv igen.",
     "err_no_expense": "Ingen udgift i den. Prøv at nævne et beløb og hvem den var til.",
     "err_settlement": "Det lyder som en tilbagebetaling snarere end en ny udgift.",

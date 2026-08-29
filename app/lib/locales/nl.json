@@ -1224,7 +1224,6 @@
     "draftsLabel": "{{count}} uitgaven gevonden",
     "draftsLabel_one": "{{count}} uitgave gevonden",
     "draftsLabel_other": "{{count}} uitgaven gevonden",
-    "eachAmount": "{{amount}} elk",
     "err_network": "Er ging iets mis. Probeer het opnieuw.",
     "err_no_expense": "Daar zit geen uitgave in. Noem een bedrag en voor wie het was.",
     "err_settlement": "Dat klinkt als terugbetalen, niet als een nieuwe uitgave.",

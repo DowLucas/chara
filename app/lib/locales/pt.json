@@ -1264,7 +1264,6 @@
     "draftsLabel": "{{count}} despesas encontradas",
     "draftsLabel_one": "{{count}} despesa encontrada",
     "draftsLabel_other": "{{count}} despesas encontradas",
-    "eachAmount": "{{amount}} cada",
     "err_network": "Algo correu mal. Tenta de novo.",
     "err_no_expense": "Não há despesa nenhuma aí. Diz um valor e para quem era.",
     "err_settlement": "Isso parece pagar de volta, não uma despesa nova.",

@@ -1224,7 +1224,6 @@
     "draftsLabel": "{{count}} expenses found",
     "draftsLabel_one": "{{count}} expense found",
     "draftsLabel_other": "{{count}} expenses found",
-    "eachAmount": "{{amount}} each",
     "err_network": "Something went wrong. Try again.",
     "err_no_expense": "No expense in that one. Try naming an amount and who it was for.",
     "err_settlement": "That sounds like paying someone back rather than a new expense.",

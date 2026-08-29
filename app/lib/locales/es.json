@@ -1264,7 +1264,6 @@
     "draftsLabel": "{{count}} gastos encontrados",
     "draftsLabel_one": "{{count}} gasto encontrado",
     "draftsLabel_other": "{{count}} gastos encontrados",
-    "eachAmount": "{{amount}} cada uno",
     "err_network": "Algo salió mal. Inténtalo de nuevo.",
     "err_no_expense": "Ahí no hay ningún gasto. Di un importe y para quién era.",
     "err_settlement": "Eso suena a devolver dinero, no a un gasto nuevo.",

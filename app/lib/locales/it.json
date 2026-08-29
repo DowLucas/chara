@@ -1264,7 +1264,6 @@
     "draftsLabel": "{{count}} spese trovate",
     "draftsLabel_one": "{{count}} spesa trovata",
     "draftsLabel_other": "{{count}} spese trovate",
-    "eachAmount": "{{amount}} a testa",
     "err_network": "Qualcosa è andato storto. Riprova.",
     "err_no_expense": "Lì non c’è nessuna spesa. Prova a dire un importo e per chi era.",
     "err_settlement": "Sembra un rimborso, non una nuova spesa.",

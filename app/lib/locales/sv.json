@@ -1224,7 +1224,6 @@
     "draftsLabel": "{{count}} utgifter hittade",
     "draftsLabel_one": "{{count}} utgift hittad",
     "draftsLabel_other": "{{count}} utgifter hittade",
-    "eachAmount": "{{amount}} var",
     "err_network": "Något gick fel. Försök igen.",
     "err_no_expense": "Ingen utgift i den. Prova att säga ett belopp och vem den var för.",
     "err_settlement": "Det låter som en återbetalning snarare än en ny utgift.",

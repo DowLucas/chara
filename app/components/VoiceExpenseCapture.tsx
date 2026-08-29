@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
-  Text,
   TextInput,
   StyleSheet,
   TouchableOpacity,
@@ -21,6 +20,8 @@ import {
 import * as FileSystem from 'expo-file-system/legacy';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+
+import { Text } from '@/components/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
@@ -535,6 +536,9 @@ function ReviewView({
         accessibilityLabel={t('voiceExpense.transcriptLabel')}
         // A visual affordance helps nobody using VoiceOver; say it too.
         accessibilityHint={t('voiceExpense.transcriptHint')}
+        // Matches components/Field.tsx: scale with the OS, capped at 2x.
+        allowFontScaling
+        maxFontSizeMultiplier={2}
       />
 
       {questions.map((q) => (
@@ -580,7 +584,7 @@ function ReviewView({
               <Text style={styles.draftPhrase} numberOfLines={2}>
                 “{d.source_phrase}”
               </Text>
-              <DraftSplitLine draft={d} members={members} groupCurrency={groupCurrency} />
+              <DraftSplitList draft={d} members={members} groupCurrency={groupCurrency} />
               {d.reasoning ? (
                 <Text style={styles.draftReasoning} numberOfLines={3}>
                   {d.reasoning}
@@ -621,13 +625,16 @@ function ReviewView({
 }
 
 /**
- * States the split in words: who is on it, how it divides, and — when it
- * divides exactly — what each person owes.
+ * Who paid, and what each person on the split owes.
  *
- * This is the line that would have made "the rest of the guys" (which
- * excludes the speaker) visible before saving rather than after.
+ * The card used to name participants in one dense line and never say who
+ * paid at all — so "I paid, the rest of the guys split it" looked the same
+ * as "we all split it", which is exactly the reading that surprised a user.
+ *
+ * Amounts come from the server's own per-member shares, so an exact or
+ * percentage split shows real figures rather than an average.
  */
-function DraftSplitLine({
+function DraftSplitList({
   draft,
   members,
   groupCurrency,
@@ -640,18 +647,44 @@ function DraftSplitLine({
   const summary = splitSummary(draft, members);
   if (summary.memberNames.length === 0) return null;
 
-  const method = t(`addExpense.split.${draft.split_method}` as const);
-  const each =
-    summary.perPersonMinor !== undefined
-      ? t('voiceExpense.eachAmount', {
-          amount: formatMinorUnits(summary.perPersonMinor, draft.currency || groupCurrency),
-        })
-      : null;
+  const currency = draft.currency || groupCurrency;
+  const byMember = new Map((draft.shares ?? []).map((s) => [s.member_id, s.share_minor]));
+  const rows = members.filter((m) => draft.participants.includes(m.id));
 
   return (
-    <Text style={styles.draftSplit} numberOfLines={2}>
-      {[summary.memberNames.join(', '), method, each].filter(Boolean).join(' · ')}
-    </Text>
+    <View style={styles.splitBlock}>
+      {summary.payerName ? (
+        <View style={styles.splitHeadRow}>
+          <Text style={styles.splitEyebrow}>{t('addExpense.paidByLabel')}</Text>
+          <Text style={styles.splitHeadValue} numberOfLines={1}>
+            {summary.payerName}
+          </Text>
+        </View>
+      ) : null}
+
+      <View style={styles.splitHeadRow}>
+        <Text style={styles.splitEyebrow}>{t('addExpense.splitLabel')}</Text>
+        <Text style={styles.splitHeadValue} numberOfLines={1}>
+          {t(`addExpense.split.${draft.split_method}` as const)}
+        </Text>
+      </View>
+
+      {rows.map((m) => {
+        const share = byMember.get(m.id);
+        return (
+          <View key={m.id} style={styles.personRow}>
+            {/* flex + truncation, so a long name at 2x text scaling pushes
+                nothing off the card. */}
+            <Text style={styles.personName} numberOfLines={1}>
+              {m.name}
+            </Text>
+            {share !== undefined ? (
+              <Text style={styles.personAmount}>{formatMinorUnits(share, currency)}</Text>
+            ) : null}
+          </View>
+        );
+      })}
+    </View>
   );
 }
 
@@ -716,18 +749,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.s5,
     paddingBottom: spacing.s4,
   },
-  title: { fontFamily: fontDisplay, fontSize: fontSize.body, color: colors.graphite },
+  title: {
+    flex: 1,
+    textAlign: 'center',
+    fontFamily: fontDisplay,
+    fontSize: fontSize.body,
+    color: colors.graphite,
+  },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.s5,
+    paddingVertical: spacing.s4,
     gap: spacing.s4,
   },
   micButton: {
     width: 88,
     height: 88,
     borderRadius: 44,
+    flexShrink: 0,
     backgroundColor: colors.graphite,
     alignItems: 'center',
     justifyContent: 'center',
@@ -783,6 +824,8 @@ const styles = StyleSheet.create({
     padding: spacing.s4,
     minHeight: 88,
     textAlignVertical: 'top',
+    // minHeight, never height: at 2x scaling a fixed box clips the words
+    // the user is being asked to check.
   },
   questionCard: { backgroundColor: colors.bone, borderRadius: 10, padding: spacing.s4 },
   questionText: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite },
@@ -798,12 +841,17 @@ const styles = StyleSheet.create({
   optionText: { fontFamily: fontBody, fontSize: fontSize.caption, color: colors.graphite },
   optionTextSelected: { color: colors.paper },
   draftCard: { backgroundColor: colors.bone, borderRadius: 10, padding: spacing.s4 },
-  draftHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  draftHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    gap: spacing.s3,
+  },
   draftTitle: {
+    flex: 1,
     fontFamily: fontDisplay,
     fontSize: fontSize.body,
     color: colors.graphite,
-    flexShrink: 1,
   },
   draftAmount: {
     fontFamily: fontMono,
@@ -817,13 +865,41 @@ const styles = StyleSheet.create({
     color: colors.lead,
     marginTop: spacing.s2,
   },
-  // Mono: this line is names, a method and a number — closer to data than
-  // prose, and it should scan rather than read.
-  draftSplit: {
+  splitBlock: { marginTop: spacing.s3, gap: 2 },
+  splitHeadRow: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.s2 },
+  splitEyebrow: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  splitHeadValue: {
+    flex: 1,
+    fontFamily: fontBody,
+    fontSize: fontSize.caption,
+    color: colors.graphite,
+  },
+  personRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    gap: spacing.s3,
+    paddingLeft: spacing.s3,
+  },
+  // flex:1 + truncation on the name, intrinsic width on the amount: growing
+  // text shortens the name rather than pushing the figure off the card.
+  personName: {
+    flex: 1,
+    fontFamily: fontBody,
+    fontSize: fontSize.caption,
+    color: colors.graphite,
+  },
+  personAmount: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
     color: colors.graphite,
-    marginTop: spacing.s2,
+    fontVariant: ['tabular-nums'],
   },
   draftReasoning: {
     fontFamily: fontBody,

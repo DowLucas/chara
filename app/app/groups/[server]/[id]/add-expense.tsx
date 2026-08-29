@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { showAlert } from '@/lib/app-alert';
+import { Text as AppText } from '@/components/Text';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
@@ -789,9 +790,9 @@ function ShortcutPill({
       activeOpacity={0.7}
     >
       <Feather name={icon} size={16} color={colors.graphite} />
-      <Text style={styles.shortcutLabel} numberOfLines={1}>
+      <AppText style={styles.shortcutLabel} numberOfLines={1}>
         {label}
-      </Text>
+      </AppText>
     </TouchableOpacity>
   );
 }

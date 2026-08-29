@@ -1224,7 +1224,6 @@
     "draftsLabel": "{{count}} kulua löytyi",
     "draftsLabel_one": "{{count}} kulu löytyi",
     "draftsLabel_other": "{{count}} kulua löytyi",
-    "eachAmount": "{{amount}} kukin",
     "err_network": "Jokin meni pieleen. Yritä uudelleen.",
     "err_no_expense": "Siinä ei ollut kulua. Kerro summa ja kenelle se oli.",
     "err_settlement": "Tuo kuulostaa takaisinmaksulta, ei uudelta kululta.",

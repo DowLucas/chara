@@ -1223,7 +1223,6 @@
     "discardRest": "残りを破棄",
     "draftsLabel": "{{count}}件の支出",
     "draftsLabel_other": "{{count}}件の支出",
-    "eachAmount": "1人 {{amount}}",
     "err_network": "問題が発生しました。もう一度お試しください。",
     "err_no_expense": "支出が見つかりませんでした。金額と誰の分か伝えてみてください。",
     "err_settlement": "それは新しい支出ではなく、返済のようです。",

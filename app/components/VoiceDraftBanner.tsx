@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+
+import { Text } from '@/components/Text';
 
 import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
 
@@ -29,7 +31,7 @@ export function VoiceDraftBanner({ remaining, nextPhrase, onDiscardRest }: Voice
     <View style={styles.card}>
       <View style={styles.row}>
         <Feather name="mic" size={14} color={colors.lead} />
-        <Text style={styles.count}>
+        <Text style={styles.count} numberOfLines={2}>
           {t('voiceExpense.moreFromRecording', { count: remaining })}
         </Text>
         <TouchableOpacity
@@ -56,7 +58,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.s2,
     padding: spacing.s4,
   },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.s2 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.s2, flexWrap: 'wrap' },
   count: {
     flex: 1,
     fontFamily: fontMono,

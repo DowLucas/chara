@@ -1264,7 +1264,6 @@
     "draftsLabel": "{{count}} dépenses trouvées",
     "draftsLabel_one": "{{count}} dépense trouvée",
     "draftsLabel_other": "{{count}} dépenses trouvées",
-    "eachAmount": "{{amount}} chacun",
     "err_network": "Un problème est survenu. Réessaie.",
     "err_no_expense": "Aucune dépense là-dedans. Donne un montant et pour qui c’était.",
     "err_settlement": "On dirait un remboursement, pas une nouvelle dépense.",
