@@ -1192,3 +1192,46 @@ func TestSettle_Create_RejectsClientIDFromAnotherGroup(t *testing.T) {
 	require.Equal(t, http.StatusConflict, rr.Code, rr.Body.String())
 	assert.NotContains(t, rr.Body.String(), otherGroup.ID, "must not leak the other group's settlement")
 }
+
+// TestSettle_Create_RejectsRetryOfRevertedSettlement closes the gap between
+// idempotency and revert. The retry path returns the stored settlement, but a
+// reverted one no longer settles anything: member_balances filters
+// reverted_at IS NULL, so handing it back with 200 tells the client the debt
+// is paid while the balance is still open.
+//
+// Reachable because the client mints one id per screen mount and reuses it
+// across attempts: Bob settles, the response is lost, Alice reverts inside the
+// 24h window, then Bob retries from the same screen.
+func TestSettle_Create_RejectsRetryOfRevertedSettlement(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	testutil.CreateExpense(t, env.Pool, groupID, "Dinner", 9000, "SEK", aliceMemberID, alice.ID, []string{aliceMemberID, bobMemberID})
+
+	clientID := ulid.New()
+	body := fmt.Sprintf(
+		`{"id":%q,"from_member_id":%q,"to_member_id":%q,"amount":"45.00","currency":"SEK"}`,
+		clientID, bobMemberID, aliceMemberID,
+	)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, bob.Token))
+	require.Equal(t, http.StatusCreated, rr.Code, rr.Body.String())
+
+	// Alice reverts before Bob's retry lands.
+	rr = env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settlements/"+clientID+"/revert", "", alice.Token))
+	require.Equal(t, http.StatusNoContent, rr.Code, rr.Body.String())
+
+	// The retry must not report success — the debt is open again.
+	rr = env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/settle", body, bob.Token))
+	require.Equal(t, http.StatusConflict, rr.Code, rr.Body.String())
+
+	// And the revert still stands: Bob owes Alice the full 45 again.
+	rr = env.Do(t, env.AuthRequest(t, "GET", "/api/groups/"+groupID+"/balances", "", alice.Token))
+	require.Equal(t, http.StatusOK, rr.Code)
+	var balances []map[string]any
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&balances))
+	nets := map[string]any{}
+	for _, b := range balances {
+		nets[b["member_id"].(string)] = b["net_balance"]
+	}
+	assert.Equal(t, "-45.00", nets[bobMemberID])
+	assert.Equal(t, "45.00", nets[aliceMemberID])
+}

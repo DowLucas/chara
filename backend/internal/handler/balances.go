@@ -417,6 +417,15 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 		// ON CONFLICT DO NOTHING matched: this id is already recorded, so
 		// this is a retry. Return the stored settlement without writing a
 		// second activity event. The tx is rolled back by the defer.
+		//
+		// The stored row wins even when the retry names a different method:
+		// the client reuses one id per screen mount, so a user who confirms
+		// Swish, loses the response and then falls back to "mark as paid
+		// manually" retries under the same id. Nothing was paid twice, and
+		// the first attempt is where the payment was actually confirmed.
+		// Rejecting the mismatch would report failure for a settlement that
+		// is recorded, sending the user back to settle a second time — the
+		// double-settle this whole path exists to prevent.
 		existing, getErr := h.queries.GetSettlement(r.Context(), settlementID)
 		if getErr != nil {
 			writeError(w, http.StatusInternalServerError, "could not load settlement")
@@ -427,6 +436,14 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 		// they may not be a member of.
 		if existing.GroupID != groupID {
 			writeError(w, http.StatusConflict, "settlement id already used")
+			return
+		}
+		// Reverted since it was recorded, so it settles nothing any more
+		// (member_balances filters reverted_at IS NULL). Replaying it as a
+		// success would tell the caller the debt is paid while the balance is
+		// open — fail instead, so the user records the payment afresh.
+		if existing.RevertedAt.Valid {
+			writeError(w, http.StatusConflict, "settlement was reverted")
 			return
 		}
 		writeJSON(w, http.StatusOK, settlementToResponse(existing))
