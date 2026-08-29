@@ -89,13 +89,14 @@ func resolveDrafts(raws []rawDraft, vc Context) (drafts []Draft, degraded, unres
 			d.LowConfidence = append(d.LowConfidence, "paid_by")
 		}
 
-		shares, method, fellBack := resolveShares(raw, amount, d.Participants)
+		shares, pcts, method, fellBack := resolveShares(raw, amount, d.Participants)
 		if fellBack {
 			degraded++
 			d.LowConfidence = append(d.LowConfidence, "split")
 		}
 		d.SplitMethod = method
 		d.Shares = shares
+		d.Percentages = pcts
 
 		drafts = append(drafts, d)
 	}
@@ -145,7 +146,10 @@ func resolveCategory(raw string, catalog []string) string {
 
 // resolveShares recomputes the split. fellBack is true when the model's
 // exact/percentage numbers did not validate and equal was used instead.
-func resolveShares(raw rawDraft, amount money.Amount, participants []string) ([]MemberShare, string, bool) {
+//
+// The returned percentages are non-nil only for a percentage split that
+// validated: a degraded one must not keep the numbers that just failed.
+func resolveShares(raw rawDraft, amount money.Amount, participants []string) ([]MemberShare, []MemberPct, string, bool) {
 	equal := func() []MemberShare {
 		parts, err := split.Equal(amount, participants)
 		if err != nil {
@@ -159,25 +163,25 @@ func resolveShares(raw rawDraft, amount money.Amount, participants []string) ([]
 		in := make([]split.MemberShare, 0, len(raw.Shares))
 		for _, s := range raw.Shares {
 			if !containsStr(participants, s.MemberID) {
-				return equal(), "equal", true
+				return equal(), nil, "equal", true
 			}
 			v, err := money.ParseDecimal(s.Amount)
 			if err != nil {
-				return equal(), "equal", true
+				return equal(), nil, "equal", true
 			}
 			in = append(in, split.MemberShare{MemberID: s.MemberID, Share: v})
 		}
 		out, err := split.Exact(amount, in)
 		if err != nil {
-			return equal(), "equal", true
+			return equal(), nil, "equal", true
 		}
-		return toMemberShares(out), "exact", false
+		return toMemberShares(out), nil, "exact", false
 
 	case "percentage":
 		in := make([]split.MemberPct, 0, len(raw.Percentages))
 		for _, p := range raw.Percentages {
 			if !containsStr(participants, p.MemberID) {
-				return equal(), "equal", true
+				return equal(), nil, "equal", true
 			}
 			in = append(in, split.MemberPct{
 				MemberID: p.MemberID,
@@ -188,13 +192,17 @@ func resolveShares(raw rawDraft, amount money.Amount, participants []string) ([]
 		}
 		out, err := split.Percentage(amount, in)
 		if err != nil {
-			return equal(), "equal", true
+			return equal(), nil, "equal", true
 		}
-		return toMemberShares(out), "percentage", false
+		pcts := make([]MemberPct, len(in))
+		for i, p := range in {
+			pcts[i] = MemberPct{MemberID: p.MemberID, BasisPoints: p.BasisPoints}
+		}
+		return toMemberShares(out), pcts, "percentage", false
 
 	default:
 		// Includes "equal" and anything the model invented.
-		return equal(), "equal", false
+		return equal(), nil, "equal", false
 	}
 }
 

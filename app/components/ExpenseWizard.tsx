@@ -156,9 +156,15 @@ export interface ExpenseWizardHandle {
     category?: string;
     date?: Date;
     paidById: string;
-    splitMethod: 'equal' | 'exact' | 'percentage';
     participants: string[];
-    shares?: { memberId: string; shareMinor: number }[];
+    /** How the split should be represented, decided by
+     *  lib/voice-drafts.toWizardSplit so the rule is unit-testable rather
+     *  than buried in this component. */
+    split: {
+      method: 'equal' | 'exact' | 'percentage';
+      exactByMember?: Record<string, string>;
+      pctByMember?: Record<string, string>;
+    };
   }): void;
 }
 
@@ -928,16 +934,24 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
             setIncluded(nextIncluded);
           }
 
-          // Only 'exact' carries per-member numbers worth keeping. A
-          // percentage split arrives already resolved to shares, and
-          // re-deriving percentages from rounded minor units would not
-          // round-trip, so it lands as exact amounts instead.
-          if (input.shares?.length && input.splitMethod !== 'equal') {
+          // Keep the split's MEANING, not just the amounts it produced —
+          // the same reason applyScanItemsAssignment stores the itemisation
+          // rather than its derived totals. A user who said "Alex owes 25%"
+          // must see 25%, and that proportion has to keep holding if the
+          // amount changes.
+          const onRoster = (byMember: Record<string, string> | undefined) => {
             const next: Record<string, string> = {};
-            for (const s of input.shares) {
-              if (known.has(s.memberId)) next[s.memberId] = (s.shareMinor / 100).toFixed(2);
+            for (const [id, v] of Object.entries(byMember ?? {})) {
+              if (known.has(id)) next[id] = v;
             }
-            setExactByMember(next);
+            return next;
+          };
+
+          if (input.split.method === 'percentage') {
+            setPctByMember(onRoster(input.split.pctByMember));
+            setMethod('percentage');
+          } else if (input.split.method === 'exact') {
+            setExactByMember(onRoster(input.split.exactByMember));
             setMethod('exact');
           } else {
             setMethod('equal');

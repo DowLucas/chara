@@ -165,6 +165,42 @@ func TestVoice_ReturnsDraftsAndGenerationID(t *testing.T) {
 	assert.Equal(t, 2, rec.UnresolvedMemberCount)
 }
 
+// A percentage split must reach the client AS a percentage. Sending only
+// the resolved amounts makes the wizard show 250.00 instead of "25%", which
+// is what the user actually asked for.
+func TestVoice_SerialisesPercentages(t *testing.T) {
+	res := okResult()
+	res.Drafts[0].SplitMethod = "percentage"
+	res.Drafts[0].Percentages = []voice.MemberPct{
+		{MemberID: "m1", BasisPoints: 7500},
+		{MemberID: "m2", BasisPoints: 2500},
+	}
+	router := voiceRouter(t, &stubParser{res: res}, &okLookup{})
+
+	rr := postVoice(t, router, audioBody(nil), authedContext("u1"))
+	require.Equal(t, http.StatusOK, rr.Code, rr.Body.String())
+
+	var got voiceResponse
+	require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &got))
+	require.Len(t, got.Expenses, 1)
+	require.Len(t, got.Expenses[0].Percentages, 2)
+
+	byID := map[string]int{}
+	for _, p := range got.Expenses[0].Percentages {
+		byID[p.MemberID] = p.BasisPoints
+	}
+	assert.Equal(t, 2500, byID["m2"])
+	assert.Equal(t, 7500, byID["m1"])
+}
+
+// An equal split must not carry an empty percentages array into the JSON —
+// the client uses its presence to decide the split method.
+func TestVoice_OmitsPercentagesForEqualSplits(t *testing.T) {
+	router := voiceRouter(t, &stubParser{res: okResult()}, &okLookup{})
+	rr := postVoice(t, router, audioBody(nil), authedContext("u1"))
+	assert.NotContains(t, rr.Body.String(), "percentages")
+}
+
 func TestVoice_RejectsNonMember(t *testing.T) {
 	router := voiceRouter(t, &stubParser{res: okResult()}, notAMemberLookup{})
 	rr := postVoice(t, router, audioBody(nil), authedContext("u1"))

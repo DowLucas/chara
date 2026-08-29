@@ -116,6 +116,15 @@ type voiceDraftShare struct {
 	ShareMinor int64  `json:"share_minor"`
 }
 
+// voiceDraftPct carries a validated percentage split in basis points
+// (10000 == 100%). Present only for split_method "percentage" — the client
+// uses its presence to restore a proportional split rather than pinning
+// the amounts it happened to produce.
+type voiceDraftPct struct {
+	MemberID    string `json:"member_id"`
+	BasisPoints int    `json:"basis_points"`
+}
+
 type voiceDraft struct {
 	SourcePhrase string            `json:"source_phrase"`
 	Title        string            `json:"title"`
@@ -127,6 +136,7 @@ type voiceDraft struct {
 	SplitMethod  string            `json:"split_method"`
 	Participants []string          `json:"participants"`
 	Shares       []voiceDraftShare `json:"shares,omitempty"`
+	Percentages  []voiceDraftPct   `json:"percentages,omitempty"`
 	// LowConfidence names fields the resolver guessed at, so the UI can
 	// flag them for the user rather than presenting them as certain.
 	LowConfidence []string `json:"low_confidence,omitempty"`
@@ -360,6 +370,13 @@ func toVoiceDrafts(in []voice.Draft) []voiceDraft {
 		for j, s := range d.Shares {
 			shares[j] = voiceDraftShare{MemberID: s.MemberID, ShareMinor: int64(s.Share)}
 		}
+		var pcts []voiceDraftPct
+		if len(d.Percentages) > 0 {
+			pcts = make([]voiceDraftPct, len(d.Percentages))
+			for j, p := range d.Percentages {
+				pcts[j] = voiceDraftPct{MemberID: p.MemberID, BasisPoints: p.BasisPoints}
+			}
+		}
 		out[i] = voiceDraft{
 			SourcePhrase:  d.SourcePhrase,
 			Title:         d.Title,
@@ -371,6 +388,7 @@ func toVoiceDrafts(in []voice.Draft) []voiceDraft {
 			SplitMethod:   d.SplitMethod,
 			Participants:  d.Participants,
 			Shares:        shares,
+			Percentages:   pcts,
 			LowConfidence: d.LowConfidence,
 		}
 	}

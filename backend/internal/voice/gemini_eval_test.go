@@ -366,3 +366,40 @@ func TestVoiceEval_RepaymentIsASettlementNotAnExpense(t *testing.T) {
 	assert.ErrorIs(t, err, ErrSettlement,
 		"a repayment must point at the settle flow, not become an expense")
 }
+
+// Reported from real use: "Jag betalade 1000 kr och Alex är skyldig 25%"
+// showed exact amounts instead of a 25% split. The model was always right;
+// the percentages were being discarded on the way to the client.
+func TestVoiceEval_Text_PartialPercentageKeepsProportions(t *testing.T) {
+	key := os.Getenv("GEMINI_API_KEY")
+	if key == "" {
+		t.Skip("GEMINI_API_KEY not set")
+	}
+	vc := Context{
+		GroupID: "g_bcn", GroupName: "Barcelona", Currency: "EUR", Language: "sv",
+		Categories: []string{"food", "drinks", "travel"},
+		Members: []Member{
+			{ID: "m1", Name: "Lucas"},
+			{ID: "m2", Name: "Alex"},
+		},
+		CallerMemberID: "m1",
+		LocalDate:      "2026-08-29",
+	}
+
+	got, err := NewGemini(key).ParseText(context.Background(),
+		"Jag betalade 1000 kr och Alex är skyldig 25%", vc, nil)
+	require.NoError(t, err)
+	require.Len(t, got.Drafts, 1)
+
+	d := got.Drafts[0]
+	assert.Equal(t, "percentage", d.SplitMethod)
+	assert.Equal(t, "SEK", d.Currency, `"kr" is SEK even in a EUR group — the FX path handles it`)
+	assert.Zero(t, got.DegradedSplits)
+
+	byID := map[string]int{}
+	for _, p := range d.Percentages {
+		byID[p.MemberID] = p.BasisPoints
+	}
+	assert.Equal(t, 2500, byID["m2"], "Alex must be 25%%, not a pinned amount")
+	assert.Equal(t, 7500, byID["m1"], "the unstated remainder belongs to the speaker")
+}

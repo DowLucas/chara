@@ -43,6 +43,7 @@ import {
   advance,
   discardRest,
   changedFields,
+  toWizardSplit,
   type VoiceDraft,
   type VoiceQueue,
 } from '@/lib/voice-drafts';
@@ -266,9 +267,8 @@ export default function AddExpenseScreen() {
           })()
         : undefined,
       paidById: d.paid_by_id,
-      splitMethod: d.split_method,
       participants: d.participants,
-      shares: d.shares?.map((s) => ({ memberId: s.member_id, shareMinor: s.share_minor })),
+      split: toWizardSplit(d),
     };
   }
 

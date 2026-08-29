@@ -17,6 +17,12 @@ export interface VoiceDraftShare {
   share_minor: number;
 }
 
+export interface VoiceDraftPct {
+  member_id: string;
+  /** 10000 == 100%, matching the server's internal/split. */
+  basis_points: number;
+}
+
 export interface VoiceDraft {
   /** The words from the transcript that produced this draft. Shown to the
    *  user against the draft — that traceability is what makes accepting a
@@ -31,6 +37,10 @@ export interface VoiceDraft {
   split_method: 'equal' | 'exact' | 'percentage';
   participants: string[];
   shares?: VoiceDraftShare[];
+  /** Present only for a validated percentage split. Carrying the
+   *  proportions — rather than only the amounts they produced — is what
+   *  lets the wizard show "25%" instead of pinning 250.00. */
+  percentages?: VoiceDraftPct[];
   /** Field names the server's resolver had to guess at, for the UI to flag. */
   low_confidence?: string[];
 }
@@ -50,6 +60,50 @@ export interface SavedExpenseShape {
   paidById: string;
   splitMethod: string;
   participants: string[];
+}
+
+/** How the wizard should represent a draft's split. */
+export interface WizardSplit {
+  method: 'equal' | 'exact' | 'percentage';
+  /** Decimal strings keyed by member id, e.g. "180.00". */
+  exactByMember?: Record<string, string>;
+  /** Percent strings keyed by member id, e.g. "25" or "33.33". */
+  pctByMember?: Record<string, string>;
+}
+
+/**
+ * Decide how a draft's split should appear in the wizard.
+ *
+ * A percentage split stays proportional. The user who said "Alex owes 25%"
+ * asked for a proportion, and showing them 250.00 instead answers a
+ * question they did not ask — and silently stops tracking the proportion
+ * if the amount later changes.
+ *
+ * When a percentage split arrives without its percentages (an older
+ * server), exact amounts are the right fallback: they keep the money
+ * correct, which matters more than keeping the method label honest.
+ */
+export function toWizardSplit(draft: VoiceDraft): WizardSplit {
+  if (draft.split_method === 'percentage' && draft.percentages?.length) {
+    const pctByMember: Record<string, string> = {};
+    for (const p of draft.percentages) {
+      // Trim trailing zeros: 2500 is "25", 3333 is "33.33".
+      pctByMember[p.member_id] = String(
+        Number((p.basis_points / 100).toFixed(2)),
+      );
+    }
+    return { method: 'percentage', pctByMember };
+  }
+
+  if (draft.split_method !== 'equal' && draft.shares?.length) {
+    const exactByMember: Record<string, string> = {};
+    for (const s of draft.shares) {
+      exactByMember[s.member_id] = (s.share_minor / 100).toFixed(2);
+    }
+    return { method: 'exact', exactByMember };
+  }
+
+  return { method: 'equal' };
 }
 
 export function makeQueue(drafts: VoiceDraft[], generationId: string): VoiceQueue {

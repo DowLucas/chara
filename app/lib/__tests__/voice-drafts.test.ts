@@ -5,6 +5,7 @@ import {
   advance,
   discardRest,
   changedFields,
+  toWizardSplit,
   type VoiceDraft,
 } from '../voice-drafts';
 
@@ -108,5 +109,90 @@ describe('changedFields', () => {
 
   it('detects a changed currency', () => {
     expect(changedFields(draft(), { ...saved, currency: 'EUR' })).toEqual(['currency']);
+  });
+});
+
+describe('toWizardSplit', () => {
+  const base = (over: Partial<VoiceDraft> = {}): VoiceDraft => ({
+    source_phrase: 'x',
+    title: 'X',
+    amount_minor: 100000,
+    currency: 'SEK',
+    paid_by_id: 'm1',
+    split_method: 'equal',
+    participants: ['m1', 'm2'],
+    ...over,
+  });
+
+  it('keeps a percentage split proportional instead of pinning amounts', () => {
+    // "Jag betalade 1000 kr och Alex är skyldig 25%" — the user asked for a
+    // proportion, so the wizard must show 25%, not 250.00.
+    const got = toWizardSplit(
+      base({
+        split_method: 'percentage',
+        shares: [
+          { member_id: 'm1', share_minor: 75000 },
+          { member_id: 'm2', share_minor: 25000 },
+        ],
+        percentages: [
+          { member_id: 'm1', basis_points: 7500 },
+          { member_id: 'm2', basis_points: 2500 },
+        ],
+      }),
+    );
+    expect(got.method).toBe('percentage');
+    expect(got.pctByMember).toEqual({ m1: '75', m2: '25' });
+    expect(got.exactByMember).toBeUndefined();
+  });
+
+  it('renders fractional percentages without trailing zeros', () => {
+    const got = toWizardSplit(
+      base({
+        split_method: 'percentage',
+        percentages: [
+          { member_id: 'm1', basis_points: 3333 },
+          { member_id: 'm2', basis_points: 6667 },
+        ],
+      }),
+    );
+    expect(got.pctByMember).toEqual({ m1: '33.33', m2: '66.67' });
+  });
+
+  it('uses exact amounts for an exact split', () => {
+    const got = toWizardSplit(
+      base({
+        split_method: 'exact',
+        shares: [
+          { member_id: 'm1', share_minor: 18000 },
+          { member_id: 'm2', share_minor: 25000 },
+        ],
+      }),
+    );
+    expect(got.method).toBe('exact');
+    expect(got.exactByMember).toEqual({ m1: '180.00', m2: '250.00' });
+    expect(got.pctByMember).toBeUndefined();
+  });
+
+  it('uses equal when there is nothing per-member to carry', () => {
+    const got = toWizardSplit(base());
+    expect(got.method).toBe('equal');
+    expect(got.exactByMember).toBeUndefined();
+    expect(got.pctByMember).toBeUndefined();
+  });
+
+  it('falls back to exact when a percentage split lost its percentages', () => {
+    // An older server sends shares but no percentages; amounts still beat
+    // silently splitting evenly and getting the money wrong.
+    const got = toWizardSplit(
+      base({
+        split_method: 'percentage',
+        shares: [
+          { member_id: 'm1', share_minor: 75000 },
+          { member_id: 'm2', share_minor: 25000 },
+        ],
+      }),
+    );
+    expect(got.method).toBe('exact');
+    expect(got.exactByMember).toEqual({ m1: '750.00', m2: '250.00' });
   });
 });

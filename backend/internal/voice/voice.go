@@ -84,6 +84,13 @@ type MemberShare struct {
 	Share    money.Amount
 }
 
+// MemberPct is one member's validated percentage, in basis points
+// (10000 == 100%), matching internal/split.
+type MemberPct struct {
+	MemberID    string
+	BasisPoints int
+}
+
 // Draft is one proposed expense, after resolution. Every field has been
 // checked against the group: member ids exist, the currency and category
 // are known, and Shares were recomputed by internal/split rather than
@@ -103,6 +110,13 @@ type Draft struct {
 	SplitMethod  string
 	Participants []string
 	Shares       []MemberShare
+	// Percentages is set only for a validated percentage split. Carrying
+	// them is what lets the client show "Alex 25%" instead of a bare
+	// 250.00 — the amounts alone cannot say whether the user asked for a
+	// proportion or typed a number, and re-deriving one from rounded minor
+	// units is guesswork the server can avoid, having already validated
+	// the real values.
+	Percentages []MemberPct
 	// LowConfidence names fields the resolver had to guess or fall back
 	// on, so the UI can flag them.
 	LowConfidence []string

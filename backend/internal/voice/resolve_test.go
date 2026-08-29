@@ -333,3 +333,78 @@ func TestResolveNoDraftsIsNotAnError(t *testing.T) {
 		t.Errorf("got %d/%d/%d, want 0/0/0", len(got), degraded, unresolved)
 	}
 }
+
+// A percentage split must keep its percentages, not just the amounts they
+// produced. The client needs them to show "Alex 25%" rather than a bare
+// 250.00, and re-deriving them from rounded minor units is guesswork the
+// server can simply avoid — it already validated the real numbers.
+func TestResolveKeepsPercentagesOnTheDraft(t *testing.T) {
+	raws := []rawDraft{{
+		Title: "Delad utgift", Amount: "1000.00", Currency: "SEK",
+		PaidByMemberID: "m1", SplitMethod: "percentage",
+		Participants: []string{"m1", "m2"},
+		Percentages: []rawPercent{
+			{MemberID: "m1", Percent: 75},
+			{MemberID: "m2", Percent: 25},
+		},
+	}}
+	got, degraded, _ := resolveDrafts(raws, testContext())
+
+	require := func(cond bool, format string, args ...any) {
+		t.Helper()
+		if !cond {
+			t.Fatalf(format, args...)
+		}
+	}
+	require(degraded == 0, "degraded = %d, want 0", degraded)
+	require(len(got) == 1, "got %d drafts, want 1", len(got))
+
+	byID := map[string]int{}
+	for _, p := range got[0].Percentages {
+		byID[p.MemberID] = p.BasisPoints
+	}
+	if byID["m2"] != 2500 {
+		t.Errorf("m2 basis points = %d, want 2500", byID["m2"])
+	}
+	if byID["m1"] != 7500 {
+		t.Errorf("m1 basis points = %d, want 7500", byID["m1"])
+	}
+}
+
+// An equal or exact split has no percentages to carry.
+func TestResolveLeavesPercentagesEmptyForOtherMethods(t *testing.T) {
+	for _, method := range []string{"equal", "exact"} {
+		raws := []rawDraft{{
+			Title: "Dinner", Amount: "430.00", PaidByMemberID: "m1",
+			SplitMethod: method, Participants: []string{"m1", "m2"},
+			Shares: []rawShare{
+				{MemberID: "m1", Amount: "180.00"},
+				{MemberID: "m2", Amount: "250.00"},
+			},
+		}}
+		got, _, _ := resolveDrafts(raws, testContext())
+		if len(got[0].Percentages) != 0 {
+			t.Errorf("%s split carried percentages %v, want none", method, got[0].Percentages)
+		}
+	}
+}
+
+// A degraded percentage split falls back to equal, so its percentages must
+// not survive — they are exactly the numbers that failed to validate.
+func TestResolveDropsPercentagesWhenTheyDegrade(t *testing.T) {
+	raws := []rawDraft{{
+		Title: "Hotel", Amount: "900.00", PaidByMemberID: "m1",
+		SplitMethod: "percentage", Participants: []string{"m1", "m2"},
+		Percentages: []rawPercent{
+			{MemberID: "m1", Percent: 70},
+			{MemberID: "m2", Percent: 40},
+		},
+	}}
+	got, degraded, _ := resolveDrafts(raws, testContext())
+	if degraded != 1 {
+		t.Fatalf("degraded = %d, want 1", degraded)
+	}
+	if len(got[0].Percentages) != 0 {
+		t.Errorf("degraded draft kept percentages %v, want none", got[0].Percentages)
+	}
+}
