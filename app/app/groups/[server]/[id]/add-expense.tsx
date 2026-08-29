@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Image,
   Modal,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -33,6 +34,20 @@ import { PdfView, canRenderPdfInline } from '@/components/PdfView';
 import { ExpenseSavedOverlay } from '@/components/ExpenseSavedOverlay';
 import { notifyGroupChanged } from '@/lib/group-refresh';
 import { ScanItemsAssign } from '@/components/ScanItemsAssign';
+import { VoiceExpenseCapture } from '@/components/VoiceExpenseCapture';
+import { VoiceDraftBanner } from '@/components/VoiceDraftBanner';
+import {
+  makeQueue,
+  currentDraft,
+  remainingCount,
+  advance,
+  discardRest,
+  changedFields,
+  type VoiceDraft,
+  type VoiceQueue,
+} from '@/lib/voice-drafts';
+import * as analytics from '@/lib/analytics';
+import { isPopupJustClosed } from '@/lib/popup-guard';
 import { buildScanItemsState, type Itemization, type ScanItemsState } from '@/lib/scan-items';
 import { draftKey } from '@/lib/expense-draft';
 import { useAccount } from '@/lib/accounts';
@@ -72,6 +87,11 @@ export default function AddExpenseScreen() {
   // below must not decide "no OCR" on the initial value.
   const [ocrAvailable, setOcrAvailable] = useState<boolean | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
+  // Voice is native-only for now: browser capture needs MediaRecorder
+  // rather than expo-audio's native path.
+  const [voiceAvailable, setVoiceAvailable] = useState(false);
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  const [voiceQueue, setVoiceQueue] = useState<VoiceQueue | null>(null);
   // A file handed over by the OS share sheet, for the scanner to start on.
   const [initialScan, setInitialScan] = useState<{
     source: ReceiptSource;
@@ -126,8 +146,14 @@ export default function AddExpenseScreen() {
     if (!serverUrl) return;
     api
       .instanceInfo()
-      .then((info) => setOcrAvailable(info.features.ocr))
-      .catch(() => setOcrAvailable(false));
+      .then((info) => {
+        setOcrAvailable(info.features.ocr);
+        setVoiceAvailable(Platform.OS !== 'web' && info.features.voice_expense === true);
+      })
+      .catch(() => {
+        setOcrAvailable(false);
+        setVoiceAvailable(false);
+      });
   }, [serverUrl]);
 
   useEffect(() => {
@@ -202,6 +228,70 @@ export default function AddExpenseScreen() {
         buttons: [{ key: 'ok', label: t('common.ok') }],
       });
     });
+  }
+
+  // Report drafts the user walked away from. Reads the queue through a ref
+  // so the unmount effect does not re-subscribe on every queue transition.
+  const voiceQueueRef = useRef<VoiceQueue | null>(null);
+  voiceQueueRef.current = voiceQueue;
+  useEffect(
+    () => () => {
+      const q = voiceQueueRef.current;
+      if (!q) return;
+      const remaining = q.drafts.length - q.index;
+      if (remaining > 0) {
+        analytics.track('voice_queue_abandoned', { saved: q.index, remaining });
+      }
+    },
+    [],
+  );
+
+  function openVoice() {
+    // Dismissing another sheet by tapping this row must not chain-open it.
+    if (isPopupJustClosed()) return;
+    setVoiceOpen(true);
+  }
+
+  /** Convert a draft into the shape the wizard's handle expects. */
+  function toWizardInput(d: VoiceDraft) {
+    return {
+      title: d.title,
+      amountMinor: d.amount_minor,
+      currency: d.currency,
+      category: d.category,
+      date: d.date
+        ? (() => {
+            const parsed = new Date(d.date + 'T00:00:00');
+            return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+          })()
+        : undefined,
+      paidById: d.paid_by_id,
+      splitMethod: d.split_method,
+      participants: d.participants,
+      shares: d.shares?.map((s) => ({ memberId: s.member_id, shareMinor: s.share_minor })),
+    };
+  }
+
+  function handleVoiceGenerated(result: { drafts: VoiceDraft[]; generationId: string }) {
+    setVoiceOpen(false);
+    const q = makeQueue(result.drafts, result.generationId);
+    setVoiceQueue(q);
+    const first = currentDraft(q);
+    if (first) wizardRef.current?.applyVoiceDraft(toWizardInput(first));
+  }
+
+  /** Move to the next queued draft, or clear the queue when spent. */
+  function advanceVoiceQueue(): boolean {
+    if (!voiceQueue) return false;
+    const next = advance(voiceQueue);
+    const draft = currentDraft(next);
+    if (!draft) {
+      setVoiceQueue(null);
+      return false;
+    }
+    setVoiceQueue(next);
+    wizardRef.current?.applyVoiceDraft(toWizardInput(draft));
+    return true;
   }
 
   function closeScanner() {
@@ -287,6 +377,25 @@ export default function AddExpenseScreen() {
     if (!id) return;
     setSaving(true);
     try {
+      // When a voice draft is in the wizard, report which of its fields
+      // the user changed. That is what turns generations into per-field
+      // acceptance rates; it is best-effort and never blocks the save.
+      const voiceDraft = voiceQueue ? currentDraft(voiceQueue) : null;
+      const voiceTracking = voiceDraft
+        ? {
+            generation_id: voiceQueue!.generationId,
+            changed_fields: changedFields(voiceDraft, {
+              title: payload.title,
+              amountMinor: Math.round(parseFloat(payload.amount) * 100),
+              currency: payload.currency,
+              paidById: payload.paid_by_id,
+              splitMethod: payload.split_method,
+              participants:
+                payload.participants ?? (payload.splits ?? []).map((sp) => sp.member_id),
+            }),
+          }
+        : {};
+
       const base = {
         title: payload.title,
         amount: payload.amount,
@@ -296,6 +405,7 @@ export default function AddExpenseScreen() {
         expense_date: payload.expense_date,
         split_method: payload.split_method,
         ...(payload.fx ?? {}),
+        ...voiceTracking,
       };
 
       let created;
@@ -324,6 +434,15 @@ export default function AddExpenseScreen() {
         } catch (uploadErr) {
           console.warn('receipt attachment upload failed', uploadErr);
         }
+      }
+
+      if (voiceQueue && voiceDraft) {
+        analytics.track('voice_draft_saved', {
+          index: voiceQueue.index,
+          total_drafts: voiceQueue.drafts.length,
+          changed_field_count: (voiceTracking as { changed_fields?: string[] }).changed_fields
+            ?.length ?? 0,
+        });
       }
 
       const amountMinor = Math.round(parseFloat(payload.amount) * 100);
@@ -396,6 +515,33 @@ export default function AddExpenseScreen() {
     </TouchableOpacity>
   ) : null;
 
+  const nextQueued = voiceQueue ? voiceQueue.drafts[voiceQueue.index + 1] : undefined;
+  const voiceSlot = (
+    <>
+      {voiceAvailable && !voiceQueue ? (
+        <TouchableOpacity
+          style={styles.scanRow}
+          onPress={openVoice}
+          accessibilityRole="button"
+          accessibilityLabel={t('addExpense.voiceButton')}
+        >
+          <Feather name="mic" size={18} color={colors.graphite} />
+          <Text style={styles.scanLabel}>{t('addExpense.voiceButton')}</Text>
+        </TouchableOpacity>
+      ) : null}
+      {voiceQueue && nextQueued ? (
+        <VoiceDraftBanner
+          remaining={remainingCount(voiceQueue)}
+          nextPhrase={nextQueued.source_phrase}
+          onDiscardRest={() => {
+            analytics.track('voice_draft_discarded', { remaining: remainingCount(voiceQueue) });
+            setVoiceQueue(discardRest(voiceQueue));
+          }}
+        />
+      ) : null}
+    </>
+  );
+
   const preCtaSlot = duplicate ? (
     <View style={[styles.dupWrap, { paddingBottom: 4 }]}>
       <View style={styles.dupBanner}>
@@ -447,7 +593,12 @@ export default function AddExpenseScreen() {
         draftKey={id ? draftKey(serverUrl, id) : undefined}
         onValuesChange={setLiveValues}
         onScanChange={setAppliedScan}
-        topSlot={topSlot}
+        topSlot={
+          <>
+            {topSlot}
+            {voiceSlot}
+          </>
+        }
         preCtaSlot={preCtaSlot}
       />
 
@@ -465,6 +616,27 @@ export default function AddExpenseScreen() {
           onScanned={handleReceiptScanned}
           onCancel={closeScanner}
           initialScan={initialScan ?? undefined}
+        />
+      </Modal>
+
+      <Modal
+        visible={voiceOpen}
+        animationType="slide"
+        onRequestClose={() => setVoiceOpen(false)}
+        statusBarTranslucent
+      >
+        <VoiceExpenseCapture
+          serverUrl={serverUrl}
+          groupId={id ?? ''}
+          groupCurrency={group?.currency ?? 'SEK'}
+          onGenerated={handleVoiceGenerated}
+          onGoToSettle={() => {
+            setVoiceOpen(false);
+            router.push(
+              `/groups/${encodeURIComponent(serverUrl)}/${id}/settle`,
+            );
+          }}
+          onCancel={() => setVoiceOpen(false)}
         />
       </Modal>
 
@@ -555,6 +727,9 @@ export default function AddExpenseScreen() {
         subtitle={savedSubtitle ?? undefined}
         onContinue={() => {
           setSavedSubtitle(null);
+          // With drafts still queued, stay on the screen and load the next
+          // one rather than dropping the user back into the group.
+          if (advanceVoiceQueue()) return;
           router.back();
         }}
       />

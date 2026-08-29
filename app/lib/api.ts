@@ -979,6 +979,10 @@ export interface InstanceFeatures {
   /** POST /settle-reminders is available. Optional — absent on backends
    *  predating the feature, which the app treats as unsupported. */
   settle_reminders?: boolean;
+  /** POST /api/voice/expenses is available. Optional — absent on backends
+   *  predating the feature, which the app treats as unsupported, so the
+   *  mic stays hidden rather than offering a button that always fails. */
+  voice_expense?: boolean;
 }
 
 export interface InstanceInfo {
