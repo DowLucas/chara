@@ -154,10 +154,14 @@ type Result struct {
 	UnresolvedMembers int
 }
 
-// Parser extracts drafts from audio, or from a transcript plus answers on
-// a clarify re-post (in which case audio is nil).
+// Parser extracts drafts from an utterance.
+//
+// The two methods are separate because the calls differ in more than their
+// input: ParseText is the clarify re-post — cheap, no audio, and
+// deliberately not metered.
 type Parser interface {
 	Parse(ctx context.Context, audio []byte, mimeType string, vc Context, answers []Answer) (*Result, error)
+	ParseText(ctx context.Context, transcript string, vc Context, answers []Answer) (*Result, error)
 }
 
 var (
