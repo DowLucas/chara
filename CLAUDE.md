@@ -194,6 +194,8 @@ On this Proxmox host Docker runs inside an unprivileged LXC whose AppArmor profi
 
 The Expo app caches `/.well-known/chara-instance` at module load (`app/lib/api.ts`), so after toggling a backend feature flag (e.g. adding `GEMINI_API_KEY`) you must hard-reload the Expo bundle (`r` in Metro) — restarting only the server isn't enough.
 
+`GEMINI_API_KEY` gates **two** features, `ocr` and `voice_expense`. Voice capture uses `expo-audio`, a **native module**, so it only works in a dev client or a release build — never Expo Go — and it ships to users only through `./release`, not over the air.
+
 ## Release
 
 ```

@@ -35,7 +35,7 @@ export const Route = createFileRoute("/dpa")({
         <p>Names, email addresses, optional phone numbers, optional avatar URLs, locale, expense entries (amount, currency, date, description, group members), settlements, receipts you upload, the activity log of changes within each group, push tokens, magic-link tokens, and request logs. We do not request or expect special categories of data; if you upload them in receipts, that's your decision and your responsibility.</p>
 
         <H2>5 · Sub-processors</H2>
-        <p>The current list is maintained in the privacy policy and covers the hosting provider, Cloudflare, Expo / EAS, the email provider, Google (Gemini API), Google (Sign in with Google), Apple (Sign in with Apple), the European Central Bank, and Google Fonts on the marketing site. We give 30 days' notice before adding a new sub-processor. You may object; if we can't resolve the objection, you may terminate the affected service.</p>
+        <p>The current list is maintained in the privacy policy and covers the hosting provider, Cloudflare, Expo / EAS, the email provider, Google (Gemini API — receipt images and, if you use voice input, audio, which we process transiently and do not retain), Google (Sign in with Google), Apple (Sign in with Apple), the European Central Bank, and Google Fonts on the marketing site. We give 30 days' notice before adding a new sub-processor. You may object; if we can't resolve the objection, you may terminate the affected service.</p>
 
         <H2>6 · Security measures</H2>
         <ul className="list-disc pl-6 space-y-2">
