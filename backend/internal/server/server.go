@@ -22,6 +22,7 @@ import (
 	"github.com/DowLucas/chara/internal/middleware"
 	"github.com/DowLucas/chara/internal/receipt"
 	"github.com/DowLucas/chara/internal/storage"
+	"github.com/DowLucas/chara/internal/voice"
 	"github.com/DowLucas/chara/internal/wellknown"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -29,6 +30,12 @@ import (
 )
 
 const version = "0.1.0"
+
+// FreeVoiceCap is the anti-abuse cap on free voice generations per UTC
+// month. Lower headroom than it looks next to FreeOCRCap: Gemini bills
+// audio at roughly 32 tokens per second, so a 45s clip costs on the order
+// of twice a receipt scan.
+const FreeVoiceCap = 5
 
 // FreeOCRCap is the anti-abuse cap on free OCR scans per UTC month for
 // hosted-instance users in v1.0/v1.1. v1.2 will replace this with a
@@ -272,6 +279,16 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 					WithCapOverrides(handler.NewCapOverrides(queries))
 			}
 			r.Post("/api/receipts/scan", receiptH.Scan)
+
+			voiceH := handler.NewVoiceHandler(voice.NewGemini(cfg.GeminiAPIKey)).
+				WithGroupContext(handler.NewVoiceContextLookup(queries)).
+				WithUsageRecorder(aiusage.NewRecorder(handler.NewAIUsageStore(queries)))
+			if cfg.IsHosted() {
+				voiceH = voiceH.
+					WithCounter(billing.NewCounter(queries), FreeVoiceCap).
+					WithCapOverrides(handler.NewCapOverrides(queries))
+			}
+			r.Post("/api/voice/expenses", voiceH.Generate)
 		}
 	})
 

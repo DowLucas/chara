@@ -117,3 +117,40 @@ func TestFeatures_PushReflectsRecurringEnabled(t *testing.T) {
 		})
 	}
 }
+
+// voice_expense must track the Gemini key exactly as ocr does: without a
+// key the endpoint cannot work, and the app hides the mic rather than
+// offering a button that always fails.
+func TestFeatures_VoiceExpenseTracksGeminiKey(t *testing.T) {
+	cases := []struct {
+		name      string
+		geminiKey string
+		want      bool
+	}{
+		{"with key", "test-key", true},
+		{"without key", "", false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := &config.Config{InstanceMode: "selfhost", GeminiAPIKey: tc.geminiKey}
+			h := Handler(cfg, "0.1.0")
+
+			rr := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "/.well-known/chara-instance", nil)
+			h.ServeHTTP(rr, req)
+
+			var got map[string]any
+			if err := json.NewDecoder(rr.Body).Decode(&got); err != nil {
+				t.Fatalf("decode: %v", err)
+			}
+			features, _ := got["features"].(map[string]any)
+			if features["voice_expense"] != tc.want {
+				t.Errorf("voice_expense = %v, want %v", features["voice_expense"], tc.want)
+			}
+			// It should move in lockstep with ocr — both need the key.
+			if features["ocr"] != tc.want {
+				t.Errorf("ocr = %v, want %v (sanity)", features["ocr"], tc.want)
+			}
+		})
+	}
+}
