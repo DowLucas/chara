@@ -172,7 +172,9 @@
     "saveErrorBody": "Kunne ikke gemme udgiften. Prøv igen.",
     "saveErrorTitle": "Fejl",
     "saving": "Gemmer…",
-    "scanReceipt": "Scan kvittering",
+    "scanReceipt": "Scan en kvittering",
+    "scanShort": "Scan",
+    "speakShort": "Tal",
     "split": {
       "equal": "delt ligeligt",
       "exact": "delt efter beløb",
@@ -195,7 +197,7 @@
     "totalSplit": "samlet fordeling",
     "viewItems": "Vis varer",
     "viewReceipt": "Vis kvittering",
-    "voiceButton": "Sig udgiften",
+    "voiceButton": "Tal udgiften ind",
     "when": {
       "pick": "vælg dato",
       "today": "i dag",
@@ -1247,7 +1249,7 @@
     "secondsLeft_other": "{{count}} sekunder tilbage",
     "startRecording": "Start optagelse",
     "stop": "Færdig",
-    "title": "Sig udgiften",
+    "title": "Tal udgiften ind",
     "transcriptHint": "Ret teksten, hvis ordene blev forkerte",
     "transcriptLabel": "Det du sagde · tryk for at rette",
     "tryAgain": "Prøv igen",

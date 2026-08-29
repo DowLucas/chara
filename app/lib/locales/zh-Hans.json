@@ -172,7 +172,9 @@
     "saveErrorBody": "保存失败，请重试。",
     "saveErrorTitle": "出错了",
     "saving": "保存中……",
-    "scanReceipt": "扫描小票 · 或在下方填写",
+    "scanReceipt": "扫描小票",
+    "scanShort": "扫描",
+    "speakShort": "说话",
     "split": {
       "equal": "均分",
       "exact": "按金额分",

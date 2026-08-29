@@ -178,7 +178,9 @@
     "saveErrorBody": "Non sono riuscito a salvare la spesa. Riprova.",
     "saveErrorTitle": "Errore",
     "saving": "Salvataggio…",
-    "scanReceipt": "Scansiona scontrino",
+    "scanReceipt": "Scansiona uno scontrino",
+    "scanShort": "Scansiona",
+    "speakShort": "Parla",
     "split": {
       "equal": "dividi in parti uguali",
       "exact": "dividi per importo",
@@ -201,7 +203,7 @@
     "totalSplit": "totale diviso",
     "viewItems": "Vedi articoli",
     "viewReceipt": "Vedi scontrino",
-    "voiceButton": "Dì la spesa",
+    "voiceButton": "Dire la spesa",
     "when": {
       "pick": "scegli una data",
       "today": "oggi",
@@ -1287,7 +1289,7 @@
     "secondsLeft_other": "{{count}} secondi rimasti",
     "startRecording": "Avvia registrazione",
     "stop": "Fatto",
-    "title": "Dì la spesa",
+    "title": "Dire la spesa",
     "transcriptHint": "Modifica il testo se le parole sono sbagliate",
     "transcriptLabel": "Quello che hai detto · tocca per correggere",
     "tryAgain": "Riprova",

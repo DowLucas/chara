@@ -196,7 +196,9 @@
     "saveErrorBody": "تعذر حفظ المصروف. حاول مرة أخرى.",
     "saveErrorTitle": "خطأ",
     "saving": "حفظ…",
-    "scanReceipt": "مسح الإيصال",
+    "scanReceipt": "امسح إيصالًا",
+    "scanShort": "مسح",
+    "speakShort": "تحدّث",
     "split": {
       "equal": "تقسيم بالتساوي",
       "exact": "تقسيم حسب المبلغ",

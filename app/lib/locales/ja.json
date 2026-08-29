@@ -173,6 +173,8 @@
     "saveErrorTitle": "エラー",
     "saving": "保存中…",
     "scanReceipt": "レシートをスキャン",
+    "scanShort": "スキャン",
+    "speakShort": "話す",
     "split": {
       "equal": "均等に分割",
       "exact": "金額で分割",

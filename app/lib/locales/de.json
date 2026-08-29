@@ -173,6 +173,8 @@
     "saveErrorTitle": "Fehler",
     "saving": "Speichert…",
     "scanReceipt": "Beleg scannen",
+    "scanShort": "Scannen",
+    "speakShort": "Sprechen",
     "split": {
       "equal": "gleich aufteilen",
       "exact": "nach Betrag aufteilen",

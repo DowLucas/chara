@@ -184,7 +184,9 @@
     "saveErrorBody": "Nie udało się zapisać wydatku. Spróbuj ponownie.",
     "saveErrorTitle": "Błąd",
     "saving": "Zapisywanie…",
-    "scanReceipt": "Zeskanuj paragon — lub wypełnij poniżej",
+    "scanReceipt": "Zeskanuj paragon",
+    "scanShort": "Skanuj",
+    "speakShort": "Mów",
     "split": {
       "equal": "podzielone równo",
       "exact": "podzielone kwotowo",

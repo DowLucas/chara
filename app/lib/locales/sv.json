@@ -172,7 +172,9 @@
     "saveErrorBody": "Kunde inte spara utgiften. Försök igen.",
     "saveErrorTitle": "Något gick fel",
     "saving": "Sparar…",
-    "scanReceipt": "Skanna kvitto",
+    "scanReceipt": "Skanna ett kvitto",
+    "scanShort": "Skanna",
+    "speakShort": "Tala",
     "split": {
       "equal": "delad lika",
       "exact": "delad med belopp",
@@ -195,7 +197,7 @@
     "totalSplit": "summa fördelat",
     "viewItems": "Visa varor",
     "viewReceipt": "Visa kvitto",
-    "voiceButton": "Säg utgiften",
+    "voiceButton": "Tala in utgiften",
     "when": {
       "pick": "välj datum",
       "today": "idag",
@@ -1247,7 +1249,7 @@
     "secondsLeft_other": "{{count}} sekunder kvar",
     "startRecording": "Börja spela in",
     "stop": "Klar",
-    "title": "Säg utgiften",
+    "title": "Tala in utgiften",
     "transcriptHint": "Ändra texten om orden blev fel",
     "transcriptLabel": "Det du sa · tryck för att ändra",
     "tryAgain": "Försök igen",

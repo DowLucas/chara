@@ -178,7 +178,9 @@
     "saveErrorBody": "No se pudo guardar el gasto. Inténtalo de nuevo.",
     "saveErrorTitle": "Error",
     "saving": "Guardando…",
-    "scanReceipt": "Escanear recibo — o rellenar abajo",
+    "scanReceipt": "Escanear un recibo",
+    "scanShort": "Escanear",
+    "speakShort": "Hablar",
     "split": {
       "equal": "dividir equitativamente",
       "exact": "dividir por monto",
@@ -201,7 +203,7 @@
     "totalSplit": "total dividido",
     "viewItems": "Ver artículos",
     "viewReceipt": "Ver recibo",
-    "voiceButton": "Di el gasto",
+    "voiceButton": "Decir el gasto",
     "when": {
       "pick": "elegir una fecha",
       "today": "hoy",

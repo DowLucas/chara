@@ -172,7 +172,9 @@
     "saveErrorBody": "Kon de uitgave niet opslaan. Probeer het opnieuw.",
     "saveErrorTitle": "Fout",
     "saving": "Opslaan…",
-    "scanReceipt": "Bon scannen",
+    "scanReceipt": "Een bon scannen",
+    "scanShort": "Scannen",
+    "speakShort": "Spreken",
     "split": {
       "equal": "gelijk verdelen",
       "exact": "verdelen op bedrag",
@@ -195,7 +197,7 @@
     "totalSplit": "totaal verdeeld",
     "viewItems": "Items bekijken",
     "viewReceipt": "Bon bekijken",
-    "voiceButton": "Zeg de uitgave",
+    "voiceButton": "De uitgave inspreken",
     "when": {
       "pick": "kies een datum",
       "today": "vandaag",
@@ -1247,7 +1249,7 @@
     "secondsLeft_other": "nog {{count}} seconden",
     "startRecording": "Opname starten",
     "stop": "Klaar",
-    "title": "Zeg de uitgave",
+    "title": "De uitgave inspreken",
     "transcriptHint": "Pas de tekst aan als de woorden niet kloppen",
     "transcriptLabel": "Wat je zei · tik om te wijzigen",
     "tryAgain": "Opnieuw",

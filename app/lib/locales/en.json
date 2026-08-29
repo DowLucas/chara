@@ -172,7 +172,9 @@
     "saveErrorBody": "Could not save the expense. Please try again.",
     "saveErrorTitle": "Error",
     "saving": "Saving…",
-    "scanReceipt": "Scan receipt — or fill in below",
+    "scanReceipt": "Scan a receipt",
+    "scanShort": "Scan",
+    "speakShort": "Speak",
     "split": {
       "equal": "split equally",
       "exact": "split by amount",
@@ -195,7 +197,7 @@
     "totalSplit": "total split",
     "viewItems": "View items",
     "viewReceipt": "View receipt",
-    "voiceButton": "Say the expense",
+    "voiceButton": "Speak the expense",
     "when": {
       "pick": "pick a date",
       "today": "today",
@@ -1247,7 +1249,7 @@
     "secondsLeft_other": "{{count}} seconds left",
     "startRecording": "Start recording",
     "stop": "Done",
-    "title": "Say the expense",
+    "title": "Speak the expense",
     "transcriptHint": "Edit the text if it got your words wrong",
     "transcriptLabel": "What you said · tap to fix",
     "tryAgain": "Try again",

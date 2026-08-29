@@ -513,16 +513,6 @@ export default function AddExpenseScreen() {
         )}
       </View>
     </View>
-  ) : ocrAvailable ? (
-    <TouchableOpacity
-      style={styles.scanRow}
-      onPress={() => setScannerOpen(true)}
-      accessibilityRole="button"
-      accessibilityLabel={t('addExpense.scanReceipt')}
-    >
-      <Feather name="camera" size={18} color={colors.graphite} />
-      <Text style={styles.scanLabel}>{t('addExpense.scanReceipt')}</Text>
-    </TouchableOpacity>
   ) : null;
 
   const nextQueued = voiceQueue ? voiceQueue.drafts[voiceQueue.index + 1] : undefined;
@@ -530,18 +520,33 @@ export default function AddExpenseScreen() {
   // banner — and must not keep hiding the mic, or a user who records once
   // and does not save is stranded with no way to try again.
   const voiceQueueActive = Boolean(voiceQueue && nextQueued);
+  // Both shortcuts are optional ways in; the form below always works. They
+  // share one compact row so neither reads as a required first step, which
+  // is what a full-width button implied.
+  const showScanPill = ocrAvailable && !appliedScan;
+  const showVoicePill = voiceAvailable && !voiceQueueActive;
+
   const voiceSlot = (
     <>
-      {voiceAvailable && !voiceQueueActive ? (
-        <TouchableOpacity
-          style={styles.scanRow}
-          onPress={openVoice}
-          accessibilityRole="button"
-          accessibilityLabel={t('addExpense.voiceButton')}
-        >
-          <Feather name="mic" size={18} color={colors.graphite} />
-          <Text style={styles.scanLabel}>{t('addExpense.voiceButton')}</Text>
-        </TouchableOpacity>
+      {showScanPill || showVoicePill ? (
+        <View style={styles.shortcutRow}>
+          {showScanPill ? (
+            <ShortcutPill
+              icon="camera"
+              label={t('addExpense.scanShort')}
+              accessibilityLabel={t('addExpense.scanReceipt')}
+              onPress={() => setScannerOpen(true)}
+            />
+          ) : null}
+          {showVoicePill ? (
+            <ShortcutPill
+              icon="mic"
+              label={t('addExpense.speakShort')}
+              accessibilityLabel={t('addExpense.voiceButton')}
+              onPress={openVoice}
+            />
+          ) : null}
+        </View>
       ) : null}
       {voiceQueue && nextQueued ? (
         <VoiceDraftBanner
@@ -755,22 +760,62 @@ export default function AddExpenseScreen() {
   );
 }
 
+/**
+ * A compact optional shortcut into the expense form.
+ *
+ * Icon plus a one-word label rather than icon alone: a camera or a mic
+ * glyph above an expense form has no established meaning, and a first-time
+ * user should not have to guess. Keeps the hairline border, radius and
+ * mono caption the full-width rows used, so it reads as the same family
+ * at a smaller size.
+ */
+function ShortcutPill({
+  icon,
+  label,
+  accessibilityLabel,
+  onPress,
+}: {
+  icon: React.ComponentProps<typeof Feather>['name'];
+  label: string;
+  accessibilityLabel: string;
+  onPress(): void;
+}) {
+  return (
+    <TouchableOpacity
+      style={styles.shortcutPill}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      activeOpacity={0.7}
+    >
+      <Feather name={icon} size={16} color={colors.graphite} />
+      <Text style={styles.shortcutLabel} numberOfLines={1}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper },
-  scanRow: {
+  shortcutRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+    flexWrap: 'wrap',
+    gap: spacing.s2,
     marginHorizontal: spacing.s5,
     marginTop: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+  },
+  shortcutPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderWidth: 0.5,
     borderColor: colors.graphite,
     borderRadius: 8,
-    justifyContent: 'center',
   },
-  scanLabel: {
+  shortcutLabel: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
     color: colors.graphite,

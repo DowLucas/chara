@@ -173,6 +173,8 @@
     "saveErrorTitle": "Virhe",
     "saving": "Tallennetaan…",
     "scanReceipt": "Skannaa kuitti",
+    "scanShort": "Skannaa",
+    "speakShort": "Puhu",
     "split": {
       "equal": "jaa tasan",
       "exact": "jaa summittain",

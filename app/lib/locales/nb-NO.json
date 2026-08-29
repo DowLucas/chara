@@ -172,7 +172,9 @@
     "saveErrorBody": "Kunne ikke lagre utgiften. Prøv igjen.",
     "saveErrorTitle": "Feil",
     "saving": "Lagrer …",
-    "scanReceipt": "Skann kvittering — eller fyll inn under",
+    "scanReceipt": "Skann en kvittering",
+    "scanShort": "Skann",
+    "speakShort": "Snakk",
     "split": {
       "equal": "del likt",
       "exact": "del etter beløp",
@@ -195,7 +197,7 @@
     "totalSplit": "totalt fordelt",
     "viewItems": "Vis varer",
     "viewReceipt": "Vis kvittering",
-    "voiceButton": "Si utgiften",
+    "voiceButton": "Snakk inn utgiften",
     "when": {
       "pick": "velg dato",
       "today": "i dag",
@@ -1247,7 +1249,7 @@
     "secondsLeft_other": "{{count}} sekunder igjen",
     "startRecording": "Start opptak",
     "stop": "Ferdig",
-    "title": "Si utgiften",
+    "title": "Snakk inn utgiften",
     "transcriptHint": "Rett teksten hvis ordene ble feil",
     "transcriptLabel": "Det du sa · trykk for å rette",
     "tryAgain": "Prøv igjen",

@@ -178,7 +178,9 @@
     "saveErrorBody": "Impossible d'enregistrer la dépense. Réessaie.",
     "saveErrorTitle": "Erreur",
     "saving": "Enregistrement…",
-    "scanReceipt": "Scanner le reçu",
+    "scanReceipt": "Scanner un reçu",
+    "scanShort": "Scanner",
+    "speakShort": "Parler",
     "split": {
       "equal": "partage égal",
       "exact": "partage par montant",
@@ -201,7 +203,7 @@
     "totalSplit": "total partagé",
     "viewItems": "Voir les articles",
     "viewReceipt": "Voir le reçu",
-    "voiceButton": "Dis la dépense",
+    "voiceButton": "Dire la dépense",
     "when": {
       "pick": "choisir une date",
       "today": "aujourd'hui",
@@ -1287,7 +1289,7 @@
     "secondsLeft_other": "{{count}} secondes restantes",
     "startRecording": "Démarrer l’enregistrement",
     "stop": "Terminé",
-    "title": "Dis la dépense",
+    "title": "Dire la dépense",
     "transcriptHint": "Modifie le texte si les mots sont faux",
     "transcriptLabel": "Ce que tu as dit · touche pour corriger",
     "tryAgain": "Réessayer",

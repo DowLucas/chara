@@ -178,7 +178,9 @@
     "saveErrorBody": "Não foi possível salvar a despesa. Tente novamente.",
     "saveErrorTitle": "Erro",
     "saving": "Salvando…",
-    "scanReceipt": "Escanear recibo — ou preencha abaixo",
+    "scanReceipt": "Digitalizar um recibo",
+    "scanShort": "Digitalizar",
+    "speakShort": "Falar",
     "split": {
       "equal": "dividir igualmente",
       "exact": "dividir por valor",
@@ -201,7 +203,7 @@
     "totalSplit": "total dividido",
     "viewItems": "Ver itens",
     "viewReceipt": "Ver recibo",
-    "voiceButton": "Diz a despesa",
+    "voiceButton": "Dizer a despesa",
     "when": {
       "pick": "escolher uma data",
       "today": "hoje",
@@ -1287,7 +1289,7 @@
     "secondsLeft_other": "faltam {{count}} segundos",
     "startRecording": "Começar a gravar",
     "stop": "Pronto",
-    "title": "Diz a despesa",
+    "title": "Dizer a despesa",
     "transcriptHint": "Edita o texto se as palavras ficaram erradas",
     "transcriptLabel": "O que disseste · toca para corrigir",
     "tryAgain": "Tentar de novo",
