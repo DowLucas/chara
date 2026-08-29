@@ -1217,6 +1217,7 @@
     "you": "Profiili"
   },
   "voiceExpense": {
+    "capBody": "Puhesyöttöä on rajoitettu kuukausittain kustannusten hillitsemiseksi. Jätä sähköpostisi, niin kerromme kun raja nousee.",
     "discardRest": "Hylkää loput",
     "draftsLabel": "{{count}} kulua löytyi",
     "draftsLabel_one": "{{count}} kulu löytyi",

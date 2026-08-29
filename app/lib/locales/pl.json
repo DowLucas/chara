@@ -1301,6 +1301,7 @@
     "you": "Profil"
   },
   "voiceExpense": {
+    "capBody": "Wprowadzanie głosowe jest co miesiąc ograniczone, aby utrzymać koszty. Zostaw e-mail, a damy znać, gdy limit wzrośnie.",
     "discardRest": "Odrzuć resztę",
     "draftsLabel": "znaleziono {{count}} wydatku",
     "draftsLabel_few": "znaleziono {{count}} wydatki",

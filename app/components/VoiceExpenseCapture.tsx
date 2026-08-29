@@ -121,12 +121,12 @@ export function VoiceExpenseCapture({
   // a change and undoing it should disable the button again.
   const [originalTranscript, setOriginalTranscript] = useState('');
   const [answers, setAnswers] = useState<Record<string, { member_id: string; text: string }>>({});
-  const [capBody, setCapBody] = useState<{ periodResetsAt?: string } | null>(null);
+  const [capBody, setCapBody] = useState<{ periodResetsAt?: string; remaining?: number; cap?: number } | null>(null);
 
   const account = useAccount(serverUrl);
   const handleWaitlistSubmit = useCallback(
     async (email: string) => {
-      await apiFor(serverUrl).submitWaitlist({ email, trigger: 'ocr_cap', source: 'mobile' });
+      await apiFor(serverUrl).submitWaitlist({ email, trigger: 'voice_cap', source: 'mobile' });
     },
     [serverUrl],
   );
@@ -145,19 +145,46 @@ export function VoiceExpenseCapture({
     }
   };
 
-  useEffect(() => clearAutoStop, []);
+  /**
+   * Stop recording, delete the clip, and hand the audio session back.
+   *
+   * Every exit path must run this. Leaving the recorder going keeps the
+   * file on disk — which would make the privacy policy's "never written to
+   * disk" claim false — and leaving allowsRecording set keeps iOS in
+   * record mode for the rest of the process, routing later playback to the
+   * earpiece and potentially holding the recording indicator on.
+   */
+  const teardownRecording = useCallback(async () => {
+    clearAutoStop();
+    try {
+      if (recorder.isRecording) await recorder.stop();
+    } catch {
+      // Already stopped, or never started. Still release the session.
+    }
+    const uri = recorder.uri;
+    if (uri) await FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {});
+    await setAudioModeAsync({ allowsRecording: false }).catch(() => {});
+  }, [recorder]);
+
+  // Cover the case where the screen goes away without any button press.
+  useEffect(() => {
+    return () => {
+      clearAutoStop();
+      void teardownRecording();
+    };
+  }, [teardownRecording]);
 
   const dismiss = useCallback(
     (stage: string) => {
-      clearAutoStop();
       analytics.track('voice_capture_cancelled', {
         stage,
         clip_ms: startedAt.current ? Date.now() - startedAt.current : 0,
       });
+      void teardownRecording();
       markPopupClosed();
       onCancel();
     },
-    [onCancel],
+    [onCancel, teardownRecording],
   );
 
   /** Send audio (or a transcript re-post) and move to review. */
@@ -205,7 +232,7 @@ export function VoiceExpenseCapture({
         const cap = isVoiceCapReached(err);
         if (cap) {
           analytics.track('voice_generation_failed', { code: 'cap' });
-          setCapBody({ periodResetsAt: cap.period_resets_at });
+          setCapBody({ periodResetsAt: cap.period_resets_at, remaining: cap.remaining });
           setState({ kind: 'idle' });
           return;
         }
@@ -235,9 +262,10 @@ export function VoiceExpenseCapture({
       const audioBase64 = await FileSystem.readAsStringAsync(uri, {
         encoding: FileSystem.EncodingType.Base64,
       });
-      // Audio is transient by design: delete it the moment it is encoded,
-      // so a recording never lingers on the device.
+      // Audio is transient by design: drop the file and release the audio
+      // session the moment it is encoded.
       await FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {});
+      await setAudioModeAsync({ allowsRecording: false }).catch(() => {});
       await submit({ audioBase64, clipMs });
     } catch {
       setState({ kind: 'error', code: 'network' });
@@ -371,7 +399,10 @@ export function VoiceExpenseCapture({
       {capBody ? (
         <WaitlistModal
           visible
-          cap={5}
+          // The server owns the number; hardcoding it here would drift the
+          // moment FreeVoiceCap changes.
+          cap={capBody.remaining ?? 0}
+          body={t('voiceExpense.capBody')}
           periodResetsAt={capBody.periodResetsAt}
           defaultEmail={account?.user.email}
           onSubmit={handleWaitlistSubmit}

@@ -46,10 +46,23 @@ describe('voice draft queue', () => {
     expect(remainingCount(q)).toBe(0);
   });
 
-  it('discardRest empties the queue', () => {
-    const q = discardRest(makeQueue([draft(), draft(), draft()], 'gen1'));
-    expect(currentDraft(q)).toBeNull();
+  it('discardRest drops what is queued behind, keeping the current draft', () => {
+    // The button says "discard rest". Dropping the one in the wizard too
+    // would contradict the label and lose its generation link on save.
+    const q = discardRest(makeQueue([draft({ title: 'A' }), draft(), draft()], 'gen1'));
+    expect(currentDraft(q)?.title).toBe('A');
     expect(remainingCount(q)).toBe(0);
+  });
+
+  it('discardRest on the last draft changes nothing', () => {
+    const q = discardRest(advance(makeQueue([draft({ title: 'A' }), draft({ title: 'B' })], 'gen1')));
+    expect(currentDraft(q)?.title).toBe('B');
+    expect(remainingCount(q)).toBe(0);
+  });
+
+  it('advancing past a discarded queue still exhausts it', () => {
+    const q = advance(discardRest(makeQueue([draft(), draft(), draft()], 'gen1')));
+    expect(currentDraft(q)).toBeNull();
   });
 
   it('handles an empty draft list', () => {

@@ -1217,6 +1217,7 @@
     "you": "Profil"
   },
   "voiceExpense": {
+    "capBody": "Röstinmatning är begränsad varje månad för att hålla kostnaderna nere. Lämna din e-post så hör vi av oss när gränsen höjs.",
     "discardRest": "Släng resten",
     "draftsLabel": "{{count}} utgifter hittade",
     "draftsLabel_one": "{{count}} utgift hittad",

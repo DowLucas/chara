@@ -1217,6 +1217,7 @@
     "you": "あなた"
   },
   "voiceExpense": {
+    "capBody": "コストを抑えるため、音声入力には毎月の上限があります。メールアドレスを教えていただければ、上限が増えたらお知らせします。",
     "discardRest": "残りを破棄",
     "draftsLabel": "{{count}}件の支出",
     "draftsLabel_other": "{{count}}件の支出",

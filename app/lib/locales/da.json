@@ -1217,6 +1217,7 @@
     "you": "Profil"
   },
   "voiceExpense": {
+    "capBody": "Taleindtastning er begrænset hver måned for at holde omkostningerne nede. Læg din e-mail, så siger vi til, når grænsen hæves.",
     "discardRest": "Kassér resten",
     "draftsLabel": "{{count}} udgifter fundet",
     "draftsLabel_one": "{{count}} udgift fundet",

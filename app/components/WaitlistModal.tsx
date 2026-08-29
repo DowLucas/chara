@@ -45,6 +45,10 @@ interface Props {
   /** The free-tier cap. No longer rendered in title copy, but kept on the
    *  prop for backward-compat with callers and for analytics. */
   cap: number;
+  /** Overrides the default (receipt-scan) explanation. Other gates reuse
+   *  this modal, and telling a voice user their scans are rate-limited is
+   *  simply wrong. */
+  body?: string;
   /** Called when user taps "Notify me" with a valid email. The parent runs
    *  the POST and resolves with success/failure. The modal stays visible
    *  in submitting state while this resolves. */
@@ -58,6 +62,7 @@ interface Props {
 
 export function WaitlistModal({
   visible,
+  body,
   periodResetsAt,
   defaultEmail,
   cap: _cap,
@@ -135,7 +140,7 @@ export function WaitlistModal({
             <>
               <Text style={styles.eyebrow}>{t('waitlist.eyebrow')}</Text>
               <Text style={styles.title}>{t('waitlist.title')}</Text>
-              <Text style={styles.body}>{t('waitlist.body')}</Text>
+              <Text style={styles.body}>{body ?? t('waitlist.body')}</Text>
               {periodResetsAt ? (
                 <Text style={styles.resets}>
                   {t('waitlist.resetsAt', {

@@ -1257,6 +1257,7 @@
     "you": "Profil"
   },
   "voiceExpense": {
+    "capBody": "La saisie vocale est limitée chaque mois pour maîtriser les coûts. Laisse ton e-mail, on te préviendra quand la limite augmentera.",
     "discardRest": "Abandonner le reste",
     "draftsLabel": "{{count}} dépenses trouvées",
     "draftsLabel_one": "{{count}} dépense trouvée",

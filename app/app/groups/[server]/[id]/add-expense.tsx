@@ -247,6 +247,12 @@ export default function AddExpenseScreen() {
     [],
   );
 
+  /** Single dismissal path for the voice modal, so the X, the Android back
+   *  button and the settle redirect all behave identically. */
+  function closeVoice() {
+    setVoiceOpen(false);
+  }
+
   function openVoice() {
     // Dismissing another sheet by tapping this row must not chain-open it.
     if (isPopupJustClosed()) return;
@@ -434,6 +440,10 @@ export default function AddExpenseScreen() {
         } catch (uploadErr) {
           console.warn('receipt attachment upload failed', uploadErr);
         }
+        // Consume it: with a voice queue the screen stays mounted across
+        // saves, so leaving this set would re-attach the same image to
+        // every following expense.
+        setPendingReceiptFile(null);
       }
 
       if (voiceQueue && voiceDraft) {
@@ -516,9 +526,13 @@ export default function AddExpenseScreen() {
   ) : null;
 
   const nextQueued = voiceQueue ? voiceQueue.drafts[voiceQueue.index + 1] : undefined;
+  // A queue with nothing behind the current draft no longer needs the
+  // banner — and must not keep hiding the mic, or a user who records once
+  // and does not save is stranded with no way to try again.
+  const voiceQueueActive = Boolean(voiceQueue && nextQueued);
   const voiceSlot = (
     <>
-      {voiceAvailable && !voiceQueue ? (
+      {voiceAvailable && !voiceQueueActive ? (
         <TouchableOpacity
           style={styles.scanRow}
           onPress={openVoice}
@@ -622,7 +636,10 @@ export default function AddExpenseScreen() {
       <Modal
         visible={voiceOpen}
         animationType="slide"
-        onRequestClose={() => setVoiceOpen(false)}
+        // Android hardware-back must go through the same path as the X, or
+        // it skips markPopupClosed() (see the tap-through guard in
+        // CLAUDE.md) and leaves the recorder running.
+        onRequestClose={closeVoice}
         statusBarTranslucent
       >
         <VoiceExpenseCapture

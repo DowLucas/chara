@@ -1217,6 +1217,7 @@
     "you": "Profile"
   },
   "voiceExpense": {
+    "capBody": "Voice entry is limited each month to keep costs sustainable. Leave your email and we'll tell you when the limit goes up.",
     "discardRest": "Discard rest",
     "draftsLabel": "{{count}} expenses found",
     "draftsLabel_one": "{{count}} expense found",

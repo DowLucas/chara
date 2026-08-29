@@ -1122,7 +1122,7 @@ function voiceBody(input: VoiceExpensesInput) {
 // Waitlist — captures emails when hosted users hit a soft gate during the
 // v1.0/v1.1 free beta. The server enforces the allowed-triggers list, so
 // adding a new trigger here also requires a backend handler change.
-export type WaitlistTrigger = 'ocr_cap' | 'recurring_request' | 'export_request';
+export type WaitlistTrigger = 'ocr_cap' | 'voice_cap' | 'recurring_request' | 'export_request';
 
 export interface WaitlistSubmission {
   email: string;

@@ -125,8 +125,15 @@ export function advance(q: VoiceQueue): VoiceQueue {
   return { ...q, index: Math.min(q.index + 1, q.drafts.length) };
 }
 
+/**
+ * Drop everything QUEUED BEHIND the current draft.
+ *
+ * The one in the wizard survives — the control says "discard rest", and
+ * discarding it too would both contradict the label and silently drop the
+ * generation link for an expense the user is about to save.
+ */
 export function discardRest(q: VoiceQueue): VoiceQueue {
-  return { ...q, index: q.drafts.length };
+  return { ...q, drafts: q.drafts.slice(0, q.index + 1) };
 }
 
 /**

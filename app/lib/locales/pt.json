@@ -1257,6 +1257,7 @@
     "you": "Perfil"
   },
   "voiceExpense": {
+    "capBody": "A entrada por voz tem um limite mensal para manter os custos sustentáveis. Deixa o teu email e avisamos quando o limite subir.",
     "discardRest": "Descartar o resto",
     "draftsLabel": "{{count}} despesas encontradas",
     "draftsLabel_one": "{{count}} despesa encontrada",

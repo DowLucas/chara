@@ -1217,6 +1217,7 @@
     "you": "Profiel"
   },
   "voiceExpense": {
+    "capBody": "Spraakinvoer is elke maand beperkt om de kosten in de hand te houden. Laat je e-mail achter, dan laten we het weten als de limiet omhooggaat.",
     "discardRest": "Rest weggooien",
     "draftsLabel": "{{count}} uitgaven gevonden",
     "draftsLabel_one": "{{count}} uitgave gevonden",

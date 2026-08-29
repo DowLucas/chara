@@ -918,9 +918,16 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
           setAmount((input.amountMinor / 100).toFixed(2));
           if (input.currency) setSelectedCurrency(input.currency);
           if (input.date) setDate(input.date);
+          // Set OR clear: the wizard is not remounted between queued
+          // drafts, so leaving a previous category in place files the next
+          // expense under it. "Dinner then taxi" would book the taxi as
+          // food, which the user has no reason to expect.
           if (input.category && (enabledCategories as readonly string[]).includes(input.category)) {
             setCategory(input.category);
             setCategoryTouched(true);
+          } else {
+            setCategory(DEFAULT_CATEGORY);
+            setCategoryTouched(false);
           }
 
           // Payer and participants only from the live roster. The server

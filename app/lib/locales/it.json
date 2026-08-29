@@ -1257,6 +1257,7 @@
     "you": "Profilo"
   },
   "voiceExpense": {
+    "capBody": "L'inserimento vocale è limitato ogni mese per tenere sotto controllo i costi. Lasciaci la tua email e ti diremo quando il limite aumenta.",
     "discardRest": "Scarta il resto",
     "draftsLabel": "{{count}} spese trovate",
     "draftsLabel_one": "{{count}} spesa trovata",

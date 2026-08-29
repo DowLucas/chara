@@ -1217,6 +1217,7 @@
     "you": "我的"
   },
   "voiceExpense": {
+    "capBody": "为控制成本，语音记账每月有使用上限。留下邮箱，上限提高时我们会通知你。",
     "discardRest": "放弃其余",
     "draftsLabel": "找到 {{count}} 笔支出",
     "draftsLabel_other": "找到 {{count}} 笔支出",

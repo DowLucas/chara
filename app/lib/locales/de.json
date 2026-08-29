@@ -1217,6 +1217,7 @@
     "you": "Profil"
   },
   "voiceExpense": {
+    "capBody": "Die Spracheingabe ist monatlich begrenzt, damit die Kosten tragbar bleiben. Hinterlass deine E-Mail — wir melden uns, wenn das Limit steigt.",
     "discardRest": "Rest verwerfen",
     "draftsLabel": "{{count}} Ausgaben gefunden",
     "draftsLabel_one": "{{count}} Ausgabe gefunden",

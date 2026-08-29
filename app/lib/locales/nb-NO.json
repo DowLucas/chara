@@ -1217,6 +1217,7 @@
     "you": "Profil"
   },
   "voiceExpense": {
+    "capBody": "Taleinntasting er begrenset hver måned for å holde kostnadene nede. Legg igjen e-posten din, så sier vi fra når grensen økes.",
     "discardRest": "Forkast resten",
     "draftsLabel": "{{count}} utgifter funnet",
     "draftsLabel_one": "{{count}} utgift funnet",
