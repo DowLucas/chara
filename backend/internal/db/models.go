@@ -71,6 +71,32 @@ type Activity struct {
 	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at"`
 }
 
+type AiGeneration struct {
+	ID                    string             `db:"id" json:"id"`
+	UserID                string             `db:"user_id" json:"user_id"`
+	Feature               string             `db:"feature" json:"feature"`
+	GroupID               pgtype.Text        `db:"group_id" json:"group_id"`
+	Model                 string             `db:"model" json:"model"`
+	InputTokens           pgtype.Int4        `db:"input_tokens" json:"input_tokens"`
+	OutputTokens          pgtype.Int4        `db:"output_tokens" json:"output_tokens"`
+	ClipMs                pgtype.Int4        `db:"clip_ms" json:"clip_ms"`
+	RequestBytes          pgtype.Int4        `db:"request_bytes" json:"request_bytes"`
+	LatencyMs             int32              `db:"latency_ms" json:"latency_ms"`
+	Outcome               string             `db:"outcome" json:"outcome"`
+	ErrorClass            pgtype.Text        `db:"error_class" json:"error_class"`
+	ExpenseCount          int32              `db:"expense_count" json:"expense_count"`
+	QuestionCount         int32              `db:"question_count" json:"question_count"`
+	DegradedSplitCount    int32              `db:"degraded_split_count" json:"degraded_split_count"`
+	UnresolvedMemberCount int32              `db:"unresolved_member_count" json:"unresolved_member_count"`
+	CreatedAt             pgtype.Timestamptz `db:"created_at" json:"created_at"`
+}
+
+type AiGenerationExpense struct {
+	GenerationID  string   `db:"generation_id" json:"generation_id"`
+	ExpenseID     string   `db:"expense_id" json:"expense_id"`
+	ChangedFields []string `db:"changed_fields" json:"changed_fields"`
+}
+
 type Expense struct {
 	ID               string             `db:"id" json:"id"`
 	GroupID          string             `db:"group_id" json:"group_id"`
