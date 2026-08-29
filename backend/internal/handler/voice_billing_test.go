@@ -58,7 +58,7 @@ func hostedVoiceRouter(t *testing.T, env *testutil.Env, parser voice.Parser, fre
 	t.Helper()
 	h := handler.NewVoiceHandler(parser).
 		WithGroupContext(handler.NewVoiceContextLookup(env.Queries)).
-		WithCounter(billing.NewCounter(env.Queries), freeCap).
+		WithCounter(billing.NewCounter(env.Queries), freeCap, 50).
 		WithCapOverrides(handler.NewCapOverrides(env.Queries))
 	mux := http.NewServeMux()
 	mux.Handle("/api/voice/expenses", middleware.Authenticate(env.JWT, env.Queries)(http.HandlerFunc(h.Generate)))

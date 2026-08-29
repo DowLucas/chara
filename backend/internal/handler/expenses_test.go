@@ -1624,3 +1624,31 @@ func TestExpenses_Create_WithoutGenerationIDWritesNoLink(t *testing.T) {
 		`SELECT COUNT(*) FROM ai_generation_expenses`).Scan(&count))
 	assert.Zero(t, count)
 }
+
+// A generation belonging to someone else must not be linkable: the join
+// table exists to measure how often OUR AI output is accepted, and letting
+// a client attach expenses to another user's row pollutes exactly that.
+func TestExpenses_Create_IgnoresAnotherUsersGenerationID(t *testing.T) {
+	env, alice, bob, groupID, aliceMemberID, bobMemberID := setupExpenseEnv(t)
+	bobsGeneration := seedAIGeneration(t, env, bob.ID, "voice")
+
+	body := fmt.Sprintf(`{
+		"title": "Dinner",
+		"amount": "90.00",
+		"currency": "SEK",
+		"paid_by_id": %q,
+		"split_method": "equal",
+		"participants": [%q, %q],
+		"generation_id": %q,
+		"changed_fields": ["amount"]
+	}`, aliceMemberID, aliceMemberID, bobMemberID, bobsGeneration)
+
+	rr := env.Do(t, env.AuthRequest(t, "POST", "/api/groups/"+groupID+"/expenses", body, alice.Token))
+	require.Equal(t, http.StatusCreated, rr.Code, rr.Body.String())
+
+	var count int
+	require.NoError(t, env.Pool.QueryRow(context.Background(),
+		`SELECT COUNT(*) FROM ai_generation_expenses WHERE generation_id = $1`,
+		bobsGeneration).Scan(&count))
+	assert.Zero(t, count, "alice must not link her expense to bob's generation")
+}

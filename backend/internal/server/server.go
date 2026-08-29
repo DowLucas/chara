@@ -37,6 +37,12 @@ const version = "0.1.0"
 // of twice a receipt scan.
 const FreeVoiceCap = 5
 
+// FreeVoiceRepostCap bounds the clarify re-post, which is deliberately not
+// charged against FreeVoiceCap. Generous on purpose: a user correcting
+// their own transcript will never reach it, while a script looping text
+// prompts through our Gemini key will.
+const FreeVoiceRepostCap = 50
+
 // FreeOCRCap is the anti-abuse cap on free OCR scans per UTC month for
 // hosted-instance users in v1.0/v1.1. v1.2 will replace this with a
 // tier-aware lookup once paid Chara Hosted launches.
@@ -285,7 +291,7 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 				WithUsageRecorder(aiusage.NewRecorder(handler.NewAIUsageStore(queries)))
 			if cfg.IsHosted() {
 				voiceH = voiceH.
-					WithCounter(billing.NewCounter(queries), FreeVoiceCap).
+					WithCounter(billing.NewCounter(queries), FreeVoiceCap, FreeVoiceRepostCap).
 					WithCapOverrides(handler.NewCapOverrides(queries))
 			}
 			r.Post("/api/voice/expenses", voiceH.Generate)

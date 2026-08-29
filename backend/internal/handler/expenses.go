@@ -591,15 +591,15 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		addMember(req.PaidByID)
 
 		if _, err := h.rc.Insert(r.Context(), jobs.PushNotifyArgs{
-			EventKind:        "expense_added",
-			GroupID:          groupID,
-			GroupName:        group.Name,
+			EventKind:          "expense_added",
+			GroupID:            groupID,
+			GroupName:          group.Name,
 			ActorUserID:        claims.UserID,
 			ActorName:          actorMember.Name,
 			RecipientMemberIDs: involvedMemberIDs,
 			Title:              req.Title,
-			AmountMinor:      canonicalAmount,
-			Currency:         canonicalCurrency,
+			AmountMinor:        canonicalAmount,
+			Currency:           canonicalCurrency,
 		}, nil); err != nil {
 			slog.Warn("expenses: enqueue push notification failed", "error", err, "group_id", groupID)
 		}
@@ -610,6 +610,8 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 			GenerationID:  req.GenerationID,
 			ExpenseID:     created.Row.ID,
 			ChangedFields: req.ChangedFields,
+			// Scoped to the caller's own generation — see the query.
+			UserID: claims.UserID,
 		}); err != nil {
 			// A stale id violates the foreign key. The expense is already
 			// committed and is what the user asked for, so warn and move on.

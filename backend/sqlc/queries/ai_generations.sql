@@ -14,8 +14,18 @@ INSERT INTO ai_generations (
 -- name: LinkAIGenerationExpense :exec
 -- Best-effort link from a saved expense back to the generation that
 -- proposed it. ON CONFLICT DO NOTHING because a retry must not error.
+--
+-- The EXISTS guard scopes the link to the caller's OWN generation. Without
+-- it a client could attach its expense to somebody else's row and skew the
+-- per-field acceptance rates this table exists to measure. An id that is
+-- unknown or belongs to another user inserts nothing, which is exactly the
+-- silent no-op the handler already treats as acceptable.
 INSERT INTO ai_generation_expenses (generation_id, expense_id, changed_fields)
-VALUES ($1, $2, $3)
+SELECT @generation_id, @expense_id, @changed_fields::text[]
+WHERE EXISTS (
+    SELECT 1 FROM ai_generations
+    WHERE id = @generation_id AND user_id = @user_id
+)
 ON CONFLICT (generation_id, expense_id) DO NOTHING;
 
 -- name: DeleteAIGenerationsBefore :exec

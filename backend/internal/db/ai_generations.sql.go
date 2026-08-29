@@ -77,7 +77,11 @@ func (q *Queries) InsertAIGeneration(ctx context.Context, arg InsertAIGeneration
 
 const linkAIGenerationExpense = `-- name: LinkAIGenerationExpense :exec
 INSERT INTO ai_generation_expenses (generation_id, expense_id, changed_fields)
-VALUES ($1, $2, $3)
+SELECT $1, $2, $3::text[]
+WHERE EXISTS (
+    SELECT 1 FROM ai_generations
+    WHERE id = $1 AND user_id = $4
+)
 ON CONFLICT (generation_id, expense_id) DO NOTHING
 `
 
@@ -85,11 +89,23 @@ type LinkAIGenerationExpenseParams struct {
 	GenerationID  string   `db:"generation_id" json:"generation_id"`
 	ExpenseID     string   `db:"expense_id" json:"expense_id"`
 	ChangedFields []string `db:"changed_fields" json:"changed_fields"`
+	UserID        string   `db:"user_id" json:"user_id"`
 }
 
 // Best-effort link from a saved expense back to the generation that
 // proposed it. ON CONFLICT DO NOTHING because a retry must not error.
+//
+// The EXISTS guard scopes the link to the caller's OWN generation. Without
+// it a client could attach its expense to somebody else's row and skew the
+// per-field acceptance rates this table exists to measure. An id that is
+// unknown or belongs to another user inserts nothing, which is exactly the
+// silent no-op the handler already treats as acceptable.
 func (q *Queries) LinkAIGenerationExpense(ctx context.Context, arg LinkAIGenerationExpenseParams) error {
-	_, err := q.db.Exec(ctx, linkAIGenerationExpense, arg.GenerationID, arg.ExpenseID, arg.ChangedFields)
+	_, err := q.db.Exec(ctx, linkAIGenerationExpense,
+		arg.GenerationID,
+		arg.ExpenseID,
+		arg.ChangedFields,
+		arg.UserID,
+	)
 	return err
 }

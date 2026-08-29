@@ -27,6 +27,26 @@ const MaxVoiceAudioBytes = 2 * 1024 * 1024
 // VoiceFeatureKey is the usage_counters.feature identifier for voice.
 const VoiceFeatureKey = "voice"
 
+// VoiceRepostFeatureKey meters the clarify re-post separately.
+//
+// The re-post is not charged against the user's voice budget on purpose —
+// charging for it would punish them for the model's ambiguity and teach
+// them to skip the loop that makes the feature trustworthy. But "free"
+// cannot mean "unbounded": without a ceiling, any authenticated group
+// member can loop text prompts through our Gemini key indefinitely. A
+// generous separate cap keeps the intent and closes the hole.
+const VoiceRepostFeatureKey = "voice_repost"
+
+// MaxTranscriptChars bounds the text a re-post may carry. A 45s utterance
+// transcribes to a few hundred characters, so this is far above any real
+// use while stopping a single request from becoming a multi-million-token
+// prompt.
+const MaxTranscriptChars = 2000
+
+// maxTimezoneChars bounds the client's IANA zone before it is interpolated
+// into the prompt. Longest real zone name is ~32 characters.
+const maxTimezoneChars = 64
+
 // allowedVoiceMIME is what expo-audio produces across platforms.
 var allowedVoiceMIME = map[string]struct{}{
 	"audio/ogg":  {},
@@ -56,12 +76,13 @@ type GroupContextLookup interface {
 // It writes nothing. It returns drafts; creating an expense still goes
 // through the expense endpoint, which validates independently.
 type VoiceHandler struct {
-	parser    voice.Parser
-	groups    GroupContextLookup
-	counter   *billing.Counter
-	freeCap   int
-	overrides CapOverrides
-	usage     *aiusage.Recorder
+	parser        voice.Parser
+	groups        GroupContextLookup
+	counter       *billing.Counter
+	freeCap       int
+	freeRepostCap int
+	overrides     CapOverrides
+	usage         *aiusage.Recorder
 }
 
 func NewVoiceHandler(p voice.Parser) *VoiceHandler {
@@ -76,9 +97,10 @@ func (h *VoiceHandler) WithGroupContext(g GroupContextLookup) *VoiceHandler {
 
 // WithCounter wires the anti-abuse counter. cap is the free monthly limit.
 // A nil counter disables metering entirely (selfhost).
-func (h *VoiceHandler) WithCounter(counter *billing.Counter, cap int) *VoiceHandler {
+func (h *VoiceHandler) WithCounter(counter *billing.Counter, cap, repostCap int) *VoiceHandler {
 	h.counter = counter
 	h.freeCap = cap
+	h.freeRepostCap = repostCap
 	return h
 }
 
@@ -191,6 +213,10 @@ func (h *VoiceHandler) Generate(w http.ResponseWriter, r *http.Request) {
 		writeVoiceError(w, http.StatusBadRequest, "bad_request", "audio_base64 or transcript is required")
 		return
 	}
+	if len(req.Transcript) > MaxTranscriptChars {
+		writeVoiceError(w, http.StatusRequestEntityTooLarge, "too_large", "transcript is too long")
+		return
+	}
 
 	claims := middleware.ClaimsFromContext(r.Context())
 
@@ -212,13 +238,12 @@ func (h *VoiceHandler) Generate(w http.ResponseWriter, r *http.Request) {
 		writeVoiceError(w, http.StatusForbidden, "forbidden", "not a member of this group")
 		return
 	}
-	vc.LocalDate = req.LocalDate
-	if vc.LocalDate == "" {
-		// Better a server-side day than an empty anchor, which would make
-		// every relative date unresolvable.
-		vc.LocalDate = time.Now().UTC().Format("2006-01-02")
-	}
-	vc.Timezone = req.Timezone
+	// Both of these are interpolated into the model prompt and local_date
+	// can also become an expense's date, so neither is taken on trust. A
+	// malformed value from a buggy client falls back rather than failing
+	// the request; a crafted one simply never reaches the prompt.
+	vc.LocalDate = sanitizeLocalDate(req.LocalDate)
+	vc.Timezone = sanitizeTimezone(req.Timezone)
 
 	var audio []byte
 	if !isRepost {
@@ -247,19 +272,28 @@ func (h *VoiceHandler) Generate(w http.ResponseWriter, r *http.Request) {
 	// Metering. The clarify re-post is deliberately NOT metered: charging
 	// for it would punish the user for the model's ambiguity and teach
 	// them to skip the loop that makes the feature trustworthy.
+	// Re-posts are metered under their own generous key rather than the
+	// user's voice budget: bounded, but not a cost the user feels.
+	featureKey := VoiceFeatureKey
+	freeCap := h.freeCap
+	if isRepost {
+		featureKey = VoiceRepostFeatureKey
+		freeCap = h.freeRepostCap
+	}
+
 	var reservation *billing.Reservation
 	var meterResult billing.Result
 	var metered bool
-	if h.counter != nil && !isRepost {
+	if h.counter != nil {
 		if claims == nil || claims.UserID == "" {
 			writeVoiceError(w, http.StatusUnauthorized, "unauthorized", "missing user context")
 			return
 		}
 
-		cap := h.freeCap
+		cap := freeCap
 		unlimited := false
 		if h.overrides != nil {
-			ov, oErr := h.overrides.GetFeatureCap(r.Context(), claims.UserID, VoiceFeatureKey)
+			ov, oErr := h.overrides.GetFeatureCap(r.Context(), claims.UserID, featureKey)
 			if oErr != nil && !errors.Is(oErr, pgx.ErrNoRows) {
 				writeVoiceError(w, http.StatusInternalServerError, "server_error", "usage counter unavailable")
 				return
@@ -274,7 +308,7 @@ func (h *VoiceHandler) Generate(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if !unlimited {
-			res, mErr := h.counter.Reserve(r.Context(), claims.UserID, VoiceFeatureKey, cap)
+			res, mErr := h.counter.Reserve(r.Context(), claims.UserID, featureKey, cap)
 			if mErr != nil {
 				writeVoiceError(w, http.StatusInternalServerError, "server_error", "usage counter unavailable")
 				return
@@ -361,6 +395,34 @@ func (h *VoiceHandler) Generate(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(body)
+}
+
+// sanitizeLocalDate keeps a well-formed YYYY-MM-DD and otherwise falls
+// back to the server's UTC day — better a day that may be off by one than
+// an empty anchor, which would make every relative date unresolvable.
+func sanitizeLocalDate(raw string) string {
+	if _, err := time.Parse("2006-01-02", raw); err == nil {
+		return raw
+	}
+	return time.Now().UTC().Format("2006-01-02")
+}
+
+// sanitizeTimezone accepts only the shape of an IANA zone name. Anything
+// else becomes empty: the prompt reads better without a zone than with
+// attacker-chosen text in it.
+func sanitizeTimezone(raw string) string {
+	if raw == "" || len(raw) > maxTimezoneChars {
+		return ""
+	}
+	for _, r := range raw {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9':
+		case r == '/', r == '_', r == '-', r == '+':
+		default:
+			return ""
+		}
+	}
+	return raw
 }
 
 func toVoiceDrafts(in []voice.Draft) []voiceDraft {
