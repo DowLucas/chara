@@ -191,6 +191,91 @@ func TestVoiceEval_Text_NoExpense(t *testing.T) {
 	assert.ErrorIs(t, err, ErrNoExpense)
 }
 
+// ── Multilingual text evals ───────────────────────────────────────────
+//
+// The decimal-separator case is the important one: money.ParseDecimal
+// rejects commas, so if the model emits "12,50" the expense is silently
+// dropped. Languages that speak commas are where that surfaces.
+
+func evalTextIn(t *testing.T, groupLang, sentence string) *Result {
+	t.Helper()
+	key := os.Getenv("GEMINI_API_KEY")
+	if key == "" {
+		t.Skip("GEMINI_API_KEY not set")
+	}
+	vc := evalContext()
+	vc.Language = groupLang
+	res, err := NewGemini(key).ParseText(context.Background(), sentence, vc, nil)
+	require.NoError(t, err)
+	return res
+}
+
+func TestVoiceEval_Text_GermanCommaDecimal(t *testing.T) {
+	got := evalTextIn(t, "de", "Ich habe zwölf Komma fünfzig für den Kaffee bezahlt, nur ich")
+
+	require.Len(t, got.Drafts, 1)
+	assert.EqualValues(t, 1250, got.Drafts[0].AmountMinor,
+		"a spoken comma decimal must survive as 12.50, not be dropped")
+}
+
+func TestVoiceEval_Text_SwedishSpokenNumeralAndSlang(t *testing.T) {
+	got := evalTextIn(t, "sv", "Jag lade ut fyrahundraåttio spänn på middagen med Anna och Sara")
+
+	require.Len(t, got.Drafts, 1)
+	d := got.Drafts[0]
+	assert.EqualValues(t, 48000, d.AmountMinor, "spoken numeral must become digits")
+	assert.Equal(t, "SEK", d.Currency, `"spänn" is SEK`)
+	assert.Len(t, d.Participants, 3)
+}
+
+func TestVoiceEval_Text_FrenchSpokenNumeral(t *testing.T) {
+	got := evalTextIn(t, "fr", "J'ai payé quatre-vingts euros pour le dîner, juste moi")
+
+	require.Len(t, got.Drafts, 1)
+	assert.EqualValues(t, 8000, got.Drafts[0].AmountMinor)
+	assert.Equal(t, "EUR", got.Drafts[0].Currency)
+}
+
+func TestVoiceEval_Text_ArabicGroupGetsArabicTitle(t *testing.T) {
+	// The case the allowlist fix unblocked: an Arabic group must get an
+	// Arabic title, not an English one.
+	got := evalTextIn(t, "ar", "I paid 200 for lunch with Anna")
+
+	require.Len(t, got.Drafts, 1)
+	title := got.Drafts[0].Title
+	assert.NotEmpty(t, title)
+	hasArabic := false
+	for _, r := range title {
+		if r >= 0x0600 && r <= 0x06FF {
+			hasArabic = true
+			break
+		}
+	}
+	assert.True(t, hasArabic, "title %q should be written in Arabic script", title)
+}
+
+func TestVoiceEval_Text_TranscriptIsNotTranslated(t *testing.T) {
+	// Group language is English, speech is Swedish: the title localises,
+	// the transcript must not.
+	got := evalTextIn(t, "en", "Jag betalade 620 för mat, delat på alla")
+
+	require.Len(t, got.Drafts, 1)
+	assert.Contains(t, got.Transcript, "betalade",
+		"transcript must stay in the language spoken")
+}
+
+func TestVoiceEval_Text_CodeSwitchedSentence(t *testing.T) {
+	got := evalTextIn(t, "en", "Jag betalade 400 for the hotel, split 70/30 with Johan")
+
+	require.Len(t, got.Drafts, 1)
+	byID := map[string]int64{}
+	for _, s := range got.Drafts[0].Shares {
+		byID[s.MemberID] = int64(s.Share)
+	}
+	assert.EqualValues(t, 28000, byID["m1"])
+	assert.EqualValues(t, 12000, byID["m4"])
+}
+
 // ── Audio evals (need recorded fixtures) ──────────────────────────────
 
 // "I paid four hundred and eighty for dinner with Anna and Sara"

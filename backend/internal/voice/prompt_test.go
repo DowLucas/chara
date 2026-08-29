@@ -87,3 +87,69 @@ func TestResponseSchemaRequiresLoadBearingFields(t *testing.T) {
 		}
 	}
 }
+
+// ── Multilingual guarantees ───────────────────────────────────────────
+//
+// These pin instructions the resolver depends on. The decimal-separator
+// rule in particular is load-bearing: money.ParseDecimal rejects commas,
+// so a German or Swedish speaker's "12,50" would be dropped as "no usable
+// amount" if the prompt ever stopped demanding a period.
+
+func TestPromptDemandsPeriodDecimalSeparator(t *testing.T) {
+	p := buildPrompt(testContext(), nil)
+	low := strings.ToLower(p)
+	if !strings.Contains(low, "comma") {
+		t.Error("prompt does not mention commas; a spoken \"12,50\" would be dropped")
+	}
+	if !strings.Contains(low, "period") && !strings.Contains(low, "full stop") {
+		t.Error("prompt does not demand a period as the decimal separator")
+	}
+}
+
+func TestPromptAllowsAnySpokenLanguage(t *testing.T) {
+	low := strings.ToLower(buildPrompt(testContext(), nil))
+	if !strings.Contains(low, "any language") {
+		t.Error("prompt does not tell the model the speaker may use any language")
+	}
+}
+
+func TestPromptKeepsTranscriptInTheSpokenLanguage(t *testing.T) {
+	low := strings.ToLower(buildPrompt(testContext(), nil))
+	// The user has to be able to read and correct their own words.
+	if !strings.Contains(low, "do not translate") {
+		t.Error("prompt does not forbid translating the transcript")
+	}
+}
+
+func TestPromptPinsTitleToTheGroupLanguageRegardlessOfSpeech(t *testing.T) {
+	vc := testContext()
+	vc.Language = "sv"
+	p := buildPrompt(vc, nil)
+	if !strings.Contains(p, "Swedish") {
+		t.Fatal("prompt does not name the group language")
+	}
+	if !strings.Contains(strings.ToLower(p), "regardless") {
+		t.Error("prompt does not pin the title to the group language regardless of what was spoken")
+	}
+}
+
+func TestPromptCoversSpokenNumeralsAndColloquialCurrency(t *testing.T) {
+	low := strings.ToLower(buildPrompt(testContext(), nil))
+	if !strings.Contains(low, "spoken") || !strings.Contains(low, "digits") {
+		t.Error("prompt does not require spoken numerals to become digits")
+	}
+	// A Swede says "spänn"; an American says "bucks". Both mean a currency.
+	if !strings.Contains(low, "kronor") && !strings.Contains(low, "colloquial") {
+		t.Error("prompt gives no guidance on colloquial currency words")
+	}
+}
+
+// Arabic is the case that motivated the allowlist fix; the prompt must be
+// able to name it rather than falling back to "the speaker's own language".
+func TestPromptNamesArabicAsAGroupLanguage(t *testing.T) {
+	vc := testContext()
+	vc.Language = "ar"
+	if !strings.Contains(buildPrompt(vc, nil), "Arabic") {
+		t.Error("prompt does not name Arabic as the group language")
+	}
+}

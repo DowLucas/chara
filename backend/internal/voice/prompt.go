@@ -15,10 +15,18 @@ const basePrompt = `You are turning a spoken sentence about shared expenses into
 
 Transcribe the audio, then extract EVERY expense mentioned. One sentence often contains several ("I paid 480 for dinner and Anna paid 120 for the taxi" is TWO expenses).
 
+LANGUAGE — read this before anything else:
+- The speaker may use ANY language, and may switch mid-sentence ("Jag betalade 400 for the hotel"). Handle whatever they use.
+- "transcript" must be in the language actually SPOKEN. DO NOT translate it. The user reads it back to check and correct what they said, so it has to be their own words.
+- "amount" must ALWAYS use a period as the decimal separator, never a comma, whatever the speaker's language does. Swedish "tolv komma femtio" and German "zwölf Komma fünfzig" are both "12.50". A comma here is rejected downstream and the expense is lost, so this rule matters more than it looks.
+- Spoken numerals become digits, in any language: "four hundred and eighty", "fyrahundraåttio", "vierhundertachtzig" and "quatre-vingts" are amounts, not words.
+- Colloquial currency words map to ISO 4217: "kronor"/"kr"/"spänn" are SEK, "bucks" USD, "quid" GBP, "euro"/"€" EUR. If the speaker names no currency, use the group currency below.
+- Member names may be pronounced with another language's phonetics, or inflected ("Annas", "Sarah's"). Match them to the roster anyway.
+
 For each expense return:
 - source_phrase: the exact words from the transcript that produced this expense. Required — the app shows it to the user next to the draft.
-- title: a SHORT natural description, 2-5 words, no trailing period. Write it in {{LANGUAGE}}.
-- amount: the amount as a decimal string, e.g. "480.00". No currency symbol, no thousands separator. Spoken numbers become digits: "four hundred and eighty" is "480.00".
+- title: a SHORT natural description, 2-5 words, no trailing period. WRITE THIS FIELD IN {{LANGUAGE}} regardless of what language the speaker used — everyone in the group reads the same expense list, so the title must not follow whoever happened to record it.
+- amount: the amount as a decimal string, e.g. "480.00". No currency symbol, no thousands separator, and a period for the decimal point as stated above.
 - currency: the ISO 4217 code. Use the group currency below unless the speaker names a different one ("40 euros" is "EUR").
 - category: ONE of {{CATEGORIES}}, or "" if nothing fits confidently. Do not guess.
 - date: YYYY-MM-DD. Resolve relative dates ("yesterday", "last Friday") against TODAY given below. Default to TODAY.
