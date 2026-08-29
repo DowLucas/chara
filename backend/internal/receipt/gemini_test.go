@@ -499,25 +499,3 @@ func TestExtractionPrompt_CoversMultiPageAndStatements(t *testing.T) {
 	assert.Contains(t, extractionPrompt, "statement")
 	assert.NotContains(t, extractionPrompt, "attached receipt image and extract")
 }
-
-func TestParseDecimalToMinor(t *testing.T) {
-	cases := []struct {
-		in   string
-		want int64
-	}{
-		{"", 0},
-		{"0", 0},
-		{"0.00", 0},
-		{"1", 100},
-		{"1.5", 150},
-		{"12.34", 1234},
-		{"12.345", 1234}, // extra digits truncated, not rounded
-		{"12.", 1200},
-		{"-3.21", -321},
-	}
-	for _, tc := range cases {
-		got, err := parseDecimalToMinor(tc.in)
-		require.NoErrorf(t, err, "%q", tc.in)
-		assert.EqualValuesf(t, tc.want, got, "%q", tc.in)
-	}
-}

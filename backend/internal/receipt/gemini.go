@@ -323,22 +323,22 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 		return nil, fmt.Errorf("receipt: unsupported currency %q", extracted.Currency)
 	}
 
-	total, err := parseDecimalToMinor(extracted.Total)
+	total, err := money.ParseDecimal(extracted.Total)
 	if err != nil {
 		return nil, fmt.Errorf("receipt: total: %w", err)
 	}
 	if total <= 0 {
 		return nil, ErrUnreadable
 	}
-	subtotal, err := parseDecimalToMinor(extracted.Subtotal)
+	subtotal, err := money.ParseDecimal(extracted.Subtotal)
 	if err != nil {
 		return nil, fmt.Errorf("receipt: subtotal: %w", err)
 	}
-	tax, err := parseDecimalToMinor(extracted.Tax)
+	tax, err := money.ParseDecimal(extracted.Tax)
 	if err != nil {
 		return nil, fmt.Errorf("receipt: tax: %w", err)
 	}
-	tip, err := parseDecimalToMinor(extracted.Tip)
+	tip, err := money.ParseDecimal(extracted.Tip)
 	if err != nil {
 		return nil, fmt.Errorf("receipt: tip: %w", err)
 	}
@@ -346,7 +346,7 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 	// unparseable value degrades to "not present" rather than failing an
 	// otherwise good scan — notably a refund row the parser may render with
 	// a leading minus.
-	deposit, err := parseDecimalToMinor(extracted.Deposit)
+	deposit, err := money.ParseDecimal(extracted.Deposit)
 	if err != nil {
 		deposit = 0
 	}
@@ -368,7 +368,7 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 		if desc == "" {
 			continue
 		}
-		totalMinor, err := parseDecimalToMinor(raw.Total)
+		totalMinor, err := money.ParseDecimal(raw.Total)
 		if err != nil || totalMinor <= 0 {
 			continue
 		}
@@ -376,7 +376,7 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 		if qty <= 0 {
 			qty = 1
 		}
-		unitMinor, err := parseDecimalToMinor(raw.UnitPrice)
+		unitMinor, err := money.ParseDecimal(raw.UnitPrice)
 		if err != nil || unitMinor <= 0 {
 			// Fall back to total when unit price is missing — single-qty
 			// lines often omit it.
