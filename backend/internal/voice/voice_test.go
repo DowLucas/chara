@@ -5,7 +5,7 @@ import "testing"
 func testContext() Context {
 	return Context{
 		GroupID: "g1", GroupName: "Sweden Trip", Currency: "SEK", Language: "en",
-		Categories: []string{"restaurant", "groceries", "transport"},
+		Categories: []string{"food", "groceries", "transport"},
 		Members: []Member{
 			{ID: "m1", Name: "Lucas"},
 			{ID: "m2", Name: "Anna"},
