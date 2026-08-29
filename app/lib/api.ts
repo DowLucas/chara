@@ -5,6 +5,7 @@ import {
   APP_PROTOCOL_VERSION,
   PROTOCOL_HEADER,
 } from './protocol';
+import type { VoiceDraft } from './voice-drafts';
 import {
   accountFor,
   defaultAccount,
@@ -674,6 +675,11 @@ export interface CreateExpenseInput {
   fx_rate?: string;
   fx_as_of?: string;
   fx_source?: 'ecb' | 'manual';
+  /** Links this expense to the AI generation that proposed it. Optional and
+   *  best-effort — the server ignores an unknown id rather than failing. */
+  generation_id?: string;
+  /** Draft fields the user changed before saving, for acceptance metrics. */
+  changed_fields?: string[];
 }
 
 // PATCH /api/groups/{groupID}/expenses/{expenseID}.
@@ -1051,6 +1057,61 @@ export function scanReceipt(
       ...(language ? { language } : {}),
       ...(groupId ? { group_id: groupId } : {}),
     }),
+  });
+}
+
+// Voice expenses — POST /api/voice/expenses. Audio (or, on a clarify
+// re-post, a transcript plus answers) becomes validated expense drafts.
+// Drafts are proposals only: creating an expense still goes through
+// createExpense, which the server validates independently.
+export interface VoiceQuestionOption {
+  member_id: string;
+  label: string;
+}
+
+export interface VoiceQuestion {
+  id: string;
+  text: string;
+  options: VoiceQuestionOption[];
+}
+
+export interface VoiceExpensesResponse {
+  transcript: string;
+  expenses: VoiceDraft[];
+  questions?: VoiceQuestion[];
+  /** Pass back on createExpense to record per-field acceptance. */
+  generation_id?: string;
+  tier?: string;
+  remaining?: number;
+  period_resets_at?: string;
+}
+
+export interface VoiceExpensesInput {
+  /** Omitted on a clarify re-post, which carries `transcript` instead. */
+  audioBase64?: string;
+  mimeType?: string;
+  groupId: string;
+  /** The device's local day (YYYY-MM-DD) and IANA zone. The server cannot
+   *  know the user's day, and "yesterday" must resolve against theirs. */
+  localDate: string;
+  timezone: string;
+  clipMs?: number;
+  /** Set for the clarify re-post. The server routes it to the text path,
+   *  which is cheaper and deliberately not metered. */
+  transcript?: string;
+  answers?: Array<{ question_id: string; member_id?: string; text: string }>;
+}
+
+function voiceBody(input: VoiceExpensesInput) {
+  return JSON.stringify({
+    group_id: input.groupId,
+    local_date: input.localDate,
+    timezone: input.timezone,
+    ...(input.audioBase64 ? { audio_base64: input.audioBase64 } : {}),
+    ...(input.mimeType ? { mime_type: input.mimeType } : {}),
+    ...(input.clipMs ? { clip_ms: input.clipMs } : {}),
+    ...(input.transcript ? { transcript: input.transcript } : {}),
+    ...(input.answers?.length ? { answers: input.answers } : {}),
   });
 }
 
@@ -1579,6 +1640,14 @@ export function apiFor(serverUrl: string) {
           ...(language ? { language } : {}),
           ...(groupId ? { group_id: groupId } : {}),
         }),
+      }),
+
+    // Voice expenses (group-scoped — uses the group's home server).
+    // Intentionally has no flat-export twin: new code uses apiFor().
+    generateVoiceExpenses: (input: VoiceExpensesInput) =>
+      requestOn<VoiceExpensesResponse>(serverUrl, '/api/voice/expenses', {
+        method: 'POST',
+        body: voiceBody(input),
       }),
 
     // Waitlist signup — hosted-only soft-gate email capture during the
