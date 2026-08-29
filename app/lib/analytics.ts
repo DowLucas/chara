@@ -44,6 +44,16 @@ export type AnalyticsEvent =
   | 'qr_scanned'
   | 'group_joined'
   | 'onboarding_finished'
+  // voice expenses
+  | 'voice_capture_started'
+  | 'voice_capture_cancelled'
+  | 'voice_generated'
+  | 'voice_generation_failed'
+  | 'voice_transcript_edited'
+  | 'voice_question_answered'
+  | 'voice_draft_saved'
+  | 'voice_draft_discarded'
+  | 'voice_queue_abandoned'
   // errors
   | 'auth_error'
   | 'discovery_error'

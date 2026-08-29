@@ -1158,6 +1158,48 @@ export function isOcrCapReached(err: unknown): OcrCapReachedBody | null {
   return body as OcrCapReachedBody;
 }
 
+/** The 429 body for the voice cap. Same shape as the OCR one — a separate
+ *  code because voice and OCR are independent budgets. */
+export interface VoiceCapReachedBody {
+  code: 'voice_cap_reached';
+  message: string;
+  remaining: number;
+  period_resets_at: string;
+  waitlist_prompt: boolean;
+}
+
+export function isVoiceCapReached(err: unknown): VoiceCapReachedBody | null {
+  if (!(err instanceof ApiError)) return null;
+  if (err.status !== 429) return null;
+  const body = err.body as Partial<VoiceCapReachedBody> | null;
+  if (!body || body.code !== 'voice_cap_reached') return null;
+  return body as VoiceCapReachedBody;
+}
+
+/** The 422 body for a voice extraction that produced nothing usable. The
+ *  code drives which copy the user sees — in particular `settlement`
+ *  points at the settle flow rather than reporting a failure. */
+export type VoiceFailureCode =
+  | 'unintelligible'
+  | 'no_expense'
+  | 'settlement'
+  | 'bad_request';
+
+export function voiceFailureCode(err: unknown): VoiceFailureCode | null {
+  if (!(err instanceof ApiError)) return null;
+  const body = err.body as { code?: string } | null;
+  const code = body?.code;
+  if (
+    code === 'unintelligible' ||
+    code === 'no_expense' ||
+    code === 'settlement' ||
+    code === 'bad_request'
+  ) {
+    return code;
+  }
+  return null;
+}
+
 // Receipt attachments
 export interface ExpenseAttachment {
   id: string;
