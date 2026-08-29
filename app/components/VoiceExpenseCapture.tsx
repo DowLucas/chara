@@ -37,6 +37,8 @@ import { formatMinorUnits } from '@/lib/i18n';
 import { showAlert } from '@/lib/app-alert';
 import { useAccount } from '@/lib/accounts';
 import { markPopupClosed } from '@/lib/popup-guard';
+import { VoiceVocalizer } from '@/components/VoiceVocalizer';
+import { dbfsToLevel } from '@/lib/voice-levels';
 import * as analytics from '@/lib/analytics';
 
 /** Hard stop for a recording. Gemini bills audio at roughly 32 tokens per
@@ -128,7 +130,9 @@ export function VoiceExpenseCapture({
   );
 
   const recorder = useAudioRecorder(RECORDING_OPTIONS);
-  const recorderState = useAudioRecorderState(recorder, 250);
+  // 80ms, not the default: at 250ms the vocalizer visibly steps between
+  // frames instead of moving, which reads as lag rather than loudness.
+  const recorderState = useAudioRecorderState(recorder, 80);
   const startedAt = useRef(0);
   const autoStop = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -294,7 +298,7 @@ export function VoiceExpenseCapture({
         return (
           <RecordingView
             elapsedMs={Date.now() - startedAt.current}
-            metering={recorderState.metering ?? -60}
+            level={dbfsToLevel(recorderState.metering)}
             onStop={stopAndSend}
           />
         );
@@ -393,6 +397,7 @@ function IdleView({ onRecord, onType }: { onRecord(): void; onType(): void }) {
         <Feather name="mic" size={36} color={colors.paper} />
       </TouchableOpacity>
       <Text style={styles.hint}>{t('voiceExpense.hint')}</Text>
+      <Text style={styles.exampleLabel}>{t('voiceExpense.exampleLabel')}</Text>
       <Text style={styles.example}>{t('voiceExpense.example')}</Text>
       <TouchableOpacity onPress={onType} accessibilityRole="button">
         <Text style={styles.link}>{t('voiceExpense.typeInstead')}</Text>
@@ -403,11 +408,12 @@ function IdleView({ onRecord, onType }: { onRecord(): void; onType(): void }) {
 
 function RecordingView({
   elapsedMs,
-  metering,
+  level,
   onStop,
 }: {
   elapsedMs: number;
-  metering: number;
+  /** Loudness 0..1, already normalised by dbfsToLevel. */
+  level: number;
   onStop(): void;
 }) {
   const { t } = useTranslation();
@@ -434,17 +440,13 @@ function RecordingView({
     return () => loop.stop();
   }, [pulse]);
 
-  // metering is dBFS, roughly -60 (silence) to 0 (clipping).
-  const level = Math.max(0, Math.min(1, (metering + 60) / 60));
   const remaining = Math.max(0, Math.ceil((MAX_CLIP_MS - elapsedMs) / 1000));
 
   return (
     <View style={styles.centered}>
       <Animated.View style={[styles.recordingDot, { opacity: pulse }]} />
       <Text style={styles.timer}>{t('voiceExpense.secondsLeft', { count: remaining })}</Text>
-      <View style={styles.meterTrack}>
-        <View style={[styles.meterFill, { width: `${level * 100}%` }]} />
-      </View>
+      <VoiceVocalizer level={level} />
       <Button onPress={onStop}>
         <Text>{t('voiceExpense.stop')}</Text>
       </Button>
@@ -482,7 +484,7 @@ function ReviewView({
         value={transcript}
         onChangeText={onTranscriptChange}
         multiline
-        placeholder={t('voiceExpense.transcriptPlaceholder')}
+        placeholder={t('voiceExpense.example')}
         placeholderTextColor={colors.lead}
         accessibilityLabel={t('voiceExpense.transcriptLabel')}
       />
@@ -638,6 +640,13 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   link: { fontFamily: fontBody, fontSize: fontSize.caption, color: colors.lead },
+  exampleLabel: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
   recordingDot: { width: 16, height: 16, borderRadius: 8, backgroundColor: colors.brick },
   timer: {
     fontFamily: fontMono,
@@ -645,14 +654,6 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
   },
-  meterTrack: {
-    width: '70%',
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.bone,
-    overflow: 'hidden',
-  },
-  meterFill: { height: 4, backgroundColor: colors.graphite },
   reviewScroll: { padding: spacing.s4, gap: spacing.s3, paddingBottom: spacing.s6 },
   eyebrow: {
     fontFamily: fontMono,
