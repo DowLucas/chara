@@ -263,7 +263,7 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 			if cfg.IsHosted() {
 				receiptH = receiptH.
 					WithCounter(billing.NewCounter(queries), FreeOCRCap).
-					WithCapOverrides(queries)
+					WithCapOverrides(handler.NewCapOverrides(queries))
 			}
 			r.Post("/api/receipts/scan", receiptH.Scan)
 		}

@@ -54,7 +54,7 @@ func hostedReceiptsRouter(t *testing.T, env *testutil.Env, scanner receipt.Scann
 	}
 	h := handler.NewReceiptHandler(scanner).
 		WithCounter(counter, freeCap).
-		WithCapOverrides(env.Queries)
+		WithCapOverrides(handler.NewCapOverrides(env.Queries))
 	mux := http.NewServeMux()
 	mux.Handle("/api/receipts/scan", middleware.Authenticate(env.JWT, env.Queries)(http.HandlerFunc(h.Scan)))
 	return mux
@@ -232,10 +232,12 @@ func TestReceiptScan_Hosted_CrossingMonthBoundaryResetsCounter(t *testing.T) {
 
 // ── Hosted: per-user cap override ──────────────────────────────────────────────
 
-func setOCRCapOverride(t *testing.T, env *testutil.Env, userID string, cap int) {
+func setFeatureCapOverride(t *testing.T, env *testutil.Env, userID, feature string, cap int) {
 	t.Helper()
 	_, err := env.Pool.Exec(context.Background(),
-		`UPDATE users SET ocr_cap_override = $1 WHERE id = $2`, cap, userID)
+		`INSERT INTO user_feature_caps (user_id, feature, cap) VALUES ($1, $2, $3)
+		 ON CONFLICT (user_id, feature) DO UPDATE SET cap = EXCLUDED.cap`,
+		userID, feature, cap)
 	require.NoError(t, err)
 }
 
@@ -245,7 +247,7 @@ func TestReceiptScan_Hosted_UnlimitedOverrideBypassesCap(t *testing.T) {
 	token := env.MintToken(t, user.ID, user.Email)
 
 	// Negative override = unlimited; metering is bypassed entirely.
-	setOCRCapOverride(t, env, user.ID, -1)
+	setFeatureCapOverride(t, env, user.ID, handler.OCRFeatureKey, -1)
 
 	scanner := &fakeReceiptScanner{resp: successReceipt()}
 	router := hostedReceiptsRouter(t, env, scanner, 3, nil)
@@ -277,7 +279,7 @@ func TestReceiptScan_Hosted_PositiveOverrideRaisesCap(t *testing.T) {
 	token := env.MintToken(t, user.ID, user.Email)
 
 	// Override to 5 even though the global free cap is 3.
-	setOCRCapOverride(t, env, user.ID, 5)
+	setFeatureCapOverride(t, env, user.ID, handler.OCRFeatureKey, 5)
 
 	scanner := &fakeReceiptScanner{resp: successReceipt()}
 	router := hostedReceiptsRouter(t, env, scanner, 3, nil)
@@ -293,6 +295,27 @@ func TestReceiptScan_Hosted_PositiveOverrideRaisesCap(t *testing.T) {
 }
 
 // ── Self-host: no counter, no metering ────────────────────────────────────────
+
+func TestReceiptScan_Hosted_OverrideIsScopedToItsFeature(t *testing.T) {
+	env := testutil.NewEnv(t)
+	user := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "scoped"), "Scoped Cap User")
+	token := env.MintToken(t, user.ID, user.Email)
+
+	// A generous override on a DIFFERENT feature must not raise the OCR
+	// cap — that is the whole point of keying overrides by feature.
+	setFeatureCapOverride(t, env, user.ID, "voice", 100)
+
+	scanner := &fakeReceiptScanner{resp: successReceipt()}
+	router := hostedReceiptsRouter(t, env, scanner, 3, nil)
+
+	for i := 0; i < 3; i++ {
+		rr := postAuthedScan(t, router, token)
+		require.Equal(t, http.StatusOK, rr.Code, "scan %d: %s", i+1, rr.Body.String())
+	}
+	rr := postAuthedScan(t, router, token)
+	require.Equal(t, http.StatusTooManyRequests, rr.Code, rr.Body.String())
+	assert.EqualValues(t, 3, scanner.callCount.Load())
+}
 
 func TestReceiptScan_Selfhost_NoCounterMeansNoCap(t *testing.T) {
 	env := testutil.NewEnv(t)

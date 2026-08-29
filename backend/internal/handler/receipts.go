@@ -38,11 +38,30 @@ type ReceiptHandler struct {
 	groups    GroupCategoriesLookup
 }
 
-// CapOverrides resolves a per-user OCR cap override. The billing counter
-// already takes the cap as a per-call argument; this is the per-user lookup
-// the global FreeOCRCap always anticipated. *db.Queries satisfies it.
+// CapOverrides resolves a per-user, per-feature cap override. The billing
+// counter already takes the cap as a per-call argument; this is the
+// per-user lookup the global free caps always anticipated.
+//
+// An invalid (zero-value) result means "no override, use the global cap";
+// cap >= 0 is an explicit cap; cap < 0 means unlimited. Use
+// [NewCapOverrides] to adapt *db.Queries.
 type CapOverrides interface {
-	GetOCRCapOverride(ctx context.Context, userID string) (pgtype.Int4, error)
+	GetFeatureCap(ctx context.Context, userID, feature string) (pgtype.Int4, error)
+}
+
+// dbCapOverrides adapts *db.Queries to CapOverrides, mapping the "no row"
+// case to an invalid pgtype.Int4 so callers need not know about pgx.
+type dbCapOverrides struct{ queries *db.Queries }
+
+// NewCapOverrides wires the real DB-backed cap lookup for production use.
+func NewCapOverrides(queries *db.Queries) CapOverrides { return dbCapOverrides{queries: queries} }
+
+func (d dbCapOverrides) GetFeatureCap(ctx context.Context, userID, feature string) (pgtype.Int4, error) {
+	cap, err := d.queries.GetFeatureCap(ctx, db.GetFeatureCapParams{UserID: userID, Feature: feature})
+	if err != nil {
+		return pgtype.Int4{}, err
+	}
+	return pgtype.Int4{Int32: cap, Valid: true}, nil
 }
 
 // GroupCategoriesLookup resolves a group's configured (or default) category
@@ -250,7 +269,7 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 		cap := h.freeCap
 		unlimited := false
 		if h.overrides != nil {
-			ov, oErr := h.overrides.GetOCRCapOverride(r.Context(), claims.UserID)
+			ov, oErr := h.overrides.GetFeatureCap(r.Context(), claims.UserID, OCRFeatureKey)
 			if oErr != nil && !errors.Is(oErr, pgx.ErrNoRows) {
 				writeError(w, http.StatusInternalServerError, "usage counter unavailable")
 				return

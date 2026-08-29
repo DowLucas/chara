@@ -17,7 +17,7 @@ SET avatar_object_key = NULL,
     avatar_updated_at = NOW(),
     updated_at        = NOW()
 WHERE id = $1
-RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at, ocr_cap_override
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at
 `
 
 func (q *Queries) ClearUserAvatar(ctx context.Context, id string) (User, error) {
@@ -35,7 +35,6 @@ func (q *Queries) ClearUserAvatar(ctx context.Context, id string) (User, error) 
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
 		&i.DeletedAt,
-		&i.OcrCapOverride,
 	)
 	return i, err
 }
@@ -59,7 +58,7 @@ func (q *Queries) DeletePushTokensByUser(ctx context.Context, userID string) err
 }
 
 const getActiveUserByID = `-- name: GetActiveUserByID :one
-SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at, ocr_cap_override FROM users WHERE id = $1 AND deleted_at IS NULL
+SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at FROM users WHERE id = $1 AND deleted_at IS NULL
 `
 
 // Used by the auth middleware to reject any JWT whose subject has been
@@ -79,26 +78,12 @@ func (q *Queries) GetActiveUserByID(ctx context.Context, id string) (User, error
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
 		&i.DeletedAt,
-		&i.OcrCapOverride,
 	)
 	return i, err
 }
 
-const getOCRCapOverride = `-- name: GetOCRCapOverride :one
-SELECT ocr_cap_override FROM users WHERE id = $1
-`
-
-// Per-user OCR cap override for hosted metering. NULL = use the global
-// FreeOCRCap; >= 0 = explicit cap; < 0 = unlimited (metering bypassed).
-func (q *Queries) GetOCRCapOverride(ctx context.Context, id string) (pgtype.Int4, error) {
-	row := q.db.QueryRow(ctx, getOCRCapOverride, id)
-	var ocr_cap_override pgtype.Int4
-	err := row.Scan(&ocr_cap_override)
-	return ocr_cap_override, err
-}
-
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at, ocr_cap_override FROM users WHERE email = $1
+SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -116,13 +101,12 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
 		&i.DeletedAt,
-		&i.OcrCapOverride,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at, ocr_cap_override FROM users WHERE id = $1
+SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
@@ -140,7 +124,6 @@ func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
 		&i.DeletedAt,
-		&i.OcrCapOverride,
 	)
 	return i, err
 }
@@ -167,7 +150,7 @@ SET avatar_object_key = $2,
     avatar_updated_at = NOW(),
     updated_at        = NOW()
 WHERE id = $1
-RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at, ocr_cap_override
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at
 `
 
 type SetUserAvatarParams struct {
@@ -190,7 +173,6 @@ func (q *Queries) SetUserAvatar(ctx context.Context, arg SetUserAvatarParams) (U
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
 		&i.DeletedAt,
-		&i.OcrCapOverride,
 	)
 	return i, err
 }
@@ -227,7 +209,7 @@ SET display_name = COALESCE($2, display_name),
     locale       = COALESCE($5, locale),
     updated_at   = NOW()
 WHERE id = $1
-RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at, ocr_cap_override
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at
 `
 
 type UpdateUserParams struct {
@@ -259,7 +241,6 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
 		&i.DeletedAt,
-		&i.OcrCapOverride,
 	)
 	return i, err
 }
@@ -271,7 +252,7 @@ ON CONFLICT (email) DO UPDATE
     SET display_name = EXCLUDED.display_name,
         avatar_url   = COALESCE(EXCLUDED.avatar_url, users.avatar_url),
         updated_at   = NOW()
-RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at, ocr_cap_override
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at
 `
 
 type UpsertUserParams struct {
@@ -303,7 +284,6 @@ func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (User, e
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
 		&i.DeletedAt,
-		&i.OcrCapOverride,
 	)
 	return i, err
 }
