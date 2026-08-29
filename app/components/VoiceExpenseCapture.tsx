@@ -126,6 +126,8 @@ export function VoiceExpenseCapture({
   const [originalTranscript, setOriginalTranscript] = useState('');
   const [answers, setAnswers] = useState<Record<string, { member_id: string; text: string }>>({});
   const [capBody, setCapBody] = useState<{ periodResetsAt?: string; remaining?: number; cap?: number } | null>(null);
+  /** Set when a re-post failed but we still hold usable drafts. */
+  const [retryError, setRetryError] = useState<string | null>(null);
 
   const account = useAccount(serverUrl);
   const handleWaitlistSubmit = useCallback(
@@ -216,6 +218,11 @@ export function VoiceExpenseCapture({
   /** Send audio (or a transcript re-post) and move to review. */
   const submit = useCallback(
     async (payload: { audioBase64?: string; clipMs?: number; transcript?: string }) => {
+      // Hold the drafts we already have: on a failed re-post we restore
+      // them rather than dropping the user on an error screen. The audio is
+      // deleted once encoded, so losing them costs a re-record AND another
+      // metered credit.
+      const previous = state.kind === 'review' ? state : null;
       setState({ kind: 'uploading' });
       const started = Date.now();
       try {
@@ -262,7 +269,7 @@ export function VoiceExpenseCapture({
         if (cap) {
           analytics.track('voice_generation_failed', { code: 'cap' });
           setCapBody({ periodResetsAt: cap.period_resets_at, remaining: cap.remaining });
-          setState({ kind: 'idle' });
+          setState(previous ?? { kind: 'idle' });
           return;
         }
         const code = voiceFailureCode(err);
@@ -271,10 +278,17 @@ export function VoiceExpenseCapture({
             ? code
             : 'network';
         analytics.track('voice_generation_failed', { code: mapped });
+        if (previous) {
+          // Keep the good drafts and say the retry failed, rather than
+          // throwing away work to show a full-screen error.
+          setRetryError(mapped);
+          setState(previous);
+          return;
+        }
         setState({ kind: 'error', code: mapped });
       }
     },
-    [answers, groupId, serverUrl],
+    [answers, groupId, serverUrl, state],
   );
 
   const stopAndSend = useCallback(async () => {
@@ -330,11 +344,18 @@ export function VoiceExpenseCapture({
   }, [dismiss, recorder, stopAndSend, t]);
 
   const transcriptEdited = transcriptDraft.trim() !== originalTranscript.trim();
+  // Answering a question is a change to re-run on, exactly like editing the
+  // text. Gating only on the text left the option chips with no enabled
+  // control, so the clarify loop — prompt, ParseText, repost metering —
+  // could only ever fire if the user also happened to retype something.
+  const hasAnswers = Object.keys(answers).length > 0;
+  const canRegenerate = transcriptEdited || hasAnswers;
 
   const regenerate = useCallback(() => {
     analytics.track('voice_transcript_edited', {});
     const answered = Object.keys(answers).length;
     if (answered > 0) analytics.track('voice_question_answered', { question_count: answered });
+    setRetryError(null);
     void submit({ transcript: transcriptDraft });
   }, [answers, submit, transcriptDraft]);
 
@@ -382,7 +403,8 @@ export function VoiceExpenseCapture({
         return (
           <ReviewView
             transcript={transcriptDraft}
-            transcriptEdited={transcriptEdited}
+            canRegenerate={canRegenerate}
+            retryError={retryError}
             drafts={state.drafts}
             members={members}
             questions={state.questions}
@@ -531,7 +553,8 @@ function RecordingView({
 
 function ReviewView({
   transcript,
-  transcriptEdited,
+  canRegenerate,
+  retryError,
   drafts,
   members,
   questions,
@@ -543,8 +566,11 @@ function ReviewView({
   onUse,
 }: {
   transcript: string;
-  /** Whether the user has actually changed the text. Gates the redo. */
-  transcriptEdited: boolean;
+  /** Whether there is anything new to re-run on — edited text, or an
+   *  answered question. Gates the redo. */
+  canRegenerate: boolean;
+  /** A failed retry, shown inline so the drafts stay on screen. */
+  retryError: string | null;
   drafts: VoiceDraft[];
   members: RosterMember[];
   questions: VoiceQuestion[];
@@ -643,9 +669,13 @@ function ReviewView({
         </>
       ) : null}
 
+      {retryError ? (
+        <Text style={styles.retryError}>{t(`voiceExpense.err_${retryError}` as const)}</Text>
+      ) : null}
+
       <View style={styles.reviewActions}>
-        <Button kind="secondary" onPress={onRegenerate} disabled={!transcriptEdited}>
-          {transcriptEdited
+        <Button kind="secondary" onPress={onRegenerate} disabled={!canRegenerate}>
+          {canRegenerate
             ? t('voiceExpense.regenerate')
             : t('voiceExpense.regenerateDisabled')}
         </Button>
@@ -906,6 +936,12 @@ const styles = StyleSheet.create({
     fontSize: fontSize.caption,
     color: colors.brick,
     letterSpacing: 0.3,
+  },
+  retryError: {
+    fontFamily: fontBody,
+    fontSize: fontSize.caption,
+    color: colors.brick,
+    marginTop: spacing.s3,
   },
   reviewActions: { gap: spacing.s3, marginTop: spacing.s4 },
   errorText: {

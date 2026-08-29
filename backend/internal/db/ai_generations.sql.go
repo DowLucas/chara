@@ -77,7 +77,7 @@ func (q *Queries) InsertAIGeneration(ctx context.Context, arg InsertAIGeneration
 
 const linkAIGenerationExpense = `-- name: LinkAIGenerationExpense :exec
 INSERT INTO ai_generation_expenses (generation_id, expense_id, changed_fields)
-SELECT $1, $2, $3::text[]
+SELECT $1, $2, COALESCE($3::text[], '{}')
 WHERE EXISTS (
     SELECT 1 FROM ai_generations
     WHERE id = $1 AND user_id = $4
@@ -100,6 +100,10 @@ type LinkAIGenerationExpenseParams struct {
 // per-field acceptance rates this table exists to measure. An id that is
 // unknown or belongs to another user inserts nothing, which is exactly the
 // silent no-op the handler already treats as acceptable.
+// COALESCE because a client may send generation_id with no changed_fields:
+// pgx encodes a nil slice as SQL NULL, and the column is NOT NULL, so the
+// insert would fail and the link be lost. The DEFAULT does not apply when
+// the column is named explicitly.
 func (q *Queries) LinkAIGenerationExpense(ctx context.Context, arg LinkAIGenerationExpenseParams) error {
 	_, err := q.db.Exec(ctx, linkAIGenerationExpense,
 		arg.GenerationID,

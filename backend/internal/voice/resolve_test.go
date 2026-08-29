@@ -425,3 +425,111 @@ func TestResolveCarriesReasoning(t *testing.T) {
 		t.Error("reasoning was dropped")
 	}
 }
+
+// split.Exact validates only that shares are non-negative and sum to the
+// total. It says nothing about WHO they cover, so resolve.go has to.
+
+func TestResolveDegradesWhenExactSharesMissAParticipant(t *testing.T) {
+	// Sums to 430 and passes split.Exact, but Sara is on the split and owes
+	// nothing — a draft that contradicts itself, with no flag raised.
+	raws := []rawDraft{{
+		Title: "Dinner", Amount: "430.00", PaidByMemberID: "m1",
+		SplitMethod: "exact", Participants: []string{"m1", "m2", "m3"},
+		Shares: []rawShare{
+			{MemberID: "m1", Amount: "180.00"},
+			{MemberID: "m2", Amount: "250.00"},
+		},
+	}}
+	got, degraded, _ := resolveDrafts(raws, testContext())
+
+	if degraded != 1 {
+		t.Errorf("degraded = %d, want 1 — shares do not cover every participant", degraded)
+	}
+	if got[0].SplitMethod != "equal" {
+		t.Errorf("SplitMethod = %q, want equal", got[0].SplitMethod)
+	}
+}
+
+func TestResolveDegradesOnDuplicateExactShares(t *testing.T) {
+	// Sums correctly, but the client collapses duplicates last-wins, so the
+	// wizard's amounts would no longer total the expense and the save would
+	// fail with an error the user cannot act on.
+	raws := []rawDraft{{
+		Title: "Dinner", Amount: "430.00", PaidByMemberID: "m1",
+		SplitMethod: "exact", Participants: []string{"m1", "m2"},
+		Shares: []rawShare{
+			{MemberID: "m2", Amount: "250.00"},
+			{MemberID: "m2", Amount: "180.00"},
+		},
+	}}
+	_, degraded, _ := resolveDrafts(raws, testContext())
+	if degraded != 1 {
+		t.Errorf("degraded = %d, want 1 — duplicate member in shares", degraded)
+	}
+}
+
+// split.Percentage checks only that basis points SUM to 10000, so a wild
+// pair like 200%/-100% passes and pays one member twice the total.
+func TestResolveDegradesOnOutOfRangePercentages(t *testing.T) {
+	for _, pcts := range [][]rawPercent{
+		{{MemberID: "m1", Percent: 200}, {MemberID: "m2", Percent: -100}},
+		{{MemberID: "m1", Percent: -10}, {MemberID: "m2", Percent: 110}},
+	} {
+		raws := []rawDraft{{
+			Title: "Hotel", Amount: "900.00", PaidByMemberID: "m1",
+			SplitMethod: "percentage", Participants: []string{"m1", "m2"},
+			Percentages: pcts,
+		}}
+		got, degraded, _ := resolveDrafts(raws, testContext())
+		if degraded != 1 || got[0].SplitMethod != "equal" {
+			t.Errorf("pcts %v: degraded=%d method=%q, want 1/equal", pcts, degraded, got[0].SplitMethod)
+		}
+		for _, s := range got[0].Shares {
+			if s.Share < 0 {
+				t.Errorf("pcts %v produced a negative share %d", pcts, s.Share)
+			}
+		}
+	}
+}
+
+func TestResolveDegradesOnDuplicatePercentageMembers(t *testing.T) {
+	raws := []rawDraft{{
+		Title: "Hotel", Amount: "900.00", PaidByMemberID: "m1",
+		SplitMethod: "percentage", Participants: []string{"m1", "m2"},
+		Percentages: []rawPercent{
+			{MemberID: "m2", Percent: 70},
+			{MemberID: "m2", Percent: 30},
+		},
+	}}
+	_, degraded, _ := resolveDrafts(raws, testContext())
+	if degraded != 1 {
+		t.Errorf("degraded = %d, want 1 — duplicate member in percentages", degraded)
+	}
+}
+
+// The valid cases must keep working.
+func TestResolveKeepsFullyCoveredExactAndPercentageSplits(t *testing.T) {
+	exact := []rawDraft{{
+		Title: "Dinner", Amount: "430.00", PaidByMemberID: "m1",
+		SplitMethod: "exact", Participants: []string{"m1", "m2"},
+		Shares: []rawShare{
+			{MemberID: "m1", Amount: "180.00"},
+			{MemberID: "m2", Amount: "250.00"},
+		},
+	}}
+	if got, degraded, _ := resolveDrafts(exact, testContext()); degraded != 0 || got[0].SplitMethod != "exact" {
+		t.Errorf("valid exact split degraded (%d, %q)", degraded, got[0].SplitMethod)
+	}
+
+	pct := []rawDraft{{
+		Title: "Hotel", Amount: "900.00", PaidByMemberID: "m1",
+		SplitMethod: "percentage", Participants: []string{"m1", "m2"},
+		Percentages: []rawPercent{
+			{MemberID: "m1", Percent: 70},
+			{MemberID: "m2", Percent: 30},
+		},
+	}}
+	if got, degraded, _ := resolveDrafts(pct, testContext()); degraded != 0 || got[0].SplitMethod != "percentage" {
+		t.Errorf("valid percentage split degraded (%d, %q)", degraded, got[0].SplitMethod)
+	}
+}

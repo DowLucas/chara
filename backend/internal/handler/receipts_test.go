@@ -459,7 +459,10 @@ func TestReceiptScan_RecordsGenerationAndReturnsID(t *testing.T) {
 	assert.Equal(t, OCRFeatureKey, rec.Feature)
 	assert.Equal(t, aiusage.OutcomeOK, rec.Outcome)
 	assert.Equal(t, "u1", rec.UserID)
-	assert.Equal(t, "g1", rec.GroupID)
+	// No group lookup is wired here, so membership was never confirmed and
+	// the id must NOT be recorded — ai_generations.group_id has an FK, and
+	// an unverified id would fail the insert on every scan.
+	assert.Empty(t, rec.GroupID)
 	assert.Equal(t, 1300, rec.InputTokens)
 	assert.Equal(t, 250, rec.OutputTokens)
 	assert.Equal(t, 1, rec.ExpenseCount)
@@ -470,6 +473,28 @@ func TestReceiptScan_RecordsGenerationAndReturnsID(t *testing.T) {
 // An unreadable image is a distinct outcome from a transport failure: the
 // user gets different copy, and the ratio between them tells us whether a
 // capture bug or a prompt problem is to blame.
+// The counterpart: when the caller's membership IS confirmed, the group
+// belongs on the telemetry row.
+func TestReceiptScan_RecordsVerifiedGroupID(t *testing.T) {
+	fake := &fakeScanner{resp: &receipt.Receipt{Merchant: "X", Currency: "SEK", TotalMinor: 100}}
+	store := &fakeUsageStore{}
+	groups := &fakeGroupCategories{slugs: map[string][]string{"g1": {"food"}}}
+	h := NewReceiptHandler(fake).
+		WithGroupCategories(groups).
+		WithUsageRecorder(aiusage.NewRecorder(store))
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/receipts/scan", h.Scan)
+
+	postScanWithContext(t, mux, map[string]string{
+		"image_base64": base64.StdEncoding.EncodeToString([]byte("b")),
+		"mime_type":    "image/jpeg",
+		"group_id":     "g1",
+	}, authedContext("u1"))
+
+	require.Len(t, store.got, 1)
+	assert.Equal(t, "g1", store.got[0].GroupID)
+}
+
 func TestReceiptScan_RecordsUnreadableOutcome(t *testing.T) {
 	fake := &fakeScanner{err: receipt.ErrUnreadable}
 	store := &fakeUsageStore{}

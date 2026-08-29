@@ -44,6 +44,18 @@ const VoiceRepostFeatureKey = "voice_repost"
 // prompt.
 const MaxTranscriptChars = 2000
 
+// MaxAnswers and MaxAnswerChars bound the clarify answers, which are
+// interpolated into the prompt verbatim.
+//
+// The repost cap bounds how MANY calls a user can make, not how large each
+// one is — so without these a single request could still carry megabytes
+// of prompt text on the operator's Gemini key. A real clarification is one
+// short phrase per open question.
+const (
+	MaxAnswers     = 10
+	MaxAnswerChars = 200
+)
+
 // maxTimezoneChars bounds the client's IANA zone before it is interpolated
 // into the prompt. Longest real zone name is ~32 characters.
 const maxTimezoneChars = 64
@@ -225,6 +237,16 @@ func (h *VoiceHandler) Generate(w http.ResponseWriter, r *http.Request) {
 		writeVoiceError(w, http.StatusRequestEntityTooLarge, "too_large", "transcript is too long")
 		return
 	}
+	if len(req.Answers) > MaxAnswers {
+		writeVoiceError(w, http.StatusRequestEntityTooLarge, "too_large", "too many answers")
+		return
+	}
+	for _, a := range req.Answers {
+		if len(a.Text) > MaxAnswerChars || len(a.QuestionID) > MaxAnswerChars {
+			writeVoiceError(w, http.StatusRequestEntityTooLarge, "too_large", "answer is too long")
+			return
+		}
+	}
 
 	claims := middleware.ClaimsFromContext(r.Context())
 
@@ -254,6 +276,17 @@ func (h *VoiceHandler) Generate(w http.ResponseWriter, r *http.Request) {
 	vc.Timezone = sanitizeTimezone(req.Timezone)
 	if code, ok := language.Normalize(req.UILanguage); ok {
 		vc.UILanguage = code
+	}
+
+	// An answer names a member. The id round-trips through the client, so
+	// check it against the roster rather than echoing it back into the
+	// prompt on trust; the text is still useful either way.
+	answers := make([]voice.Answer, len(req.Answers))
+	for i, a := range req.Answers {
+		answers[i] = a
+		if !vc.HasMember(a.MemberID) {
+			answers[i].MemberID = ""
+		}
 	}
 
 	var audio []byte
@@ -337,9 +370,9 @@ func (h *VoiceHandler) Generate(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	var result *voice.Result
 	if isRepost {
-		result, err = h.parser.ParseText(r.Context(), req.Transcript, vc, req.Answers)
+		result, err = h.parser.ParseText(r.Context(), req.Transcript, vc, answers)
 	} else {
-		result, err = h.parser.Parse(r.Context(), audio, req.MIMEType, vc, req.Answers)
+		result, err = h.parser.Parse(r.Context(), audio, req.MIMEType, vc, answers)
 	}
 
 	if err != nil {
@@ -366,7 +399,7 @@ func (h *VoiceHandler) Generate(w http.ResponseWriter, r *http.Request) {
 		}
 
 		h.usage.Record(r.Context(), aiusage.Record{
-			UserID: claimsUserID(claims), Feature: VoiceFeatureKey, GroupID: req.GroupID,
+			UserID: claimsUserID(claims), Feature: featureKey, GroupID: req.GroupID,
 			Model: voice.DefaultGeminiModel, RequestBytes: len(audio), ClipMS: req.ClipMS,
 			LatencyMS: int(time.Since(start).Milliseconds()),
 			Outcome:   outcome, ErrorClass: errClass,
@@ -387,7 +420,7 @@ func (h *VoiceHandler) Generate(w http.ResponseWriter, r *http.Request) {
 		Questions:  result.Questions,
 	}
 	body.GenerationID = h.usage.Record(r.Context(), aiusage.Record{
-		UserID: claimsUserID(claims), Feature: VoiceFeatureKey, GroupID: req.GroupID,
+		UserID: claimsUserID(claims), Feature: featureKey, GroupID: req.GroupID,
 		Model: voice.DefaultGeminiModel, RequestBytes: len(audio), ClipMS: req.ClipMS,
 		InputTokens: result.Usage.InputTokens, OutputTokens: result.Usage.OutputTokens,
 		LatencyMS:             int(time.Since(start).Milliseconds()),

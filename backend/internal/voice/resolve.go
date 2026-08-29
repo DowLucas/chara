@@ -1,6 +1,7 @@
 package voice
 
 import (
+	"math"
 	"time"
 
 	"github.com/DowLucas/chara/internal/category"
@@ -162,16 +163,26 @@ func resolveShares(raw rawDraft, amount money.Amount, participants []string) ([]
 
 	switch raw.SplitMethod {
 	case "exact":
+		seen := make(map[string]bool, len(raw.Shares))
 		in := make([]split.MemberShare, 0, len(raw.Shares))
 		for _, s := range raw.Shares {
-			if !containsStr(participants, s.MemberID) {
+			// One entry per participant, and only participants.
+			// split.Exact checks the SUM, not who it covers — so shares of
+			// 180+250 across three participants passes there while leaving
+			// the third owing nothing, and a duplicate member survives to
+			// be collapsed last-wins by the client, breaking the total.
+			if !containsStr(participants, s.MemberID) || seen[s.MemberID] {
 				return equal(), nil, "equal", true
 			}
+			seen[s.MemberID] = true
 			v, err := money.ParseDecimal(s.Amount)
 			if err != nil {
 				return equal(), nil, "equal", true
 			}
 			in = append(in, split.MemberShare{MemberID: s.MemberID, Share: v})
+		}
+		if len(in) != len(participants) {
+			return equal(), nil, "equal", true
 		}
 		out, err := split.Exact(amount, in)
 		if err != nil {
@@ -180,17 +191,28 @@ func resolveShares(raw rawDraft, amount money.Amount, participants []string) ([]
 		return toMemberShares(out), nil, "exact", false
 
 	case "percentage":
+		seen := make(map[string]bool, len(raw.Percentages))
 		in := make([]split.MemberPct, 0, len(raw.Percentages))
 		for _, p := range raw.Percentages {
-			if !containsStr(participants, p.MemberID) {
+			if !containsStr(participants, p.MemberID) || seen[p.MemberID] {
+				return equal(), nil, "equal", true
+			}
+			seen[p.MemberID] = true
+			// Each share must itself be a real percentage. split.Percentage
+			// validates only that basis points SUM to 10000, so 200% paired
+			// with -100% passes there and pays one member twice the total.
+			if p.Percent < 0 || p.Percent > 100 {
 				return equal(), nil, "equal", true
 			}
 			in = append(in, split.MemberPct{
 				MemberID: p.MemberID,
 				// Percent arrives as a float ("70"); basis points are the
 				// integer representation internal/split works in.
-				BasisPoints: int(p.Percent*100 + 0.5),
+				BasisPoints: int(math.Round(p.Percent * 100)),
 			})
+		}
+		if len(in) != len(participants) {
+			return equal(), nil, "equal", true
 		}
 		out, err := split.Percentage(amount, in)
 		if err != nil {

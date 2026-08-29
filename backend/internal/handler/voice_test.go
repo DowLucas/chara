@@ -444,3 +444,64 @@ func TestVoice_NormalisesAndSanitisesUILanguage(t *testing.T) {
 		})
 	}
 }
+
+// req.Answers reaches buildPrompt verbatim. Every sibling field on this
+// request is bounded; this one was the exception, and the repost cap
+// bounds call COUNT, not call SIZE.
+func TestVoice_RejectsOversizeAnswers(t *testing.T) {
+	router := voiceRouter(t, &stubParser{res: okResult()}, &okLookup{})
+	rr := postVoice(t, router, map[string]any{
+		"group_id":   "g1",
+		"transcript": "I paid 480",
+		"answers": []map[string]string{
+			{"question_id": "q1", "text": strings.Repeat("a", MaxAnswerChars+1)},
+		},
+	}, authedContext("u1"))
+	assert.Equal(t, http.StatusRequestEntityTooLarge, rr.Code, rr.Body.String())
+}
+
+func TestVoice_RejectsTooManyAnswers(t *testing.T) {
+	answers := make([]map[string]string, MaxAnswers+1)
+	for i := range answers {
+		answers[i] = map[string]string{"question_id": "q", "text": "x"}
+	}
+	router := voiceRouter(t, &stubParser{res: okResult()}, &okLookup{})
+	rr := postVoice(t, router, map[string]any{
+		"group_id": "g1", "transcript": "I paid 480", "answers": answers,
+	}, authedContext("u1"))
+	assert.Equal(t, http.StatusRequestEntityTooLarge, rr.Code, rr.Body.String())
+}
+
+// An answer names a member; one the roster does not contain must not be
+// echoed into the prompt as if it did.
+func TestVoice_DropsAnswerMemberIDsNotOnTheRoster(t *testing.T) {
+	parser := &stubParser{res: okResult()}
+	router := voiceRouter(t, parser, &okLookup{})
+	postVoice(t, router, map[string]any{
+		"group_id": "g1", "transcript": "I paid 480",
+		"answers": []map[string]string{
+			{"question_id": "q1", "member_id": "m99", "text": "Anna Lind"},
+		},
+	}, authedContext("u1"))
+
+	require.Len(t, parser.gotAnswers, 1)
+	assert.Empty(t, parser.gotAnswers[0].MemberID, "an unknown member id must not reach the prompt")
+	assert.Equal(t, "Anna Lind", parser.gotAnswers[0].Text, "the text itself is still useful")
+}
+
+// Telemetry must record the key the call was actually metered under, or
+// the cost series mixes zero-audio text calls into the audio numbers.
+func TestVoice_RecordsRepostsUnderTheirOwnFeature(t *testing.T) {
+	usage := &fakeUsageStore{}
+	router := voiceRouter(t, &stubParser{res: okResult()}, &okLookup{},
+		func(h *VoiceHandler) *VoiceHandler {
+			return h.WithUsageRecorder(aiusage.NewRecorder(usage))
+		})
+
+	postVoice(t, router, map[string]any{
+		"group_id": "g1", "transcript": "I paid 480 for dinner",
+	}, authedContext("u1"))
+
+	require.Len(t, usage.got, 1)
+	assert.Equal(t, VoiceRepostFeatureKey, usage.got[0].Feature)
+}

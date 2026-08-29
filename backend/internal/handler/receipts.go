@@ -152,21 +152,21 @@ type scanRequest struct {
 }
 
 type scanResponse struct {
-	Title         string             `json:"title"`
-	Merchant      string             `json:"merchant"`
-	Date          string             `json:"date,omitempty"`
-	Currency      string             `json:"currency"`
+	Title    string `json:"title"`
+	Merchant string `json:"merchant"`
+	Date     string `json:"date,omitempty"`
+	Currency string `json:"currency"`
 	// Category is one of the fixed EXPENSE_CATEGORIES ids the mobile app
 	// renders, or omitted when the scanner had no confident guess.
-	Category      string             `json:"category,omitempty"`
-	TotalMinor    int64              `json:"total_minor"`
-	SubtotalMinor int64              `json:"subtotal_minor,omitempty"`
-	TaxMinor      int64              `json:"tax_minor,omitempty"`
-	TipMinor      int64              `json:"tip_minor,omitempty"`
+	Category      string `json:"category,omitempty"`
+	TotalMinor    int64  `json:"total_minor"`
+	SubtotalMinor int64  `json:"subtotal_minor,omitempty"`
+	TaxMinor      int64  `json:"tax_minor,omitempty"`
+	TipMinor      int64  `json:"tip_minor,omitempty"`
 	// DepositMinor is container deposit ("pant") included in the total but
 	// not in Items. Clients offer it as an evenly-shared extra charge.
-	DepositMinor  int64              `json:"deposit_minor,omitempty"`
-	Items         []scanResponseItem `json:"items,omitempty"`
+	DepositMinor int64              `json:"deposit_minor,omitempty"`
+	Items        []scanResponseItem `json:"items,omitempty"`
 
 	// Hosted-only fields. Omitted on selfhost instances where the counter
 	// is disabled. The client uses these to update its cached counter
@@ -318,9 +318,15 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var allowedCategories []string
+	// Only a group we have CONFIRMED the caller belongs to may be recorded
+	// on the telemetry row: ai_generations.group_id carries a foreign key,
+	// so an unknown id fails the insert, logs an error on every scan, and
+	// hands the client a generation_id with no row behind it.
+	var verifiedGroupID string
 	if req.GroupID != "" && h.groups != nil && claims != nil && claims.UserID != "" {
 		if slugs, err := h.groups.GetGroupCategorySlugs(r.Context(), req.GroupID, claims.UserID); err == nil {
 			allowedCategories = slugs
+			verifiedGroupID = req.GroupID
 		}
 		// A lookup failure — unknown/deleted group, the caller isn't a
 		// member (GetGroupMemberByUserAndGroup returns ErrNoRows), or a
@@ -347,7 +353,7 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 		h.usage.Record(r.Context(), aiusage.Record{
 			UserID:       claimsUserID(claims),
 			Feature:      OCRFeatureKey,
-			GroupID:      req.GroupID,
+			GroupID:      verifiedGroupID,
 			Model:        receipt.DefaultGeminiModel,
 			RequestBytes: len(imgData),
 			LatencyMS:    int(time.Since(start).Milliseconds()),
@@ -402,7 +408,7 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 	body.GenerationID = h.usage.Record(r.Context(), aiusage.Record{
 		UserID:       claimsUserID(claims),
 		Feature:      OCRFeatureKey,
-		GroupID:      req.GroupID,
+		GroupID:      verifiedGroupID,
 		Model:        receipt.DefaultGeminiModel,
 		RequestBytes: len(imgData),
 		InputTokens:  res.Usage.InputTokens,

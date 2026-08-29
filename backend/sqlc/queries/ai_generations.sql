@@ -21,7 +21,11 @@ INSERT INTO ai_generations (
 -- unknown or belongs to another user inserts nothing, which is exactly the
 -- silent no-op the handler already treats as acceptable.
 INSERT INTO ai_generation_expenses (generation_id, expense_id, changed_fields)
-SELECT @generation_id, @expense_id, @changed_fields::text[]
+-- COALESCE because a client may send generation_id with no changed_fields:
+-- pgx encodes a nil slice as SQL NULL, and the column is NOT NULL, so the
+-- insert would fail and the link be lost. The DEFAULT does not apply when
+-- the column is named explicitly.
+SELECT @generation_id, @expense_id, COALESCE(@changed_fields::text[], '{}')
 WHERE EXISTS (
     SELECT 1 FROM ai_generations
     WHERE id = @generation_id AND user_id = @user_id
