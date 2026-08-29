@@ -68,6 +68,131 @@ func evalParse(t *testing.T, fixture string) *Result {
 	return res
 }
 
+// ── Text evals ────────────────────────────────────────────────────────
+//
+// These need NO recordings: ParseText runs the same prompt through the
+// same resolver as the audio path, so they exercise everything except
+// transcription. Run them whenever the prompt changes; the audio evals
+// below add speech recognition on top.
+
+func evalText(t *testing.T, sentence string) *Result {
+	t.Helper()
+	key := os.Getenv("GEMINI_API_KEY")
+	if key == "" {
+		t.Skip("GEMINI_API_KEY not set")
+	}
+	res, err := NewGemini(key).ParseText(context.Background(), sentence, evalContext(), nil)
+	require.NoError(t, err)
+	return res
+}
+
+func TestVoiceEval_Text_SingleExpense(t *testing.T) {
+	got := evalText(t, "I paid 480 for dinner with Anna and Sara")
+
+	require.Len(t, got.Drafts, 1)
+	d := got.Drafts[0]
+	assert.EqualValues(t, 48000, d.AmountMinor)
+	assert.Equal(t, "m1", d.PaidByID, `"I paid" must bind to the speaker`)
+	assert.Equal(t, "equal", d.SplitMethod)
+	assert.Len(t, d.Participants, 3)
+	assert.Zero(t, got.UnresolvedMembers)
+}
+
+func TestVoiceEval_Text_TwoExpensesDifferentPayers(t *testing.T) {
+	got := evalText(t, "I paid 340 for drinks and Anna paid 120 for the taxi")
+
+	require.Len(t, got.Drafts, 2, "one sentence, two expenses")
+	byPayer := map[string]int64{}
+	for _, d := range got.Drafts {
+		byPayer[d.PaidByID] = int64(d.AmountMinor)
+	}
+	assert.EqualValues(t, 34000, byPayer["m1"])
+	assert.EqualValues(t, 12000, byPayer["m2"], "Anna must be the taxi payer")
+}
+
+func TestVoiceEval_Text_EveryoneExcept(t *testing.T) {
+	got := evalText(t, "Groceries 620, everyone except Johan")
+
+	require.Len(t, got.Drafts, 1)
+	assert.EqualValues(t, 62000, got.Drafts[0].AmountMinor)
+	assert.NotContains(t, got.Drafts[0].Participants, "m4", "Johan was excluded")
+	assert.Len(t, got.Drafts[0].Participants, 3)
+}
+
+func TestVoiceEval_Text_ExactSplitFromTwoDishes(t *testing.T) {
+	got := evalText(t, "Anna had the steak at 250 and I had the pasta at 180")
+
+	require.Len(t, got.Drafts, 1, "two dishes, one bill")
+	d := got.Drafts[0]
+	assert.EqualValues(t, 43000, d.AmountMinor)
+	assert.Equal(t, "exact", d.SplitMethod)
+	assert.Zero(t, got.DegradedSplits, "the model's own arithmetic should validate")
+}
+
+func TestVoiceEval_Text_PercentageSplit(t *testing.T) {
+	got := evalText(t, "Split the 900 hotel 70/30 between me and Johan")
+
+	require.Len(t, got.Drafts, 1)
+	byID := map[string]int64{}
+	for _, s := range got.Drafts[0].Shares {
+		byID[s.MemberID] = int64(s.Share)
+	}
+	assert.EqualValues(t, 63000, byID["m1"])
+	assert.EqualValues(t, 27000, byID["m4"])
+}
+
+func TestVoiceEval_Text_ForeignCurrency(t *testing.T) {
+	got := evalText(t, "The hotel was 40 euros, just me")
+
+	require.Len(t, got.Drafts, 1)
+	assert.Equal(t, "EUR", got.Drafts[0].Currency)
+	assert.EqualValues(t, 4000, got.Drafts[0].AmountMinor)
+}
+
+func TestVoiceEval_Text_SwedishExactSplit(t *testing.T) {
+	got := evalText(t, "Anna tog biffen för 250, jag tog pastan för 180")
+
+	require.Len(t, got.Drafts, 1)
+	assert.EqualValues(t, 43000, got.Drafts[0].AmountMinor)
+	assert.Equal(t, "exact", got.Drafts[0].SplitMethod)
+}
+
+func TestVoiceEval_Text_AmbiguousNameAsksRatherThanGuessing(t *testing.T) {
+	// Two Annas: the model must ask, not pick one silently.
+	vc := evalContext()
+	vc.Members = append(vc.Members, Member{ID: "m5", Name: "Anna Svensson"})
+	vc.Members[1].Name = "Anna Lind"
+
+	key := os.Getenv("GEMINI_API_KEY")
+	if key == "" {
+		t.Skip("GEMINI_API_KEY not set")
+	}
+	got, err := NewGemini(key).ParseText(context.Background(), "Anna paid 120 for the taxi", vc, nil)
+	require.NoError(t, err)
+	assert.NotEmpty(t, got.Questions, "an ambiguous name must produce a question")
+}
+
+func TestVoiceEval_Text_RepaymentIsASettlement(t *testing.T) {
+	key := os.Getenv("GEMINI_API_KEY")
+	if key == "" {
+		t.Skip("GEMINI_API_KEY not set")
+	}
+	_, err := NewGemini(key).ParseText(context.Background(), "I paid Anna back 200", evalContext(), nil)
+	assert.ErrorIs(t, err, ErrSettlement,
+		"a repayment must point at the settle flow, not become an expense")
+}
+
+func TestVoiceEval_Text_NoExpense(t *testing.T) {
+	key := os.Getenv("GEMINI_API_KEY")
+	if key == "" {
+		t.Skip("GEMINI_API_KEY not set")
+	}
+	_, err := NewGemini(key).ParseText(context.Background(), "the weather is nice today", evalContext(), nil)
+	assert.ErrorIs(t, err, ErrNoExpense)
+}
+
+// ── Audio evals (need recorded fixtures) ──────────────────────────────
+
 // "I paid four hundred and eighty for dinner with Anna and Sara"
 func TestVoiceEval_EnglishSingleExpense(t *testing.T) {
 	got := evalParse(t, "en_single.ogg")
