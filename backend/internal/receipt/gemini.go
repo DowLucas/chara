@@ -196,6 +196,12 @@ type geminiResponse struct {
 	Candidates []struct {
 		Content geminiContent `json:"content"`
 	} `json:"candidates"`
+	// UsageMetadata is optional — a pointer so "not reported" stays
+	// distinguishable from "reported as zero".
+	UsageMetadata *struct {
+		PromptTokenCount     int `json:"promptTokenCount"`
+		CandidatesTokenCount int `json:"candidatesTokenCount"`
+	} `json:"usageMetadata,omitempty"`
 	Error *struct {
 		Code    int    `json:"code"`
 		Message string `json:"message"`
@@ -394,7 +400,7 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 		})
 	}
 
-	return &Receipt{
+	out := &Receipt{
 		Title:         title,
 		Merchant:      merchant,
 		Date:          strings.TrimSpace(extracted.Date),
@@ -406,7 +412,14 @@ func (s *GeminiScanner) Scan(ctx context.Context, imageData []byte, mimeType str
 		TipMinor:      tip,
 		DepositMinor:  deposit,
 		Items:         items,
-	}, nil
+	}
+	if parsed.UsageMetadata != nil {
+		out.Usage = Usage{
+			InputTokens:  parsed.UsageMetadata.PromptTokenCount,
+			OutputTokens: parsed.UsageMetadata.CandidatesTokenCount,
+		}
+	}
+	return out, nil
 }
 
 // stripCodeFence removes a leading ```json ... ``` fence if Gemini decides

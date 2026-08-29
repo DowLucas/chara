@@ -499,3 +499,42 @@ func TestExtractionPrompt_CoversMultiPageAndStatements(t *testing.T) {
 	assert.Contains(t, extractionPrompt, "statement")
 	assert.NotContains(t, extractionPrompt, "attached receipt image and extract")
 }
+
+// TestGeminiScanner_Scan_CapturesTokenUsage pins the token accounting the
+// cost analysis depends on. Without this the usageMetadata block is
+// silently dropped and every scan looks free.
+func TestGeminiScanner_Scan_CapturesTokenUsage(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `{
+			"candidates":[{"content":{"parts":[{"text":"{\"title\":\"Lunch\",\"merchant\":\"X\",\"currency\":\"SEK\",\"total\":\"120.00\",\"items\":[]}"}]}}],
+			"usageMetadata":{"promptTokenCount":1300,"candidatesTokenCount":250,"totalTokenCount":1550}
+		}`)
+	}))
+	defer srv.Close()
+
+	s := NewGemini("test-key", WithGeminiBaseURL(srv.URL))
+	got, err := s.Scan(context.Background(), []byte{0xff, 0xd8, 0xff, 0xe0}, "image/jpeg", "", nil)
+	require.NoError(t, err)
+
+	assert.Equal(t, 1300, got.Usage.InputTokens)
+	assert.Equal(t, 250, got.Usage.OutputTokens)
+}
+
+// A provider that reports no usage must leave the counts at zero rather
+// than panicking — usageMetadata is optional in the API.
+func TestGeminiScanner_Scan_MissingUsageMetadataIsZero(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(geminiTextResponse(t,
+			`{"title":"Lunch","merchant":"X","currency":"SEK","total":"120.00"}`))
+	}))
+	defer srv.Close()
+
+	s := NewGemini("test-key", WithGeminiBaseURL(srv.URL))
+	got, err := s.Scan(context.Background(), []byte{0xff, 0xd8, 0xff, 0xe0}, "image/jpeg", "", nil)
+	require.NoError(t, err)
+
+	assert.Zero(t, got.Usage.InputTokens)
+	assert.Zero(t, got.Usage.OutputTokens)
+}

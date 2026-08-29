@@ -16,6 +16,14 @@ import (
 	"github.com/DowLucas/chara/internal/money"
 )
 
+// Usage is the token accounting the provider reports for one call. Zero
+// means the provider did not report it — usageMetadata is optional in the
+// Gemini API. Recorded for cost analysis; see internal/aiusage.
+type Usage struct {
+	InputTokens  int `json:"input_tokens"`
+	OutputTokens int `json:"output_tokens"`
+}
+
 // Receipt is the structured result of a single scan.
 //
 // All monetary values are int64 minor units in the receipt's currency. A
@@ -56,6 +64,11 @@ type Receipt struct {
 	// line; deposit / "pant" rows are reported in DepositMinor instead;
 	// subtotal/tax/tip lines are not repeated here.
 	Items []Item `json:"items,omitempty"`
+
+	// Usage is token accounting for the call that produced this receipt.
+	// Deliberately not part of the client payload — the handler strips it
+	// into internal/aiusage, and a client has no use for it.
+	Usage Usage `json:"-"`
 }
 
 // Item is a single line on a receipt. All amounts are in the receipt's
