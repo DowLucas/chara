@@ -144,6 +144,22 @@ export interface ExpenseWizardHandle {
      *  so it lands in the unassigned remainder for the user to distribute. */
     depositMinor?: number;
   }): void;
+  /** Apply a voice-generated draft. Unlike applyReceiptResult this also
+   *  sets the payer, participants and split, because speech carries all
+   *  three ("I paid 480 for dinner with Anna and Sara"). Ids the current
+   *  roster does not contain are ignored — the server already filtered,
+   *  but a stale members prop must not corrupt the split. */
+  applyVoiceDraft(input: {
+    title: string;
+    amountMinor: number;
+    currency: string;
+    category?: string;
+    date?: Date;
+    paidById: string;
+    splitMethod: 'equal' | 'exact' | 'percentage';
+    participants: string[];
+    shares?: { memberId: string; shareMinor: number }[];
+  }): void;
 }
 
 export interface ExpenseWizardProps {
@@ -889,8 +905,46 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
           for (const m of members) nextIncluded[m.id] = (amounts[m.id] ?? 0) > 0;
           setIncluded(nextIncluded);
         },
+        applyVoiceDraft(input) {
+          const known = new Set(members.map((m) => m.id));
+
+          setTitle(input.title);
+          setAmount((input.amountMinor / 100).toFixed(2));
+          if (input.currency) setSelectedCurrency(input.currency);
+          if (input.date) setDate(input.date);
+          if (input.category && (enabledCategories as readonly string[]).includes(input.category)) {
+            setCategory(input.category);
+            setCategoryTouched(true);
+          }
+
+          // Payer and participants only from the live roster. The server
+          // validated against its own copy; this guards a stale members prop.
+          if (known.has(input.paidById)) setPayerMemberId(input.paidById);
+
+          const participants = input.participants.filter((id) => known.has(id));
+          if (participants.length > 0) {
+            const nextIncluded: Record<string, boolean> = {};
+            for (const m of members) nextIncluded[m.id] = participants.includes(m.id);
+            setIncluded(nextIncluded);
+          }
+
+          // Only 'exact' carries per-member numbers worth keeping. A
+          // percentage split arrives already resolved to shares, and
+          // re-deriving percentages from rounded minor units would not
+          // round-trip, so it lands as exact amounts instead.
+          if (input.shares?.length && input.splitMethod !== 'equal') {
+            const next: Record<string, string> = {};
+            for (const s of input.shares) {
+              if (known.has(s.memberId)) next[s.memberId] = (s.shareMinor / 100).toFixed(2);
+            }
+            setExactByMember(next);
+            setMethod('exact');
+          } else {
+            setMethod('equal');
+          }
+        },
       }),
-      [members],
+      [members, enabledCategories],
     );
 
     async function handleSubmit() {
