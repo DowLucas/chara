@@ -9,7 +9,10 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/DowLucas/chara/internal/aiusage"
+	"github.com/DowLucas/chara/internal/auth"
 	"github.com/DowLucas/chara/internal/billing"
 	"github.com/DowLucas/chara/internal/db"
 	"github.com/DowLucas/chara/internal/middleware"
@@ -35,6 +38,7 @@ type ReceiptHandler struct {
 	counter   *billing.Counter
 	freeCap   int
 	overrides CapOverrides
+	usage     *aiusage.Recorder
 	groups    GroupCategoriesLookup
 }
 
@@ -125,6 +129,14 @@ func (h *ReceiptHandler) WithGroupCategories(g GroupCategoriesLookup) *ReceiptHa
 	return h
 }
 
+// WithUsageRecorder wires per-call cost/quality recording. Optional — a nil
+// recorder disables it, which is the selfhost and unit-test path. Returns
+// the receiver for chaining.
+func (h *ReceiptHandler) WithUsageRecorder(r *aiusage.Recorder) *ReceiptHandler {
+	h.usage = r
+	return h
+}
+
 type scanRequest struct {
 	ImageBase64 string `json:"image_base64"`
 	MIMEType    string `json:"mime_type"`
@@ -162,6 +174,12 @@ type scanResponse struct {
 	Tier           string `json:"tier,omitempty"`
 	Remaining      *int   `json:"remaining,omitempty"`
 	PeriodResetsAt string `json:"period_resets_at,omitempty"`
+
+	// GenerationID identifies the aiusage row for this scan. Clients pass
+	// it back on expense create, with the fields they changed, so we can
+	// measure how often the AI's output survives contact with the user.
+	// Empty when telemetry is disabled.
+	GenerationID string `json:"generation_id,omitempty"`
 }
 
 type scanResponseItem struct {
@@ -313,6 +331,7 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 		// group's category configuration.
 	}
 
+	start := time.Now()
 	res, scanErr := h.scanner.Scan(r.Context(), imgData, req.MIMEType, req.Language, allowedCategories)
 	if scanErr != nil {
 		// Free the slot we reserved so the user isn't billed for a failure.
@@ -321,6 +340,20 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 			// caller already cancelled the request.
 			_ = h.counter.Refund(context.Background(), *reservation)
 		}
+		outcome, errClass := aiusage.OutcomeError, "scanner_failed"
+		if errors.Is(scanErr, receipt.ErrUnreadable) {
+			outcome, errClass = aiusage.OutcomeUnintelligible, ""
+		}
+		h.usage.Record(r.Context(), aiusage.Record{
+			UserID:       claimsUserID(claims),
+			Feature:      OCRFeatureKey,
+			GroupID:      req.GroupID,
+			Model:        receipt.DefaultGeminiModel,
+			RequestBytes: len(imgData),
+			LatencyMS:    int(time.Since(start).Milliseconds()),
+			Outcome:      outcome,
+			ErrorClass:   errClass,
+		})
 		if errors.Is(scanErr, receipt.ErrUnreadable) {
 			writeError(w, http.StatusUnprocessableEntity, "could not read a receipt from this image")
 			return
@@ -366,8 +399,31 @@ func (h *ReceiptHandler) Scan(w http.ResponseWriter, r *http.Request) {
 		body.PeriodResetsAt = meterResult.PeriodResetsAt.UTC().Format("2006-01-02T15:04:05Z")
 	}
 
+	body.GenerationID = h.usage.Record(r.Context(), aiusage.Record{
+		UserID:       claimsUserID(claims),
+		Feature:      OCRFeatureKey,
+		GroupID:      req.GroupID,
+		Model:        receipt.DefaultGeminiModel,
+		RequestBytes: len(imgData),
+		InputTokens:  res.Usage.InputTokens,
+		OutputTokens: res.Usage.OutputTokens,
+		LatencyMS:    int(time.Since(start).Milliseconds()),
+		Outcome:      aiusage.OutcomeOK,
+		ExpenseCount: 1,
+	})
+
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(body)
+}
+
+// claimsUserID tolerates a nil claims pointer: the selfhost and unit-test
+// paths reach the scanner unauthenticated, and telemetry must not panic
+// there.
+func claimsUserID(c *auth.Claims) string {
+	if c == nil {
+		return ""
+	}
+	return c.UserID
 }
 
 func writeCapReached(w http.ResponseWriter, res billing.Result) {

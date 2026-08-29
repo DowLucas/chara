@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 
+	"github.com/DowLucas/chara/internal/aiusage"
 	"github.com/DowLucas/chara/internal/auth"
 	"github.com/DowLucas/chara/internal/billing"
 	"github.com/DowLucas/chara/internal/config"
@@ -258,8 +259,13 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 		// (FreeOCRCap = 3/month, v1.0 anti-abuse). Self-hosters pay the
 		// Gemini bill themselves, so no metering: pass a nil counter.
 		if cfg.HasGemini() {
+			// Usage recording is wired on BOTH hosted and selfhost: the
+			// rows stay in the operator's own database and nothing is
+			// transmitted, so a self-hoster gets the same cost visibility
+			// we do.
 			receiptH := handler.NewReceiptHandler(receipt.NewGemini(cfg.GeminiAPIKey)).
-				WithGroupCategories(handler.NewGroupCategoriesLookup(queries))
+				WithGroupCategories(handler.NewGroupCategoriesLookup(queries)).
+				WithUsageRecorder(aiusage.NewRecorder(handler.NewAIUsageStore(queries)))
 			if cfg.IsHosted() {
 				receiptH = receiptH.
 					WithCounter(billing.NewCounter(queries), FreeOCRCap).
