@@ -36,7 +36,7 @@ export function SiteFooter() {
         </div>
 
         <div className="col-span-6 md:col-span-3">
-          <div className="mono text-[11px] uppercase tracking-[0.2em] text-bone-mute mb-5">{t("footer.legal")}</div>
+          <div className="label text-[11px] uppercase tracking-[0.2em] text-bone-mute mb-5">{t("footer.legal")}</div>
           <ul className="space-y-3">
             {legalRoutes.map((l) => (
               <li key={l.to}>
@@ -49,7 +49,7 @@ export function SiteFooter() {
         </div>
 
         <div className="col-span-6 md:col-span-3">
-          <div className="mono text-[11px] uppercase tracking-[0.2em] text-bone-mute mb-5">{t("footer.project")}</div>
+          <div className="label text-[11px] uppercase tracking-[0.2em] text-bone-mute mb-5">{t("footer.project")}</div>
           <ul className="space-y-3 text-sm">
             <li><a className="text-bone hover:text-ochre transition-colors" href="https://github.com/DowLucas/chara">{t("footer.github")}</a></li>
             <li><a className="text-bone hover:text-ochre transition-colors" href="/docs">{t("footer.docs")}</a></li>
@@ -63,7 +63,7 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t border-bone/10">
-        <div className="mx-auto max-w-[1320px] px-8 lg:px-14 py-6 flex items-center justify-between mono text-[11px] uppercase tracking-[0.2em] text-bone-mute">
+        <div className="mx-auto max-w-[1320px] px-8 lg:px-14 py-6 flex items-center justify-between label text-[11px] uppercase tracking-[0.2em] text-bone-mute">
           <span>{t("footer.place")}</span>
           <span>{t("footer.license")}</span>
         </div>

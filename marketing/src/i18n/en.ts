@@ -96,21 +96,46 @@ export const en = {
     colSplitwise: "Splitwise (free)",
     colSteven: "Steven",
     colChara: "Chara",
-    rows: [
-      { k: "What it costs", sw: "Free until you hit the limit, then $4.99/mo", st: "Free with ads, or a subscription", ch: "Free. Only extended AI costs, on our cloud" },
-      { k: "How many expenses a day", sw: "A handful, then you're locked out", st: "Unlimited", ch: "Unlimited" },
-      { k: "Ads", sw: "Banners and countdowns between entries", st: "Yes, unless you pay", ch: "Never" },
-      { k: "Scan a receipt", sw: "Paid plan only", st: "No", ch: "Yes — reads each line, splits per person" },
-      { k: "Different currencies", sw: "Paid plan only", st: "Sweden only, really", ch: "159 currencies, updated daily" },
-      { k: "Keep the receipt image", sw: "Paid plan only", st: "Basic", ch: "Kept with the expense, forever" },
-      { k: "Rent and other repeating bills", sw: "Paid plan only", st: "No", ch: "Set once, posts itself" },
-      { k: "Pay from inside the app", sw: "Venmo and PayPal links", st: "Swish and Klarna", ch: "Swish, Vipps and PayPal, prefilled" },
-      { k: "Move your balances in", sw: "—", st: "—", ch: "Screenshot the old app, done" },
-      { k: "Run it on your own machine", sw: "No", st: "No", ch: "Yes — one command, ten minutes" },
-      { k: "Read the source code", sw: "No", st: "No", ch: "All of it, AGPL" },
-      { k: "Use it in a browser", sw: "Yes", st: "Yes", ch: "Not yet — phone apps today" },
-      { k: "Log in with your company account", sw: "—", st: "—", ch: "Not yet" },
-      { k: "How long it's been around", sw: "Since 2011, very polished", st: "Years, but winding down", ch: "New. Some rough edges" },
+    groups: [
+      {
+        title: "Why people leave Splitwise",
+        rows: [
+          { k: "How many expenses a day", sw: "A handful, then you're locked out", st: "Unlimited", ch: "Unlimited" },
+          { k: "What it costs", sw: "Free until you hit the daily cap, then $4.99/mo", st: "Free with ads, or a subscription", ch: "Free. Only extended AI costs, on our cloud" },
+          { k: "No ads", sw: "Banners and countdowns between entries", st: "Only if you pay", ch: "Always ad-free" },
+        ],
+      },
+      {
+        title: "What only Chara does",
+        rows: [
+          { k: "Scan a receipt", sw: "Paid plan only", st: "No", ch: "Yes — reads each line, splits per person" },
+          { k: "Describe the expense in text", sw: "No", st: "No", ch: "Yes — any language, several expenses in one sentence" },
+          { k: "Different currencies", sw: "Paid plan only", st: "Kronor, in practice", ch: "159 currencies, updated daily" },
+          { k: "Rent and other repeating bills", sw: "Paid plan only", st: "No", ch: "Set once, posts itself" },
+          { k: "Run it on your own machine", sw: "No", st: "No", ch: "Yes — one command, ten minutes" },
+        ],
+      },
+      {
+        title: "Where we're behind",
+        rows: [
+          { k: "Your friends already have it", sw: "Everyone you split with is on it", st: "Common in Sweden", ch: "No — you'll be the one who suggests it" },
+          { k: "Use it in a browser", sw: "Yes", st: "Yes", ch: "Not yet — phone apps today" },
+          { k: "How long it's been around", sw: "Since 2011, very polished", st: "Years, but winding down", ch: "New. Some rough edges" },
+        ],
+      },
+    ],
+    asOf: "Compared against the free tiers as of August 2026. We recheck monthly.",
+    closer: "It takes ten seconds to try, and your balances come with you. If it isn't better for your group, you've lost nothing.",
+  },
+  switchIn: {
+    eyebrow: "Switching",
+    titleA: "Bring your balances",
+    titleB: "with you.",
+    body: "Nobody re-types two years of history. Screenshot your balances screen — Splitwise, Tricount, Settle Up, Splid or Steven — and Chara reads who owes whom and rebuilds the group to match, in one pass.",
+    steps: [
+      { h: "Screenshot the old app.", b: "The balances screen is enough. No export file, no CSV, no support ticket." },
+      { h: "Chara reads who owes whom.", b: "Names, amounts, direction. It shows you what it read before anything is saved." },
+      { h: "The group is yours again.", b: "Everyone is in it, every balance carried over, and the next expense goes in here instead." },
     ],
   },
   selfHost: {

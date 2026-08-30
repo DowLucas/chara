@@ -171,7 +171,7 @@ function ReleasesPage() {
         </section>
 
         <footer className="mt-24 flex items-end justify-between">
-          <div className="mono text-xs uppercase tracking-[0.2em] text-bone-mute">
+          <div className="label text-xs uppercase tracking-[0.2em] text-bone-mute">
             Chara · Stockholm
           </div>
           <HankoSeal size={48} />
@@ -204,12 +204,12 @@ function PlateCard({
 
       <div className="px-5 sm:px-8 md:px-14 lg:px-20 py-12 md:py-16 relative z-0">
         {/* Eyebrow: plate index · version · date */}
-        <div className="mono text-[11px] uppercase tracking-[0.2em] flex flex-wrap items-center gap-x-4 gap-y-2 text-bone">
-          <span className="tabular-nums">{release.plate}</span>
+        <div className="label text-[11px] uppercase tracking-[0.2em] flex flex-wrap items-center gap-x-4 gap-y-2 text-bone">
+          <span className="mono tabular-nums">{release.plate}</span>
           <span aria-hidden="true" className="h-px w-8 bg-ochre opacity-80" />
-          <span className="tabular-nums font-semibold text-ochre text-[12px]">{release.version}</span>
+          <span className="mono tabular-nums font-semibold text-ochre text-[12px]">{release.version}</span>
           <span aria-hidden="true" className="h-px w-8 bg-ochre opacity-80" />
-          <span className="font-medium">{release.date}</span>
+          <span className="mono font-medium">{release.date}</span>
           {highlight && (
             <>
               <span aria-hidden="true" className="h-px w-8 bg-ochre opacity-80" />
@@ -221,7 +221,7 @@ function PlateCard({
 
         {/* Optional series title */}
         {release.title && (
-          <div className="mt-6 mono text-xs uppercase tracking-[0.22em] text-bone">
+          <div className="mt-6 label text-xs uppercase tracking-[0.22em] text-bone">
             “{release.title}”
           </div>
         )}
@@ -260,7 +260,7 @@ function PlateCard({
 
         {/* Footer rule */}
         <div className="mt-12 flex items-center justify-between border-t border-bone/25 pt-4">
-          <span className="mono text-[10px] uppercase tracking-[0.22em] text-bone">
+          <span className="label text-[10px] uppercase tracking-[0.22em] text-bone">
             ōban · {release.date}
           </span>
           <span className="mono text-[10px] uppercase tracking-[0.22em] text-ochre font-semibold">

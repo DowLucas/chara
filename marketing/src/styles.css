@@ -126,6 +126,14 @@
     font-weight: 600;
   }
 
+  /* Eyebrows, section labels, nav and buttons: the sans, at a weight that
+     holds up at 10-12px uppercase. Mono is reserved for figures, glyphs and
+     the terminal, where the fixed advance width is the point. */
+  .label {
+    font-family: var(--font-sans);
+    font-weight: 500;
+  }
+
   /* Mono numerals — the print's margin notation */
   .mono, code, kbd, samp, pre {
     font-family: var(--font-mono);

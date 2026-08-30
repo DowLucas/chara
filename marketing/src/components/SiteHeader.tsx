@@ -17,7 +17,7 @@ export function SiteHeader() {
             draggable={false}
           />
         </Link>
-        <nav className="hidden md:flex items-center gap-10 mono text-[11px] uppercase tracking-[0.2em] text-bone-mute">
+        <nav className="hidden md:flex items-center gap-10 label text-[11px] uppercase tracking-[0.2em] text-bone-mute">
           <a href="/#values" className="hover:text-bone transition-colors">{t("nav.why")}</a>
           <a href="/#features" className="hover:text-bone transition-colors">{t("nav.features")}</a>
           <a href="/#compare" className="hover:text-bone transition-colors">{t("nav.compare")}</a>
@@ -29,7 +29,7 @@ export function SiteHeader() {
           <LanguageToggle />
           <a
             href="https://github.com/DowLucas/chara"
-            className="hidden sm:inline-flex mono text-[11px] uppercase tracking-[0.2em] text-bone border border-bone/30 px-4 py-2 hover:border-bone hover:bg-bone hover:text-indigo transition-colors"
+            className="hidden sm:inline-flex label text-[11px] uppercase tracking-[0.2em] text-bone border border-bone/30 px-4 py-2 hover:border-bone hover:bg-bone hover:text-indigo transition-colors"
           >
             {t("nav.source")}
           </a>

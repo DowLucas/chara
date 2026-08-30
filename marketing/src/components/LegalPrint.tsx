@@ -27,7 +27,7 @@ export function LegalPrint({ index, title, updated, children }: Props) {
           </div>
 
           <div className="mt-24 flex items-end justify-between">
-            <div className="mono text-xs uppercase tracking-[0.2em] text-bone-mute">
+            <div className="label text-xs uppercase tracking-[0.2em] text-bone-mute">
               Chara · Stockholm
             </div>
             <HankoSeal size={56} />
