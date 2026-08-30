@@ -78,7 +78,7 @@ function Hero() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: EASE, delay: 0.05 }}
-            className="mono text-xs font-medium tracking-[0.1em] text-ochre"
+            className="label text-xs font-medium tracking-[0.1em] text-ochre"
           >
             {t("hero.eyebrow")}
           </motion.div>
@@ -107,7 +107,7 @@ function Hero() {
             className="mt-8 flex flex-col items-center gap-4"
           >
             <StoreBadges size="lg" className="justify-center" />
-            <p className="mono text-[11px] tracking-[0.06em] text-bone-mute">
+            <p className="label text-[11px] tracking-[0.06em] text-bone-mute">
               {t("hero.aiNote")}
             </p>
           </motion.div>
@@ -158,7 +158,7 @@ function Price() {
                 }`}
               >
                 <span className="text-[16.5px] leading-none text-bone">{r.k}</span>
-                <span className="mono text-sm font-medium leading-none text-moss">{r.v}</span>
+                <span className="label text-sm font-medium leading-none text-moss">{r.v}</span>
               </div>
             ))}
           </div>
@@ -226,7 +226,7 @@ function Value() {
     <Section id="values">
       <div className="grid grid-cols-12 gap-8 items-end">
         <div className="col-span-12 lg:col-span-7">
-          <div className="mono text-xs uppercase tracking-[0.2em] text-ochre">
+          <div className="label text-xs uppercase tracking-[0.2em] text-ochre">
             {t("value.eyebrow")}
           </div>
           <h2 className="mt-6 max-w-3xl text-[clamp(40px,5.2vw,80px)] font-semibold tracking-[-0.035em] leading-[0.98] text-bone">
@@ -284,7 +284,7 @@ function Value() {
               <p className="mt-8 text-bone text-lg lg:text-xl leading-[1.55] tracking-[-0.01em]">
                 {current.b}
               </p>
-              <p className="mt-8 mono text-xs uppercase tracking-[0.18em] text-bone-mute">
+              <p className="mt-8 label text-xs uppercase tracking-[0.18em] text-bone-mute">
                 {current.q}
               </p>
             </div>
@@ -310,7 +310,7 @@ function Features() {
         <h2 className="text-[clamp(32px,3.2vw,44px)] font-semibold tracking-[-0.038em] leading-[1.02] text-bone">
           {t("features.title")}
         </h2>
-        <span className="mono text-xs font-medium tracking-[0.06em] text-bone-mute shrink-0">
+        <span className="label text-xs font-medium tracking-[0.06em] text-bone-mute shrink-0">
           {t("features.tag")}
         </span>
       </div>
@@ -352,13 +352,13 @@ function Belief() {
         }}
       />
       <div className="mx-auto max-w-[1320px] px-8 lg:px-14 py-36 lg:py-56 relative">
-        <div className="mono text-xs text-bone-mute flex items-center gap-3 uppercase tracking-[0.18em]"><span className="tabular-nums">ed.0a</span><span aria-hidden="true" className="h-px w-8 bg-current opacity-60" /><span>{t("belief.eyebrow")}</span></div>
+        <div className="label text-xs text-bone-mute flex items-center gap-3 uppercase tracking-[0.18em]"><span className="mono tabular-nums">ed.0a</span><span aria-hidden="true" className="h-px w-8 bg-current opacity-60" /><span>{t("belief.eyebrow")}</span></div>
         <blockquote className="mt-10 max-w-3xl">
           <p className="text-[clamp(36px,5vw,72px)] font-semibold tracking-[-0.03em] leading-[1.05] text-bone">
             <span className="text-[color:var(--shu)]">“</span>{t("belief.quoteA")}<br />
             {t("belief.quoteB")}<span className="text-[color:var(--shu)]">”</span>
           </p>
-          <footer className="mt-12 mono text-xs uppercase tracking-[0.22em] text-bone-mute">
+          <footer className="mt-12 label text-xs uppercase tracking-[0.22em] text-bone-mute">
             {t("belief.source")}
           </footer>
         </blockquote>
@@ -369,12 +369,69 @@ function Belief() {
 
 
 /* ============================================================
-   Comparison table — Chara column tinted ochre.
+   Comparison table — grouped rows, Chara column tinted ochre,
+   every cell marked with a verdict.
 ============================================================ */
-function Compare() {
-  const { t } = useTranslation();
-  const rows = t("compare.rows", { returnObjects: true }) as Array<{ k: string; sw: string; st: string; ch: string }>;
+type Verdict = "good" | "bad" | "mixed" | "soon" | "unknown";
 
+const VERDICT_MARK: Record<Verdict, { glyph: string; color: string }> = {
+  good: { glyph: "✓", color: "var(--moss)" },
+  bad: { glyph: "✕", color: "var(--shu)" },
+  mixed: { glyph: "◐", color: "var(--ochre)" },
+  soon: { glyph: "○", color: "var(--bone-mute)" },
+  unknown: { glyph: "\u00a0", color: "var(--bone-mute)" }, // no verdict on file: no claim, column still aligned
+};
+
+/* One [Splitwise, Steven, Chara] verdict per row, group by group, in the same
+   order as compare.groups in every locale. Kept out of the translations so the
+   two languages can never disagree about who wins a line. */
+const COMPARE_VERDICTS: Array<Array<[Verdict, Verdict, Verdict]>> = [
+  [
+    ["bad", "good", "good"], // expenses a day
+    ["mixed", "mixed", "good"], // what it costs
+    ["bad", "bad", "good"], // no ads
+  ],
+  [
+    ["mixed", "bad", "good"], // scan a receipt
+    ["bad", "bad", "good"], // describe the expense
+    ["mixed", "bad", "good"], // different currencies
+    ["mixed", "bad", "good"], // repeating bills
+    ["bad", "bad", "good"], // run it yourself
+  ],
+  [
+    ["good", "mixed", "bad"], // your friends already have it
+    ["good", "good", "soon"], // use it in a browser
+    ["good", "mixed", "mixed"], // how long it's been around
+  ],
+];
+
+const CHARA_TINT_WIN = "color-mix(in oklab, var(--ochre) 22%, var(--indigo))";
+const CHARA_TINT_HELD = "color-mix(in oklab, var(--ochre) 7%, var(--indigo))";
+const CHARA_TINT_BAND = "color-mix(in oklab, var(--ochre) 12%, var(--indigo))";
+
+function Cell({ verdict, children }: { verdict: Verdict; children: string }) {
+  const mark = VERDICT_MARK[verdict];
+  return (
+    <span className="flex gap-2.5">
+      <span className="mono text-[13px] leading-[1.55] shrink-0" style={{ color: mark.color }} aria-hidden>
+        {mark.glyph}
+      </span>
+      <span>{children}</span>
+    </span>
+  );
+}
+
+function Compare() {
+  const { t, i18n } = useTranslation();
+  const groups = t("compare.groups", { returnObjects: true }) as Array<{
+    title: string;
+    rows: Array<{ k: string; sw: string; st: string; ch: string }>;
+  }>;
+  // Steven is a Swedish app almost nobody abroad has heard of — outside Sweden
+  // its column costs a quarter of the table to introduce a competitor.
+  const showSteven = i18n.language.startsWith("sv");
+  const colCount = showSteven ? 4 : 3;
+  const colWidth = showSteven ? "w-[24%]" : "w-[33%]";
 
   return (
     <Section id="compare">
@@ -386,44 +443,103 @@ function Compare() {
       </p>
 
       <div className="mt-16 overflow-x-auto">
-        <table className="w-full border-collapse min-w-[720px]">
+        <table className="w-full border-collapse min-w-[640px]">
           <thead>
             <tr className="border-y border-bone/20">
-              <th className="text-left py-5 pr-4 mono text-[11px] uppercase tracking-[0.2em] text-bone-mute font-normal w-[28%]">{t("compare.colFeature")}</th>
-              <th className="text-left py-5 px-4 mono text-[11px] uppercase tracking-[0.2em] text-bone-mute font-normal w-[24%]">{t("compare.colSplitwise")}</th>
-              <th className="text-left py-5 px-4 mono text-[11px] uppercase tracking-[0.2em] text-bone-mute font-normal w-[24%]">{t("compare.colSteven")}</th>
+              <th className={`text-left py-5 pr-4 label text-[11px] uppercase tracking-[0.2em] text-bone-mute font-medium ${showSteven ? "w-[28%]" : "w-[34%]"}`}>{t("compare.colFeature")}</th>
+              <th className={`text-left py-5 px-4 label text-[11px] uppercase tracking-[0.2em] text-bone-mute font-medium ${colWidth}`}>{t("compare.colSplitwise")}</th>
+              {showSteven && (
+                <th className={`text-left py-5 px-4 label text-[11px] uppercase tracking-[0.2em] text-bone-mute font-medium ${colWidth}`}>{t("compare.colSteven")}</th>
+              )}
               <th
-                className="text-left py-5 px-4 mono text-[11px] uppercase tracking-[0.2em] font-normal w-[24%]"
+                className={`text-left py-5 px-4 label text-[11px] uppercase tracking-[0.2em] font-medium ${colWidth}`}
                 style={{ background: "var(--ochre)", color: "var(--sumi)" }}
               >
                 {t("compare.colChara")}
               </th>
             </tr>
           </thead>
-          <tbody>
-            {rows.map((r) => {
-              const notYet = /^(Not yet|Inte än|New\.|Ny\.)/.test(r.ch);
-              return (
-                <tr key={r.k}>
-                  <td className="py-4 pr-4 text-bone text-[15px] align-top border-b border-bone/10">{r.k}</td>
-                  <td className="py-4 px-4 text-bone-mute text-sm leading-[1.5] align-top border-b border-bone/10">{r.sw}</td>
-                  <td className="py-4 px-4 text-bone-mute text-sm leading-[1.5] align-top border-b border-bone/10">{r.st}</td>
-                  <td
-                    className={`py-4 px-4 text-sm leading-[1.5] align-top border-b border-bone/30 ${notYet ? "" : "font-medium"}`}
-                    style={{
-                      background: notYet
-                        ? "color-mix(in oklab, var(--ochre) 7%, var(--indigo))"
-                        : "color-mix(in oklab, var(--ochre) 22%, var(--indigo))",
-                      color: notYet ? "var(--bone-dim)" : "var(--bone)",
-                    }}
-                  >
-                    {r.ch}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
+          {groups.map((g, gi) => (
+            <tbody key={g.title}>
+              <tr>
+                <th
+                  colSpan={colCount - 1}
+                  scope="rowgroup"
+                  className="text-left pt-12 pb-4 pr-4 label text-[11px] uppercase tracking-[0.2em] text-ochre font-medium"
+                >
+                  {g.title}
+                </th>
+                <td style={{ background: CHARA_TINT_BAND }} />
+              </tr>
+              {g.rows.map((r, ri) => {
+                const [sw, st, ch] = COMPARE_VERDICTS[gi]?.[ri] ?? (["unknown", "unknown", "unknown"] as const);
+                const held = ch !== "good";
+                return (
+                  <tr key={r.k}>
+                    <td className="py-4 pr-4 text-bone text-[15px] align-top border-b border-bone/10">{r.k}</td>
+                    <td className="py-4 px-4 text-bone-mute text-sm leading-[1.5] align-top border-b border-bone/10">
+                      <Cell verdict={sw}>{r.sw}</Cell>
+                    </td>
+                    {showSteven && (
+                      <td className="py-4 px-4 text-bone-mute text-sm leading-[1.5] align-top border-b border-bone/10">
+                        <Cell verdict={st}>{r.st}</Cell>
+                      </td>
+                    )}
+                    <td
+                      className={`py-4 px-4 text-sm leading-[1.5] align-top border-b border-bone/30 ${held ? "" : "font-medium"}`}
+                      style={{
+                        background: held ? CHARA_TINT_HELD : CHARA_TINT_WIN,
+                        color: held ? "var(--bone-dim)" : "var(--bone)",
+                      }}
+                    >
+                      <Cell verdict={ch}>{r.ch}</Cell>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          ))}
         </table>
+      </div>
+
+      <p className="mt-6 label text-[11px] uppercase tracking-[0.16em] text-bone-mute">
+        {t("compare.asOf")}
+      </p>
+      <p className="mt-12 max-w-xl text-bone text-[19px] leading-[1.5]">
+        {t("compare.closer")}
+      </p>
+    </Section>
+  );
+}
+
+
+/* ============================================================
+   Switching — the objection the table just created: fine, but
+   I am not re-entering two years of history.
+============================================================ */
+function SwitchIn() {
+  const { t } = useTranslation();
+  const steps = t("switchIn.steps", { returnObjects: true }) as Array<{ h: string; b: string }>;
+  return (
+    <Section id="switch">
+      <div className="grid grid-cols-12 gap-x-8 gap-y-10">
+        <div className="col-span-12 lg:col-span-5">
+          <p className="label text-[11px] uppercase tracking-[0.2em] text-bone-mute">{t("switchIn.eyebrow")}</p>
+          <h2 className="mt-6 text-[clamp(36px,4.4vw,68px)] font-semibold tracking-[-0.035em] leading-[1.0] text-bone">
+            {t("switchIn.titleA")}<br />{t("switchIn.titleB")}
+          </h2>
+        </div>
+        <div className="col-span-12 lg:col-span-6 lg:col-start-7 self-start">
+          <p className="max-w-xl text-bone-dim text-[15px] leading-[1.65]">{t("switchIn.body")}</p>
+          <ul className="mt-10 space-y-5 text-bone-dim text-[15px] leading-[1.6]">
+            {steps.map((it, i) => (
+              <li key={it.h} className="flex gap-5">
+                <span className="mono text-ochre text-xs tabular-nums pt-1 w-8 shrink-0">{String(i + 1).padStart(2, "0")}</span>
+                <span><span className="text-bone">{it.h}</span> {it.b}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </Section>
   );
@@ -452,7 +568,7 @@ function CopyCommandButton() {
         );
       }}
       aria-label={t("selfHost.copyCommand")}
-      className="flex items-center gap-1.5 mono text-[10px] uppercase tracking-[0.2em] text-bone-mute hover:text-bone transition-colors"
+      className="flex items-center gap-1.5 label text-[10px] uppercase tracking-[0.2em] text-bone-mute hover:text-bone transition-colors"
     >
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
         {copied ? (
@@ -600,7 +716,7 @@ function FinalCTA() {
       <div className="mx-auto max-w-[1320px] px-8 lg:px-14 py-32 lg:py-48 relative">
         <div className="grid grid-cols-12 gap-8 items-end">
           <div className="col-span-12 lg:col-span-8">
-            <div className="mono text-[11px] uppercase tracking-[0.22em] text-indigo/70">{t("cta.pre")}</div>
+            <div className="label text-[11px] uppercase tracking-[0.22em] text-indigo/70">{t("cta.pre")}</div>
             <h2 className="mt-6 text-[clamp(48px,7vw,112px)] font-semibold tracking-[-0.04em] leading-[0.94] text-indigo">
               {t("cta.titleA")}<br />
               {t("cta.titleB")}
@@ -635,7 +751,7 @@ function Diptych() {
             <p className="mt-6 text-bone-dim text-[15px] leading-[1.65] max-w-md">
               {t("diptych.body")}
             </p>
-            <div className="mt-10 mono text-[10px] uppercase tracking-[0.22em] text-bone-mute">
+            <div className="mt-10 label text-[10px] uppercase tracking-[0.22em] text-bone-mute">
               {t("diptych.caption")}
             </div>
           </div>
@@ -672,7 +788,7 @@ function SelfHostPlate() {
             <p className="mt-6 text-bone-dim text-[15px] leading-[1.65] max-w-md">
               {t("selfHostPlate.body")}
             </p>
-            <div className="mt-10 mono text-[10px] uppercase tracking-[0.22em] text-bone-mute">
+            <div className="mt-10 label text-[10px] uppercase tracking-[0.22em] text-bone-mute">
               {t("selfHostPlate.caption")}
             </div>
           </div>
@@ -746,7 +862,7 @@ function LiveLedger() {
       aria-labelledby="ledger-eyebrow"
     >
       <div className="mx-auto max-w-[1320px] px-8 lg:px-14 py-16 lg:py-20 text-center">
-        <div id="ledger-eyebrow" className="mono text-xs uppercase tracking-[0.18em] text-ochre">
+        <div id="ledger-eyebrow" className="label text-xs uppercase tracking-[0.18em] text-ochre">
           {t("ledger.eyebrow")}
         </div>
 
@@ -756,7 +872,7 @@ function LiveLedger() {
               <dd className="mono text-bone text-[clamp(30px,4.2vw,52px)] font-medium tabular-nums leading-none">
                 {f.v}
               </dd>
-              <dt className="mono text-[10px] uppercase tracking-[0.18em] text-bone-mute mt-3">
+              <dt className="label text-[10px] uppercase tracking-[0.18em] text-bone-mute mt-3">
                 {f.k}
               </dt>
             </div>
@@ -764,7 +880,7 @@ function LiveLedger() {
         </dl>
 
         {since && (
-          <p className="mt-6 mono text-[10px] uppercase tracking-[0.22em] text-bone-mute">
+          <p className="mt-6 label text-[10px] uppercase tracking-[0.22em] text-bone-mute">
             {t("ledger.caption", { since })}
           </p>
         )}
@@ -785,6 +901,7 @@ function LandingPage() {
       <Diptych />
       <Belief />
       <Compare />
+      <SwitchIn />
       <SelfHost />
       <SelfHostPlate />
       <FAQ />

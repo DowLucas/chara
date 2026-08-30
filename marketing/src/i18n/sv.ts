@@ -97,21 +97,46 @@ export const sv: Translations = {
     colSplitwise: "Splitwise (gratis)",
     colSteven: "Steven",
     colChara: "Chara",
-    rows: [
-      { k: "Vad det kostar", sw: "Gratis tills gränsen slår i, sen $4,99/mån", st: "Gratis med annonser, eller abonnemang", ch: "Gratis. Bara utökad AI kostar, i vårt moln" },
-      { k: "Hur många utlägg per dag", sw: "En handfull, sen är du utelåst", st: "Obegränsat", ch: "Obegränsat" },
-      { k: "Annonser", sw: "Banners och nedräkningar mellan inmatningar", st: "Ja, om du inte betalar", ch: "Aldrig" },
-      { k: "Skanna ett kvitto", sw: "Bara i betalversionen", st: "Nej", ch: "Ja — läser varje rad, delar per person" },
-      { k: "Olika valutor", sw: "Bara i betalversionen", st: "Egentligen bara Sverige", ch: "159 valutor, uppdaterade dagligen" },
-      { k: "Spara kvittobilden", sw: "Bara i betalversionen", st: "Grundläggande", ch: "Sparas med utlägget, för alltid" },
-      { k: "Hyra och andra återkommande räkningar", sw: "Bara i betalversionen", st: "Nej", ch: "Sätt upp en gång, läggs upp själv" },
-      { k: "Betala inifrån appen", sw: "Venmo- och PayPal-länkar", st: "Swish och Klarna", ch: "Swish, Vipps och PayPal, förifyllt" },
-      { k: "Flytta in dina saldon", sw: "—", st: "—", ch: "Skärmdump på gamla appen, klart" },
-      { k: "Kör den på din egen dator", sw: "Nej", st: "Nej", ch: "Ja — ett kommando, tio minuter" },
-      { k: "Läsa källkoden", sw: "Nej", st: "Nej", ch: "Allt, AGPL" },
-      { k: "Använda den i webbläsaren", sw: "Ja", st: "Ja", ch: "Inte än — mobilappar idag" },
-      { k: "Logga in med företagskontot", sw: "—", st: "—", ch: "Inte än" },
-      { k: "Hur länge den funnits", sw: "Sedan 2011, mycket polerad", st: "Flera år, men på nedgång", ch: "Ny. Vissa vassa kanter" },
+    groups: [
+      {
+        title: "Därför lämnar folk Splitwise",
+        rows: [
+          { k: "Hur många utlägg per dag", sw: "En handfull, sen är du utelåst", st: "Obegränsat", ch: "Obegränsat" },
+          { k: "Vad det kostar", sw: "Gratis tills dagstaket slår i, sen $4,99/mån", st: "Gratis med annonser, eller abonnemang", ch: "Gratis. Bara utökad AI kostar, i vårt moln" },
+          { k: "Inga annonser", sw: "Banners och nedräkningar mellan inmatningar", st: "Bara om du betalar", ch: "Alltid annonsfri" },
+        ],
+      },
+      {
+        title: "Det bara Chara gör",
+        rows: [
+          { k: "Skanna ett kvitto", sw: "Bara i betalversionen", st: "Nej", ch: "Ja — läser varje rad, delar per person" },
+          { k: "Beskriv utlägget i text", sw: "Nej", st: "Nej", ch: "Ja — vilket språk som helst, flera utlägg i en mening" },
+          { k: "Olika valutor", sw: "Bara i betalversionen", st: "Kronor, i praktiken", ch: "159 valutor, uppdaterade dagligen" },
+          { k: "Hyra och andra återkommande räkningar", sw: "Bara i betalversionen", st: "Nej", ch: "Sätt upp en gång, läggs upp själv" },
+          { k: "Kör den på din egen dator", sw: "Nej", st: "Nej", ch: "Ja — ett kommando, tio minuter" },
+        ],
+      },
+      {
+        title: "Där vi ligger efter",
+        rows: [
+          { k: "Dina vänner har den redan", sw: "Alla du delar med är redan där", st: "Vanlig i Sverige", ch: "Nej — du blir den som föreslår den" },
+          { k: "Använda den i webbläsaren", sw: "Ja", st: "Ja", ch: "Inte än — mobilappar idag" },
+          { k: "Hur länge den funnits", sw: "Sedan 2011, mycket polerad", st: "Flera år, men på nedgång", ch: "Ny. Vissa vassa kanter" },
+        ],
+      },
+    ],
+    asOf: "Jämfört med gratisnivåerna i augusti 2026. Vi kontrollerar varje månad.",
+    closer: "Det tar tio sekunder att prova, och saldona följer med. Är den inte bättre för din grupp har du inte förlorat något.",
+  },
+  switchIn: {
+    eyebrow: "Byta app",
+    titleA: "Ta med dig",
+    titleB: "saldona.",
+    body: "Ingen skriver in två års historik på nytt. Ta en skärmdump på saldoskärmen — Splitwise, Tricount, Settle Up, Splid eller Steven — så läser Chara vem som är skyldig vem och bygger upp gruppen igen, i ett svep.",
+    steps: [
+      { h: "Skärmdumpa den gamla appen.", b: "Saldoskärmen räcker. Ingen exportfil, ingen CSV, inget supportärende." },
+      { h: "Chara läser vem som är skyldig vem.", b: "Namn, belopp, riktning. Du får se vad den läste innan något sparas." },
+      { h: "Gruppen är din igen.", b: "Alla är med, alla saldon följer med, och nästa utlägg hamnar här i stället." },
     ],
   },
   selfHost: {

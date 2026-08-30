@@ -16,7 +16,7 @@ function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-indigo px-6">
       <div className="max-w-md text-center">
-        <div className="mono text-xs uppercase tracking-[0.22em] text-ochre">404 · Not bound</div>
+        <div className="label text-xs uppercase tracking-[0.22em] text-ochre">404 · Not bound</div>
         <h1 className="mt-6 text-7xl font-semibold tracking-[-0.035em] text-bone">Off the block.</h1>
         <p className="mt-4 text-sm text-bone-mute">
           This page isn't part of the print. The registration didn't catch.
@@ -24,7 +24,7 @@ function NotFoundComponent() {
         <div className="mt-10">
           <Link
             to="/"
-            className="mono text-xs uppercase tracking-[0.2em] border border-bone px-5 py-3 text-bone hover:bg-bone hover:text-indigo transition-colors"
+            className="label text-xs uppercase tracking-[0.2em] border border-bone px-5 py-3 text-bone hover:bg-bone hover:text-indigo transition-colors"
           >
             Return home
           </Link>
@@ -40,19 +40,19 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-indigo px-6">
       <div className="max-w-md text-center">
-        <div className="mono text-xs uppercase tracking-[0.22em] text-ochre">Misprint</div>
+        <div className="label text-xs uppercase tracking-[0.22em] text-ochre">Misprint</div>
         <h1 className="mt-6 text-4xl font-semibold tracking-[-0.035em] text-bone">This page didn't load.</h1>
         <p className="mt-4 text-sm text-bone-mute">Something slipped between the blocks.</p>
         <div className="mt-10 flex justify-center gap-3">
           <button
             onClick={() => { router.invalidate(); reset(); }}
-            className="mono text-xs uppercase tracking-[0.2em] border border-bone px-5 py-3 text-bone hover:bg-bone hover:text-indigo transition-colors"
+            className="label text-xs uppercase tracking-[0.2em] border border-bone px-5 py-3 text-bone hover:bg-bone hover:text-indigo transition-colors"
           >
             Try again
           </button>
           <a
             href="/"
-            className="mono text-xs uppercase tracking-[0.2em] border border-bone/30 px-5 py-3 text-bone-mute hover:text-bone transition-colors"
+            className="label text-xs uppercase tracking-[0.2em] border border-bone/30 px-5 py-3 text-bone-mute hover:text-bone transition-colors"
           >
             Home
           </a>
