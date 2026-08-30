@@ -25,7 +25,7 @@ const IS_DEV_VARIANT = process.env.APP_VARIANT === 'dev';
 const config: ExpoConfig = {
   name: IS_DEV_VARIANT ? 'Chara Dev' : 'Chara',
   slug: 'chara',
-  version: '1.4.0',
+  version: '1.4.1',
   scheme: IS_DEV_VARIANT ? 'charadev' : 'chara',
   orientation: 'portrait',
   icon: './assets/icon.png',
@@ -288,6 +288,10 @@ const config: ExpoConfig = {
     // Group from ios.bundleIdentifier.
     '@bacons/apple-targets',
     './plugins/withWidgets',
+    // Strips library-contributed Android entries Chara does not use: the
+    // expo-notifications boot permission and expo-audio's mediaPlayback
+    // service. See the plugin for why each one goes.
+    './plugins/withAndroidFgsTrim',
   ],
   experiments: {
     typedRoutes: true,
