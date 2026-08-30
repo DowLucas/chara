@@ -54,6 +54,8 @@ export type AnalyticsEvent =
   | 'voice_draft_saved'
   | 'voice_draft_discarded'
   | 'voice_queue_abandoned'
+  // growth
+  | 'review_prompt_requested'
   // errors
   | 'auth_error'
   | 'discovery_error'

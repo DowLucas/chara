@@ -508,6 +508,37 @@ Gemini in one call that returns both a transcript and structured expenses.
   the ffmpeg line); each missing clip skips its test. No device run: the mic
   is a native module, so it needs a dev client, and this host is Linux.
 
+### Rating prompt at a positive moment (issue #106) ✅
+
+Chara asks for a store rating after a debt is **settled** — the one completed,
+unambiguously positive moment — instead of waiting to be found under
+**You → Rate us**, which stays exactly as it was.
+
+- **Native sheet, not the deep link**: `expo-store-review`'s
+  `requestReview()` rates in-app and is localized by the OS, so the feature
+  adds **no strings** and touches no locale file. `store-url.ts` still backs
+  the manual You-tab row — the OS caps sheet frequency, so deliberate rating
+  must remain possible.
+- **Guards** (`lib/review-prompt.ts`, one SecureStore blob at
+  `chara.reviewPrompt`, survives cold launch): ≥3 days since first read,
+  ≥1 settlement **or** ≥5 expenses, at most once per app version, ≥120 days
+  between prompts, and `StoreReview.hasAction()` true. An `installedAt` in
+  the future fails the grace period rather than passing it, so a backwards
+  clock cannot unlock the prompt. `lastPromptedAt` is written only after
+  `requestReview()` resolves — a throwing sheet showed nothing, so it must
+  not burn the release's single ask. Apple gives no callback about whether
+  the sheet appeared, so these have to be right without outcome feedback.
+- **Trigger**: `settle-method.tsx`, 1.5s after `stage === 'done'` renders —
+  keyed on the stage, not the Done tap, so navigating away can't cut the
+  sheet off. `add-expense.tsx` only increments the counter; it never prompts.
+- **Analytics**: `review_prompt_requested { trigger: 'settlement' }`. We
+  can't know if the sheet appeared, only how often we asked.
+- **Tests**: `review-prompt` 22 — every guard flipped one at a time, the
+  persistence round-trip, a pre-`expenses` blob, a corrupt blob, and a
+  rejecting `requestReview()`.
+- **Not verified**: no device run — `expo-store-review` is a native module,
+  so it needs a dev client and ships only through `./release`, not OTA.
+
 ### Week 10 — Web client (Expo for Web) 🔲
 
 - [ ] Sign-in flow with magic link
