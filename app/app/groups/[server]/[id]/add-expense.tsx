@@ -33,6 +33,7 @@ import { consumePendingShare } from '@/lib/pending-share';
 import { openPdfExternally } from '@/lib/receipt-open';
 import { PdfView, canRenderPdfInline } from '@/components/PdfView';
 import { ExpenseSavedOverlay } from '@/components/ExpenseSavedOverlay';
+import { noteExpenseSaved } from '@/lib/review-prompt';
 import { notifyGroupChanged } from '@/lib/group-refresh';
 import { ScanItemsAssign } from '@/components/ScanItemsAssign';
 import { VoiceExpenseCapture } from '@/components/VoiceExpenseCapture';
@@ -429,6 +430,10 @@ export default function AddExpenseScreen() {
       }
 
       notifyGroupChanged(serverUrl, id);
+
+      // Counts towards rating-prompt eligibility only; the prompt itself
+      // never fires here (adding an expense is a chore, not a win).
+      void noteExpenseSaved();
 
       if (pendingReceiptFile && created?.id) {
         try {

@@ -34,6 +34,7 @@ import {
   setSwishPhonePromptDismissed,
 } from '@/lib/preferences';
 import { settlementMethodFor } from '@/lib/settlement-method';
+import { maybeRequestReviewAfterSettlement } from '@/lib/review-prompt';
 import { newUlid } from '@/lib/ulid';
 import {
   colors,
@@ -144,6 +145,19 @@ export default function SettleMethodScreen() {
     { id: 'swish',  enabled: swishEligible, primary: true, badge: t('settleMethod.instantBadge') },
     { id: 'manual', enabled: true,  primary: false },
   ];
+
+  // The debt just closed and someone got paid back — the one unambiguously
+  // positive, completed moment in the app, so it's where we ask for a rating.
+  // Delayed so the "settled" celebration lands before the OS sheet slides up,
+  // and keyed on the stage rather than the Done tap so navigating away can't
+  // cut the sheet off. Every "should we even ask" guard lives in the lib.
+  useEffect(() => {
+    if (stage !== 'done') return;
+    const timer = setTimeout(() => {
+      void maybeRequestReviewAfterSettlement();
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [stage]);
 
   async function recordSettlement(rail: MethodId, amountOverride?: string) {
     if (!id || !from || !to || !amount || !currency || !serverUrl) return false;
