@@ -18,6 +18,14 @@ export const sv: Translations = {
     aiNote: "appen är gratis · bara utökad AI kostar, och bara i Chara Cloud",
     alt: "En izakaya vid floden i Edo på natten, vänner gör upp notan i lyktsken",
   },
+  reviews: {
+    eyebrow: "Vad folk säger",
+    count_one: "App Store · {{count}} recension",
+    count_other: "App Store · {{count}} recensioner",
+    source: "App Store",
+    leaveYours: "Lämna din →",
+    srRating: "Betyget {{rating}} av 5 i App Store",
+  },
   price: {
     amount: "0",
     unitBefore: "",

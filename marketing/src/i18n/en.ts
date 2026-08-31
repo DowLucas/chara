@@ -16,6 +16,14 @@ export const en = {
     aiNote: "the app is free · only extended AI costs, and only in Chara Cloud",
     alt: "An Edo riverside izakaya at night, friends settling the bill by lantern light",
   },
+  reviews: {
+    eyebrow: "What people say",
+    count_one: "App Store · {{count}} review",
+    count_other: "App Store · {{count}} reviews",
+    source: "App Store",
+    leaveYours: "Leave yours →",
+    srRating: "Rated {{rating}} out of 5 on the App Store",
+  },
   price: {
     amount: "0",
     unitBefore: "$",

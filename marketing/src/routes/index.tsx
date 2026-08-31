@@ -118,6 +118,127 @@ function Hero() {
 }
 
 /* ============================================================
+   Reviews — the rating printed as a poster number.
+
+   The sample size sits next to the figure rather than under it in
+   small print: a 5.0 that hides its n reads as a claim, and this
+   page spends a whole comparison table not doing that.
+
+   Set deliberately below Price's clamp(120px,19vw,260px) so the
+   free price stays the largest number on the page.
+
+   A second review is one more entry in REVIEWS — the average, the
+   count and its plural all follow from the array.
+============================================================ */
+const REVIEWS = [
+  {
+    title: "Great app!",
+    body: "It’s great to finally have a bill-splitting app that doesn’t have more limitations than actual functions:—) 10/10",
+    handle: "iceburk_",
+    date: "2026-07-02",
+    rating: 5,
+  },
+];
+
+const RATING = REVIEWS.reduce((sum, r) => sum + r.rating, 0) / REVIEWS.length;
+
+function Stars({ rating }: { rating: number }) {
+  return (
+    <div className="flex gap-1.5" aria-hidden="true">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <svg
+          key={i}
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill={i <= rating ? "var(--ochre)" : "none"}
+          stroke="var(--ochre)"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        >
+          <path d="M12 2.6l2.94 5.96 6.58.96-4.76 4.64 1.12 6.55L12 17.62l-5.88 3.09 1.12-6.55L2.48 9.52l6.58-.96z" />
+        </svg>
+      ))}
+    </div>
+  );
+}
+
+function Reviews() {
+  const { t, i18n } = useTranslation();
+  const review = REVIEWS[0];
+
+  const rating = new Intl.NumberFormat(i18n.language, {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(RATING);
+  const date = new Intl.DateTimeFormat(i18n.language, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(review.date));
+
+  return (
+    <motion.section
+      id="reviews"
+      initial={{ opacity: 0, y: 14 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.6, ease: EASE }}
+      className="relative border-b border-bone/10"
+      aria-labelledby="reviews-eyebrow"
+    >
+      <div className="mx-auto max-w-[1320px] px-8 lg:px-14 py-20 lg:py-28">
+        <div className="grid grid-cols-12 gap-x-8 gap-y-12 items-start">
+          {/* The rating, poster-scale */}
+          <div className="col-span-12 lg:col-span-4">
+            <h2
+              id="reviews-eyebrow"
+              className="mono text-xs font-normal uppercase tracking-[0.2em] text-ochre"
+            >
+              {t("reviews.eyebrow")}
+            </h2>
+            <div className="mt-8 mono font-medium tabular-nums text-bone leading-[0.8] tracking-[-0.06em] text-[clamp(72px,10vw,150px)]">
+              {rating}
+            </div>
+            <div className="mt-6 mono text-[11px] uppercase tracking-[0.18em] text-bone-mute">
+              {t("reviews.count", { count: REVIEWS.length })}
+            </div>
+          </div>
+
+          {/* The review itself — the reviewer's own words, untranslated */}
+          <figure className="col-span-12 lg:col-span-7 lg:col-start-6 m-0">
+            <Stars rating={review.rating} />
+            <span className="sr-only">{t("reviews.srRating", { rating })}</span>
+            <p className="mt-7 text-[clamp(22px,2.4vw,30px)] font-semibold tracking-[-0.03em] leading-[1.05] text-ochre">
+              {review.title}
+            </p>
+            <blockquote className="mt-5 text-bone text-[clamp(19px,1.9vw,26px)] leading-[1.4] tracking-[-0.018em] text-pretty">
+              <span className="text-[color:var(--shu)]">“</span>
+              {review.body}
+              <span className="text-[color:var(--shu)]">”</span>
+            </blockquote>
+            <figcaption className="mt-9 flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3 border-t border-bone/15 pt-5">
+              <span className="mono text-[11px] uppercase tracking-[0.18em] text-bone-mute">
+                {review.handle} · {t("reviews.source")} · {date}
+              </span>
+              <a
+                href={APP_STORE_URL}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="mono text-[11px] uppercase tracking-[0.18em] text-bone-mute hover:text-ochre transition-colors"
+              >
+                {t("reviews.leaveYours")}
+              </a>
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
+/* ============================================================
    Price — one enormous number under the fold (design 2b):
    free stated as the whole feature list.
 ============================================================ */
@@ -778,6 +899,7 @@ function LandingPage() {
     <div className="min-h-screen bg-indigo text-bone">
       <SiteHeader />
       <Hero />
+      <Reviews />
       <LiveLedger />
       <Price />
       <Value />
