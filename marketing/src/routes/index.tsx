@@ -194,14 +194,14 @@ function Reviews() {
           <div className="col-span-12 lg:col-span-4">
             <h2
               id="reviews-eyebrow"
-              className="mono text-xs font-normal uppercase tracking-[0.2em] text-ochre"
+              className="label text-xs uppercase tracking-[0.2em] text-ochre"
             >
               {t("reviews.eyebrow")}
             </h2>
             <div className="mt-8 mono font-medium tabular-nums text-bone leading-[0.8] tracking-[-0.06em] text-[clamp(72px,10vw,150px)]">
               {rating}
             </div>
-            <div className="mt-6 mono text-[11px] uppercase tracking-[0.18em] text-bone-mute">
+            <div className="mt-6 label text-[11px] uppercase tracking-[0.18em] text-bone-mute">
               {t("reviews.count", { count: REVIEWS.length })}
             </div>
           </div>
@@ -219,14 +219,14 @@ function Reviews() {
               <span className="text-[color:var(--shu)]">”</span>
             </blockquote>
             <figcaption className="mt-9 flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3 border-t border-bone/15 pt-5">
-              <span className="mono text-[11px] uppercase tracking-[0.18em] text-bone-mute">
+              <span className="label text-[11px] uppercase tracking-[0.18em] text-bone-mute">
                 {review.handle} · {t("reviews.source")} · {date}
               </span>
               <a
                 href={APP_STORE_URL}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="mono text-[11px] uppercase tracking-[0.18em] text-bone-mute hover:text-ochre transition-colors"
+                className="label text-[11px] uppercase tracking-[0.18em] text-bone-mute hover:text-ochre transition-colors"
               >
                 {t("reviews.leaveYours")}
               </a>
