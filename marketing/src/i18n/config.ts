@@ -2,6 +2,7 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { en } from "./en";
 import { sv } from "./sv";
+import { mergePageResources } from "./pages";
 
 const STORAGE_KEY = "chara.lang";
 
@@ -18,8 +19,10 @@ if (!i18n.isInitialized) {
     .use(initReactI18next)
     .init({
       resources: {
-        en: { translation: en },
-        sv: { translation: sv },
+        // Page bundles sit alongside the shell catalogue in the same
+        // `translation` namespace, so a page key reads exactly like any other.
+        en: { translation: mergePageResources("en", en) },
+        sv: { translation: mergePageResources("sv", sv) },
       },
       lng: detectInitialLang(),
       fallbackLng: "en",

@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 
+import { SITE_URL } from "@/lib/site";
 import appCss from "../styles.css?url";
 import "@/i18n/config";
 
@@ -67,18 +68,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Chara — Split bills. Keep your data." },
-      { name: "description", content: "Open-source, self-hostable bill splitting. No ads, no daily cap, no bank linking. Built in Stockholm." },
+      { title: "Chara — the free Splitwise alternative, with no daily cap" },
+      { name: "description", content: "Split bills for free, with no daily cap and no ads. Scan the receipt and the split writes itself. 159 currencies, open source, self-hostable." },
       { name: "author", content: "Chara" },
       { property: "og:site_name", content: "Chara" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:title", content: "Chara — Split bills. Keep your data." },
-      { name: "twitter:title", content: "Chara — Split bills. Keep your data." },
-      { property: "og:description", content: "Open-source, self-hostable bill splitting. No ads, no daily cap, no bank linking. Built in Stockholm." },
-      { name: "twitter:description", content: "Open-source, self-hostable bill splitting. No ads, no daily cap, no bank linking. Built in Stockholm." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/fa38429a-24eb-4ff3-aa05-c82a6fbf6687" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/fa38429a-24eb-4ff3-aa05-c82a6fbf6687" },
+      { property: "og:title", content: "Chara — the free Splitwise alternative, with no daily cap" },
+      { name: "twitter:title", content: "Chara — the free Splitwise alternative, with no daily cap" },
+      { property: "og:description", content: "Split bills for free, with no daily cap and no ads. Scan the receipt and the split writes itself. 159 currencies, open source, self-hostable." },
+      { name: "twitter:description", content: "Split bills for free, with no daily cap and no ads. Scan the receipt and the split writes itself. 159 currencies, open source, self-hostable." },
+      { property: "og:image", content: `${SITE_URL}/og.jpg` },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Chara — free, open-source bill splitting" },
+      { name: "twitter:image", content: `${SITE_URL}/og.jpg` },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -98,14 +102,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             {
               "@type": "Organization",
               name: "Chara",
-              url: "https://getchara.lovable.app",
+              url: SITE_URL,
+              logo: `${SITE_URL}/chara-icon.png`,
+              sameAs: ["https://github.com/DowLucas/chara"],
               description:
                 "Open-source, self-hostable bill splitting. Built in Stockholm.",
             },
             {
               "@type": "WebSite",
               name: "Chara",
-              url: "https://getchara.lovable.app",
+              url: SITE_URL,
             },
           ],
         }),

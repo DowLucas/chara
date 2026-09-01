@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { RegistrationMark } from "./RegistrationMark";
 import { StoreBadges } from "./StoreBadges";
+import { COMPETITORS } from "@/lib/competitors";
 import hankoLogo from "@/assets/chara-hanko.png";
 
 const legalRoutes: { to: "/privacy" | "/terms" | "/cookies" | "/dpa" | "/security" | "/support"; key: string }[] = [
@@ -18,7 +19,7 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-bone/10 mt-32">
       <div className="mx-auto max-w-[1320px] px-8 lg:px-14 py-20 grid grid-cols-12 gap-8">
-        <div className="col-span-12 md:col-span-5">
+        <div className="col-span-12 md:col-span-4">
           <div className="flex items-center gap-3">
             <img
               src={hankoLogo}
@@ -35,7 +36,7 @@ export function SiteFooter() {
           <StoreBadges size="sm" className="mt-6" />
         </div>
 
-        <div className="col-span-6 md:col-span-3">
+        <div className="col-span-6 md:col-span-2">
           <div className="label text-[11px] uppercase tracking-[0.2em] text-bone-mute mb-5">{t("footer.legal")}</div>
           <ul className="space-y-3">
             {legalRoutes.map((l) => (
@@ -49,11 +50,34 @@ export function SiteFooter() {
         </div>
 
         <div className="col-span-6 md:col-span-3">
+          <div className="label text-[11px] uppercase tracking-[0.2em] text-bone-mute mb-5">{t("footer.compare")}</div>
+          <ul className="space-y-3 text-sm">
+            <li>
+              <Link to="/splitwise-alternative" className="text-bone hover:text-ochre transition-colors">
+                {t("footer.alternatives")}
+              </Link>
+            </li>
+            {COMPETITORS.map((c) => (
+              <li key={c.slug}>
+                <Link
+                  to="/vs/$slug"
+                  params={{ slug: c.slug }}
+                  className="text-bone hover:text-ochre transition-colors"
+                >
+                  {`vs ${c.name}`}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="col-span-6 md:col-span-2">
           <div className="label text-[11px] uppercase tracking-[0.2em] text-bone-mute mb-5">{t("footer.project")}</div>
           <ul className="space-y-3 text-sm">
             <li><a className="text-bone hover:text-ochre transition-colors" href="https://github.com/DowLucas/chara">{t("footer.github")}</a></li>
-            <li><a className="text-bone hover:text-ochre transition-colors" href="/docs">{t("footer.docs")}</a></li>
+            <li><a className="text-bone hover:text-ochre transition-colors" href="https://github.com/DowLucas/chara/tree/main/docs">{t("footer.docs")}</a></li>
             <li><Link to="/releases" className="text-bone hover:text-ochre transition-colors">{t("footer.releases")}</Link></li>
+            <li><Link to="/self-host" className="text-bone hover:text-ochre transition-colors">{t("footer.selfHost")}</Link></li>
           </ul>
         </div>
 

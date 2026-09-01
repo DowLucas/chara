@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { canonicalLink, canonicalMeta } from "@/lib/site";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { LegalPrint } from "@/components/LegalPrint";
@@ -10,9 +11,9 @@ export const Route = createFileRoute("/cookies")({
       { name: "description", content: "Chara keeps cookies and storage to the bare minimum." },
       { property: "og:title", content: "Cookies — Chara" },
       { property: "og:description", content: "No banner, because there's nothing to consent to." },
-      { property: "og:url", content: "/cookies" },
+      ...canonicalMeta("/cookies"),
     ],
-    links: [{ rel: "canonical", href: "/cookies" }],
+    links: [canonicalLink("/cookies")],
   }),
   component: () => (
     <div className="min-h-screen bg-indigo">

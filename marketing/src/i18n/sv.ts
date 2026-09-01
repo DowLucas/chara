@@ -198,6 +198,9 @@ export const sv: Translations = {
     alt: "Två rumskamrater på hyresdagen: en panikslagen vid byrån, en lugn med en tekopp och Chara öppen i telefonen.",
   },
   footer: {
+    compare: "Jämför",
+    alternatives: "Splitwise-alternativ",
+    selfHost: "Kör själv",
     blurb: "Räkningsdelning i öppen källkod som räknar matten, läser kvittona och hanterar valutorna. Dina grupper, din server — eller vår. Byggt i Stockholm.",
     legal: "Juridik",
     project: "Projekt",
