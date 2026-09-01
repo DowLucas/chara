@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { Text } from '@/components/Text';
 import { showAlert } from '@/lib/app-alert';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import { router } from 'expo-router';
@@ -13,6 +14,8 @@ import { useTranslation } from 'react-i18next';
 import { useAccounts } from '@/lib/accounts';
 import { apiFor, avatarImageSourceOn, AccountDeleteBlockedError } from '@/lib/api';
 import { hasOpenBalance } from '@/lib/balance-utils';
+import { userErrorMessage } from '@/lib/user-error';
+import { hapticWarning } from '@/lib/haptics';
 import { displayHostFor } from '@/lib/server-url';
 import { unregisterForAccount } from '@/lib/push';
 import { initialsOf } from '@/lib/name';
@@ -24,6 +27,11 @@ export default function AccountsScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { accounts, defaultAccount, removeAccount, setDefault } = useAccounts();
+  // serverUrl of the account whose removal / deletion is in flight. Both
+  // destructive rows on that card go inert until it settles — the balance
+  // check, logout and push-unregister are all network round trips, and a
+  // second tap during them fires the whole sequence again.
+  const [removing, setRemoving] = React.useState<string | null>(null);
 
   const ordered = React.useMemo(
     () => [...accounts].sort((a, b) => (a.addedAt < b.addedAt ? -1 : 1)),
@@ -32,55 +40,63 @@ export default function AccountsScreen() {
 
   async function handleRemove(account: Account) {
     if (isPopupJustClosed()) return;
-    // Block removal when the user has open balances on this server — we don't
-    // want someone to accidentally drop an account they still owe money on /
-    // are owed money in. The check fetches /api/me/balances; on network
-    // failure we block too (better than silently allowing a removal we can't
-    // verify).
-    let balances;
+    if (removing) return;
+    setRemoving(account.serverUrl);
     try {
-      balances = await apiFor(account.serverUrl).listMyBalances();
-    } catch {
-      showAlert({
-        title: t('accounts.removeBalanceCheckFailedTitle'),
-        message: t('accounts.removeBalanceCheckFailedBody'),
-      });
-      return;
-    }
-    if (hasOpenBalance(balances)) {
-      showAlert({
-        title: t('accounts.removeBlockedOpenBalanceTitle'),
-        message: t('accounts.removeBlockedOpenBalanceBody', { host: displayHostFor(account.serverUrl, t('common.mainServerLabel')) }),
-      });
-      return;
-    }
-
-    const result = await showAlert({
-      title: t('accounts.removeConfirmTitle'),
-      message: t('accounts.removeConfirmBody'),
-      buttons: [
-        { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
-        { key: 'remove', label: t('accounts.removeConfirm'), style: 'destructive' },
-      ],
-    });
-    if (result === 'remove') {
+      // Block removal when the user has open balances on this server — we don't
+      // want someone to accidentally drop an account they still owe money on /
+      // are owed money in. The check fetches /api/me/balances; on network
+      // failure we block too (better than silently allowing a removal we can't
+      // verify).
+      let balances;
       try {
-        await apiFor(account.serverUrl).logout();
+        balances = await apiFor(account.serverUrl).listMyBalances();
       } catch {
-        /* best-effort */
+        showAlert({
+          title: t('accounts.removeBalanceCheckFailedTitle'),
+          message: t('accounts.removeBalanceCheckFailedBody'),
+        });
+        return;
       }
-      // Spec §15: deregister this device's push token from the server.
-      // `unregisterForAccount` swallows internally — safe to await.
-      await unregisterForAccount(account.serverUrl);
-      await removeAccount(account.serverUrl);
-      if (accounts.length <= 1) {
-        router.replace('/(auth)/sign-in');
+      if (hasOpenBalance(balances)) {
+        showAlert({
+          title: t('accounts.removeBlockedOpenBalanceTitle'),
+          message: t('accounts.removeBlockedOpenBalanceBody', { host: displayHostFor(account.serverUrl, t('common.mainServerLabel')) }),
+        });
+        return;
       }
+
+      const result = await showAlert({
+        title: t('accounts.removeConfirmTitle'),
+        message: t('accounts.removeConfirmBody'),
+        buttons: [
+          { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
+          { key: 'remove', label: t('accounts.removeConfirm'), style: 'destructive' },
+        ],
+      });
+      if (result === 'remove') {
+        try {
+          await apiFor(account.serverUrl).logout();
+        } catch {
+          /* best-effort */
+        }
+        // Spec §15: deregister this device's push token from the server.
+        // `unregisterForAccount` swallows internally — safe to await.
+        await unregisterForAccount(account.serverUrl);
+        await removeAccount(account.serverUrl);
+        hapticWarning();
+        if (accounts.length <= 1) {
+          router.replace('/(auth)/sign-in');
+        }
+      }
+    } finally {
+      setRemoving(null);
     }
   }
 
   async function handleDeleteForever(account: Account) {
     if (isPopupJustClosed()) return;
+    if (removing) return;
     const host = displayHostFor(account.serverUrl, t('common.mainServerLabel'));
     const result = await showAlert({
       title: t('account.deleteFromServer.confirmTitle'),
@@ -92,34 +108,40 @@ export default function AccountsScreen() {
     });
     if (result !== 'delete') return;
 
+    setRemoving(account.serverUrl);
     try {
-      await apiFor(account.serverUrl).deleteMe();
-    } catch (e) {
-      if (e instanceof AccountDeleteBlockedError) {
-        const formatted = e.balances
-          .map((b) => formatMinorUnits(b.amount_minor, b.currency))
-          .join(', ');
+      try {
+        await apiFor(account.serverUrl).deleteMe();
+      } catch (e) {
+        if (e instanceof AccountDeleteBlockedError) {
+          const formatted = e.balances
+            .map((b) => formatMinorUnits(b.amount_minor, b.currency))
+            .join(', ');
+          showAlert({
+            title: t('account.deleteFromServer.blockedTitle'),
+            message: t('account.deleteFromServer.blockedBody', {
+              server: host,
+              balances: formatted || t('common.dash'),
+            }),
+          });
+          return;
+        }
         showAlert({
-          title: t('account.deleteFromServer.blockedTitle'),
-          message: t('account.deleteFromServer.blockedBody', {
-            server: host,
-            balances: formatted || t('common.dash'),
-          }),
+          title: t('common.error'),
+          message: userErrorMessage(e, t('common.requestFailed')),
         });
         return;
       }
-      showAlert({
-        title: t('common.error'),
-        message: e instanceof Error ? e.message : String(e),
-      });
-      return;
-    }
 
-    // Server-side deletion succeeded — drop push token & local account.
-    await unregisterForAccount(account.serverUrl);
-    await removeAccount(account.serverUrl);
-    if (accounts.length <= 1) {
-      router.replace('/(auth)/sign-in');
+      // Server-side deletion succeeded — drop push token & local account.
+      await unregisterForAccount(account.serverUrl);
+      await removeAccount(account.serverUrl);
+      hapticWarning();
+      if (accounts.length <= 1) {
+        router.replace('/(auth)/sign-in');
+      }
+    } finally {
+      setRemoving(null);
     }
   }
 
@@ -154,7 +176,14 @@ export default function AccountsScreen() {
               onStatusTap={() => handleStatusTap(account.serverUrl)}
               onRemove={() => handleRemove(account)}
               onDeleteForever={() => handleDeleteForever(account)}
-              onEditProfile={() => router.push('/onboarding/name')}
+              // Profile writes target the account being edited, never the
+              // default one — the name screen reads this back off the route.
+              onEditProfile={() =>
+                router.push(
+                  `/onboarding/name?server=${encodeURIComponent(account.serverUrl)}` as never,
+                )
+              }
+              busy={removing === account.serverUrl}
             />
           );
         })}
@@ -181,6 +210,8 @@ interface AccountCardProps {
   onRemove: () => void;
   onDeleteForever: () => void;
   onEditProfile: () => void;
+  /** A removal / deletion on this account is in flight. */
+  busy: boolean;
 }
 
 function AccountCard({
@@ -191,6 +222,7 @@ function AccountCard({
   onRemove,
   onDeleteForever,
   onEditProfile,
+  busy,
 }: AccountCardProps) {
   const { t } = useTranslation();
   const initials = initialsOf(account.user.name);
@@ -254,8 +286,9 @@ function AccountCard({
 
         <TouchableOpacity
           onPress={onRemove}
+          disabled={busy}
           activeOpacity={0.7}
-          style={styles.cardActionBtn}
+          style={[styles.cardActionBtn, busy && styles.busyRow]}
         >
           <Text style={styles.cardActionDestructive}>{t('accounts.remove')}</Text>
         </TouchableOpacity>
@@ -263,8 +296,9 @@ function AccountCard({
 
       <TouchableOpacity
         onPress={onDeleteForever}
+        disabled={busy}
         activeOpacity={0.7}
-        style={styles.deleteForeverRow}
+        style={[styles.deleteForeverRow, busy && styles.busyRow]}
       >
         <Text style={styles.deleteForeverTitle}>
           {t('account.deleteFromServer.title')}
@@ -351,6 +385,7 @@ const styles = StyleSheet.create({
   cardActionBtn: {
     paddingVertical: spacing.s1,
   },
+  busyRow: { opacity: 0.45 },
   cardActionLabel: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,

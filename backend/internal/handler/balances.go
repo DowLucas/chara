@@ -310,7 +310,7 @@ func (h *BalancesHandler) Settle(w http.ResponseWriter, r *http.Request) {
 
 	var req settleReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		writeError(w, http.StatusBadRequest, decodeErrorMessage(err))
 		return
 	}
 

@@ -136,6 +136,7 @@
     "amount": "المبلغ",
     "amountPlaceholder": "0",
     "amountsLabel": "المبالغ",
+    "autoBadge": "تلقائي",
     "autoFillHint": "تُقسَّم الصفوف الفارغة على الباقي بالتساوي",
     "back": "رجوع",
     "between": "بين",
@@ -263,7 +264,8 @@
       "body": "تظهر هنا المجموعات التي تؤرشفها. يمكنك إعادة فتح أي منها من إعداداتها.",
       "title": "لا توجد مجموعات مؤرشفة"
     },
-    "loadError": "تعذر تحميل المجموعات المؤرشفة. اسحب للأسفل وحاول مرة أخرى.",
+    "loadError": "تعذّر تحميل المجموعات المؤرشفة.",
+    "retry": "إعادة المحاولة",
     "title": "المجموعات المؤرشفة"
   },
   "categories": {
@@ -300,7 +302,9 @@
     "loading": "تحميل…",
     "mainServerInfoLabel": "حول Chara Cloud",
     "mainServerLabel": "خادم Chara",
+    "networkError": "أنت غير متصل بالإنترنت. تحقق من اتصالك وحاول مرة أخرى.",
     "ok": "حسنًا",
+    "retry": "إعادة المحاولة",
     "save": "حفظ",
     "saving": "حفظ…",
     "requestFailed": "حدث خطأ ما. حاول مرة أخرى.",
@@ -343,6 +347,8 @@
     "eyebrow": "تعديل المجموعة",
     "languageHint": "ستُكتب عناوين الإيصالات التي يُنشئها الذكاء الاصطناعي بهذه اللغة لجميع أعضاء المجموعة.",
     "languageLabel": "اللغة",
+    "loadErrorBody": "تحقق من اتصالك وحاول مرة أخرى.",
+    "loadErrorTitle": "تعذّر تحميل هذه المجموعة",
     "nameLabel": "اسم المجموعة",
     "namePlaceholder": "اسم المجموعة",
     "saving": "جاري الحفظ…",
@@ -377,6 +383,8 @@
       "sourceManual": "سعر مخصص"
     },
     "loadError": "تعذر تحميل هذا المصروف.",
+    "loadErrorBody": "تحقق من اتصالك وحاول مرة أخرى.",
+    "loadErrorTitle": "تعذّر تحميل هذه النفقة",
     "menuLabel": "قائمة المصروف",
     "noChanges": "لم يتغير شيء.",
     "noReceipt": "لا يوجد إيصال مرفق.",
@@ -440,11 +448,14 @@
   },
   "groupCreated": {
     "body": "مرّر هاتفك لصديقك ليمسح الرمز.",
+    "copied": "تم النسخ",
+    "copyLink": "نسخ الرابط",
     "errorLoad": "فشل تحميل المجموعة",
     "errorTitle": "حدث خطأ ما",
     "eyebrow": "تم إنشاء المجموعة",
     "goToGroups": "الذهاب إلى المجموعات",
     "open": "فتح المجموعة",
+    "retry": "إعادة المحاولة",
     "share": "مشاركة رابط الدعوة",
     "shareMessage": "انضم إلى \"{{name}}\" على Chara: {{link}}"
   },
@@ -906,6 +917,8 @@
   },
   "invite": {
     "body": "يمسح الأصدقاء هذا الرمز للانضمام.",
+    "copied": "تم النسخ",
+    "copy": "نسخ الرابط",
     "errorLoad": "فشل تحميل المجموعة",
     "eyebrow": "دعوة",
     "share": "مشاركة رابط الدعوة",
@@ -973,6 +986,8 @@
     "termsOfService": "شروط الخدمة"
   },
   "members": {
+    "copiedLabel": "تم نسخ رابط الدعوة",
+    "copyLinkLabel": "نسخ رابط الدعوة",
     "count": "الأعضاء · {{count}}",
     "count_few": "الأعضاء · {{count}}",
     "count_many": "الأعضاء · {{count}}",
@@ -987,11 +1002,14 @@
     "inviteCta": "دعوة عبر رمز QR",
     "joined": "انضم في {{date}}",
     "joinedWithRole": "انضم في {{date}} · {{role}}",
+    "loadErrorBody": "تحقق من اتصالك وحاول مرة أخرى.",
+    "loadErrorTitle": "تعذّر تحميل الأعضاء",
     "role": "الدور",
     "roleMember": "عضو",
     "roleOwner": "مالك",
     "roleUnknownJoin": "انضم مؤخرًا",
     "shareCta": "مشاركة الرابط",
+    "shareErrorTitle": "تعذّر الحصول على رابط الدعوة",
     "shareMessage": "انضم إلى \"{{name}}\" على Chara: {{link}}",
     "you": "أنت"
   },
@@ -1085,6 +1103,8 @@
     "eyebrow": "أتمتة",
     "intervalPrefix": "كل",
     "listHeader": "الفواتير المتكررة",
+    "loadErrorBody": "تحقق من اتصالك وحاول مرة أخرى.",
+    "loadErrorTitle": "تعذّر تحميل الفواتير المتكررة",
     "newButton": "+ فاتورة متكررة جديدة",
     "pauseButton": "إيقاف مؤقت",
     "paused": {
@@ -1115,6 +1135,9 @@
     "resumeAllBanner_other": "{{count}} فواتير متوقفة منذ قُفلت المجموعة.",
     "resumeAllBanner_two": "فاتورتان متوقفتان منذ قُفلت المجموعة.",
     "resumeAllBanner_zero": "{{count}} فاتورة متوقفة منذ قُفلت المجموعة.",
+    "resumeAllBusy": "جارٍ الاستئناف…",
+    "resumeAllErrorBody": "قد تكون المجموعة ما زالت مقفلة. حاول مرة أخرى.",
+    "resumeAllErrorTitle": "تعذّر الاستئناف",
     "resumeButton": "استئناف",
     "saveButton": "حفظ",
     "schedule": {
@@ -1375,9 +1398,15 @@
     "legalFooter": "بمتابعتك فإنك توافق على <terms>شروط الخدمة</terms> و<privacy>سياسة الخصوصية</privacy> الخاصة بنا.",
     "or": "أو",
     "sending": "إرسال…",
+    "useDifferentEmail": "استخدام بريد إلكتروني آخر",
     "useMyServer": "استخدم خادمي ←",
     "linkErrorTitle": "لم يعمل رابط تسجيل الدخول",
-    "linkErrorBody": "قد يكون هذا الرابط منتهي الصلاحية أو تم استخدامه من قبل. اطلب رابطًا جديدًا وحاول مرة أخرى."
+    "linkErrorBody": "قد يكون هذا الرابط منتهي الصلاحية أو تم استخدامه من قبل. اطلب رابطًا جديدًا وحاول مرة أخرى.",
+    "verifyServer": {
+      "body": "سيضيف هذا الرابط خادمًا جديدًا إلى Chara. تابع فقط إذا كنت قد طلبت ذلك.",
+      "continue": "متابعة",
+      "title": "تسجيل الدخول إلى {{host}}؟"
+    }
   },
   "tabs": {
     "activity": "النشاط",

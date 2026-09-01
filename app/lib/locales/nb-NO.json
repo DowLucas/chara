@@ -120,6 +120,7 @@
     "amount": "beløp",
     "amountPlaceholder": "0",
     "amountsLabel": "beløp",
+    "autoBadge": "auto",
     "autoFillHint": "tomme rader deler resten likt",
     "back": "Tilbake",
     "between": "mellom",
@@ -239,7 +240,8 @@
       "body": "Grupper du arkiverer dukker opp her. Du kan åpne en igjen fra innstillingene dens.",
       "title": "Ingen arkiverte grupper"
     },
-    "loadError": "Kunne ikke laste arkiverte grupper. Dra ned og prøv igjen.",
+    "loadError": "Kunne ikke laste arkiverte grupper.",
+    "retry": "Prøv igjen",
     "title": "Arkiverte grupper"
   },
   "categories": {
@@ -276,7 +278,9 @@
     "loading": "Laster …",
     "mainServerInfoLabel": "Om Chara Cloud",
     "mainServerLabel": "Chara Server",
+    "networkError": "Du er frakoblet. Sjekk tilkoblingen og prøv igjen.",
     "ok": "OK",
+    "retry": "Prøv igjen",
     "save": "Lagre",
     "saving": "Lagrer …",
     "requestFailed": "Noe gikk galt. Prøv igjen.",
@@ -319,6 +323,8 @@
     "eyebrow": "rediger gruppe",
     "languageHint": "AI-genererte kvitteringstitler skrives på dette språket for alle i gruppen.",
     "languageLabel": "Språk",
+    "loadErrorBody": "Sjekk tilkoblingen og prøv igjen.",
+    "loadErrorTitle": "Kunne ikke laste denne gruppen",
     "nameLabel": "Gruppenavn",
     "namePlaceholder": "Gruppenavn",
     "saving": "Lagrer …",
@@ -353,6 +359,8 @@
       "sourceManual": "Egendefinert kurs"
     },
     "loadError": "Kunne ikke laste denne utgiften.",
+    "loadErrorBody": "Sjekk tilkoblingen og prøv igjen.",
+    "loadErrorTitle": "Kunne ikke laste denne utgiften",
     "menuLabel": "Utgiftsmeny",
     "noChanges": "Ingenting endret seg.",
     "noReceipt": "Ingen kvittering vedlagt.",
@@ -416,11 +424,14 @@
   },
   "groupCreated": {
     "body": "Gi telefonen til en venn og la dem skanne.",
+    "copied": "Kopiert",
+    "copyLink": "Kopier lenke",
     "errorLoad": "Kunne ikke laste gruppen",
     "errorTitle": "Noe gikk galt",
     "eyebrow": "gruppe opprettet",
     "goToGroups": "Gå til grupper",
     "open": "Åpne gruppe",
+    "retry": "Prøv igjen",
     "share": "Del invitasjonslenke",
     "shareMessage": "Bli med i «{{name}}» på Chara: {{link}}"
   },
@@ -810,6 +821,8 @@
   },
   "invite": {
     "body": "Venner skanner denne for å bli med.",
+    "copied": "Kopiert",
+    "copy": "Kopier lenke",
     "errorLoad": "Kunne ikke laste gruppen",
     "eyebrow": "inviter",
     "share": "Del invitasjonslenke",
@@ -873,6 +886,8 @@
     "termsOfService": "Vilkår for bruk"
   },
   "members": {
+    "copiedLabel": "Invitasjonslenken er kopiert",
+    "copyLinkLabel": "Kopier invitasjonslenke",
     "count": "medlemmer · {{count}}",
     "count_one": "medlemmer · {{count}}",
     "count_other": "medlemmer · {{count}}",
@@ -883,11 +898,14 @@
     "inviteCta": "Inviter via QR",
     "joined": "ble med {{date}}",
     "joinedWithRole": "ble med {{date}} · {{role}}",
+    "loadErrorBody": "Sjekk tilkoblingen og prøv igjen.",
+    "loadErrorTitle": "Kunne ikke laste medlemmene",
     "role": "rolle",
     "roleMember": "medlem",
     "roleOwner": "eier",
     "roleUnknownJoin": "ble med nylig",
     "shareCta": "Del lenke",
+    "shareErrorTitle": "Kunne ikke hente invitasjonslenken",
     "shareMessage": "Bli med i «{{name}}» på Chara: {{link}}",
     "you": "du"
   },
@@ -981,6 +999,8 @@
     "eyebrow": "automatisering",
     "intervalPrefix": "hver",
     "listHeader": "Faste regninger",
+    "loadErrorBody": "Sjekk tilkoblingen og prøv igjen.",
+    "loadErrorTitle": "Kunne ikke laste faste regninger",
     "newButton": "+ Ny fast regning",
     "pauseButton": "Pause",
     "paused": {
@@ -1003,6 +1023,9 @@
     "resumeAllAfterUnlock": "Fortsett alle",
     "resumeAllBanner_one": "{{count}} regning er på pause fra da gruppen ble låst.",
     "resumeAllBanner_other": "{{count}} regninger er på pause fra da gruppen ble låst.",
+    "resumeAllBusy": "Gjenopptar…",
+    "resumeAllErrorBody": "Gruppen kan fortsatt være låst. Prøv igjen.",
+    "resumeAllErrorTitle": "Kunne ikke gjenoppta",
     "resumeButton": "Fortsett",
     "saveButton": "Lagre",
     "schedule": {
@@ -1207,9 +1230,15 @@
     "legalFooter": "Ved å fortsette godtar du våre <terms>Vilkår for bruk</terms> og <privacy>Personvernerklæring</privacy>.",
     "or": "eller",
     "sending": "Sender …",
+    "useDifferentEmail": "Bruk en annen e-post",
     "useMyServer": "bruk min server →",
     "linkErrorTitle": "Innloggingslenken virket ikke",
-    "linkErrorBody": "Lenken kan ha utløpt eller allerede vært brukt. Be om en ny lenke og prøv igjen."
+    "linkErrorBody": "Lenken kan ha utløpt eller allerede vært brukt. Be om en ny lenke og prøv igjen.",
+    "verifyServer": {
+      "body": "Denne lenken legger til en ny server i Chara. Fortsett bare hvis du ba om det selv.",
+      "continue": "Fortsett",
+      "title": "Logge inn på {{host}}?"
+    }
   },
   "tabs": {
     "activity": "Aktivitet",

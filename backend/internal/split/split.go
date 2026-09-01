@@ -38,14 +38,30 @@ func Equal(total money.Amount, memberIDs []string) ([]MemberShare, error) {
 }
 
 // Exact validates and returns the caller-supplied shares. Returns an error if
-// any share is negative or the shares do not sum to total.
+// any share is negative, any share exceeds money.MaxAmount, or the shares do
+// not sum to total.
+//
+// The per-share bound is what makes the running sum safe: without it, two
+// shares at the int64 ceiling wrap around to any target the caller likes, and
+// a split that does not add up to the expense passes the sum check below.
 func Exact(total money.Amount, shares []MemberShare) ([]MemberShare, error) {
+	if total > money.MaxAmount {
+		return nil, fmt.Errorf("split: total %s exceeds the maximum amount", total)
+	}
 	var sum money.Amount
 	for _, s := range shares {
 		if s.Share < 0 {
 			return nil, fmt.Errorf("split: negative share for member %q", s.MemberID)
 		}
+		if s.Share > money.MaxAmount {
+			return nil, fmt.Errorf("split: share for member %q exceeds the maximum amount", s.MemberID)
+		}
 		sum += s.Share
+		if sum > money.MaxAmount {
+			// Shares are non-negative, so the running sum only grows; once it
+			// passes the cap it can never come back down to total.
+			return nil, fmt.Errorf("split: shares sum above the maximum amount")
+		}
 	}
 	if sum != total {
 		return nil, fmt.Errorf("split: shares sum to %s, expected %s", sum, total)
@@ -59,6 +75,11 @@ func Exact(total money.Amount, shares []MemberShare) ([]MemberShare, error) {
 func Percentage(total money.Amount, pcts []MemberPct) ([]MemberShare, error) {
 	if len(pcts) == 0 {
 		return nil, fmt.Errorf("split: pcts must not be empty")
+	}
+	// total * basisPoints below must stay inside int64. money.MaxAmount is
+	// chosen so that it does; anything larger is rejected rather than wrapped.
+	if total < 0 || total > money.MaxAmount {
+		return nil, fmt.Errorf("split: total %s is out of range", total)
 	}
 	var bpSum int
 	for _, p := range pcts {

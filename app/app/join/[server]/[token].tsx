@@ -14,18 +14,25 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { apiFor, ApiError, publicApi, type InvitePreview } from '@/lib/api';
+import {
+  apiFor,
+  ApiError,
+  hasInviteDetails,
+  publicApi,
+  type InvitePreviewDetails,
+} from '@/lib/api';
 import { ContentContainer } from '@/components/ContentContainer';
 import { useAccount } from '@/lib/accounts';
 import * as analytics from '@/lib/analytics';
 import { showAlert } from '@/lib/app-alert';
 import { runDiscoveryHandshake } from '@/lib/discovery';
 import { checkProtocolCompat } from '@/lib/protocol';
+import { normalizeServerUrl } from '@/lib/server-url';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 
 type State =
   | { kind: 'loading' }
-  | { kind: 'ok'; preview: Extract<InvitePreview, { state: 'ok' | 'locked' }> }
+  | { kind: 'ok'; preview: InvitePreviewDetails }
   | { kind: 'invalid'; reason: 'expired' | 'not_found' | 'archived' | 'deleted' | 'rate_limited' | 'other' }
   | { kind: 'unreachable' }
   | { kind: 'error' };
@@ -40,10 +47,21 @@ function mapNotOk(state: string): Extract<State, { kind: 'invalid' }>['reason'] 
 export default function JoinConfirmScreen() {
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ server: string; token: string }>();
-  const serverUrl = useMemo(
-    () => (typeof params.server === 'string' ? decodeURIComponent(params.server) : ''),
-    [params.server],
-  );
+  // `server` is untrusted — `chara://join/<anything>/<token>` routes straight
+  // here, so an attacker can name their own host and have us fetch and render
+  // an invite card they control. Run it through the canonical normalizer; an
+  // empty result falls into the existing invalid-link state below.
+  const serverUrl = useMemo(() => {
+    if (typeof params.server !== 'string' || !params.server) return '';
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(params.server);
+    } catch {
+      return '';
+    }
+    const normalized = normalizeServerUrl(decoded);
+    return typeof normalized === 'string' ? normalized : '';
+  }, [params.server]);
   const token = typeof params.token === 'string' ? params.token : '';
   const account = useAccount(serverUrl);
 
@@ -67,7 +85,7 @@ export default function JoinConfirmScreen() {
     setState({ kind: 'loading' });
     try {
       const preview = await publicApi(serverUrl).previewInvite(token);
-      if (preview.state === 'ok' || preview.state === 'locked') {
+      if (hasInviteDetails(preview)) {
         setState({ kind: 'ok', preview });
       } else {
         setState({ kind: 'invalid', reason: mapNotOk(preview.state) });

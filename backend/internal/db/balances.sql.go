@@ -97,6 +97,43 @@ func (q *Queries) ListUserBalancesAcrossGroups(ctx context.Context, userID pgtyp
 	return items, nil
 }
 
+const listUserBalancesAcrossGroupsIncludingArchived = `-- name: ListUserBalancesAcrossGroupsIncludingArchived :many
+SELECT mb.group_id, mb.member_id, mb.user_id, mb.currency, mb.net_balance FROM member_balances mb
+JOIN groups g ON g.id = mb.group_id
+WHERE mb.user_id = $1 AND mb.currency IS NOT NULL
+`
+
+// Same as above but WITHOUT the archived filter. Used only by the destructive
+// preconditions (account deletion), where hiding archived groups would be an
+// escape hatch: archiving a group is owner-only and ungated, so a debtor could
+// archive their way past a zero-balance check and leave creditors holding a
+// balance against a deleted ghost.
+func (q *Queries) ListUserBalancesAcrossGroupsIncludingArchived(ctx context.Context, userID pgtype.Text) ([]MemberBalance, error) {
+	rows, err := q.db.Query(ctx, listUserBalancesAcrossGroupsIncludingArchived, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []MemberBalance{}
+	for rows.Next() {
+		var i MemberBalance
+		if err := rows.Scan(
+			&i.GroupID,
+			&i.MemberID,
+			&i.UserID,
+			&i.Currency,
+			&i.NetBalance,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUserLedgerLegs = `-- name: ListUserLedgerLegs :many
 SELECT
     'expense'                                    AS source,

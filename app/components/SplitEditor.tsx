@@ -21,10 +21,11 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { AmountKeypad } from '@/components/AmountKeypad';
+import { Text } from '@/components/Text';
 import { Avatar } from '@/components/Avatar';
 import { avatarImageSourceOn, GroupMember } from '@/lib/api';
 import { currentLocale } from '@/lib/i18n';
@@ -481,6 +482,7 @@ function AutoSplitField({
   unit: string;
   narrow?: boolean;
 }) {
+  const { t } = useTranslation();
   const locked = value !== '';
   return (
     <View style={styles.amountField}>
@@ -509,7 +511,7 @@ function AutoSplitField({
         </TouchableOpacity>
       ) : (
         <View style={styles.autoBadge}>
-          <Text style={styles.autoBadgeLabel}>auto</Text>
+          <Text style={styles.autoBadgeLabel}>{t('addExpense.autoBadge')}</Text>
         </View>
       )}
     </View>

@@ -10,6 +10,8 @@ import {
   Platform,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
+import { hapticWarning } from '@/lib/haptics';
+import { userErrorMessage } from '@/lib/user-error';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -88,6 +90,7 @@ export default function YouScreen() {
   const [storedLanguage, setStoredLanguage] = useState<string | null>(null);
   const [avatarToken, setAvatarToken] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -138,7 +141,10 @@ export default function YouScreen() {
       if (e instanceof ApiError && e.status === 413) {
         showAlert({ title: t('you.avatar.tooLargeTitle'), message: t('you.avatar.tooLargeBody') });
       } else {
-        showAlert({ title: t('common.error'), message: e instanceof Error ? e.message : String(e) });
+        showAlert({
+          title: t('common.error'),
+          message: userErrorMessage(e, t('common.requestFailed')),
+        });
       }
     } finally {
       setUploading(false);
@@ -187,7 +193,10 @@ export default function YouScreen() {
       await apiDeleteAvatar();
       await refreshUser();
     } catch (e) {
-      showAlert({ title: t('common.error'), message: e instanceof Error ? e.message : String(e) });
+      showAlert({
+        title: t('common.error'),
+        message: userErrorMessage(e, t('common.requestFailed')),
+      });
     } finally {
       setUploading(false);
     }
@@ -281,6 +290,7 @@ export default function YouScreen() {
   }
 
   async function handleSignOutPress() {
+    if (signingOut) return;
     // Best-effort open-balance check. Unlike per-account Remove, sign-out
     // doesn't block — Lucas wants the user to always be able to sign out;
     // we just warn when there's an unsettled balance so it's not a surprise.
@@ -327,16 +337,25 @@ export default function YouScreen() {
       void signOut();
       return;
     }
-    for (const account of accounts) {
-      try {
-        await apiFor(account.serverUrl).logout();
-      } catch {
-        /* best-effort */
+    // The fan-out below is one network round trip per linked server, so it can
+    // run for a while. Without a busy flag the row stays tappable and a second
+    // tap starts a second pass over a list the first one is mutating.
+    setSigningOut(true);
+    try {
+      for (const account of accounts) {
+        try {
+          await apiFor(account.serverUrl).logout();
+        } catch {
+          /* best-effort */
+        }
+        // Spec §15: deregister push token before forgetting the account.
+        await unregisterForAccount(account.serverUrl);
+        await removeAccount(account.serverUrl);
       }
-      // Spec §15: deregister push token before forgetting the account.
-      await unregisterForAccount(account.serverUrl);
-      await removeAccount(account.serverUrl);
+    } finally {
+      setSigningOut(false);
     }
+    hapticWarning();
     router.replace('/(auth)/sign-in');
   }
 
@@ -439,7 +458,10 @@ export default function YouScreen() {
         message: t('you.shareMessage'),
       });
     } catch (e: any) {
-      showAlert({ title: t('common.error'), message: e?.message || String(e) });
+      showAlert({
+        title: t('common.error'),
+        message: userErrorMessage(e, t('common.requestFailed')),
+      });
     }
   }
 
@@ -594,6 +616,7 @@ export default function YouScreen() {
             onPress={handleSignOutPress}
             destructive
             showChevron={false}
+            disabled={signingOut}
           />
           {accountCount > 0 && (
             <NavRow
@@ -645,16 +668,22 @@ function NavRow({
   onPress,
   destructive,
   showChevron = true,
+  disabled = false,
 }: {
   label: string;
   value?: string;
   onPress: () => void;
   destructive?: boolean;
   showChevron?: boolean;
+  disabled?: boolean;
 }) {
   const labelColor = destructive ? colors.brick : colors.graphite;
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={[styles.row, disabled && { opacity: 0.45 }]}
+      onPress={onPress}
+      activeOpacity={0.7}
+      disabled={disabled}>
       <Text style={[styles.rowLabel, { color: labelColor }]}>{label}</Text>
       <View style={styles.rowRight}>
         {value && <Text style={styles.rowValue}>{value}</Text>}

@@ -51,7 +51,11 @@ services:
       chara-minio:
         condition: service_healthy
     ports:
-      - "${API_BIND:-0.0.0.0}:${API_PORT:-8080}:8080"
+      # Loopback by default: publishing on 0.0.0.0 puts the API on the internet
+      # in cleartext, and Docker's iptables rules sit in front of ufw/firewalld
+      # so a host firewall won't stop it. setup.sh writes 0.0.0.0 only for the
+      # home-Wi-Fi mode, where phones talk to this port directly.
+      - "${API_BIND:-127.0.0.1}:${API_PORT:-8080}:8080"
     environment:
       DATABASE_URL: postgres://chara:${POSTGRES_PASSWORD}@chara-postgres:5432/chara?sslmode=disable
       INSTANCE_MODE: selfhost

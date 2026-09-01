@@ -2,6 +2,18 @@ import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import type { MigrationStorage } from './migrate-legacy-auth';
 
+// Web has no keychain equivalent, so the accounts blob — access token plus a
+// year-long refresh token — lands in `localStorage`, readable by any script
+// running on the origin. That makes an XSS on the web build a full account
+// takeover, not just a session hijack, and nothing here can prevent it:
+// sessionStorage has the same exposure, and an httpOnly cookie would need
+// backend support the API doesn't have.
+//
+// The mitigation is to keep foreign script out of the origin in the first
+// place — see the Content-Security-Policy in `app/+html.tsx`. Anything added
+// to the web build that loads third-party script (an analytics snippet, a
+// widget, a CDN font loader) widens this hole and needs the CSP loosened to
+// allow it, which is the moment to reconsider.
 const webStorage: MigrationStorage = {
   async getItem(key) {
     return typeof localStorage === 'undefined' ? null : localStorage.getItem(key);

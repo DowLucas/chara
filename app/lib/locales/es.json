@@ -124,6 +124,7 @@
     "amount": "monto",
     "amountPlaceholder": "0",
     "amountsLabel": "montos",
+    "autoBadge": "auto",
     "autoFillHint": "las filas vacías dividen el resto equitativamente",
     "back": "Atrás",
     "between": "entre",
@@ -245,7 +246,8 @@
       "body": "Los grupos que archives aparecerán aquí. Puedes reabrir uno desde sus ajustes.",
       "title": "No hay grupos archivados"
     },
-    "loadError": "No se pudieron cargar los grupos archivados. Vuelve atrás e inténtalo de nuevo.",
+    "loadError": "No se han podido cargar los grupos archivados.",
+    "retry": "Reintentar",
     "title": "Grupos archivados"
   },
   "categories": {
@@ -282,7 +284,9 @@
     "loading": "Cargando…",
     "mainServerInfoLabel": "Acerca de Chara Cloud",
     "mainServerLabel": "Servidor Chara",
+    "networkError": "Estás sin conexión. Comprueba tu conexión e inténtalo de nuevo.",
     "ok": "OK",
+    "retry": "Reintentar",
     "save": "Guardar",
     "saving": "Guardando…",
     "requestFailed": "Algo salió mal. Inténtalo de nuevo.",
@@ -325,6 +329,8 @@
     "eyebrow": "editar grupo",
     "languageHint": "Los títulos de recibos generados por IA se escribirán en este idioma para todos en el grupo.",
     "languageLabel": "Idioma",
+    "loadErrorBody": "Comprueba tu conexión e inténtalo de nuevo.",
+    "loadErrorTitle": "No se ha podido cargar este grupo",
     "nameLabel": "Nombre del grupo",
     "namePlaceholder": "Nombre del grupo",
     "saving": "Guardando…",
@@ -359,6 +365,8 @@
       "sourceManual": "Tasa personalizada"
     },
     "loadError": "No se pudo cargar este gasto.",
+    "loadErrorBody": "Comprueba tu conexión e inténtalo de nuevo.",
+    "loadErrorTitle": "No se ha podido cargar este gasto",
     "menuLabel": "Menú de gasto",
     "noChanges": "Nada cambió.",
     "noReceipt": "No hay recibo adjunto.",
@@ -422,11 +430,14 @@
   },
   "groupCreated": {
     "body": "Pásale tu teléfono a un amigo para que escanee.",
+    "copied": "Copiado",
+    "copyLink": "Copiar enlace",
     "errorLoad": "No se pudo cargar el grupo",
     "errorTitle": "Algo salió mal",
     "eyebrow": "grupo creado",
     "goToGroups": "Ir a grupos",
     "open": "Abrir grupo",
+    "retry": "Reintentar",
     "share": "Compartir enlace de invitación",
     "shareMessage": "Únete a \"{{name}}\" en Chara: {{link}}"
   },
@@ -832,6 +843,8 @@
   },
   "invite": {
     "body": "Los amigos lo escanean para unirse.",
+    "copied": "Copiado",
+    "copy": "Copiar enlace",
     "errorLoad": "No se pudo cargar el grupo",
     "eyebrow": "invitación",
     "share": "Compartir enlace de invitación",
@@ -896,6 +909,8 @@
     "termsOfService": "Términos del servicio"
   },
   "members": {
+    "copiedLabel": "Enlace de invitación copiado",
+    "copyLinkLabel": "Copiar enlace de invitación",
     "count": "miembros · {{count}}",
     "count_many": "miembros · {{count}}",
     "count_one": "miembros · {{count}}",
@@ -907,11 +922,14 @@
     "inviteCta": "Invitar por QR",
     "joined": "se unió el {{date}}",
     "joinedWithRole": "se unió el {{date}} · {{role}}",
+    "loadErrorBody": "Comprueba tu conexión e inténtalo de nuevo.",
+    "loadErrorTitle": "No se han podido cargar los miembros",
     "role": "rol",
     "roleMember": "miembro",
     "roleOwner": "propietario",
     "roleUnknownJoin": "se unió recientemente",
     "shareCta": "Compartir enlace",
+    "shareErrorTitle": "No se ha podido obtener el enlace de invitación",
     "shareMessage": "Únete a \"{{name}}\" en Chara: {{link}}",
     "you": "tú"
   },
@@ -1005,6 +1023,8 @@
     "eyebrow": "automatización",
     "intervalPrefix": "cada",
     "listHeader": "Facturas recurrentes",
+    "loadErrorBody": "Comprueba tu conexión e inténtalo de nuevo.",
+    "loadErrorTitle": "No se han podido cargar los gastos recurrentes",
     "newButton": "+ Nueva factura recurrente",
     "pauseButton": "Pausar",
     "paused": {
@@ -1029,6 +1049,9 @@
     "resumeAllBanner_many": "{{count}} facturas están en pausa desde que se bloqueó el grupo.",
     "resumeAllBanner_one": "{{count}} factura está en pausa desde que se bloqueó el grupo.",
     "resumeAllBanner_other": "{{count}} facturas están en pausa desde que se bloqueó el grupo.",
+    "resumeAllBusy": "Reanudando…",
+    "resumeAllErrorBody": "Puede que el grupo siga bloqueado. Inténtalo de nuevo.",
+    "resumeAllErrorTitle": "No se ha podido reanudar",
     "resumeButton": "Reanudar",
     "saveButton": "Guardar",
     "schedule": {
@@ -1247,9 +1270,15 @@
     "legalFooter": "Al continuar, aceptas nuestros <terms>Términos del servicio</terms> y nuestra <privacy>Política de privacidad</privacy>.",
     "or": "o",
     "sending": "Enviando…",
+    "useDifferentEmail": "Usar otro correo",
     "useMyServer": "usar mi servidor →",
     "linkErrorTitle": "El enlace de acceso no funcionó",
-    "linkErrorBody": "Es posible que el enlace haya caducado o ya se haya usado. Solicita un nuevo enlace e inténtalo de nuevo."
+    "linkErrorBody": "Es posible que el enlace haya caducado o ya se haya usado. Solicita un nuevo enlace e inténtalo de nuevo.",
+    "verifyServer": {
+      "body": "Este enlace añadirá un servidor nuevo a Chara. Continúa solo si lo has solicitado tú.",
+      "continue": "Continuar",
+      "title": "¿Iniciar sesión en {{host}}?"
+    }
   },
   "tabs": {
     "activity": "Actividad",

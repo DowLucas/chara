@@ -1,5 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, Modal, Linking } from 'react-native';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Modal,
+  Linking,
+  ActivityIndicator,
+} from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -8,10 +17,14 @@ import { TopBar } from '@/components/TopBar';
 import { ContentContainer } from '@/components/ContentContainer';
 import { IconButton } from '@/components/IconButton';
 import { Avatar } from '@/components/Avatar';
+import { Button } from '@/components/Button';
+import { EmptyState } from '@/components/EmptyState';
+import { Text } from '@/components/Text';
 import { ActionSheet, ActionSheetOption, openNativeActionSheet } from '@/components/ActionSheet';
 import { MoneyText } from '@/components/MoneyText';
 import { SettlementImpactSheet } from '@/components/SettlementImpactSheet';
 import { showAlert } from '@/lib/app-alert';
+import { userErrorMessage } from '@/lib/user-error';
 import { openPdfExternally, stagePdf } from '@/lib/receipt-open';
 import { PdfView, canRenderPdfInline } from '@/components/PdfView';
 import { hapticWarning } from '@/lib/haptics';
@@ -64,34 +77,41 @@ export default function ExpenseDetailScreen() {
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
+  const [loadError, setLoadError] = useState(false);
   const isAuthor = !!user && !!expense && user.id === expense.created_by_id;
+
+  const load = useCallback(async () => {
+    if (!id || !groupId || !serverUrl) return;
+    const [eRes, gRes, aRes, sRes] = await Promise.allSettled([
+      api.getExpense(groupId, id),
+      api.getGroup(groupId),
+      api.listExpenseAttachments(groupId, id),
+      api.listSettlements(groupId),
+    ]);
+    // The expense itself is the screen — a rejection here has to surface,
+    // otherwise the spinner spins forever.
+    if (eRes.status === 'fulfilled') {
+      setExpense(eRes.value);
+      setLoadError(false);
+    } else {
+      setLoadError(true);
+    }
+    if (gRes.status === 'fulfilled') {
+      setGroup(gRes.value);
+      setMembers(gRes.value.members);
+    }
+    if (aRes.status === 'fulfilled') setAttachments(aRes.value);
+    if (sRes.status === 'fulfilled') setSettlements(sRes.value);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, groupId, serverUrl]);
 
   // Load on focus so returning from the edit screen reflects fresh data.
   // The project has no SWR/React Query layer — this is the cheapest
   // mechanism that keeps the detail screen in sync after a save.
   useFocusEffect(
     useCallback(() => {
-      if (!id || !groupId || !serverUrl) return;
-      let cancelled = false;
-      Promise.allSettled([
-        api.getExpense(groupId, id),
-        api.getGroup(groupId),
-        api.listExpenseAttachments(groupId, id),
-        api.listSettlements(groupId),
-      ]).then(([eRes, gRes, aRes, sRes]) => {
-        if (cancelled) return;
-        if (eRes.status === 'fulfilled') setExpense(eRes.value);
-        if (gRes.status === 'fulfilled') {
-          setGroup(gRes.value);
-          setMembers(gRes.value.members);
-        }
-        if (aRes.status === 'fulfilled') setAttachments(aRes.value);
-        if (sRes.status === 'fulfilled') setSettlements(sRes.value);
-      });
-      return () => {
-        cancelled = true;
-      };
-    }, [id, groupId, serverUrl]),
+      void load();
+    }, [load]),
   );
 
   function inferReceiptMime(asset: ImagePicker.ImagePickerAsset): string {
@@ -132,7 +152,7 @@ export default function ExpenseDetailScreen() {
     } catch (e) {
       showAlert({
         title: t('common.error'),
-        message: e instanceof Error ? e.message : String(e),
+        message: userErrorMessage(e, t('common.requestFailed')),
       });
     } finally {
       setUploadingReceipt(false);
@@ -277,7 +297,20 @@ export default function ExpenseDetailScreen() {
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <TopBar left={<IconButton icon="arrow-left" onPress={() => router.back()} label={t('common.back')} />} />
         <View style={styles.loading}>
-          <Text style={styles.loadingText}>{t('common.loading')}</Text>
+          {loadError ? (
+            <View style={styles.loadErrorInner}>
+              <EmptyState
+                title={t('expenseDetail.loadErrorTitle')}
+                body={t('expenseDetail.loadErrorBody')}
+                icon="alert-circle"
+              />
+              <Button kind="secondary" onPress={() => void load()}>
+                {t('common.retry')}
+              </Button>
+            </View>
+          ) : (
+            <ActivityIndicator color={colors.graphite} />
+          )}
         </View>
       </View>
     );
@@ -633,8 +666,13 @@ function SplitRow({ name, initials, share, currency, avatarSource }: SplitRowPro
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  loadingText: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.s5,
+  },
+  loadErrorInner: { alignItems: 'center', gap: spacing.s4 },
   header: { paddingHorizontal: spacing.s5, paddingTop: spacing.s5 },
   context: {
     fontFamily: fontMono,

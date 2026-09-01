@@ -1788,6 +1788,26 @@ export type InvitePreview =
     }
   | { state: 'expired' | 'not_found' | 'archived' | 'deleted' | 'rate_limited' | string };
 
+/** The branch of [InvitePreview] that actually carries group details. */
+export type InvitePreviewDetails = Extract<InvitePreview, { groupName: string }>;
+
+/**
+ * Narrow an [InvitePreview] to the branch with group details.
+ *
+ * The union cannot discriminate on `state` alone: the not-available branch is
+ * open (`| string`) so a future server can return a state this build has never
+ * heard of, which means TypeScript must assume that branch could also carry
+ * `state: 'ok'`. Checking for a field only the detailed branch has is both
+ * type-sound and a genuine runtime guard against a server that sends `ok`
+ * without the accompanying data.
+ */
+export function hasInviteDetails(p: InvitePreview): p is InvitePreviewDetails {
+  return (
+    (p.state === 'ok' || p.state === 'locked') &&
+    typeof (p as Partial<InvitePreviewDetails>).groupName === 'string'
+  );
+}
+
 export function publicApi(serverUrl: string) {
   return {
     instanceInfo: () =>

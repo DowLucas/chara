@@ -98,3 +98,40 @@ export function classifyGroupDeepLink(
 
   return { kind: 'navigate', serverUrl: normalized, groupId, target };
 }
+
+/**
+ * How much trust a magic-link verify deep link's `server` param has earned.
+ *
+ *   known   — we already hold an account for it; adopting a token for it is
+ *             the ordinary same-device sign-in / reauth case.
+ *   hosted  — Chara Cloud (or whatever `hostedUrl` this build ships), which
+ *             first-launch sign-in targets anyway. Also the verdict when no
+ *             `server` param was supplied at all, since the screen defaults
+ *             to the hosted URL.
+ *   unknown — a server the user has never signed into. Verifying against it
+ *             would persist an account and fan the device's Expo push token
+ *             out to an attacker-chosen host, so the screen must ask first.
+ *   invalid — not a usable server identity at all; drop the link.
+ *
+ * Pure so the decision is unit-testable away from the sign-in screen; the
+ * screen only maps the verdict onto a prompt / navigation.
+ */
+export type VerifyTarget = 'known' | 'hosted' | 'unknown' | 'invalid';
+
+export function classifyVerifyTarget(
+  serverUrl: string | null | undefined,
+  knownServerUrls: string[],
+  hostedUrl: string,
+): VerifyTarget {
+  if (!serverUrl) return 'hosted';
+
+  const normalized = normalizeServerUrl(serverUrl);
+  if (typeof normalized !== 'string') return 'invalid';
+
+  if (knownServerUrls.includes(normalized)) return 'known';
+
+  const hosted = normalizeServerUrl(hostedUrl);
+  if (typeof hosted === 'string' && hosted === normalized) return 'hosted';
+
+  return 'unknown';
+}

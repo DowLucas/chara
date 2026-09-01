@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
-import { StyleSheet, Text, type TextProps, type TextStyle } from 'react-native';
+import { StyleSheet, type TextProps, type TextStyle } from 'react-native';
 
+import { Text } from '@/components/Text';
 import { fontBody } from '@/lib/theme';
 
 type Props = TextProps & {

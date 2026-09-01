@@ -22,7 +22,7 @@ jest.mock('expo-secure-store', () => ({
   deleteItemAsync: async () => undefined,
 }));
 
-import { classifyGroupDeepLink } from '../deep-link';
+import { classifyGroupDeepLink, classifyVerifyTarget } from '../deep-link';
 import type { Account } from '../accounts-store';
 
 function makeAccount(serverUrl: string): Account {
@@ -157,5 +157,59 @@ describe('classifyGroupDeepLink', () => {
     expect(classifyGroupDeepLink(null, { accounts: [], isLoaded: true }).kind).toBe('ignore');
     expect(classifyGroupDeepLink(undefined, { accounts: [], isLoaded: true }).kind).toBe('ignore');
     expect(classifyGroupDeepLink('', { accounts: [], isLoaded: true }).kind).toBe('ignore');
+  });
+});
+
+/**
+ * A magic-link deep link (`chara://verify?token=…&server=…`, or the route
+ * `chara://sign-in?verifyToken=…&server=…` that bypasses the layout handler)
+ * carries an attacker-controllable server. Auto-verifying against it would
+ * persist an account for that server and fan the device's Expo push token out
+ * to it. Only a server we already hold an account for, or the hosted server,
+ * may be adopted without asking.
+ */
+describe('classifyVerifyTarget', () => {
+  const HOSTED = 'https://hosted.example';
+
+  it('classifies a server we already have an account for as "known"', () => {
+    expect(
+      classifyVerifyTarget('https://api.example.com', ['https://api.example.com'], HOSTED),
+    ).toBe('known');
+  });
+
+  it('normalizes before matching (trailing slash / uppercase host)', () => {
+    expect(
+      classifyVerifyTarget('https://API.Example.com/', ['https://api.example.com'], HOSTED),
+    ).toBe('known');
+  });
+
+  it('classifies the hosted server as "hosted" even with no accounts', () => {
+    expect(classifyVerifyTarget(HOSTED, [], HOSTED)).toBe('hosted');
+    expect(classifyVerifyTarget(`${HOSTED}/`, [], HOSTED)).toBe('hosted');
+  });
+
+  it('treats a missing server param as the hosted default', () => {
+    expect(classifyVerifyTarget(null, [], HOSTED)).toBe('hosted');
+    expect(classifyVerifyTarget(undefined, [], HOSTED)).toBe('hosted');
+    expect(classifyVerifyTarget('', [], HOSTED)).toBe('hosted');
+  });
+
+  it('classifies any other server as "unknown"', () => {
+    expect(classifyVerifyTarget('https://evil.example', ['https://api.example.com'], HOSTED)).toBe(
+      'unknown',
+    );
+  });
+
+  it('classifies un-normalizable input as "invalid"', () => {
+    expect(classifyVerifyTarget('not-a-url', [], HOSTED)).toBe('invalid');
+    expect(classifyVerifyTarget('javascript:alert(1)', [], HOSTED)).toBe('invalid');
+    // plain http on a public host is rejected by normalizeServerUrl
+    expect(classifyVerifyTarget('http://evil.example', [], HOSTED)).toBe('invalid');
+    // a path is not part of the canonical server-identity form
+    expect(classifyVerifyTarget('https://evil.example/x', [], HOSTED)).toBe('invalid');
+  });
+
+  it('does not fall back to "hosted" when the hosted URL itself is unusable', () => {
+    expect(classifyVerifyTarget('https://evil.example', [], 'not-a-url')).toBe('unknown');
   });
 });

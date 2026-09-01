@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { showAlert } from '@/lib/app-alert';
+import { hapticSuccess } from '@/lib/haptics';
 import { Text as AppText } from '@/components/Text';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
@@ -462,6 +463,7 @@ export default function AddExpenseScreen() {
       }
 
       const amountMinor = Math.round(parseFloat(payload.amount) * 100);
+      hapticSuccess();
       setSavedSubtitle(`${payload.title} · ${fmtMinor(amountMinor, payload.currency)}`);
     } catch (e: any) {
       showAlert({

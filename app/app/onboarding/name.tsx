@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -9,13 +8,16 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+import { Text } from '@/components/Text';
 import { showAlert } from '@/lib/app-alert';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useEnglishT } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
-import { updateMe } from '@/lib/api';
+import { useAccount, useAccounts, useDefaultAccount } from '@/lib/accounts';
+import { apiFor } from '@/lib/api';
+import { userErrorMessage } from '@/lib/user-error';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 import * as analytics from '@/lib/analytics';
 import { ContentContainer } from '@/components/ContentContainer';
@@ -23,7 +25,20 @@ import { ContentContainer } from '@/components/ContentContainer';
 export default function OnboardingNameScreen() {
   const insets = useSafeAreaInsets();
   const t = useEnglishT();
-  const { user, setUser, signOut } = useAuth();
+  // Profile writes target the account being edited, not the default one:
+  // Settings → Accounts pushes `?server=<encoded url>` for the card that was
+  // tapped. First-launch onboarding has no param — fall back to the default
+  // account, which is the only one that exists at that point.
+  const { server } = useLocalSearchParams<{ server?: string }>();
+  const serverUrl = server ? decodeURIComponent(server) : null;
+  const targetedAccount = useAccount(serverUrl);
+  const defaultAccount = useDefaultAccount();
+  const account = serverUrl ? targetedAccount : defaultAccount;
+  const { updateAccount } = useAccounts();
+  // `signOut` (sign out of *every* account) only exists on the legacy shim;
+  // there is no per-account equivalent to call here.
+  const { signOut } = useAuth();
+  const user = account?.user ?? null;
   const [name, setName] = useState(user?.name ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
   const [submitting, setSubmitting] = useState(false);
@@ -32,7 +47,7 @@ export default function OnboardingNameScreen() {
   // Phone is optional — it only powers Swish/Vipps settle deep-links, a
   // non-essential feature. Apple 5.1.1(v): don't require info the core
   // app doesn't need. Name is the only gate.
-  const canSubmit = name.trim().length > 0 && !submitting;
+  const canSubmit = name.trim().length > 0 && !submitting && account !== null;
 
   async function handleSignOut() {
     const r = await showAlert({
@@ -60,17 +75,24 @@ export default function OnboardingNameScreen() {
       showAlert({ title: t('onboardingName.errorTitle'), message: t('onboardingName.errorEmpty') });
       return;
     }
+    if (!account) return;
     setSubmitting(true);
     try {
       // Omit phone when blank — the backend rejects an empty string but
       // treats an absent field as "leave unchanged".
-      const updated = await updateMe({ name: trimmedName, phone: trimmedPhone || undefined });
-      setUser(updated);
+      const updated = await apiFor(account.serverUrl).updateMe({
+        name: trimmedName,
+        phone: trimmedPhone || undefined,
+      });
+      await updateAccount(account.serverUrl, { user: updated });
       analytics.track('user_name_entered');
       if (router.canGoBack()) router.back();
       else router.replace('/onboarding');
-    } catch (e: any) {
-      showAlert({ title: t('onboardingName.errorTitle'), message: e?.message || String(e) });
+    } catch (e) {
+      showAlert({
+        title: t('onboardingName.errorTitle'),
+        message: userErrorMessage(e, t('common.requestFailed')),
+      });
     } finally {
       setSubmitting(false);
     }

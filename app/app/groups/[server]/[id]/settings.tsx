@@ -21,7 +21,7 @@ import {
   View,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
-import { hapticWarning } from '@/lib/haptics';
+import { hapticSuccess, hapticWarning } from '@/lib/haptics';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -159,9 +159,11 @@ export default function GroupSettingsScreen() {
     try {
       if (isArchived) {
         const next = await api.unarchiveGroup(group.id);
+        hapticSuccess();
         setGroup({ ...group, ...next });
       } else {
         await api.archiveGroup(group.id);
+        hapticWarning();
         router.replace('/(tabs)');
       }
     } catch (e: any) {

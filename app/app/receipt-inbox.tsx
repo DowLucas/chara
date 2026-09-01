@@ -8,12 +8,13 @@
  */
 
 import React, { useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
+import { Text } from '@/components/Text';
 import { useAccounts } from '@/lib/accounts';
 import { useAggregatedGroups } from '@/lib/aggregated-reads';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
@@ -90,6 +91,11 @@ export default function ReceiptInbox() {
 
       <Text style={styles.eyebrow}>{t('receiptInbox.whichGroup')}</Text>
       <View style={styles.list}>
+        {loading && choices.length === 0 ? (
+          <View style={styles.listLoading}>
+            <ActivityIndicator color={colors.graphite} />
+          </View>
+        ) : null}
         {choices.map((c) => (
           <TouchableOpacity
             key={`${c.serverUrl}:${c.groupId}`}
@@ -174,6 +180,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.s4,
     borderBottomWidth: 1,
     borderBottomColor: colors.ruleSoft,
+  },
+  listLoading: {
+    paddingVertical: spacing.s6,
+    alignItems: 'center',
   },
   rowText: { flex: 1, gap: 2 },
   rowLabel: { fontFamily: fontDisplay, fontSize: fontSize.body, color: colors.graphite },

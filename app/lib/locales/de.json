@@ -120,6 +120,7 @@
     "amount": "Betrag",
     "amountPlaceholder": "0",
     "amountsLabel": "Beträge",
+    "autoBadge": "auto",
     "autoFillHint": "Leere Zeilen teilen den Rest gleichmäßig auf",
     "back": "Zurück",
     "between": "zwischen",
@@ -239,7 +240,8 @@
       "body": "Gruppen, die du archivierst, erscheinen hier. Du kannst sie über ihre Einstellungen wieder einblenden.",
       "title": "Keine archivierten Gruppen"
     },
-    "loadError": "Archivierte Gruppen nicht geladen. Zurückziehen und nochmal versuchen.",
+    "loadError": "Archivierte Gruppen konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
     "title": "Archivierte Gruppen"
   },
   "categories": {
@@ -276,7 +278,9 @@
     "loading": "Lädt…",
     "mainServerInfoLabel": "Über Chara Cloud",
     "mainServerLabel": "Chara Server",
+    "networkError": "Du bist offline. Prüfe deine Verbindung und versuche es erneut.",
     "ok": "OK",
+    "retry": "Erneut versuchen",
     "save": "Speichern",
     "saving": "Speichert…",
     "requestFailed": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
@@ -319,6 +323,8 @@
     "eyebrow": "Gruppe bearbeiten",
     "languageHint": "KI-generierte Belegtitel werden für alle Mitglieder in dieser Sprache erstellt.",
     "languageLabel": "Sprache",
+    "loadErrorBody": "Prüfe deine Verbindung und versuche es erneut.",
+    "loadErrorTitle": "Diese Gruppe konnte nicht geladen werden",
     "nameLabel": "Gruppenname",
     "namePlaceholder": "Gruppenname",
     "saving": "Speichert…",
@@ -353,6 +359,8 @@
       "sourceManual": "Eigener Kurs"
     },
     "loadError": "Ausgabe nicht geladen.",
+    "loadErrorBody": "Prüfe deine Verbindung und versuche es erneut.",
+    "loadErrorTitle": "Diese Ausgabe konnte nicht geladen werden",
     "menuLabel": "Ausgabenmenü",
     "noChanges": "Nichts geändert.",
     "noReceipt": "Kein Beleg angehängt.",
@@ -416,11 +424,14 @@
   },
   "groupCreated": {
     "body": "Gib dein Handy weiter – Freunde scannen einfach den Code.",
+    "copied": "Kopiert",
+    "copyLink": "Link kopieren",
     "errorLoad": "Gruppe nicht geladen",
     "errorTitle": "Da ging was schief",
     "eyebrow": "Gruppe angelegt",
     "goToGroups": "Zu den Gruppen",
     "open": "Gruppe öffnen",
+    "retry": "Erneut versuchen",
     "share": "Einladungslink teilen",
     "shareMessage": "Tritt „{{name}}“ auf Chara bei: {{link}}"
   },
@@ -810,6 +821,8 @@
   },
   "invite": {
     "body": "Freunde scannen den Code zum Beitreten.",
+    "copied": "Kopiert",
+    "copy": "Link kopieren",
     "errorLoad": "Gruppe nicht geladen",
     "eyebrow": "einladen",
     "share": "Einladungslink teilen",
@@ -873,6 +886,8 @@
     "termsOfService": "Nutzungsbedingungen"
   },
   "members": {
+    "copiedLabel": "Einladungslink kopiert",
+    "copyLinkLabel": "Einladungslink kopieren",
     "count": "Mitglieder · {{count}}",
     "count_one": "Mitglieder · {{count}}",
     "count_other": "Mitglieder · {{count}}",
@@ -883,11 +898,14 @@
     "inviteCta": "Per QR einladen",
     "joined": "beigetreten am {{date}}",
     "joinedWithRole": "beigetreten am {{date}} · {{role}}",
+    "loadErrorBody": "Prüfe deine Verbindung und versuche es erneut.",
+    "loadErrorTitle": "Mitglieder konnten nicht geladen werden",
     "role": "Rolle",
     "roleMember": "Mitglied",
     "roleOwner": "Eigentümer",
     "roleUnknownJoin": "kürzlich beigetreten",
     "shareCta": "Link teilen",
+    "shareErrorTitle": "Einladungslink konnte nicht geladen werden",
     "shareMessage": "Tritt „{{name}}“ auf Chara bei: {{link}}",
     "you": "du"
   },
@@ -981,6 +999,8 @@
     "eyebrow": "automatisierung",
     "intervalPrefix": "alle",
     "listHeader": "Wiederkehrende Rechnungen",
+    "loadErrorBody": "Prüfe deine Verbindung und versuche es erneut.",
+    "loadErrorTitle": "Wiederkehrende Rechnungen konnten nicht geladen werden",
     "newButton": "+ Neue wiederkehrende Rechnung",
     "pauseButton": "Pausieren",
     "paused": {
@@ -1003,6 +1023,9 @@
     "resumeAllAfterUnlock": "Alle fortsetzen",
     "resumeAllBanner_one": "{{count}} Rechnung ist pausiert, seit die Gruppe gesperrt wurde.",
     "resumeAllBanner_other": "{{count}} Rechnungen sind pausiert, seit die Gruppe gesperrt wurde.",
+    "resumeAllBusy": "Wird fortgesetzt…",
+    "resumeAllErrorBody": "Die Gruppe ist möglicherweise noch gesperrt. Versuche es erneut.",
+    "resumeAllErrorTitle": "Fortsetzen fehlgeschlagen",
     "resumeButton": "Fortsetzen",
     "saveButton": "Speichern",
     "schedule": {
@@ -1207,9 +1230,15 @@
     "legalFooter": "Mit „Weiter“ akzeptierst du unsere <terms>Nutzungsbedingungen</terms> und unsere <privacy>Datenschutzerklärung</privacy>.",
     "or": "oder",
     "sending": "Sendet…",
+    "useDifferentEmail": "Andere E-Mail-Adresse verwenden",
     "useMyServer": "eigenen Server nutzen →",
     "linkErrorTitle": "Anmeldelink hat nicht funktioniert",
-    "linkErrorBody": "Dieser Link ist möglicherweise abgelaufen oder wurde bereits verwendet. Fordere einen neuen Link an und versuche es erneut."
+    "linkErrorBody": "Dieser Link ist möglicherweise abgelaufen oder wurde bereits verwendet. Fordere einen neuen Link an und versuche es erneut.",
+    "verifyServer": {
+      "body": "Dieser Link fügt Chara einen neuen Server hinzu. Fahre nur fort, wenn du das angefordert hast.",
+      "continue": "Weiter",
+      "title": "Bei {{host}} anmelden?"
+    }
   },
   "tabs": {
     "activity": "Aktivität",

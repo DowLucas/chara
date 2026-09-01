@@ -123,7 +123,11 @@ export default function GroupActivityScreen() {
       <ScrollView
         style={styles.scroll}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.graphite}
+          />
         }
       >
         <ContentContainer>

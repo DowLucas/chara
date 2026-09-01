@@ -11,6 +11,16 @@ SELECT mb.* FROM member_balances mb
 JOIN groups g ON g.id = mb.group_id
 WHERE mb.user_id = $1 AND mb.currency IS NOT NULL AND NOT g.is_archived;
 
+-- Same as above but WITHOUT the archived filter. Used only by the destructive
+-- preconditions (account deletion), where hiding archived groups would be an
+-- escape hatch: archiving a group is owner-only and ungated, so a debtor could
+-- archive their way past a zero-balance check and leave creditors holding a
+-- balance against a deleted ghost.
+-- name: ListUserBalancesAcrossGroupsIncludingArchived :many
+SELECT mb.* FROM member_balances mb
+JOIN groups g ON g.id = mb.group_id
+WHERE mb.user_id = $1 AND mb.currency IS NOT NULL;
+
 -- name: ListUserLedgerLegs :many
 -- Per-leg ledger entries that contribute to a user's net across every group
 -- they're a member of. Each row is denominated in the row's canonical

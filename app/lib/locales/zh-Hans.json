@@ -120,6 +120,7 @@
     "amount": "金额",
     "amountPlaceholder": "0",
     "amountsLabel": "金额",
+    "autoBadge": "自动",
     "autoFillHint": "留空的人将平摊剩余金额",
     "back": "返回",
     "between": "参与人",
@@ -239,7 +240,8 @@
       "body": "你归档的群组会显示在这里，可在其设置中重新打开。",
       "title": "暂无已归档群组"
     },
-    "loadError": "无法加载已归档群组，请下拉重试。",
+    "loadError": "无法加载已归档的群组。",
+    "retry": "重试",
     "title": "已归档群组"
   },
   "categories": {
@@ -276,7 +278,9 @@
     "loading": "加载中……",
     "mainServerInfoLabel": "关于 Chara Cloud",
     "mainServerLabel": "Chara 服务器",
+    "networkError": "当前处于离线状态。请检查网络连接后重试。",
     "ok": "好",
+    "retry": "重试",
     "save": "保存",
     "saving": "保存中……",
     "requestFailed": "出了点问题，请重试。",
@@ -319,6 +323,8 @@
     "eyebrow": "编辑群组",
     "languageHint": "AI 识别的小票标题将使用此语言，群组所有成员看到的都是同一语言。",
     "languageLabel": "语言",
+    "loadErrorBody": "请检查网络连接后重试。",
+    "loadErrorTitle": "无法加载此群组",
     "nameLabel": "群组名称",
     "namePlaceholder": "群组名称",
     "saving": "保存中……",
@@ -353,6 +359,8 @@
       "sourceManual": "自定义汇率"
     },
     "loadError": "无法加载这笔支出。",
+    "loadErrorBody": "请检查网络连接后重试。",
+    "loadErrorTitle": "无法加载此支出",
     "menuLabel": "更多操作",
     "noChanges": "未做任何修改。",
     "noReceipt": "未附小票。",
@@ -416,11 +424,14 @@
   },
   "groupCreated": {
     "body": "把手机递给朋友，让他扫一下。",
+    "copied": "已复制",
+    "copyLink": "复制链接",
     "errorLoad": "群组加载失败",
     "errorTitle": "出错了",
     "eyebrow": "群组已创建",
     "goToGroups": "前往群组",
     "open": "打开群组",
+    "retry": "重试",
     "share": "分享邀请链接",
     "shareMessage": "来加入“{{name}}”：{{link}}"
   },
@@ -810,6 +821,8 @@
   },
   "invite": {
     "body": "朋友扫描此二维码即可加入。",
+    "copied": "已复制",
+    "copy": "复制链接",
     "errorLoad": "群组加载失败",
     "eyebrow": "邀请",
     "share": "分享邀请链接",
@@ -873,6 +886,8 @@
     "termsOfService": "服务条款"
   },
   "members": {
+    "copiedLabel": "已复制邀请链接",
+    "copyLinkLabel": "复制邀请链接",
     "count": "成员 · {{count}} 位",
     "count_one": "成员 · {{count}} 位",
     "count_other": "成员 · {{count}} 位",
@@ -883,11 +898,14 @@
     "inviteCta": "扫码邀请",
     "joined": "加入于 {{date}}",
     "joinedWithRole": "加入于 {{date}} · {{role}}",
+    "loadErrorBody": "请检查网络连接后重试。",
+    "loadErrorTitle": "无法加载成员",
     "role": "角色",
     "roleMember": "成员",
     "roleOwner": "群主",
     "roleUnknownJoin": "最近加入",
     "shareCta": "分享链接",
+    "shareErrorTitle": "无法获取邀请链接",
     "shareMessage": "来加入“{{name}}”：{{link}}",
     "you": "我"
   },
@@ -981,6 +999,8 @@
     "eyebrow": "自动化",
     "intervalPrefix": "每",
     "listHeader": "周期账单",
+    "loadErrorBody": "请检查网络连接后重试。",
+    "loadErrorTitle": "无法加载周期性账单",
     "newButton": "+ 新建周期账单",
     "pauseButton": "暂停",
     "paused": {
@@ -1003,6 +1023,9 @@
     "resumeAllAfterUnlock": "全部恢复",
     "resumeAllBanner_one": "{{count}} 笔账单因群组锁定而暂停。",
     "resumeAllBanner_other": "{{count}} 笔账单因群组锁定而暂停。",
+    "resumeAllBusy": "正在恢复…",
+    "resumeAllErrorBody": "该群组可能仍处于锁定状态。请重试。",
+    "resumeAllErrorTitle": "无法恢复",
     "resumeButton": "恢复",
     "saveButton": "保存",
     "schedule": {
@@ -1207,9 +1230,15 @@
     "legalFooter": "继续即表示您同意我们的<terms>服务条款</terms>和<privacy>隐私政策</privacy>。",
     "or": "或",
     "sending": "发送中……",
+    "useDifferentEmail": "使用其他邮箱",
     "useMyServer": "使用我的服务器 →",
     "linkErrorTitle": "登录链接无效",
-    "linkErrorBody": "该链接可能已过期或已被使用。请重新获取链接后再试。"
+    "linkErrorBody": "该链接可能已过期或已被使用。请重新获取链接后再试。",
+    "verifyServer": {
+      "body": "此链接会向 Chara 添加一个新服务器。请仅在你主动请求时继续。",
+      "continue": "继续",
+      "title": "登录到 {{host}}？"
+    }
   },
   "tabs": {
     "activity": "动态",

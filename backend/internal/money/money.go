@@ -10,6 +10,53 @@ import (
 // Always use this type for money — never float64.
 type Amount int64
 
+// MaxAmount is the largest magnitude any single monetary value may have, in
+// minor units — one trillion major units (1 000 000 000 000.00).
+//
+// This is not arbitrary politeness about big numbers, it is an overflow
+// contract. Amounts feed three pieces of int64 arithmetic that wrap silently:
+//
+//   - split.Percentage computes total * basisPoints, where basisPoints tops
+//     out at 10 000. MaxAmount * 10 000 == 1e18, comfortably under the int64
+//     ceiling of ~9.22e18.
+//   - split.Exact sums the caller's shares. Wrapped shares can be made to sum
+//     to any target, which would let a member post a split that does not add
+//     up to the expense.
+//   - the member_balances view casts a numeric SUM back to BIGINT. A single
+//     ceiling-sized expense makes that cast raise "bigint out of range", and
+//     every balance read for the group starts failing.
+//
+// Every parser that turns untrusted input into an Amount enforces this bound,
+// so handlers do not each have to remember to.
+const MaxAmount Amount = 1e14
+
+// ErrAmountOutOfRange is returned when a parsed value exceeds ±MaxAmount.
+var ErrAmountOutOfRange = fmt.Errorf("money: amount magnitude exceeds %s", MaxAmount)
+
+// checkRange validates a parsed minor-unit value against ±MaxAmount.
+func checkRange(v int64) error {
+	if v > int64(MaxAmount) || v < -int64(MaxAmount) {
+		return ErrAmountOutOfRange
+	}
+	return nil
+}
+
+// combine builds minor units from an already-validated major/minor pair,
+// rejecting the multiplication before it can overflow.
+func combine(major, minor int64, neg bool) (Amount, error) {
+	if major > int64(MaxAmount)/100 {
+		return 0, ErrAmountOutOfRange
+	}
+	v := major*100 + minor
+	if neg {
+		v = -v
+	}
+	if err := checkRange(v); err != nil {
+		return 0, err
+	}
+	return Amount(v), nil
+}
+
 // SplitEqual divides total into n parts. Remainder pennies go to the first
 // slots so the sum is always exactly total.
 func (a Amount) SplitEqual(n int) []Amount {
@@ -72,11 +119,11 @@ func (a *Amount) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("money: invalid minor part %q: %w", parts[1], err)
 	}
 
-	v := major*100 + minor
-	if neg {
-		v = -v
+	v, err := combine(major, minor, neg)
+	if err != nil {
+		return err
 	}
-	*a = Amount(v)
+	*a = v
 	return nil
 }
 
@@ -123,11 +170,7 @@ func ParseDecimal(s string) (Amount, error) {
 		}
 		minor = n
 	}
-	v := major*100 + minor
-	if neg {
-		v = -v
-	}
-	return Amount(v), nil
+	return combine(major, minor, neg)
 }
 
 func isDigits(s string) bool {

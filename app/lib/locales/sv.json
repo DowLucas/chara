@@ -120,6 +120,7 @@
     "amount": "belopp",
     "amountPlaceholder": "0",
     "amountsLabel": "belopp",
+    "autoBadge": "auto",
     "autoFillHint": "tomma rader delar resten lika",
     "back": "Tillbaka",
     "between": "mellan",
@@ -239,7 +240,8 @@
       "body": "Grupper du arkiverar dyker upp här. Du kan ta fram en igen från dess inställningar.",
       "title": "Inga arkiverade grupper"
     },
-    "loadError": "Kunde inte ladda arkiverade grupper. Dra ner och försök igen.",
+    "loadError": "Kunde inte hämta arkiverade grupper.",
+    "retry": "Försök igen",
     "title": "Arkiverade grupper"
   },
   "categories": {
@@ -276,7 +278,9 @@
     "loading": "Laddar…",
     "mainServerInfoLabel": "Om Chara Cloud",
     "mainServerLabel": "Chara Server",
+    "networkError": "Du är offline. Kontrollera anslutningen och försök igen.",
     "ok": "OK",
+    "retry": "Försök igen",
     "save": "Spara",
     "saving": "Sparar…",
     "requestFailed": "Något gick fel. Försök igen.",
@@ -319,6 +323,8 @@
     "eyebrow": "redigera grupp",
     "languageHint": "AI-genererade kvittotitlar skrivs på det här språket för alla i gruppen.",
     "languageLabel": "Språk",
+    "loadErrorBody": "Kontrollera anslutningen och försök igen.",
+    "loadErrorTitle": "Kunde inte hämta den här gruppen",
     "nameLabel": "Gruppnamn",
     "namePlaceholder": "Gruppnamn",
     "saving": "Sparar…",
@@ -353,6 +359,8 @@
       "sourceManual": "Egen kurs"
     },
     "loadError": "Kunde inte ladda utgiften.",
+    "loadErrorBody": "Kontrollera anslutningen och försök igen.",
+    "loadErrorTitle": "Kunde inte hämta den här utgiften",
     "menuLabel": "Utgiftsmeny",
     "noChanges": "Inget ändrades.",
     "noReceipt": "Inget kvitto bifogat.",
@@ -416,11 +424,14 @@
   },
   "groupCreated": {
     "body": "Räck telefonen till en vän och låt dem skanna.",
+    "copied": "Kopierad",
+    "copyLink": "Kopiera länk",
     "errorLoad": "Kunde inte ladda gruppen",
     "errorTitle": "Något gick fel",
     "eyebrow": "grupp skapad",
     "goToGroups": "Till grupper",
     "open": "Öppna grupp",
+    "retry": "Försök igen",
     "share": "Dela inbjudningslänk",
     "shareMessage": "Gå med i ”{{name}}” på Chara: {{link}}"
   },
@@ -810,6 +821,8 @@
   },
   "invite": {
     "body": "Vänner skannar den här för att gå med.",
+    "copied": "Kopierad",
+    "copy": "Kopiera länk",
     "errorLoad": "Kunde inte ladda gruppen",
     "eyebrow": "bjud in",
     "share": "Dela inbjudningslänk",
@@ -873,6 +886,8 @@
     "termsOfService": "Användarvillkor"
   },
   "members": {
+    "copiedLabel": "Inbjudningslänken kopierad",
+    "copyLinkLabel": "Kopiera inbjudningslänk",
     "count": "medlemmar · {{count}}",
     "count_one": "medlemmar · {{count}}",
     "count_other": "medlemmar · {{count}}",
@@ -883,11 +898,14 @@
     "inviteCta": "Bjud in via QR",
     "joined": "med sedan {{date}}",
     "joinedWithRole": "med sedan {{date}} · {{role}}",
+    "loadErrorBody": "Kontrollera anslutningen och försök igen.",
+    "loadErrorTitle": "Kunde inte hämta medlemmarna",
     "role": "roll",
     "roleMember": "medlem",
     "roleOwner": "ägare",
     "roleUnknownJoin": "med sedan nyligen",
     "shareCta": "Dela länk",
+    "shareErrorTitle": "Kunde inte hämta inbjudningslänken",
     "shareMessage": "Gå med i ”{{name}}” på Chara: {{link}}",
     "you": "du"
   },
@@ -981,6 +999,8 @@
     "eyebrow": "automatik",
     "intervalPrefix": "var",
     "listHeader": "Återkommande räkningar",
+    "loadErrorBody": "Kontrollera anslutningen och försök igen.",
+    "loadErrorTitle": "Kunde inte hämta återkommande utgifter",
     "newButton": "+ Ny återkommande räkning",
     "pauseButton": "Pausa",
     "paused": {
@@ -1003,6 +1023,9 @@
     "resumeAllAfterUnlock": "Återuppta alla",
     "resumeAllBanner_one": "{{count}} räkning är pausad sedan gruppen låstes.",
     "resumeAllBanner_other": "{{count}} räkningar är pausade sedan gruppen låstes.",
+    "resumeAllBusy": "Återupptar…",
+    "resumeAllErrorBody": "Gruppen kan fortfarande vara låst. Försök igen.",
+    "resumeAllErrorTitle": "Kunde inte återuppta",
     "resumeButton": "Återuppta",
     "saveButton": "Spara",
     "schedule": {
@@ -1207,9 +1230,15 @@
     "legalFooter": "Genom att fortsätta godkänner du våra <terms>Användarvillkor</terms> och vår <privacy>Integritetspolicy</privacy>.",
     "or": "eller",
     "sending": "Skickar…",
+    "useDifferentEmail": "Använd en annan e-postadress",
     "useMyServer": "använd min server →",
     "linkErrorTitle": "Inloggningslänken fungerade inte",
-    "linkErrorBody": "Länken kan ha gått ut eller redan använts. Begär en ny länk och försök igen."
+    "linkErrorBody": "Länken kan ha gått ut eller redan använts. Begär en ny länk och försök igen.",
+    "verifyServer": {
+      "body": "Den här länken lägger till en ny server i Chara. Fortsätt bara om du bad om det själv.",
+      "continue": "Fortsätt",
+      "title": "Logga in på {{host}}?"
+    }
   },
   "tabs": {
     "activity": "Aktivitet",

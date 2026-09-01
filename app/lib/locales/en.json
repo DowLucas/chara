@@ -120,6 +120,7 @@
     "amount": "amount",
     "amountPlaceholder": "0",
     "amountsLabel": "amounts",
+    "autoBadge": "auto",
     "autoFillHint": "empty rows split the remainder evenly",
     "back": "Back",
     "between": "between",
@@ -239,7 +240,8 @@
       "body": "Groups you archive show up here. You can reopen one from its settings.",
       "title": "No archived groups"
     },
-    "loadError": "Couldn't load archived groups. Pull back and try again.",
+    "loadError": "Couldn't load archived groups.",
+    "retry": "Retry",
     "title": "Archived groups"
   },
   "categories": {
@@ -276,7 +278,9 @@
     "loading": "Loading…",
     "mainServerInfoLabel": "About Chara Cloud",
     "mainServerLabel": "Chara Cloud",
+    "networkError": "You're offline. Check your connection and try again.",
     "ok": "OK",
+    "retry": "Retry",
     "save": "Save",
     "saving": "Saving…",
     "requestFailed": "Something went wrong. Please try again.",
@@ -319,6 +323,8 @@
     "eyebrow": "edit group",
     "languageHint": "AI-generated receipt titles will be written in this language for everyone in the group.",
     "languageLabel": "Language",
+    "loadErrorBody": "Check your connection and try again.",
+    "loadErrorTitle": "Couldn't load this group",
     "nameLabel": "Group name",
     "namePlaceholder": "Group name",
     "saving": "Saving…",
@@ -353,6 +359,8 @@
       "sourceManual": "Custom rate"
     },
     "loadError": "Couldn't load this expense.",
+    "loadErrorBody": "Check your connection and try again.",
+    "loadErrorTitle": "Couldn't load this expense",
     "menuLabel": "Expense menu",
     "noChanges": "Nothing changed.",
     "noReceipt": "No receipt attached.",
@@ -416,11 +424,14 @@
   },
   "groupCreated": {
     "body": "Hand your phone to a friend and let them scan.",
+    "copied": "Copied",
+    "copyLink": "Copy link",
     "errorLoad": "Failed to load group",
     "errorTitle": "Something went wrong",
     "eyebrow": "group created",
     "goToGroups": "Go to groups",
     "open": "Open group",
+    "retry": "Retry",
     "share": "Share invite link",
     "shareMessage": "Join \"{{name}}\" on Chara: {{link}}"
   },
@@ -810,6 +821,8 @@
   },
   "invite": {
     "body": "Friends scan this to join.",
+    "copied": "Copied",
+    "copy": "Copy link",
     "errorLoad": "Failed to load group",
     "eyebrow": "invite",
     "share": "Share invite link",
@@ -873,6 +886,8 @@
     "termsOfService": "Terms of Service"
   },
   "members": {
+    "copiedLabel": "Invite link copied",
+    "copyLinkLabel": "Copy invite link",
     "count": "members · {{count}}",
     "count_one": "members · {{count}}",
     "count_other": "members · {{count}}",
@@ -883,11 +898,14 @@
     "inviteCta": "Invite via QR",
     "joined": "joined {{date}}",
     "joinedWithRole": "joined {{date}} · {{role}}",
+    "loadErrorBody": "Check your connection and try again.",
+    "loadErrorTitle": "Couldn't load members",
     "role": "role",
     "roleMember": "member",
     "roleOwner": "owner",
     "roleUnknownJoin": "joined recently",
     "shareCta": "Share link",
+    "shareErrorTitle": "Couldn't get the invite link",
     "shareMessage": "Join \"{{name}}\" on Chara: {{link}}",
     "you": "you"
   },
@@ -981,6 +999,8 @@
     "eyebrow": "automation",
     "intervalPrefix": "every",
     "listHeader": "Recurring bills",
+    "loadErrorBody": "Check your connection and try again.",
+    "loadErrorTitle": "Couldn't load recurring bills",
     "newButton": "+ New recurring bill",
     "pauseButton": "Pause",
     "paused": {
@@ -1003,6 +1023,9 @@
     "resumeAllAfterUnlock": "Resume all",
     "resumeAllBanner_one": "{{count}} bill is paused from when the group was locked.",
     "resumeAllBanner_other": "{{count}} bills are paused from when the group was locked.",
+    "resumeAllBusy": "Resuming…",
+    "resumeAllErrorBody": "The group may still be locked. Try again.",
+    "resumeAllErrorTitle": "Couldn't resume",
     "resumeButton": "Resume",
     "saveButton": "Save",
     "schedule": {
@@ -1207,9 +1230,15 @@
     "legalFooter": "By continuing you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
     "or": "or",
     "sending": "Sending…",
+    "useDifferentEmail": "Use a different email",
     "useMyServer": "use my server →",
     "linkErrorTitle": "Sign-in link didn't work",
-    "linkErrorBody": "This link may have expired or already been used. Request a new link and try again."
+    "linkErrorBody": "This link may have expired or already been used. Request a new link and try again.",
+    "verifyServer": {
+      "body": "This link will add a new server to Chara. Only continue if you asked for it.",
+      "continue": "Continue",
+      "title": "Sign in to {{host}}?"
+    }
   },
   "tabs": {
     "activity": "Activity",

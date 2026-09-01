@@ -1,12 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Share, ScrollView } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Share, ScrollView } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import { useEnglishT } from '@/lib/i18n';
+import { Text } from '@/components/Text';
 import { ContentContainer } from '@/components/ContentContainer';
 import { apiFor, getGroup, Group } from '@/lib/api';
+import { userErrorMessage } from '@/lib/user-error';
+import { hapticSuccess } from '@/lib/haptics';
 import { useDefaultAccount } from '@/lib/accounts';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 import * as analytics from '@/lib/analytics';
@@ -21,17 +25,27 @@ export default function GroupCreatedScreen() {
   const [group, setGroup] = useState<Group | null>(null);
   const [link, setLink] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  // Bumped by the retry button to re-run the load effect.
+  const [attempt, setAttempt] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!groupId) return;
-    getGroup(groupId).then(setGroup).catch((e) => setError(e?.message ?? t('groupCreated.errorLoad')));
+    getGroup(groupId)
+      .then(setGroup)
+      .catch((e) => setError(userErrorMessage(e, t('groupCreated.errorLoad'))));
     if (defaultServerUrl) {
       apiFor(defaultServerUrl)
         .getInviteLink(groupId)
         .then((r) => setLink(r.invite_url))
-        .catch((e) => setError(e?.message ?? t('groupCreated.errorLoad')));
+        .catch((e) => setError(userErrorMessage(e, t('groupCreated.errorLoad'))));
     }
-  }, [groupId, defaultServerUrl, t]);
+  }, [groupId, defaultServerUrl, t, attempt]);
+
+  useEffect(() => () => {
+    if (copiedTimer.current) clearTimeout(copiedTimer.current);
+  }, []);
 
   if (error) {
     return (
@@ -39,6 +53,16 @@ export default function GroupCreatedScreen() {
         <ContentContainer>
           <Text style={styles.errorTitle}>{t('groupCreated.errorTitle')}</Text>
           <Text style={styles.body}>{error}</Text>
+          <TouchableOpacity
+            onPress={() => {
+              setError(null);
+              setAttempt((n) => n + 1);
+            }}
+            style={styles.cta}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.ctaLabel}>{t('groupCreated.retry')}</Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => router.replace('/(tabs)')} style={styles.secondary}>
             <Text style={styles.secondaryLabel}>{t('groupCreated.goToGroups')}</Text>
           </TouchableOpacity>
@@ -53,6 +77,14 @@ export default function GroupCreatedScreen() {
         <ActivityIndicator color={colors.graphite} />
       </View>
     );
+  }
+
+  async function copyLink() {
+    await Clipboard.setStringAsync(link);
+    hapticSuccess();
+    setCopied(true);
+    if (copiedTimer.current) clearTimeout(copiedTimer.current);
+    copiedTimer.current = setTimeout(() => setCopied(false), 1800);
   }
 
   async function shareLink() {
@@ -89,6 +121,22 @@ export default function GroupCreatedScreen() {
           <TouchableOpacity style={styles.cta} onPress={shareLink} activeOpacity={0.85}>
             <Feather name="share-2" size={18} color={colors.fgOnAccent} />
             <Text style={styles.ctaLabel}>{t('groupCreated.share')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.secondary}
+            onPress={copyLink}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+          >
+            <Feather
+              name={copied ? 'check' : 'copy'}
+              size={16}
+              color={colors.graphite}
+              style={styles.secondaryIcon}
+            />
+            <Text style={styles.secondaryLabel}>
+              {copied ? t('groupCreated.copied') : t('groupCreated.copyLink')}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.secondary}
@@ -165,6 +213,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: colors.graphite,
   },
+  secondaryIcon: { marginRight: spacing.s2 },
   secondaryLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite },
   errorTitle: { fontFamily: fontDisplay, fontSize: fontSize.displayS, color: colors.graphite },
 });

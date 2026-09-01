@@ -34,6 +34,7 @@ import {
   ExpenseCategory,
   resolveGroupCategorySlugs,
 } from '@/lib/categories';
+import { hapticSuccess } from '@/lib/haptics';
 import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
 
 export default function GroupCategoriesScreen() {
@@ -88,6 +89,7 @@ export default function GroupCategoriesScreen() {
       const category_slugs = EXPENSE_CATEGORIES.filter((c) => enabled.has(c));
       const updated = await api.updateGroup(group.id, { category_slugs });
       setGroup(updated);
+      hapticSuccess();
       router.back();
     } catch (e: any) {
       setSubmitError(e?.message || t('groupCategories.errorTitle'));

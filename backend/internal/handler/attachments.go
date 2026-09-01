@@ -164,7 +164,11 @@ func (h *AttachmentHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// not the URL — but it helps when poking at the bucket directly.
 	key := "expenses/" + expenseID + "/" + id + "." + ext
 
-	if err := h.store.Upload(r.Context(), key, data, req.MimeType); err != nil {
+	// Store and serve the normalised value, never the client's raw string.
+	// The allowlist check above runs on normalizeMime(req.MimeType), so a
+	// value like "application/pdf; charset=x" passes validation while the raw
+	// form would be echoed back verbatim as the response Content-Type.
+	if err := h.store.Upload(r.Context(), key, data, claimedMime); err != nil {
 		slog.Error("attachment upload failed", "expense", expenseID, "err", err)
 		writeError(w, http.StatusInternalServerError, "upload failed")
 		return
@@ -174,7 +178,7 @@ func (h *AttachmentHandler) Create(w http.ResponseWriter, r *http.Request) {
 		ID:        id,
 		ExpenseID: expenseID,
 		S3Key:     key,
-		MimeType:  req.MimeType,
+		MimeType:  claimedMime,
 		SizeBytes: int64(len(data)),
 	})
 	if err != nil {

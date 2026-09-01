@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Text } from './Text';
 import { formatMinorUnits, formatDate } from '../lib/i18n';
@@ -39,7 +39,9 @@ export function StatsCard({ stats, loading }: Props) {
       <View style={styles.rule} />
 
       {stats == null || loading ? (
-        <Text style={styles.placeholder}>{t('common.loading')}</Text>
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator color={colors.graphite} />
+        </View>
       ) : (
         <>
           <Row label={t('groupSettings.stats.memberCount')} value={String(stats.member_count)} />
@@ -179,6 +181,10 @@ const styles = StyleSheet.create({
     fontSize: fontSize.body,
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
+  },
+  loadingWrap: {
+    alignItems: 'center',
+    paddingVertical: spacing.s4,
   },
   placeholder: {
     fontFamily: fontBody,

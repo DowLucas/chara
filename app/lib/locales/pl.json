@@ -128,6 +128,7 @@
     "amount": "kwota",
     "amountPlaceholder": "0",
     "amountsLabel": "kwoty",
+    "autoBadge": "auto",
     "autoFillHint": "puste wiersze podzielą resztę równo",
     "back": "Wstecz",
     "between": "między",
@@ -251,7 +252,8 @@
       "body": "Grupy, które zarchiwizujesz, pojawią się tutaj. Możesz je przywrócić z ich ustawień.",
       "title": "Brak zarchiwizowanych grup"
     },
-    "loadError": "Nie udało się załadować zarchiwizowanych grup. Pociągnij w dół i spróbuj ponownie.",
+    "loadError": "Nie udało się wczytać zarchiwizowanych grup.",
+    "retry": "Ponów",
     "title": "Zarchiwizowane grupy"
   },
   "categories": {
@@ -288,7 +290,9 @@
     "loading": "Ładowanie…",
     "mainServerInfoLabel": "O Chara Cloud",
     "mainServerLabel": "Chara Server",
+    "networkError": "Jesteś offline. Sprawdź połączenie i spróbuj ponownie.",
     "ok": "OK",
+    "retry": "Ponów",
     "save": "Zapisz",
     "saving": "Zapisywanie…",
     "requestFailed": "Coś poszło nie tak. Spróbuj ponownie.",
@@ -331,6 +335,8 @@
     "eyebrow": "edytuj grupę",
     "languageHint": "Tytuły wygenerowane przez AI z paragonów będą zapisane w tym języku dla wszystkich w grupie.",
     "languageLabel": "Język",
+    "loadErrorBody": "Sprawdź połączenie i spróbuj ponownie.",
+    "loadErrorTitle": "Nie udało się wczytać tej grupy",
     "nameLabel": "Nazwa grupy",
     "namePlaceholder": "Nazwa grupy",
     "saving": "Zapisywanie…",
@@ -365,6 +371,8 @@
       "sourceManual": "Kurs własny"
     },
     "loadError": "Nie udało się załadować tego wydatku.",
+    "loadErrorBody": "Sprawdź połączenie i spróbuj ponownie.",
+    "loadErrorTitle": "Nie udało się wczytać tego wydatku",
     "menuLabel": "Menu wydatku",
     "noChanges": "Nic się nie zmieniło.",
     "noReceipt": "Brak załączonego paragonu.",
@@ -428,11 +436,14 @@
   },
   "groupCreated": {
     "body": "Podaj telefon znajomemu i pozwól mu zeskanować.",
+    "copied": "Skopiowano",
+    "copyLink": "Kopiuj link",
     "errorLoad": "Nie udało się załadować grupy",
     "errorTitle": "Coś poszło nie tak",
     "eyebrow": "grupa utworzona",
     "goToGroups": "Przejdź do grup",
     "open": "Otwórz grupę",
+    "retry": "Ponów",
     "share": "Udostępnij link zaproszenia",
     "shareMessage": "Dołącz do „{{name}}” w Chara: {{link}}"
   },
@@ -858,6 +869,8 @@
   },
   "invite": {
     "body": "Znajomi skanują to, aby dołączyć.",
+    "copied": "Skopiowano",
+    "copy": "Kopiuj link",
     "errorLoad": "Nie udało się załadować grupy",
     "eyebrow": "zaproszenie",
     "share": "Udostępnij link zaproszenia",
@@ -923,6 +936,8 @@
     "termsOfService": "Regulamin"
   },
   "members": {
+    "copiedLabel": "Skopiowano link z zaproszeniem",
+    "copyLinkLabel": "Kopiuj link z zaproszeniem",
     "count": "członkowie · {{count}}",
     "count_few": "członkowie · {{count}}",
     "count_many": "członkowie · {{count}}",
@@ -935,11 +950,14 @@
     "inviteCta": "Zaproś przez QR",
     "joined": "dołączył(a) {{date}}",
     "joinedWithRole": "dołączył(a) {{date}} · {{role}}",
+    "loadErrorBody": "Sprawdź połączenie i spróbuj ponownie.",
+    "loadErrorTitle": "Nie udało się wczytać uczestników",
     "role": "rola",
     "roleMember": "członek",
     "roleOwner": "właściciel",
     "roleUnknownJoin": "dołączył(a) niedawno",
     "shareCta": "Udostępnij link",
+    "shareErrorTitle": "Nie udało się pobrać linku z zaproszeniem",
     "shareMessage": "Dołącz do „{{name}}” w Chara: {{link}}",
     "you": "ty"
   },
@@ -1033,6 +1051,8 @@
     "eyebrow": "automatyzacja",
     "intervalPrefix": "co",
     "listHeader": "Cykliczne rachunki",
+    "loadErrorBody": "Sprawdź połączenie i spróbuj ponownie.",
+    "loadErrorTitle": "Nie udało się wczytać cyklicznych rachunków",
     "newButton": "+ Nowy cykliczny rachunek",
     "pauseButton": "Wstrzymaj",
     "paused": {
@@ -1059,6 +1079,9 @@
     "resumeAllBanner_many": "{{count}} rachunków jest wstrzymanych od czasu zablokowania grupy.",
     "resumeAllBanner_one": "{{count}} rachunek jest wstrzymany od czasu zablokowania grupy.",
     "resumeAllBanner_other": "{{count}} rachunków jest wstrzymanych od czasu zablokowania grupy.",
+    "resumeAllBusy": "Wznawianie…",
+    "resumeAllErrorBody": "Grupa może być nadal zablokowana. Spróbuj ponownie.",
+    "resumeAllErrorTitle": "Nie udało się wznowić",
     "resumeButton": "Wznów",
     "saveButton": "Zapisz",
     "schedule": {
@@ -1291,9 +1314,15 @@
     "legalFooter": "Kontynuując, akceptujesz nasz <terms>Regulamin</terms> i <privacy>Politykę prywatności</privacy>.",
     "or": "lub",
     "sending": "Wysyłanie…",
+    "useDifferentEmail": "Użyj innego adresu e-mail",
     "useMyServer": "użyj mojego serwera →",
     "linkErrorTitle": "Link logowania nie zadziałał",
-    "linkErrorBody": "Ten link mógł wygasnąć lub został już użyty. Poproś o nowy link i spróbuj ponownie."
+    "linkErrorBody": "Ten link mógł wygasnąć lub został już użyty. Poproś o nowy link i spróbuj ponownie.",
+    "verifyServer": {
+      "body": "Ten link doda nowy serwer do Chary. Kontynuuj tylko, jeśli sam o to prosiłeś.",
+      "continue": "Kontynuuj",
+      "title": "Zalogować się do {{host}}?"
+    }
   },
   "tabs": {
     "activity": "Aktywność",

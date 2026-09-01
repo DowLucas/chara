@@ -144,7 +144,13 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 	// not the app's JWT/protocol middleware (it's called by ops tooling, not
 	// the app). Disabled (404) when ADMIN_API_TOKEN is unset.
 	adminH := handler.NewAdminHandler(rc, cfg.AdminAPIToken)
-	r.Post("/api/admin/notify", adminH.Broadcast)
+	r.Group(func(r chi.Router) {
+		// Rate-limited like any other unauthenticated endpoint: the token is
+		// operator-configured and the compare is constant-time, but nothing
+		// else stands between the internet and an online guessing loop.
+		r.Use(middleware.IPRateLimit(30))
+		r.Post("/api/admin/notify", adminH.Broadcast)
+	})
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.AuthRateLimit(30, 5))

@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -13,6 +12,7 @@ import {
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
 import { ContentContainer } from '@/components/ContentContainer';
+import { Text } from '@/components/Text';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -28,6 +28,8 @@ import {
 } from '@/lib/accounts-store';
 import { apiFor, publicApi } from '@/lib/api';
 import { legacyHostedUrl } from '@/lib/legacy-hosted-url';
+import { classifyVerifyTarget } from '@/lib/deep-link';
+import { normalizeServerUrl } from '@/lib/server-url';
 import { parseInviteUrl } from '@/lib/invite-url';
 import { parseInstanceInfo } from '@/lib/discovery';
 import { refreshAccountInstance } from '@/lib/refresh-instance';
@@ -97,10 +99,19 @@ export default function SignInScreen() {
     verifyToken?: string;
   }>();
 
-  const mode: Mode = (params.mode as Mode) ?? 'first-launch';
+  const requestedMode: Mode = (params.mode as Mode) ?? 'first-launch';
+  // `server` is untrusted: Expo Router maps `chara://sign-in?server=…` straight
+  // onto this route, bypassing the layout's deep-link handler. Run it through
+  // the canonical normalizer (the single entry point for a URL string) instead
+  // of a bare decodeURIComponent, so we never issue a request to a host that
+  // isn't a valid server identity. An un-normalizable value falls back to the
+  // hosted server for rendering; the verify effect below refuses to act on it.
+  const rawServer = useMemo(() => decodeMaybe(params.server ?? null), [params.server]);
   const serverUrl = useMemo(() => {
-    return decodeMaybe(params.server ?? null) ?? legacyHostedUrl();
-  }, [params.server]);
+    if (!rawServer) return legacyHostedUrl();
+    const normalized = normalizeServerUrl(rawServer);
+    return typeof normalized === 'string' ? normalized : legacyHostedUrl();
+  }, [rawServer]);
   const pendingInviteUrl = useMemo(() => decodeMaybe(params.pendingInvite ?? null), [
     params.pendingInvite,
   ]);
@@ -109,7 +120,26 @@ export default function SignInScreen() {
   // Note: we call the store's addAccount directly (not the context shim) so we
   // can pass the optional `method` analytics arg. updateAccount still comes
   // from the context to stay consistent with the rest of the file.
-  const { updateAccount } = useAccounts();
+  const { accounts, loading: accountsLoading, updateAccount } = useAccounts();
+
+  // Session-fixation guard. `mode=reauth` overwrites the token of an *existing*
+  // account in place — so a deep link that names a server we're signed into,
+  // plus a magic-link token minted for the attacker's own inbox, would swap the
+  // victim's session for the attacker's. Honour reauth only when we actually
+  // hold an account for that server; otherwise it's an ordinary add-account,
+  // which the unknown-server prompt below still gates.
+  const mode: Mode =
+    requestedMode === 'reauth' && !accountsLoading && !account
+      ? 'first-launch'
+      : requestedMode;
+
+  const host = useMemo(() => {
+    try {
+      return new URL(serverUrl).host;
+    } catch {
+      return serverUrl;
+    }
+  }, [serverUrl]);
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -142,10 +172,40 @@ export default function SignInScreen() {
   const magicHandledRef = React.useRef(false);
   useEffect(() => {
     if (!verifyToken || magicHandledRef.current) return;
+    // The verdict depends on the accounts blob, which loads asynchronously on
+    // cold launch. Waiting avoids prompting for a server we're actually
+    // signed into just because the read hadn't landed yet.
+    if (accountsLoading) return;
     magicHandledRef.current = true;
-    analytics.track('auth_method_selected', { method: 'magic_link' });
-    setLoading(true);
     void (async () => {
+      // A verify token is only ever adopted for a server we already trust.
+      // Anything else would silently add an attacker-chosen account and fan
+      // this device's Expo push token out to it (registerForAccount below).
+      const target = classifyVerifyTarget(
+        rawServer,
+        accounts.map((a) => a.serverUrl),
+        legacyHostedUrl(),
+      );
+      if (target === 'invalid') {
+        router.replace('/');
+        return;
+      }
+      if (target === 'unknown') {
+        const answer = await showAlert({
+          title: t('signIn.verifyServer.title', { host }),
+          message: t('signIn.verifyServer.body'),
+          buttons: [
+            { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
+            { key: 'continue', label: t('signIn.verifyServer.continue') },
+          ],
+        });
+        if (answer !== 'continue') {
+          router.replace('/');
+          return;
+        }
+      }
+      analytics.track('auth_method_selected', { method: 'magic_link' });
+      setLoading(true);
       try {
         const verify = await publicApi(serverUrl).verifyMagicLink(verifyToken);
         await onTokenIssued(verify.token, 'magic_link', verify.refresh_token);
@@ -163,9 +223,10 @@ export default function SignInScreen() {
         setLoading(false);
       }
     })();
-    // Token drives this; onTokenIssued/serverUrl are stable for a once-guard.
+    // Token drives this; the ref guard keeps it to one run once the accounts
+    // blob has loaded. onTokenIssued/serverUrl are stable for that guard.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [verifyToken]);
+  }, [verifyToken, accountsLoading]);
 
   // Always re-read the target server's advertised capabilities on mount, even
   // when a cached snapshot already exists. The auth buttons (Apple/Google) are
@@ -467,13 +528,6 @@ export default function SignInScreen() {
     router.replace('/(tabs)');
   }
 
-  let host = serverUrl;
-  try {
-    host = new URL(serverUrl).host;
-  } catch {
-    /* keep */
-  }
-
   const isReauth = mode === 'reauth';
   // Reauth eyebrow lives in the sibling-owned `accounts.*` namespace; fall
   // back gracefully if the sibling hasn't shipped that key yet.
@@ -538,6 +592,17 @@ export default function SignInScreen() {
           <Feather name="mail" size={28} color={colors.moss} />
           <Text style={styles.sentTitle}>{t('signIn.checkEmail')}</Text>
           <Text style={styles.sentBody}>{t('signIn.checkEmailBody', { email })}</Text>
+          {/* Without this the screen is a dead end when the address was
+              mistyped — the only way back to the form is killing the app. */}
+          <TouchableOpacity
+            onPress={() => setSent(false)}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+          >
+            <Text style={styles.sentResetLabel}>
+              {t('signIn.useDifferentEmail')}
+            </Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <View style={styles.authButtons}>
@@ -586,6 +651,13 @@ export default function SignInScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              textContentType="emailAddress"
+              autoComplete="email"
+              returnKeyType="send"
+              onSubmitEditing={() => {
+                if (loading || !email.trim()) return;
+                void handleMagicLink();
+              }}
               style={styles.emailInput}
             />
           </View>
@@ -749,6 +821,14 @@ const styles = StyleSheet.create({
     color: colors.lead,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  sentResetLabel: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    letterSpacing: 0.3,
+    textDecorationLine: 'underline',
+    paddingVertical: spacing.s2,
   },
   authButtons: {
     gap: spacing.s2,

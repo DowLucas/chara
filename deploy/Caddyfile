@@ -1,3 +1,20 @@
 {$CHARA_DOMAIN} {
-	reverse_proxy chara-api:8080
+	header {
+		# The API already sets these (and HSTS) on its own responses; `?` only
+		# fills them in where they're missing, so responses Caddy generates
+		# itself — redirects, 502s — are covered too and the app's stricter
+		# values (Referrer-Policy: no-referrer) are never overwritten.
+		?X-Content-Type-Options nosniff
+		?X-Frame-Options DENY
+		?Referrer-Policy strict-origin-when-cross-origin
+		# Don't advertise the proxy.
+		-Server
+	}
+
+	reverse_proxy chara-api:8080 {
+		# Caddy is the edge here, so a client's own X-Forwarded-For is a lie.
+		# Trust it only from private ranges; from anywhere else Caddy replaces
+		# it with the real peer address, keeping per-IP rate limits honest.
+		trusted_proxies private_ranges
+	}
 }

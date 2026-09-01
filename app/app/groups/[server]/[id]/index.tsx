@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
-  Text,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   RefreshControl,
   Modal,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { hapticLongPress, hapticSelect, hapticWarning } from '@/lib/haptics';
 import { showAlert } from '@/lib/app-alert';
@@ -24,6 +24,7 @@ import { MoneyText } from '@/components/MoneyText';
 import { Avatar, AvatarStack } from '@/components/Avatar';
 import { GroupAvatar } from '@/components/GroupAvatar';
 import { EmptyState } from '@/components/EmptyState';
+import { Text } from '@/components/Text';
 import { GroupEmptyState } from '@/components/GroupEmptyState';
 import { addExpenseHref, importHref } from '@/components/GroupEmptyState.helpers';
 import {
@@ -70,6 +71,7 @@ export default function GroupDetailScreen() {
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [suggestions, setSuggestions] = useState<SettlementSuggestion[]>([]);
   const [members, setMembers] = useState<GroupMember[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const closeInfo = () => {
@@ -160,6 +162,7 @@ export default function GroupDetailScreen() {
     if (b.status === 'fulfilled') setBalances(b.value);
     if (p.status === 'fulfilled') setSettlements(p.value);
     if (s.status === 'fulfilled') setSuggestions(s.value);
+    setLoaded(true);
   }, [id, serverUrl]);
 
   useEffect(() => { load(); }, [load]);
@@ -420,7 +423,13 @@ export default function GroupDetailScreen() {
       {/* Only the tab body scrolls. Hero + tabs stay pinned above. */}
       <ScrollView
         style={styles.scroll}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.graphite}
+          />
+        }
       >
         <ContentContainer>
         {tab === 'payments' ? (
@@ -718,7 +727,11 @@ export default function GroupDetailScreen() {
         </View>
         <View style={styles.listRule} />
 
-        {expenses.length === 0 ? (
+        {expenses.length === 0 && !loaded ? (
+          <View style={styles.listLoading}>
+            <ActivityIndicator color={colors.graphite} />
+          </View>
+        ) : expenses.length === 0 ? (
           <GroupEmptyState
             onAddExpense={() => router.push(addExpenseHref(serverUrl, id))}
             onImport={() => router.push(importHref(serverUrl, id))}
@@ -1237,6 +1250,10 @@ const styles = StyleSheet.create({
     fontFamily: fontMono,
     fontSize: fontSize.bodyS,
     color: colors.lead,
+  },
+  listLoading: {
+    paddingVertical: spacing.s7,
+    alignItems: 'center',
   },
   filterEmpty: {
     fontFamily: fontBody,

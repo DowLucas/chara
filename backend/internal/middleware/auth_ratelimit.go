@@ -38,6 +38,16 @@ func AuthRateLimit(perIPPerMinute, perEmailPerMinute int) func(http.Handler) htt
 	}
 }
 
+// maxProbeBodyBytes caps what this middleware will buffer to find the email.
+//
+// This runs before the handler installs its own http.MaxBytesReader, so
+// without a cap here an unauthenticated caller can stream an arbitrarily large
+// body into memory on every auth endpoint — one rate-limit token buys as much
+// heap as the read timeout allows. Auth payloads are a few hundred bytes; a
+// body larger than this is not one, so we stop reading and let the IP bucket
+// and the handler's own limit take it from there.
+const maxProbeBodyBytes = 64 << 10
+
 // readEmailFromBody drains r.Body, restores it with bytes.NewReader, and
 // returns the lowercased email if the body is a JSON object with a string
 // "email" field. Returns "" on any failure — the IP bucket is the safety net.
@@ -45,8 +55,16 @@ func readEmailFromBody(r *http.Request) string {
 	if r.Body == nil {
 		return ""
 	}
-	body, err := io.ReadAll(r.Body)
+	limited := io.LimitReader(r.Body, maxProbeBodyBytes+1)
+	body, err := io.ReadAll(limited)
 	if err != nil {
+		return ""
+	}
+	if len(body) > maxProbeBodyBytes {
+		// Oversized: hand the handler back what we consumed plus the rest of
+		// the stream, so its MaxBytesReader produces the 413, and skip the
+		// per-email bucket for this request.
+		r.Body = io.NopCloser(io.MultiReader(bytes.NewReader(body), r.Body))
 		return ""
 	}
 	r.Body = io.NopCloser(bytes.NewReader(body))
