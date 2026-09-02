@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { canonicalLink, canonicalMeta } from "@/lib/site";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { LegalPrint } from "@/components/LegalPrint";
@@ -10,9 +11,9 @@ export const Route = createFileRoute("/terms")({
       { name: "description", content: "Read the terms of service for the Chara hosted bill-splitting platform, covering account usage, acceptable use, content, and liability." },
       { property: "og:title", content: "Terms — Chara" },
       { property: "og:description", content: "Plain terms of service for Chara hosted, covering accounts, acceptable use, and your rights as a user." },
-      { property: "og:url", content: "/terms" },
+      ...canonicalMeta("/terms"),
     ],
-    links: [{ rel: "canonical", href: "/terms" }],
+    links: [canonicalLink("/terms")],
   }),
   component: () => (
     <div className="min-h-screen bg-indigo">

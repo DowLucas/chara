@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { canonicalLink, canonicalMeta } from "@/lib/site";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { LegalPrint } from "@/components/LegalPrint";
@@ -10,9 +11,9 @@ export const Route = createFileRoute("/delete")({
       { name: "description", content: "How to delete your Chara account and what happens to your data. Covers the in-app deletion flow and what is removed versus retained." },
       { property: "og:title", content: "Delete your account — Chara" },
       { property: "og:description", content: "Step-by-step account deletion instructions for Chara, plus a clear breakdown of what data is deleted and what is kept." },
-      { property: "og:url", content: "/delete" },
+      ...canonicalMeta("/delete"),
     ],
-    links: [{ rel: "canonical", href: "/delete" }],
+    links: [canonicalLink("/delete")],
   }),
   component: () => (
     <div className="min-h-screen bg-indigo">

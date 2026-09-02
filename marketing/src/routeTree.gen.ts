@@ -16,9 +16,14 @@ import { Route as DpaRouteImport } from './routes/dpa'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReleasesRouteImport } from './routes/releases'
 import { Route as SecurityRouteImport } from './routes/security'
+import { Route as SelfHostRouteImport } from './routes/self-host'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SplitwiseAlternativeRouteImport } from './routes/splitwise-alternative'
+import { Route as SplitwiseDailyLimitRouteImport } from './routes/splitwise-daily-limit'
 import { Route as SupportRouteImport } from './routes/support'
+import { Route as SwitchFromSplitwiseRouteImport } from './routes/switch-from-splitwise'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as VsSlugRouteImport } from './routes/vs.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -55,9 +60,24 @@ const SecurityRoute = SecurityRouteImport.update({
   path: '/security',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SelfHostRoute = SelfHostRouteImport.update({
+  id: '/self-host',
+  path: '/self-host',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SplitwiseAlternativeRoute = SplitwiseAlternativeRouteImport.update({
+  id: '/splitwise-alternative',
+  path: '/splitwise-alternative',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SplitwiseDailyLimitRoute = SplitwiseDailyLimitRouteImport.update({
+  id: '/splitwise-daily-limit',
+  path: '/splitwise-daily-limit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SupportRoute = SupportRouteImport.update({
@@ -65,9 +85,19 @@ const SupportRoute = SupportRouteImport.update({
   path: '/support',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SwitchFromSplitwiseRoute = SwitchFromSplitwiseRouteImport.update({
+  id: '/switch-from-splitwise',
+  path: '/switch-from-splitwise',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VsSlugRoute = VsSlugRouteImport.update({
+  id: '/vs/$slug',
+  path: '/vs/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -79,9 +109,14 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/releases': typeof ReleasesRoute
   '/security': typeof SecurityRoute
+  '/self-host': typeof SelfHostRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/splitwise-alternative': typeof SplitwiseAlternativeRoute
+  '/splitwise-daily-limit': typeof SplitwiseDailyLimitRoute
   '/support': typeof SupportRoute
+  '/switch-from-splitwise': typeof SwitchFromSplitwiseRoute
   '/terms': typeof TermsRoute
+  '/vs/$slug': typeof VsSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -91,9 +126,14 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/releases': typeof ReleasesRoute
   '/security': typeof SecurityRoute
+  '/self-host': typeof SelfHostRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/splitwise-alternative': typeof SplitwiseAlternativeRoute
+  '/splitwise-daily-limit': typeof SplitwiseDailyLimitRoute
   '/support': typeof SupportRoute
+  '/switch-from-splitwise': typeof SwitchFromSplitwiseRoute
   '/terms': typeof TermsRoute
+  '/vs/$slug': typeof VsSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -104,9 +144,14 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/releases': typeof ReleasesRoute
   '/security': typeof SecurityRoute
+  '/self-host': typeof SelfHostRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/splitwise-alternative': typeof SplitwiseAlternativeRoute
+  '/splitwise-daily-limit': typeof SplitwiseDailyLimitRoute
   '/support': typeof SupportRoute
+  '/switch-from-splitwise': typeof SwitchFromSplitwiseRoute
   '/terms': typeof TermsRoute
+  '/vs/$slug': typeof VsSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -118,9 +163,14 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/releases'
     | '/security'
+    | '/self-host'
     | '/sitemap.xml'
+    | '/splitwise-alternative'
+    | '/splitwise-daily-limit'
     | '/support'
+    | '/switch-from-splitwise'
     | '/terms'
+    | '/vs/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -130,9 +180,14 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/releases'
     | '/security'
+    | '/self-host'
     | '/sitemap.xml'
+    | '/splitwise-alternative'
+    | '/splitwise-daily-limit'
     | '/support'
+    | '/switch-from-splitwise'
     | '/terms'
+    | '/vs/$slug'
   id:
     | '__root__'
     | '/'
@@ -142,9 +197,14 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/releases'
     | '/security'
+    | '/self-host'
     | '/sitemap.xml'
+    | '/splitwise-alternative'
+    | '/splitwise-daily-limit'
     | '/support'
+    | '/switch-from-splitwise'
     | '/terms'
+    | '/vs/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -155,9 +215,14 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ReleasesRoute: typeof ReleasesRoute
   SecurityRoute: typeof SecurityRoute
+  SelfHostRoute: typeof SelfHostRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SplitwiseAlternativeRoute: typeof SplitwiseAlternativeRoute
+  SplitwiseDailyLimitRoute: typeof SplitwiseDailyLimitRoute
   SupportRoute: typeof SupportRoute
+  SwitchFromSplitwiseRoute: typeof SwitchFromSplitwiseRoute
   TermsRoute: typeof TermsRoute
+  VsSlugRoute: typeof VsSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -211,11 +276,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SecurityRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/self-host': {
+      id: '/self-host'
+      path: '/self-host'
+      fullPath: '/self-host'
+      preLoaderRoute: typeof SelfHostRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/splitwise-alternative': {
+      id: '/splitwise-alternative'
+      path: '/splitwise-alternative'
+      fullPath: '/splitwise-alternative'
+      preLoaderRoute: typeof SplitwiseAlternativeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/splitwise-daily-limit': {
+      id: '/splitwise-daily-limit'
+      path: '/splitwise-daily-limit'
+      fullPath: '/splitwise-daily-limit'
+      preLoaderRoute: typeof SplitwiseDailyLimitRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/support': {
@@ -225,11 +311,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SupportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/switch-from-splitwise': {
+      id: '/switch-from-splitwise'
+      path: '/switch-from-splitwise'
+      fullPath: '/switch-from-splitwise'
+      preLoaderRoute: typeof SwitchFromSplitwiseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vs/$slug': {
+      id: '/vs/$slug'
+      path: '/vs/$slug'
+      fullPath: '/vs/$slug'
+      preLoaderRoute: typeof VsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -243,9 +343,14 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ReleasesRoute: ReleasesRoute,
   SecurityRoute: SecurityRoute,
+  SelfHostRoute: SelfHostRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SplitwiseAlternativeRoute: SplitwiseAlternativeRoute,
+  SplitwiseDailyLimitRoute: SplitwiseDailyLimitRoute,
   SupportRoute: SupportRoute,
+  SwitchFromSplitwiseRoute: SwitchFromSplitwiseRoute,
   TermsRoute: TermsRoute,
+  VsSlugRoute: VsSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

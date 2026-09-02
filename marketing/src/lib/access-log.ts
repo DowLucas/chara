@@ -2,8 +2,10 @@
  * One structured JSON line per page request, written to stdout.
  *
  * The container's stdout is already shipped to Loki by the homelab's Alloy
- * agent (it discovers every container), so this is all the plumbing analytics
- * needs — no tracking script, no cookies, no third party.
+ * agent (it discovers every container), so this needs no tracking script, no
+ * cookies and no third party. It is the authoritative traffic count: it sees
+ * every request, including the ones `lib/analytics.ts` never runs for (bots,
+ * blockers, JS off), so it will always report more than PostHog does.
  *
  * Visitors are counted by an opaque id: SHA-256 over the client IP plus a salt
  * generated fresh at process start. Raw IPs are never written, and the ids

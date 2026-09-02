@@ -1,3 +1,12 @@
+# check=skip=SecretsUsedInArgOrEnv
+#
+# The skip is for VITE_POSTHOG_KEY below. BuildKit's lint rule matches on the
+# variable *name* — anything containing KEY/TOKEN/SECRET/PASSWORD — and cannot
+# know that a PostHog project key is public by design: Vite inlines it into the
+# client bundle, so it is served to every visitor either way. Renaming it would
+# not silence the rule, and leaving the warning in place would put a false
+# "secret leaked" line on every marketing build.
+
 # Marketing site (Vite + TanStack Start, SSR) served by Nitro's node-server
 # preset — the repo's default build targets Cloudflare Workers, which is not
 # what the self-hosted deployment runs.
@@ -8,6 +17,14 @@ COPY package.json bun.lock bunfig.toml ./
 RUN bun install --frozen-lockfile
 
 COPY . .
+
+# PostHog project key. Public by design (it ships in the client bundle), but
+# supplied as a build arg so that forks building this image get an empty value
+# and the analytics module stays a no-op. Vite inlines VITE_* at build time,
+# so it cannot be set at runtime in docker-compose.
+ARG VITE_POSTHOG_KEY=""
+ENV VITE_POSTHOG_KEY=$VITE_POSTHOG_KEY
+
 ENV NITRO_PRESET=node-server
 RUN bun run build
 

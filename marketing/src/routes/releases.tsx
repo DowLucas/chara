@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { canonicalLink, canonicalMeta } from "@/lib/site";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { EyebrowIndex } from "@/components/EyebrowIndex";
@@ -20,9 +21,9 @@ export const Route = createFileRoute("/releases")({
         content:
           "A vertical series of dated plates. Each release, top to bottom, newest first.",
       },
-      { property: "og:url", content: "/releases" },
+      ...canonicalMeta("/releases"),
     ],
-    links: [{ rel: "canonical", href: "/releases" }],
+    links: [canonicalLink("/releases")],
   }),
   component: ReleasesPage,
 });

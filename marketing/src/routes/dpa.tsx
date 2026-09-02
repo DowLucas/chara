@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { canonicalLink, canonicalMeta } from "@/lib/site";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { LegalPrint } from "@/components/LegalPrint";
@@ -10,9 +11,9 @@ export const Route = createFileRoute("/dpa")({
       { name: "description", content: "Review the Data Processing Addendum for organizations using the Chara hosted service to ensure GDPR-compliant handling of personal data." },
       { property: "og:title", content: "Data Processing Addendum — Chara" },
       { property: "og:description", content: "GDPR Data Processing Addendum for organisations and teams using the Chara hosted bill-splitting service." },
-      { property: "og:url", content: "/dpa" },
+      ...canonicalMeta("/dpa"),
     ],
-    links: [{ rel: "canonical", href: "/dpa" }],
+    links: [canonicalLink("/dpa")],
   }),
   component: () => (
     <div className="min-h-screen bg-indigo">
