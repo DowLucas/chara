@@ -178,3 +178,34 @@ func TestMonthlySummary_EmptyMonthIsOKNotError(t *testing.T) {
 	require.Empty(t, got.ByCurrency)
 	require.Nil(t, got.Previous, "no prior month means no delta, not a zero delta")
 }
+
+func TestMonthlySummary_OptOutRoundTrips(t *testing.T) {
+	env := hostedEnv(t)
+	u := testutil.CreateUser(t, env.Pool, uniqueEmail(t, "opt"), "Opt")
+	token := env.MintToken(t, u.ID, u.Email)
+
+	var me struct {
+		MonthlySummaryOptOut bool `json:"monthly_summary_opt_out"`
+	}
+	rr := env.Do(t, env.AuthRequest(t, "GET", "/api/me", "", token))
+	require.Equal(t, http.StatusOK, rr.Code)
+	require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &me))
+	require.False(t, me.MonthlySummaryOptOut, "opted in by default")
+
+	rr = env.Do(t, env.AuthRequest(t, "PATCH", "/api/me",
+		`{"monthly_summary_opt_out": true}`, token))
+	require.Equal(t, http.StatusOK, rr.Code)
+
+	rr = env.Do(t, env.AuthRequest(t, "GET", "/api/me", "", token))
+	require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &me))
+	require.True(t, me.MonthlySummaryOptOut)
+
+	// And back off again — a one-way switch would strand anyone who
+	// changed their mind.
+	rr = env.Do(t, env.AuthRequest(t, "PATCH", "/api/me",
+		`{"monthly_summary_opt_out": false}`, token))
+	require.Equal(t, http.StatusOK, rr.Code)
+	rr = env.Do(t, env.AuthRequest(t, "GET", "/api/me", "", token))
+	require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &me))
+	require.False(t, me.MonthlySummaryOptOut)
+}

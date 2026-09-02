@@ -212,17 +212,19 @@ SET display_name = COALESCE($2, display_name),
     avatar_url   = COALESCE($3, avatar_url),
     phone        = COALESCE($4, phone),
     locale       = COALESCE($5, locale),
+    monthly_summary_opt_out = COALESCE($6, monthly_summary_opt_out),
     updated_at   = NOW()
 WHERE id = $1
 RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at, monthly_summary_opt_out
 `
 
 type UpdateUserParams struct {
-	ID          string      `db:"id" json:"id"`
-	DisplayName pgtype.Text `db:"display_name" json:"display_name"`
-	AvatarUrl   pgtype.Text `db:"avatar_url" json:"avatar_url"`
-	Phone       pgtype.Text `db:"phone" json:"phone"`
-	Locale      pgtype.Text `db:"locale" json:"locale"`
+	ID                   string      `db:"id" json:"id"`
+	DisplayName          pgtype.Text `db:"display_name" json:"display_name"`
+	AvatarUrl            pgtype.Text `db:"avatar_url" json:"avatar_url"`
+	Phone                pgtype.Text `db:"phone" json:"phone"`
+	Locale               pgtype.Text `db:"locale" json:"locale"`
+	MonthlySummaryOptOut pgtype.Bool `db:"monthly_summary_opt_out" json:"monthly_summary_opt_out"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
@@ -232,6 +234,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.AvatarUrl,
 		arg.Phone,
 		arg.Locale,
+		arg.MonthlySummaryOptOut,
 	)
 	var i User
 	err := row.Scan(

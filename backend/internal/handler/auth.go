@@ -84,6 +84,10 @@ type userResponse struct {
 	AvatarURL       *string    `json:"avatar_url,omitempty"`
 	AvatarObjectURL *string    `json:"avatar_object_url,omitempty"`
 	AvatarUpdatedAt *time.Time `json:"avatar_updated_at,omitempty"`
+	// MonthlySummaryOptOut mirrors the users column. Always present (not
+	// omitempty): the app renders a switch from it, and an absent field
+	// would be indistinguishable from "opted in".
+	MonthlySummaryOptOut bool `json:"monthly_summary_opt_out"`
 }
 
 type tokenResponse struct {
@@ -94,9 +98,10 @@ type tokenResponse struct {
 
 func userToResponse(u db.User) userResponse {
 	r := userResponse{
-		ID:    u.ID,
-		Email: u.Email,
-		Name:  u.DisplayName,
+		ID:                   u.ID,
+		Email:                u.Email,
+		Name:                 u.DisplayName,
+		MonthlySummaryOptOut: u.MonthlySummaryOptOut,
 	}
 	if u.Phone.Valid {
 		r.Phone = u.Phone.String
@@ -576,6 +581,10 @@ func (h *AuthHandler) DeleteMe(w http.ResponseWriter, r *http.Request) {
 type updateMeRequest struct {
 	Name  *string `json:"name"`
 	Phone *string `json:"phone"`
+	// MonthlySummaryOptOut is a pointer so "absent" and "explicitly false"
+	// are distinguishable — a plain bool would silently opt every caller
+	// back in on any unrelated profile edit.
+	MonthlySummaryOptOut *bool `json:"monthly_summary_opt_out"`
 }
 
 const (
@@ -599,7 +608,7 @@ func (h *AuthHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid JSON body")
 		return
 	}
-	if req.Name == nil && req.Phone == nil {
+	if req.Name == nil && req.Phone == nil && req.MonthlySummaryOptOut == nil {
 		writeError(w, http.StatusBadRequest, "no fields to update")
 		return
 	}
@@ -641,10 +650,16 @@ func (h *AuthHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback(r.Context())
 	q := db.New(tx)
 
+	optOutParam := pgtype.Bool{}
+	if req.MonthlySummaryOptOut != nil {
+		optOutParam = pgtype.Bool{Bool: *req.MonthlySummaryOptOut, Valid: true}
+	}
+
 	user, err := q.UpdateUser(r.Context(), db.UpdateUserParams{
-		ID:          claims.UserID,
-		DisplayName: nameParam,
-		Phone:       phoneParam,
+		ID:                   claims.UserID,
+		DisplayName:          nameParam,
+		Phone:                phoneParam,
+		MonthlySummaryOptOut: optOutParam,
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -674,4 +689,3 @@ func (h *AuthHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, userToResponse(user))
 }
-

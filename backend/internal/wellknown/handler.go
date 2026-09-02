@@ -39,6 +39,11 @@ type Features struct {
 	// the app hides the mic rather than offering a button that always
 	// fails. Absent on older builds → the app hides it (version-skew safe).
 	VoiceExpense bool `json:"voice_expense"`
+	// MonthlySummary advertises GET /api/me/summary and the monthly summary
+	// push. Hosted-only AND queue-dependent: without the job queue nothing
+	// ever notifies, so the app would surface a page nobody is told about.
+	// Absent on older builds → the app hides the row (version-skew safe).
+	MonthlySummary bool `json:"monthly_summary"`
 }
 
 func Handler(cfg *config.Config, version string) http.HandlerFunc {
@@ -83,6 +88,7 @@ func buildInfo(cfg *config.Config, version string) InstanceInfo {
 			Push:            cfg.RecurringEnabled,
 			SettleReminders: cfg.RecurringEnabled,
 			VoiceExpense:    cfg.HasGemini(),
+			MonthlySummary:  cfg.IsHosted() && cfg.RecurringEnabled,
 		},
 	}
 }

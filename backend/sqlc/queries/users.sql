@@ -58,6 +58,7 @@ SET display_name = COALESCE(sqlc.narg(display_name), display_name),
     avatar_url   = COALESCE(sqlc.narg(avatar_url), avatar_url),
     phone        = COALESCE(sqlc.narg(phone), phone),
     locale       = COALESCE(sqlc.narg(locale), locale),
+    monthly_summary_opt_out = COALESCE(sqlc.narg(monthly_summary_opt_out), monthly_summary_opt_out),
     updated_at   = NOW()
 WHERE id = $1
 RETURNING *;
