@@ -137,7 +137,11 @@ export default function ActivityScreen() {
       <ScrollView
         style={styles.scroll}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.graphite}
+          />
         }
       >
         <ContentContainer>

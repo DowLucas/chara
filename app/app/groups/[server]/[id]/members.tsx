@@ -1,7 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Share } from 'react-native';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Share,
+  RefreshControl,
+  ActivityIndicator,
+} from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { showAlert } from '@/lib/app-alert';
-import { hapticWarning } from '@/lib/haptics';
+import { hapticSuccess, hapticWarning } from '@/lib/haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TopBar } from '@/components/TopBar';
@@ -9,6 +18,7 @@ import { ContentContainer } from '@/components/ContentContainer';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
+import { Text } from '@/components/Text';
 import { ActionSheet, openNativeActionSheet } from '@/components/ActionSheet';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -37,19 +47,65 @@ export default function GroupMembersScreen() {
   const account = useAccount(serverUrl);
   const user = account?.user ?? null;
   const [group, setGroup] = useState<GroupDetail | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [kickSheetFor, setKickSheetFor] = useState<GroupMember | null>(null);
+  // In-flight guard for the share CTA: fetching the invite link is a round
+  // trip, and a double tap would otherwise open two share sheets.
+  const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const reload = useCallback(() => {
+  const reload = useCallback(async () => {
     if (!id || !serverUrl) return;
-    api
-      .getGroup(id)
-      .then(setGroup)
-      .catch(() => {});
+    try {
+      setGroup(await api.getGroup(id));
+      setLoadError(false);
+    } catch {
+      // A failed load must not read as "0 members" — surface it instead.
+      setLoadError(true);
+    }
   }, [id, serverUrl, api]);
 
   useEffect(() => {
-    reload();
+    void reload();
   }, [reload]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await reload();
+    setRefreshing(false);
+  }, [reload]);
+
+  async function copyInviteLink() {
+    if (!group || sharing) return;
+    setSharing(true);
+    try {
+      const { invite_url: link } = await api.getInviteLink(id);
+      await Clipboard.setStringAsync(link);
+      hapticSuccess();
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (e: any) {
+      showAlert({ title: t('members.shareErrorTitle'), message: e?.message || String(e) });
+    } finally {
+      setSharing(false);
+    }
+  }
+
+  async function shareInviteLink() {
+    if (!group || sharing) return;
+    setSharing(true);
+    try {
+      const { invite_url: link } = await api.getInviteLink(id);
+      await Share.share({
+        message: t('members.shareMessage', { name: group.name, link }),
+      });
+    } catch (e: any) {
+      showAlert({ title: t('members.shareErrorTitle'), message: e?.message || String(e) });
+    } finally {
+      setSharing(false);
+    }
+  }
 
   const members: GroupMember[] = group?.members ?? [];
   const shorten = useMemo(
@@ -141,8 +197,32 @@ export default function GroupMembersScreen() {
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={{ paddingBottom: insets.bottom + spacing.s5 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.graphite}
+          />
+        }
       >
         <ContentContainer>
+        {loadError ? (
+          <View style={styles.loadState}>
+            <EmptyState
+              title={t('members.loadErrorTitle')}
+              body={t('members.loadErrorBody')}
+              icon="alert-circle"
+            />
+            <Button kind="secondary" onPress={() => void reload()}>
+              {t('common.retry')}
+            </Button>
+          </View>
+        ) : !group ? (
+          <View style={styles.loadState}>
+            <ActivityIndicator color={colors.graphite} />
+          </View>
+        ) : (
+          <>
         <View style={styles.header}>
           <Text style={styles.eyebrow}>{t('members.eyebrow')}</Text>
           <Text
@@ -215,6 +295,8 @@ export default function GroupMembersScreen() {
             );
           })
         )}
+          </>
+        )}
         </ContentContainer>
       </ScrollView>
       <View style={[styles.ctaBar, { paddingBottom: insets.bottom + 8 }]}>
@@ -228,20 +310,28 @@ export default function GroupMembersScreen() {
         </Button>
         <Button
           kind="primary"
-          onPress={async () => {
-            if (!group) return;
-            try {
-              const { invite_url: link } = await api.getInviteLink(id);
-              await Share.share({
-                message: t('members.shareMessage', { name: group.name, link }),
-              });
-            } catch {}
-          }}
-          disabled={!group}
+          onPress={shareInviteLink}
+          disabled={!group || sharing}
           style={{ flex: 1 }}
         >
           {t('members.shareCta')}
         </Button>
+        {/* Copy sits alongside the share sheet as a compact icon so the two
+            labelled CTAs keep their room. Feedback is the check swap. */}
+        <TouchableOpacity
+          style={[styles.copyBtn, (!group || sharing) && styles.copyBtnDisabled]}
+          onPress={copyInviteLink}
+          disabled={!group || sharing}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={copied ? t('members.copiedLabel') : t('members.copyLinkLabel')}
+        >
+          <Feather
+            name={copied ? 'check' : 'copy'}
+            size={20}
+            color={copied ? colors.moss : colors.graphite}
+          />
+        </TouchableOpacity>
         </ContentContainer>
       </View>
       <ActionSheet
@@ -346,5 +436,21 @@ const styles = StyleSheet.create({
   ctaInner: {
     flexDirection: 'row',
     gap: spacing.s2,
+  },
+  copyBtn: {
+    width: 52,
+    height: 52,
+    borderRadius: 6,
+    borderWidth: 0.5,
+    borderColor: colors.graphite,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  copyBtnDisabled: { opacity: 0.4 },
+  loadState: {
+    paddingVertical: spacing.s7,
+    paddingHorizontal: spacing.s5,
+    alignItems: 'center',
+    gap: spacing.s4,
   },
 });

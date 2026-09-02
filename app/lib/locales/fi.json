@@ -120,6 +120,7 @@
     "amount": "summa",
     "amountPlaceholder": "0",
     "amountsLabel": "summat",
+    "autoBadge": "auto",
     "autoFillHint": "tyhjät rivit jakavat loput tasan",
     "back": "Takaisin",
     "between": "kesken",
@@ -239,7 +240,8 @@
       "body": "Arkistoimasi ryhmät näkyvät täällä. Voit avata ryhmän uudelleen sen asetuksista.",
       "title": "Ei arkistoituja ryhmiä"
     },
-    "loadError": "Arkistoituja ryhmiä ei voitu ladata. Vedä alas ja yritä uudelleen.",
+    "loadError": "Arkistoitujen ryhmien lataaminen epäonnistui.",
+    "retry": "Yritä uudelleen",
     "title": "Arkistoidut ryhmät"
   },
   "categories": {
@@ -276,7 +278,9 @@
     "loading": "Ladataan…",
     "mainServerInfoLabel": "Tietoja Chara Cloudista",
     "mainServerLabel": "Chara-palvelin",
+    "networkError": "Ei verkkoyhteyttä. Tarkista yhteytesi ja yritä uudelleen.",
     "ok": "OK",
+    "retry": "Yritä uudelleen",
     "save": "Tallenna",
     "saving": "Tallennetaan…",
     "requestFailed": "Jotain meni pieleen. Yritä uudelleen.",
@@ -319,6 +323,8 @@
     "eyebrow": "muokkaa ryhmää",
     "languageHint": "Tekoälyn luomat kuittien otsikot kirjoitetaan tällä kielellä kaikille ryhmäläisille.",
     "languageLabel": "Kieli",
+    "loadErrorBody": "Tarkista yhteytesi ja yritä uudelleen.",
+    "loadErrorTitle": "Ryhmän lataaminen epäonnistui",
     "nameLabel": "Ryhmän nimi",
     "namePlaceholder": "Ryhmän nimi",
     "saving": "Tallennetaan…",
@@ -353,6 +359,8 @@
       "sourceManual": "Mukautettu kurssi"
     },
     "loadError": "Kulua ei voitu ladata.",
+    "loadErrorBody": "Tarkista yhteytesi ja yritä uudelleen.",
+    "loadErrorTitle": "Menon lataaminen epäonnistui",
     "menuLabel": "Kuluvalikko",
     "noChanges": "Ei muutoksia.",
     "noReceipt": "Ei kuittia.",
@@ -416,11 +424,14 @@
   },
   "groupCreated": {
     "body": "Anna puhelin kaverille skannattavaksi.",
+    "copied": "Kopioitu",
+    "copyLink": "Kopioi linkki",
     "errorLoad": "Ryhmän lataus epäonnistui",
     "errorTitle": "Jotain meni pieleen",
     "eyebrow": "ryhmä luotu",
     "goToGroups": "Ryhmiin",
     "open": "Avaa ryhmä",
+    "retry": "Yritä uudelleen",
     "share": "Jaa kutsulinkki",
     "shareMessage": "Liity ryhmään ”{{name}}” Charassa: {{link}}"
   },
@@ -810,6 +821,8 @@
   },
   "invite": {
     "body": "Kaverit liittyvät skannaamalla tämän.",
+    "copied": "Kopioitu",
+    "copy": "Kopioi linkki",
     "errorLoad": "Ryhmän lataus epäonnistui",
     "eyebrow": "kutsu",
     "share": "Jaa kutsulinkki",
@@ -873,6 +886,8 @@
     "termsOfService": "Käyttöehdot"
   },
   "members": {
+    "copiedLabel": "Kutsulinkki kopioitu",
+    "copyLinkLabel": "Kopioi kutsulinkki",
     "count": "jäseniä · {{count}}",
     "count_one": "jäseniä · {{count}}",
     "count_other": "jäseniä · {{count}}",
@@ -883,11 +898,14 @@
     "inviteCta": "Kutsu QR-koodilla",
     "joined": "liittyi {{date}}",
     "joinedWithRole": "liittyi {{date}} · {{role}}",
+    "loadErrorBody": "Tarkista yhteytesi ja yritä uudelleen.",
+    "loadErrorTitle": "Jäsenten lataaminen epäonnistui",
     "role": "rooli",
     "roleMember": "jäsen",
     "roleOwner": "omistaja",
     "roleUnknownJoin": "liittyi äskettäin",
     "shareCta": "Jaa linkki",
+    "shareErrorTitle": "Kutsulinkin haku epäonnistui",
     "shareMessage": "Liity ryhmään ”{{name}}” Charassa: {{link}}",
     "you": "sinä"
   },
@@ -981,6 +999,8 @@
     "eyebrow": "automaatio",
     "intervalPrefix": "joka",
     "listHeader": "Toistuvat laskut",
+    "loadErrorBody": "Tarkista yhteytesi ja yritä uudelleen.",
+    "loadErrorTitle": "Toistuvien laskujen lataaminen epäonnistui",
     "newButton": "+ Uusi toistuva lasku",
     "pauseButton": "Keskeytä",
     "paused": {
@@ -1003,6 +1023,9 @@
     "resumeAllAfterUnlock": "Jatka kaikkia",
     "resumeAllBanner_one": "{{count}} lasku on keskeytetty ryhmän lukituksen ajalta.",
     "resumeAllBanner_other": "{{count}} laskua on keskeytetty ryhmän lukituksen ajalta.",
+    "resumeAllBusy": "Jatketaan…",
+    "resumeAllErrorBody": "Ryhmä voi olla yhä lukittu. Yritä uudelleen.",
+    "resumeAllErrorTitle": "Jatkaminen epäonnistui",
     "resumeButton": "Jatka",
     "saveButton": "Tallenna",
     "schedule": {
@@ -1207,9 +1230,15 @@
     "legalFooter": "Jatkamalla hyväksyt <terms>Käyttöehdot</terms> ja <privacy>Tietosuojakäytännön</privacy>.",
     "or": "tai",
     "sending": "Lähetetään…",
+    "useDifferentEmail": "Käytä toista sähköpostia",
     "useMyServer": "käytä omaa palvelinta →",
     "linkErrorTitle": "Kirjautumislinkki ei toiminut",
-    "linkErrorBody": "Linkki on voinut vanhentua tai se on jo käytetty. Pyydä uusi linkki ja yritä uudelleen."
+    "linkErrorBody": "Linkki on voinut vanhentua tai se on jo käytetty. Pyydä uusi linkki ja yritä uudelleen.",
+    "verifyServer": {
+      "body": "Tämä linkki lisää Charaan uuden palvelimen. Jatka vain, jos pyysit sitä itse.",
+      "continue": "Jatka",
+      "title": "Kirjaudutaanko palvelimeen {{host}}?"
+    }
   },
   "tabs": {
     "activity": "Tapahtumat",

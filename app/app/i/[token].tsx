@@ -45,7 +45,11 @@ export default function InviteUniversalLink() {
       if (!rawUrl) rawUrl = `https://${FALLBACK_HOST}/i/${tokenStr}`;
 
       const parsed = parseInviteUrl(rawUrl);
-      if ('kind' in parsed && parsed.kind === 'invalid') {
+      // `kind` exists only on InviteParseError (and is always 'invalid'), so
+      // the presence check alone is the discriminant. Adding `&& kind ===
+      // 'invalid'` made the condition a conjunction, which stopped TypeScript
+      // narrowing the else branch to InviteRef.
+      if ('kind' in parsed) {
         router.replace('/');
         return;
       }

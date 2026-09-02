@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/DowLucas/chara/internal/ulid"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -32,13 +33,13 @@ type GroupStatsTotalResponse struct {
 }
 
 type GroupStatsResponse struct {
-	MemberCount       int64                         `json:"member_count"`
-	ExpenseCount      int64                         `json:"expense_count"`
-	TotalsByCurrency  []GroupStatsTotalResponse     `json:"totals_by_currency"`
-	TopSpender        *GroupStatsTopSpenderResponse `json:"top_spender"`
-	CreatedAt         time.Time                     `json:"created_at"`
-	FirstExpenseAt    *string                       `json:"first_expense_at"`
-	LastExpenseAt     *string                       `json:"last_expense_at"`
+	MemberCount      int64                         `json:"member_count"`
+	ExpenseCount     int64                         `json:"expense_count"`
+	TotalsByCurrency []GroupStatsTotalResponse     `json:"totals_by_currency"`
+	TopSpender       *GroupStatsTopSpenderResponse `json:"top_spender"`
+	CreatedAt        time.Time                     `json:"created_at"`
+	FirstExpenseAt   *string                       `json:"first_expense_at"`
+	LastExpenseAt    *string                       `json:"last_expense_at"`
 }
 
 // Stats returns aggregate figures about a group. Member-only read endpoint —
@@ -549,6 +550,27 @@ func (h *GroupHandler) RemoveMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// A kicked member still holds whatever invite link they were sent, and
+	// invite tokens are multi-use and never expire — so without a rotation the
+	// removal is undone by one tap on an old link. Self-leave does not rotate:
+	// leaving is the member's own choice and invalidating everyone else's link
+	// would be collateral damage.
+	if !isSelf {
+		if _, err := q.RegenerateInviteToken(r.Context(), db.RegenerateInviteTokenParams{
+			ID:                         groupID,
+			InviteToken:                ulid.New(),
+			InviteTokenCreatedByUserID: pgtype.Text{String: claims.UserID, Valid: true},
+		}); err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error")
+			return
+		}
+		if err := writeActivity(r.Context(), q, groupID, claims.UserID,
+			EventInviteLinkRotated, groupID, EntityGroup, nil); err != nil {
+			writeError(w, http.StatusInternalServerError, "could not write activity")
+			return
+		}
+	}
+
 	event := EventMemberKicked
 	if isSelf {
 		event = EventMemberLeft
@@ -643,4 +665,3 @@ func (h *GroupHandler) CanLeave(w http.ResponseWriter, r *http.Request) {
 		Reasons: append([]canLeaveReason{}, reasons...),
 	})
 }
-

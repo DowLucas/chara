@@ -247,6 +247,10 @@ func (h *GroupHandler) Create(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "name is required")
 		return
 	}
+	if err := validateText(req.Name, maxGroupNameLen, "name"); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	if req.Currency == "" {
 		req.Currency = "SEK"
 	}
@@ -446,6 +450,10 @@ func (h *GroupHandler) Update(w http.ResponseWriter, r *http.Request) {
 	snapshot := GroupSnapshot{}
 
 	if req.Name != nil && *req.Name != prev.Name {
+		if err := validateText(*req.Name, maxGroupNameLen, "name"); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 		params.Name = pgtype.Text{String: *req.Name, Valid: true}
 		snapshot.Changed = append(snapshot.Changed, "name")
 		snapshot.Name = *req.Name

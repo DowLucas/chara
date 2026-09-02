@@ -49,7 +49,7 @@ right thing, Caddy add-on included.)
 | I want to… | Run |
 |------------|-----|
 | see what's happening | `docker compose logs -f` |
-| update to the newest Chara | `docker compose pull && docker compose up -d` |
+| update to the newest Chara | `git pull && ./setup.sh`, answer **n** — `setup.sh` re-pins `CHARA_VERSION` to the image built from this checkout (secrets and answers are kept). Prefer to track main instead? Set `CHARA_VERSION=latest` in `.env` and `docker compose pull && docker compose up -d` |
 | stop | `docker compose down` |
 | back up | copy the two Docker volumes `deploy_postgres_data` and `deploy_minio_data` (e.g. `docker run --rm -v deploy_postgres_data:/v -v $PWD:/b alpine tar czf /b/postgres.tgz -C /v .`) |
 | change a setting (add SMTP, switch to a domain…) | `./setup.sh`, answer **n** to "keep .env?" — passwords and secrets are kept, only the questions are re-asked |
@@ -72,9 +72,16 @@ Add-ons, combined with `-f`:
 - `docker-compose.build.yml` — build the API from this checkout instead of pulling
   `ghcr.io/dowlucas/chara-backend`.
 
-Already have nginx / Traefik / Caddy? Proxy to `127.0.0.1:8080`, set
-`BASE_URL=https://your.domain` and `TRUSTED_PROXIES` to your proxy's IP range,
-and optionally `API_BIND=127.0.0.1` so the API isn't reachable directly.
+Already have nginx / Traefik / Caddy? Proxy to `127.0.0.1:8080` and set
+`BASE_URL=https://your.domain` plus `TRUSTED_PROXIES` to your proxy's IP range.
+Leave `API_BIND` on its `127.0.0.1` default: publishing the API on `0.0.0.0`
+serves it in cleartext right next to your HTTPS proxy, and Docker's port
+publishing goes in ahead of `ufw` / `firewalld`, so a host firewall does not
+close that port for you. Only home-Wi-Fi setups, where phones talk to the API
+port directly, want `API_BIND=0.0.0.0` — `setup.sh` sets that for you.
+
+If your proxy is itself a container, don't reach for `0.0.0.0`: attach it to the
+`deploy_default` network and proxy to `chara-api:8080` instead.
 
 Every variable is documented in [`.env.example`](.env.example).
 

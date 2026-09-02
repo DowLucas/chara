@@ -396,13 +396,23 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	var req createExpenseReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		writeError(w, http.StatusBadRequest, decodeErrorMessage(err))
 		return
 	}
 
 	if req.Title == "" {
 		writeError(w, http.StatusBadRequest, "title is required")
 		return
+	}
+	if err := validateText(req.Title, maxTitleLen, "title"); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if req.Notes != nil {
+		if err := validateText(*req.Notes, maxNotesLen, "notes"); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 	}
 	if req.Amount <= 0 {
 		writeError(w, http.StatusBadRequest, "amount must be positive")
@@ -514,6 +524,12 @@ func (h *ExpenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		canonicalAmount = conv.AmountMinor
+		// The conversion multiplies by a rate, so a request amount that was
+		// inside money.MaxAmount can land outside it in the group currency.
+		if canonicalAmount > int64(money.MaxAmount) {
+			writeError(w, http.StatusBadRequest, "converted amount is too large")
+			return
+		}
 		canonicalCurrency = group.Currency
 		fxOriginalAmount = pgtype.Int8{Int64: int64(req.Amount), Valid: true}
 		fxOriginalCurrency = pgtype.Text{String: req.Currency, Valid: true}
@@ -783,7 +799,7 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	var req updateExpenseReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		writeError(w, http.StatusBadRequest, decodeErrorMessage(err))
 		return
 	}
 
@@ -808,7 +824,17 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	params := db.UpdateExpenseParams{ID: expenseID}
 	if req.Title != nil {
+		if err := validateText(*req.Title, maxTitleLen, "title"); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 		params.Title = pgtype.Text{String: *req.Title, Valid: true}
+	}
+	if req.Notes != nil {
+		if err := validateText(*req.Notes, maxNotesLen, "notes"); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 	}
 	// Default-init: req.Amount and req.Currency are persisted via the explicit
 	// FX-aware path below — we leave params.Amount/Currency unset here so
@@ -945,6 +971,10 @@ func (h *ExpenseHandler) Update(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			newCanonicalAmount = conv.AmountMinor
+			if newCanonicalAmount > int64(money.MaxAmount) {
+				writeError(w, http.StatusBadRequest, "converted amount is too large")
+				return
+			}
 			fxOriginalAmount = pgtype.Int8{Int64: inputAmount, Valid: true}
 			fxOriginalCurrency = pgtype.Text{String: inputCurrency, Valid: true}
 			var n pgtype.Numeric
@@ -1408,7 +1438,7 @@ func (h *ExpenseHandler) Merge(w http.ResponseWriter, r *http.Request) {
 
 	var req mergeExpensesReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		writeError(w, http.StatusBadRequest, decodeErrorMessage(err))
 		return
 	}
 

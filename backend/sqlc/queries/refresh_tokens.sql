@@ -9,7 +9,10 @@ SELECT * FROM refresh_tokens WHERE token_hash = $1;
 -- name: TouchRefreshToken :exec
 UPDATE refresh_tokens SET last_used_at = NOW() WHERE id = $1;
 
--- name: RevokeRefreshToken :exec
+-- Rotation guard: the WHERE clause makes this a compare-and-swap, and the
+-- rows-affected count tells the caller whether it won. Zero rows means another
+-- request already rotated this token, i.e. a concurrent reuse.
+-- name: RevokeRefreshToken :execrows
 UPDATE refresh_tokens SET revoked_at = NOW() WHERE id = $1 AND revoked_at IS NULL;
 
 -- name: RevokeAllRefreshTokensForUser :exec

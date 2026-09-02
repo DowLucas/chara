@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -11,12 +10,14 @@ import {
   ScrollView,
 } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
+import { hapticSuccess } from '@/lib/haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { apiFor, ApiError, Group } from '@/lib/api';
 import { ContentContainer } from '@/components/ContentContainer';
+import { Text } from '@/components/Text';
 import { CurrencyPicker } from '@/components/CurrencyPicker';
 import { SUGGESTED_CURRENCY_CODES } from '@/lib/currencies';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
@@ -42,12 +43,23 @@ export default function EditGroupScreen() {
 
   useEffect(() => {
     if (!id || !serverUrl) return;
-    api.getGroup(id).then((g) => {
-      setGroup(g);
-      setName(g.name);
-      setCurrency(g.currency);
-      setLanguage(g.language || 'en');
-    });
+    api
+      .getGroup(id)
+      .then((g) => {
+        setGroup(g);
+        setName(g.name);
+        setCurrency(g.currency);
+        setLanguage(g.language || 'en');
+      })
+      .catch(async (e: any) => {
+        // Without this the screen sits on its spinner forever.
+        await showAlert({
+          title: t('editGroup.loadErrorTitle'),
+          message: e?.message || t('editGroup.loadErrorBody'),
+        });
+        router.back();
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, serverUrl]);
 
   const dirty =
@@ -66,6 +78,7 @@ export default function EditGroupScreen() {
         currency: currency !== group.currency ? currency : undefined,
         language: language !== (group.language || 'en') ? language : undefined,
       });
+      hapticSuccess();
       router.back();
     } catch (e: any) {
       // Surface the backend's group_currency_locked code as a clear,

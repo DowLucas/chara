@@ -28,6 +28,7 @@ import { useTranslation } from 'react-i18next';
 import { Feather } from '@expo/vector-icons';
 
 import { showAlert } from '@/lib/app-alert';
+import { userErrorMessage } from '@/lib/user-error';
 import { ContentContainer } from '@/components/ContentContainer';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
@@ -183,7 +184,7 @@ export default function ImportSourceScreen() {
     } catch (e) {
       showAlert({
         title: t('import.extractError.title'),
-        message: e instanceof Error ? e.message : String(e),
+        message: userErrorMessage(e, t('common.requestFailed')),
       });
     } finally {
       setBusy(false);
@@ -228,7 +229,7 @@ export default function ImportSourceScreen() {
       setStep('review');
       showAlert({
         title: t('import.commitError.title'),
-        message: e instanceof Error ? e.message : String(e),
+        message: userErrorMessage(e, t('common.requestFailed')),
       });
     } finally {
       setBusy(false);

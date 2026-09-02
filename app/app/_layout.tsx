@@ -66,7 +66,16 @@ function handleDeepLink(url: string | null | undefined): void {
   // back as chara://verify?token=…&server=… . Route into the sign-in screen,
   // which exchanges the raw token for a JWT via its existing flow. The `server`
   // param is the issuing backend (the browser hop loses the screen's context);
-  // normalize it to the account join-key form, ignoring anything malformed.
+  // normalize it to the account join-key form.
+  //
+  // The server here is attacker-controllable (anyone can send the user a
+  // chara://verify link), so a malformed one drops the whole link rather than
+  // falling through to the hosted default — otherwise an attacker's token
+  // would be verified against Chara Cloud. Whether an *otherwise valid* but
+  // unfamiliar server may be adopted is decided on the sign-in screen via
+  // `classifyVerifyTarget`; that gate has to live there anyway, because Expo
+  // Router maps `chara://sign-in?…` straight onto the route and never reaches
+  // this handler.
   if (lower.startsWith('chara://verify') || lower.startsWith('quits://verify')) {
     const q = Linking.parse(url).queryParams ?? {};
     const rawToken = Array.isArray(q.token) ? q.token[0] : q.token;
@@ -75,7 +84,8 @@ function handleDeepLink(url: string | null | undefined): void {
       const rawServer = Array.isArray(q.server) ? q.server[0] : q.server;
       if (typeof rawServer === 'string' && rawServer) {
         const normalized = normalizeServerUrl(rawServer);
-        if (typeof normalized === 'string') params.set('server', normalized);
+        if (typeof normalized !== 'string') return;
+        params.set('server', normalized);
       }
       router.push(`/(auth)/sign-in?${params.toString()}` as never);
     }

@@ -124,6 +124,7 @@
     "amount": "importo",
     "amountPlaceholder": "0",
     "amountsLabel": "importi",
+    "autoBadge": "auto",
     "autoFillHint": "le righe vuote si dividono il resto in parti uguali",
     "back": "Indietro",
     "between": "tra",
@@ -245,7 +246,8 @@
       "body": "I gruppi che archivi compaiono qui. Puoi riaprirne uno dalle sue impostazioni.",
       "title": "Nessun gruppo archiviato"
     },
-    "loadError": "Non sono riuscito a caricare i gruppi archiviati. Tira giù e riprova.",
+    "loadError": "Impossibile caricare i gruppi archiviati.",
+    "retry": "Riprova",
     "title": "Gruppi archiviati"
   },
   "categories": {
@@ -282,7 +284,9 @@
     "loading": "Caricamento…",
     "mainServerInfoLabel": "Info su Chara Cloud",
     "mainServerLabel": "Chara Server",
+    "networkError": "Sei offline. Controlla la connessione e riprova.",
     "ok": "OK",
+    "retry": "Riprova",
     "save": "Salva",
     "saving": "Salvataggio…",
     "requestFailed": "Qualcosa è andato storto. Riprova.",
@@ -325,6 +329,8 @@
     "eyebrow": "modifica gruppo",
     "languageHint": "I titoli degli scontrini generati dall'AI saranno scritti in questa lingua per tutti i membri del gruppo.",
     "languageLabel": "Lingua",
+    "loadErrorBody": "Controlla la connessione e riprova.",
+    "loadErrorTitle": "Impossibile caricare questo gruppo",
     "nameLabel": "Nome del gruppo",
     "namePlaceholder": "Nome del gruppo",
     "saving": "Salvataggio…",
@@ -359,6 +365,8 @@
       "sourceManual": "Tasso personalizzato"
     },
     "loadError": "Non riesco a caricare questa spesa.",
+    "loadErrorBody": "Controlla la connessione e riprova.",
+    "loadErrorTitle": "Impossibile caricare questa spesa",
     "menuLabel": "Menu spesa",
     "noChanges": "Nessuna modifica.",
     "noReceipt": "Nessuno scontrino allegato.",
@@ -422,11 +430,14 @@
   },
   "groupCreated": {
     "body": "Passa il telefono a un amico e fagli scansionare il codice.",
+    "copied": "Copiato",
+    "copyLink": "Copia link",
     "errorLoad": "Non riesco a caricare il gruppo",
     "errorTitle": "Qualcosa è andato storto",
     "eyebrow": "gruppo creato",
     "goToGroups": "Vai ai gruppi",
     "open": "Apri gruppo",
+    "retry": "Riprova",
     "share": "Condividi link di invito",
     "shareMessage": "Vieni nel gruppo \"{{name}}\" su Chara: {{link}}"
   },
@@ -832,6 +843,8 @@
   },
   "invite": {
     "body": "Gli amici scansionano questo per entrare.",
+    "copied": "Copiato",
+    "copy": "Copia link",
     "errorLoad": "Non riesco a caricare il gruppo",
     "eyebrow": "invito",
     "share": "Condividi link di invito",
@@ -896,6 +909,8 @@
     "termsOfService": "Termini di servizio"
   },
   "members": {
+    "copiedLabel": "Link d'invito copiato",
+    "copyLinkLabel": "Copia link d'invito",
     "count": "membri · {{count}}",
     "count_many": "membri · {{count}}",
     "count_one": "membri · {{count}}",
@@ -907,11 +922,14 @@
     "inviteCta": "Invita con QR",
     "joined": "entrato il {{date}}",
     "joinedWithRole": "entrato il {{date}} · {{role}}",
+    "loadErrorBody": "Controlla la connessione e riprova.",
+    "loadErrorTitle": "Impossibile caricare i membri",
     "role": "ruolo",
     "roleMember": "membro",
     "roleOwner": "proprietario",
     "roleUnknownJoin": "entrato di recente",
     "shareCta": "Condividi link",
+    "shareErrorTitle": "Impossibile ottenere il link d'invito",
     "shareMessage": "Vieni nel gruppo \"{{name}}\" su Chara: {{link}}",
     "you": "tu"
   },
@@ -1005,6 +1023,8 @@
     "eyebrow": "automazione",
     "intervalPrefix": "ogni",
     "listHeader": "Bollette ricorrenti",
+    "loadErrorBody": "Controlla la connessione e riprova.",
+    "loadErrorTitle": "Impossibile caricare le spese ricorrenti",
     "newButton": "+ Nuova bolletta ricorrente",
     "pauseButton": "Metti in pausa",
     "paused": {
@@ -1029,6 +1049,9 @@
     "resumeAllBanner_many": "{{count}} bollette sono in pausa da quando il gruppo è stato bloccato.",
     "resumeAllBanner_one": "{{count}} bolletta è in pausa da quando il gruppo è stato bloccato.",
     "resumeAllBanner_other": "{{count}} bollette sono in pausa da quando il gruppo è stato bloccato.",
+    "resumeAllBusy": "Ripresa…",
+    "resumeAllErrorBody": "Il gruppo potrebbe essere ancora bloccato. Riprova.",
+    "resumeAllErrorTitle": "Impossibile riprendere",
     "resumeButton": "Riprendi",
     "saveButton": "Salva",
     "schedule": {
@@ -1247,9 +1270,15 @@
     "legalFooter": "Continuando accetti i nostri <terms>Termini di servizio</terms> e la <privacy>Informativa sulla privacy</privacy>.",
     "or": "oppure",
     "sending": "Invio…",
+    "useDifferentEmail": "Usa un'altra email",
     "useMyServer": "usa il mio server →",
     "linkErrorTitle": "Il link di accesso non ha funzionato",
-    "linkErrorBody": "Il link potrebbe essere scaduto o già stato usato. Richiedi un nuovo link e riprova."
+    "linkErrorBody": "Il link potrebbe essere scaduto o già stato usato. Richiedi un nuovo link e riprova.",
+    "verifyServer": {
+      "body": "Questo link aggiungerà un nuovo server a Chara. Continua solo se l'hai richiesto tu.",
+      "continue": "Continua",
+      "title": "Accedere a {{host}}?"
+    }
   },
   "tabs": {
     "activity": "Attività",

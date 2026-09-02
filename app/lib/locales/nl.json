@@ -120,6 +120,7 @@
     "amount": "bedrag",
     "amountPlaceholder": "0",
     "amountsLabel": "bedragen",
+    "autoBadge": "auto",
     "autoFillHint": "lege rijen verdelen de rest gelijk",
     "back": "Terug",
     "between": "tussen",
@@ -239,7 +240,8 @@
       "body": "Groepen die je archiveert verschijnen hier. Je kunt ze heropenen via hun instellingen.",
       "title": "Geen gearchiveerde groepen"
     },
-    "loadError": "Kon gearchiveerde groepen niet laden. Trek omlaag om opnieuw te proberen.",
+    "loadError": "Kan gearchiveerde groepen niet laden.",
+    "retry": "Opnieuw proberen",
     "title": "Gearchiveerde groepen"
   },
   "categories": {
@@ -276,7 +278,9 @@
     "loading": "Laden…",
     "mainServerInfoLabel": "Over Chara Cloud",
     "mainServerLabel": "Chara Server",
+    "networkError": "Je bent offline. Controleer je verbinding en probeer het opnieuw.",
     "ok": "OK",
+    "retry": "Opnieuw proberen",
     "save": "Opslaan",
     "saving": "Opslaan…",
     "requestFailed": "Er is iets misgegaan. Probeer het opnieuw.",
@@ -319,6 +323,8 @@
     "eyebrow": "groep bewerken",
     "languageHint": "Door AI gegenereerde titels van bonnen worden in deze taal geschreven voor iedereen in de groep.",
     "languageLabel": "Taal",
+    "loadErrorBody": "Controleer je verbinding en probeer het opnieuw.",
+    "loadErrorTitle": "Kan deze groep niet laden",
     "nameLabel": "Groepsnaam",
     "namePlaceholder": "Groepsnaam",
     "saving": "Opslaan…",
@@ -353,6 +359,8 @@
       "sourceManual": "Eigen koers"
     },
     "loadError": "Kon deze uitgave niet laden.",
+    "loadErrorBody": "Controleer je verbinding en probeer het opnieuw.",
+    "loadErrorTitle": "Kan deze uitgave niet laden",
     "menuLabel": "Uitgavemenu",
     "noChanges": "Niets gewijzigd.",
     "noReceipt": "Geen bon toegevoegd.",
@@ -416,11 +424,14 @@
   },
   "groupCreated": {
     "body": "Geef je telefoon aan een vriend en laat ze scannen.",
+    "copied": "Gekopieerd",
+    "copyLink": "Link kopiëren",
     "errorLoad": "Kan groep niet laden",
     "errorTitle": "Er is iets misgegaan",
     "eyebrow": "groep aangemaakt",
     "goToGroups": "Ga naar groepen",
     "open": "Groep openen",
+    "retry": "Opnieuw proberen",
     "share": "Uitnodigingslink delen",
     "shareMessage": "Word lid van \"{{name}}\" op Chara: {{link}}"
   },
@@ -810,6 +821,8 @@
   },
   "invite": {
     "body": "Vrienden scannen dit om lid te worden.",
+    "copied": "Gekopieerd",
+    "copy": "Link kopiëren",
     "errorLoad": "Kan groep niet laden",
     "eyebrow": "uitnodigen",
     "share": "Uitnodigingslink delen",
@@ -873,6 +886,8 @@
     "termsOfService": "Servicevoorwaarden"
   },
   "members": {
+    "copiedLabel": "Uitnodigingslink gekopieerd",
+    "copyLinkLabel": "Uitnodigingslink kopiëren",
     "count": "leden · {{count}}",
     "count_one": "leden · {{count}}",
     "count_other": "leden · {{count}}",
@@ -883,11 +898,14 @@
     "inviteCta": "Uitnodigen via QR",
     "joined": "lid sinds {{date}}",
     "joinedWithRole": "lid sinds {{date}} · {{role}}",
+    "loadErrorBody": "Controleer je verbinding en probeer het opnieuw.",
+    "loadErrorTitle": "Kan leden niet laden",
     "role": "rol",
     "roleMember": "lid",
     "roleOwner": "eigenaar",
     "roleUnknownJoin": "recent toegevoegd",
     "shareCta": "Link delen",
+    "shareErrorTitle": "Kan de uitnodigingslink niet ophalen",
     "shareMessage": "Word lid van \"{{name}}\" op Chara: {{link}}",
     "you": "jij"
   },
@@ -981,6 +999,8 @@
     "eyebrow": "automatisering",
     "intervalPrefix": "elke",
     "listHeader": "Terugkerende rekeningen",
+    "loadErrorBody": "Controleer je verbinding en probeer het opnieuw.",
+    "loadErrorTitle": "Kan terugkerende kosten niet laden",
     "newButton": "+ Nieuwe terugkerende rekening",
     "pauseButton": "Pauzeren",
     "paused": {
@@ -1003,6 +1023,9 @@
     "resumeAllAfterUnlock": "Alles hervatten",
     "resumeAllBanner_one": "{{count}} rekening is gepauzeerd sinds de groep werd vergrendeld.",
     "resumeAllBanner_other": "{{count}} rekeningen zijn gepauzeerd sinds de groep werd vergrendeld.",
+    "resumeAllBusy": "Hervatten…",
+    "resumeAllErrorBody": "De groep is mogelijk nog vergrendeld. Probeer het opnieuw.",
+    "resumeAllErrorTitle": "Hervatten mislukt",
     "resumeButton": "Hervatten",
     "saveButton": "Opslaan",
     "schedule": {
@@ -1207,9 +1230,15 @@
     "legalFooter": "Door verder te gaan ga je akkoord met onze <terms>Servicevoorwaarden</terms> en <privacy>Privacybeleid</privacy>.",
     "or": "of",
     "sending": "Versturen…",
+    "useDifferentEmail": "Ander e-mailadres gebruiken",
     "useMyServer": "gebruik mijn server →",
     "linkErrorTitle": "Aanmeldlink werkte niet",
-    "linkErrorBody": "Deze link is mogelijk verlopen of al gebruikt. Vraag een nieuwe link aan en probeer het opnieuw."
+    "linkErrorBody": "Deze link is mogelijk verlopen of al gebruikt. Vraag een nieuwe link aan en probeer het opnieuw.",
+    "verifyServer": {
+      "body": "Deze link voegt een nieuwe server toe aan Chara. Ga alleen verder als je hierom hebt gevraagd.",
+      "continue": "Doorgaan",
+      "title": "Inloggen bij {{host}}?"
+    }
   },
   "tabs": {
     "activity": "Activiteit",

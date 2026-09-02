@@ -23,7 +23,6 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   TouchableOpacity,
   View,
@@ -35,6 +34,7 @@ import { useTranslation } from 'react-i18next';
 import { showAlert } from '@/lib/app-alert';
 import { itemizedAmounts, type Itemization } from '@/lib/scan-items';
 import { splitExtraCharge } from '@/lib/extra-charge';
+import { Text } from '@/components/Text';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { Button } from '@/components/Button';
@@ -1369,6 +1369,8 @@ function Step1({
           placeholderTextColor={colors.lead}
           style={styles.titleInput}
           maxLength={120}
+          returnKeyType="done"
+          blurOnSubmit
         />
       </View>
 
@@ -1387,7 +1389,7 @@ function Step1({
           accessibilityLabel={t('addExpense.whoPaid')}
         >
           <Text style={styles.groupName}>{payerLabel}</Text>
-          <Text style={styles.dateInputCaret}>▾</Text>
+          <Feather name="chevron-down" size={18} color={colors.lead} />
         </TouchableOpacity>
       </View>
 
@@ -1401,7 +1403,7 @@ function Step1({
           accessibilityLabel={t('addExpense.categoryLabel')}
         >
           <Text style={styles.groupName}>{categoryLabel}</Text>
-          <Text style={styles.dateInputCaret}>▾</Text>
+          <Feather name="chevron-down" size={18} color={colors.lead} />
         </TouchableOpacity>
       </View>
 
@@ -1573,7 +1575,7 @@ function DateInput({
   return (
     <TouchableOpacity activeOpacity={0.7} onPress={onOpenPicker} style={styles.dateInputAndroid}>
       <Text style={styles.dateInputValue}>{formatted}</Text>
-      <Text style={styles.dateInputCaret}>▾</Text>
+      <Feather name="chevron-down" size={18} color={colors.lead} />
     </TouchableOpacity>
   );
 }
@@ -1741,10 +1743,5 @@ const styles = StyleSheet.create({
     fontFamily: fontBody,
     fontSize: fontSize.body,
     color: colors.graphite,
-  },
-  dateInputCaret: {
-    fontFamily: fontMono,
-    fontSize: fontSize.bodyS,
-    color: colors.lead,
   },
 });

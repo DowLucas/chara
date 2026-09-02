@@ -124,6 +124,7 @@
     "amount": "valor",
     "amountPlaceholder": "0",
     "amountsLabel": "valores",
+    "autoBadge": "auto",
     "autoFillHint": "linhas vazias dividem o restante igualmente",
     "back": "Voltar",
     "between": "entre",
@@ -245,7 +246,8 @@
       "body": "Os grupos que você arquivar aparecem aqui. Você pode reabrir um pelas configurações dele.",
       "title": "Nenhum grupo arquivado"
     },
-    "loadError": "Não foi possível carregar os grupos arquivados. Puxe para tentar de novo.",
+    "loadError": "Não foi possível carregar os grupos arquivados.",
+    "retry": "Tentar de novo",
     "title": "Grupos arquivados"
   },
   "categories": {
@@ -282,7 +284,9 @@
     "loading": "Carregando…",
     "mainServerInfoLabel": "Sobre o Chara Cloud",
     "mainServerLabel": "Chara Server",
+    "networkError": "Estás offline. Verifica a tua ligação e tenta novamente.",
     "ok": "OK",
+    "retry": "Tentar de novo",
     "save": "Salvar",
     "saving": "Salvando…",
     "requestFailed": "Algo deu errado. Tente novamente.",
@@ -325,6 +329,8 @@
     "eyebrow": "editar grupo",
     "languageHint": "Os títulos de recibo gerados por IA serão escritos neste idioma para todos no grupo.",
     "languageLabel": "Idioma",
+    "loadErrorBody": "Verifica a tua ligação e tenta novamente.",
+    "loadErrorTitle": "Não foi possível carregar este grupo",
     "nameLabel": "Nome do grupo",
     "namePlaceholder": "Nome do grupo",
     "saving": "Salvando…",
@@ -359,6 +365,8 @@
       "sourceManual": "Taxa personalizada"
     },
     "loadError": "Não foi possível carregar esta despesa.",
+    "loadErrorBody": "Verifica a tua ligação e tenta novamente.",
+    "loadErrorTitle": "Não foi possível carregar esta despesa",
     "menuLabel": "Menu da despesa",
     "noChanges": "Nada mudou.",
     "noReceipt": "Nenhum recibo anexado.",
@@ -422,11 +430,14 @@
   },
   "groupCreated": {
     "body": "Passe o celular para um amigo e deixe ele escanear.",
+    "copied": "Copiado",
+    "copyLink": "Copiar ligação",
     "errorLoad": "Falha ao carregar o grupo",
     "errorTitle": "Algo deu errado",
     "eyebrow": "grupo criado",
     "goToGroups": "Ir para grupos",
     "open": "Abrir grupo",
+    "retry": "Tentar de novo",
     "share": "Compartilhar link de convite",
     "shareMessage": "Entre em \"{{name}}\" no Chara: {{link}}"
   },
@@ -832,6 +843,8 @@
   },
   "invite": {
     "body": "Os amigos escaneiam isto para entrar.",
+    "copied": "Copiado",
+    "copy": "Copiar ligação",
     "errorLoad": "Falha ao carregar o grupo",
     "eyebrow": "convite",
     "share": "Compartilhar link de convite",
@@ -896,6 +909,8 @@
     "termsOfService": "Termos de Serviço"
   },
   "members": {
+    "copiedLabel": "Ligação de convite copiada",
+    "copyLinkLabel": "Copiar ligação de convite",
     "count": "membros · {{count}}",
     "count_many": "membros · {{count}}",
     "count_one": "membros · {{count}}",
@@ -907,11 +922,14 @@
     "inviteCta": "Convidar via QR",
     "joined": "entrou em {{date}}",
     "joinedWithRole": "entrou em {{date}} · {{role}}",
+    "loadErrorBody": "Verifica a tua ligação e tenta novamente.",
+    "loadErrorTitle": "Não foi possível carregar os membros",
     "role": "função",
     "roleMember": "membro",
     "roleOwner": "dono",
     "roleUnknownJoin": "entrou recentemente",
     "shareCta": "Compartilhar link",
+    "shareErrorTitle": "Não foi possível obter a ligação de convite",
     "shareMessage": "Entre em \"{{name}}\" no Chara: {{link}}",
     "you": "você"
   },
@@ -1005,6 +1023,8 @@
     "eyebrow": "automação",
     "intervalPrefix": "a cada",
     "listHeader": "Contas recorrentes",
+    "loadErrorBody": "Verifica a tua ligação e tenta novamente.",
+    "loadErrorTitle": "Não foi possível carregar as despesas recorrentes",
     "newButton": "+ Nova conta recorrente",
     "pauseButton": "Pausar",
     "paused": {
@@ -1029,6 +1049,9 @@
     "resumeAllBanner_many": "{{count}} contas estão pausadas desde quando o grupo foi bloqueado.",
     "resumeAllBanner_one": "{{count}} conta está pausada desde quando o grupo foi bloqueado.",
     "resumeAllBanner_other": "{{count}} contas estão pausadas desde quando o grupo foi bloqueado.",
+    "resumeAllBusy": "A retomar…",
+    "resumeAllErrorBody": "O grupo pode ainda estar bloqueado. Tenta novamente.",
+    "resumeAllErrorTitle": "Não foi possível retomar",
     "resumeButton": "Retomar",
     "saveButton": "Salvar",
     "schedule": {
@@ -1247,9 +1270,15 @@
     "legalFooter": "Ao continuar, você concorda com nossos <terms>Termos de Serviço</terms> e <privacy>Política de Privacidade</privacy>.",
     "or": "ou",
     "sending": "Enviando…",
+    "useDifferentEmail": "Usar outro e-mail",
     "useMyServer": "usar meu servidor →",
     "linkErrorTitle": "O link de acesso não funcionou",
-    "linkErrorBody": "Este link pode ter expirado ou já ter sido usado. Solicite um novo link e tente novamente."
+    "linkErrorBody": "Este link pode ter expirado ou já ter sido usado. Solicite um novo link e tente novamente.",
+    "verifyServer": {
+      "body": "Esta ligação vai adicionar um novo servidor ao Chara. Continua apenas se foste tu a pedir.",
+      "continue": "Continuar",
+      "title": "Iniciar sessão em {{host}}?"
+    }
   },
   "tabs": {
     "activity": "Atividade",

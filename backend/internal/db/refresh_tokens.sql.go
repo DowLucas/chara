@@ -88,13 +88,19 @@ func (q *Queries) RevokeAllRefreshTokensForUser(ctx context.Context, userID stri
 	return err
 }
 
-const revokeRefreshToken = `-- name: RevokeRefreshToken :exec
+const revokeRefreshToken = `-- name: RevokeRefreshToken :execrows
 UPDATE refresh_tokens SET revoked_at = NOW() WHERE id = $1 AND revoked_at IS NULL
 `
 
-func (q *Queries) RevokeRefreshToken(ctx context.Context, id string) error {
-	_, err := q.db.Exec(ctx, revokeRefreshToken, id)
-	return err
+// Rotation guard: the WHERE clause makes this a compare-and-swap, and the
+// rows-affected count tells the caller whether it won. Zero rows means another
+// request already rotated this token, i.e. a concurrent reuse.
+func (q *Queries) RevokeRefreshToken(ctx context.Context, id string) (int64, error) {
+	result, err := q.db.Exec(ctx, revokeRefreshToken, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const touchRefreshToken = `-- name: TouchRefreshToken :exec

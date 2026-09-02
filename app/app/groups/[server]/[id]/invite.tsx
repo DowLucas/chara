@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Share, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Share, ScrollView } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -7,6 +8,8 @@ import QRCode from 'react-native-qrcode-svg';
 import { useTranslation } from 'react-i18next';
 import { apiFor, Group } from '@/lib/api';
 import { ContentContainer } from '@/components/ContentContainer';
+import { Text } from '@/components/Text';
+import { hapticSuccess } from '@/lib/haptics';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 
 export default function GroupInviteScreen() {
@@ -17,6 +20,7 @@ export default function GroupInviteScreen() {
   const [group, setGroup] = useState<Group | null>(null);
   const [link, setLink] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!id || !serverUrl) return;
@@ -36,6 +40,14 @@ export default function GroupInviteScreen() {
     try {
       await Share.share({ message: t('invite.shareMessage', { name: group.name, link }) });
     } catch {}
+  }
+
+  async function copyLink() {
+    if (!link) return;
+    await Clipboard.setStringAsync(link);
+    hapticSuccess();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   }
 
   return (
@@ -83,6 +95,22 @@ export default function GroupInviteScreen() {
                 <Feather name="share-2" size={18} color={colors.fgOnAccent} />
                 <Text style={styles.ctaLabel}>{t('invite.share')}</Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.secondaryCta}
+                onPress={copyLink}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel={copied ? t('invite.copied') : t('invite.copy')}
+              >
+                <Feather
+                  name={copied ? 'check' : 'copy'}
+                  size={18}
+                  color={copied ? colors.moss : colors.graphite}
+                />
+                <Text style={[styles.secondaryCtaLabel, copied && { color: colors.moss }]}>
+                  {copied ? t('invite.copied') : t('invite.copy')}
+                </Text>
+              </TouchableOpacity>
             </View>
           </ContentContainer>
         </>
@@ -128,7 +156,7 @@ const styles = StyleSheet.create({
     color: colors.lead,
     letterSpacing: 0.5,
   },
-  footer: { paddingTop: spacing.s3 },
+  footer: { paddingTop: spacing.s3, gap: spacing.s2 },
   cta: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -139,4 +167,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.vermillion,
   },
   ctaLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.fgOnAccent },
+  secondaryCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.s2,
+    height: 52,
+    borderRadius: 6,
+    borderWidth: 0.5,
+    borderColor: colors.graphite,
+  },
+  secondaryCtaLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite },
 });

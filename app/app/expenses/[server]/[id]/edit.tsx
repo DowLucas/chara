@@ -18,6 +18,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
+import { hapticSuccess } from '@/lib/haptics';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -294,6 +295,7 @@ export default function EditExpenseScreen() {
     setSubmitError(null);
     try {
       await api.updateExpense(groupId, id, payloadToUpdateInput(payload, expense));
+      hapticSuccess();
       setImpactSheetVisible(false);
       router.back();
     } catch (e: any) {

@@ -1,5 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  RefreshControl,
+  ActivityIndicator,
+} from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -11,6 +18,7 @@ import { AvatarStack } from '@/components/Avatar';
 import { Stamp } from '@/components/Stamp';
 import { EmptyState } from '@/components/EmptyState';
 import { MoneyText } from '@/components/MoneyText';
+import { Text } from '@/components/Text';
 import { useTranslation } from 'react-i18next';
 import { apiFor, avatarImageSourceOn, Group, GroupMember, MyBalance } from '@/lib/api';
 import { useAccounts } from '@/lib/accounts';
@@ -161,6 +169,11 @@ export default function HomeScreen() {
     return rows;
   }, [groupReads, balanceReads, pinnedKeys]);
 
+  // First-load gate: `status` is only 'loading' while an account has no data
+  // yet, so this is true exactly during the cold fetch. Without it the "no
+  // groups" empty state flashes before the first response lands.
+  const groupsLoading = groupReads.some((r) => r.status === 'loading' && r.data == null);
+
   // Per-currency net totals across all accounts.
   const netByCurrency = useMemo(() => netByCurrencyOf(balanceReads), [balanceReads]);
 
@@ -278,7 +291,13 @@ export default function HomeScreen() {
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={{ paddingBottom: spacing.s5 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.graphite}
+          />
+        }
       >
         <ContentContainer>
         {/* Net balance hero
@@ -363,7 +382,11 @@ export default function HomeScreen() {
         </View>
 
         {/* Your groups card */}
-        {mergedGroups.length === 0 ? (
+        {mergedGroups.length === 0 && groupsLoading ? (
+          <View style={styles.groupsLoading}>
+            <ActivityIndicator color={colors.graphite} />
+          </View>
+        ) : mergedGroups.length === 0 ? (
           <View style={{ paddingHorizontal: spacing.s5 }}>
             <EmptyState title={t('home.noGroupsTitle')} body={t('home.noGroupsBody')} />
             <TouchableOpacity
@@ -601,14 +624,6 @@ export default function HomeScreen() {
 }
 
 /**
- * Per-account error strip (spec §12).
- *
- * Retry is currently a visual affordance only — the aggregated-reads
- * hook auto-retries on every foreground transition (60s floor). A
- * follow-up wave is expected to expose an imperative per-server
- * `refresh()` from the hook so this CTA can wire to it directly.
- */
-/**
  * Compact one-liner for the home-screen recent-activity preview. The
  * full templates with deep-link affordances live on the Activity tab —
  * this view's role is "what just happened across all my groups" so we
@@ -679,13 +694,24 @@ function summariseActivity(
   }
 }
 
+/**
+ * Per-account error strip (spec §12). The CTA re-runs the aggregated
+ * fan-out; the failing account is re-queried along with the healthy ones.
+ */
 function ErrorStrip({ label, cta }: { label: string; cta: string }) {
   return (
     <View style={styles.errorStrip}>
       <Text style={styles.errorStripText} numberOfLines={1}>
         {label}
       </Text>
-      <Text style={styles.errorStripCta}>{cta}</Text>
+      <TouchableOpacity
+        onPress={() => refreshAggregatedReads()}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={cta}
+      >
+        <Text style={styles.errorStripCta}>{cta}</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -1021,6 +1047,10 @@ const styles = StyleSheet.create({
     fontSize: fontSize.caption,
     color: colors.lead,
     marginTop: 2,
+  },
+  groupsLoading: {
+    paddingVertical: spacing.s7,
+    alignItems: 'center',
   },
   emptyCta: {
     flexDirection: 'row',

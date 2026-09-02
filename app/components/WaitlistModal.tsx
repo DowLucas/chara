@@ -156,6 +156,14 @@ export function WaitlistModal({
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                autoComplete="email"
+                textContentType="emailAddress"
+                returnKeyType="send"
+                // Only submit from the keyboard when the field is actually
+                // sendable — otherwise "send" would just paint an error.
+                onSubmitEditing={() => {
+                  if (!submitting && EMAIL_RE.test(email.trim())) void handleSubmit();
+                }}
                 placeholder={t('waitlist.emailPlaceholder')}
                 placeholderTextColor={colors.lead}
                 editable={!submitting}

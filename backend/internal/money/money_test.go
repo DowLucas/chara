@@ -146,3 +146,55 @@ func TestParseDecimalRejectsGarbage(t *testing.T) {
 		}
 	}
 }
+
+// --- Overflow / magnitude bounds -------------------------------------------
+//
+// Amounts are int64 minor units. Downstream arithmetic multiplies by 10 000
+// (basis points in split.Percentage) and sums many rows in SQL, so an
+// unbounded Amount silently wraps and corrupts balances. MaxAmount is the
+// contract every parser enforces.
+
+func TestAmount_UnmarshalJSON_RejectsAboveMax(t *testing.T) {
+	var a money.Amount
+	err := json.Unmarshal([]byte(`"92233720368547758.07"`), &a)
+	require.Error(t, err, "an amount at the int64 ceiling must be rejected, not stored")
+
+	err = json.Unmarshal([]byte(`"-92233720368547758.07"`), &a)
+	require.Error(t, err, "the negative ceiling must be rejected too")
+}
+
+func TestAmount_UnmarshalJSON_RejectsOverflowingMajorPart(t *testing.T) {
+	// major*100 + minor overflows int64 before any bounds check on the result.
+	var a money.Amount
+	err := json.Unmarshal([]byte(`"9223372036854775807.99"`), &a)
+	require.Error(t, err)
+}
+
+func TestAmount_UnmarshalJSON_AcceptsMax(t *testing.T) {
+	var a money.Amount
+	require.NoError(t, json.Unmarshal([]byte(`"1000000000000.00"`), &a))
+	assert.Equal(t, money.MaxAmount, a)
+}
+
+func TestParseDecimal_RejectsAboveMax(t *testing.T) {
+	_, err := money.ParseDecimal("92233720368547758.07")
+	require.Error(t, err)
+
+	_, err = money.ParseDecimal("9223372036854775807.99")
+	require.Error(t, err, "overflowing major part must error, not wrap")
+
+	_, err = money.ParseDecimal("-92233720368547758.07")
+	require.Error(t, err)
+}
+
+func TestParseDecimal_AcceptsMax(t *testing.T) {
+	got, err := money.ParseDecimal("1000000000000.00")
+	require.NoError(t, err)
+	assert.Equal(t, money.MaxAmount, got)
+}
+
+func TestMaxAmount_SurvivesBasisPointMultiplication(t *testing.T) {
+	// split.Percentage computes total * basisPoints (max 10 000) in int64.
+	// This is the invariant that makes MaxAmount safe.
+	assert.Less(t, int64(money.MaxAmount), int64(1<<63-1)/10000)
+}

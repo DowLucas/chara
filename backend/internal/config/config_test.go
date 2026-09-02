@@ -96,3 +96,45 @@ func TestIsDemoLogin(t *testing.T) {
 	assert.False(t, c.IsDemoLogin("someone@else.test"))
 	assert.False(t, (&Config{}).IsDemoLogin("appstore-review@getchara.app"), "empty allowlist matches nothing")
 }
+
+func TestValidate_RejectsPlaceholderJWTSecret(t *testing.T) {
+	// The shipped .env.example placeholder is long enough to satisfy the
+	// length check, so a self-hoster who copies the file verbatim would boot
+	// with a publicly known signing key.
+	c := baseSelfhost()
+	c.DevMode = false
+	c.ResendAPIKey = "re_test" // DevMode=false requires an email provider
+	c.JWTSecret = "change-me-to-a-long-random-secret-32b"
+	err := c.validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "placeholder")
+}
+
+func TestValidate_AllowsPlaceholderJWTSecretInDevMode(t *testing.T) {
+	// A local dev box running the example secret is harmless; breaking it
+	// would just teach people to delete the check.
+	c := baseSelfhost() // DevMode: true
+	c.JWTSecret = "change-me-to-a-long-random-secret-32b"
+	require.NoError(t, c.validate())
+}
+
+func TestValidate_RejectsShortAdminToken(t *testing.T) {
+	c := baseSelfhost()
+	c.AdminAPIToken = "admin"
+	err := c.validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "ADMIN_API_TOKEN")
+}
+
+func TestValidate_AcceptsLongAdminToken(t *testing.T) {
+	c := baseSelfhost()
+	c.AdminAPIToken = strings.Repeat("a", 32)
+	require.NoError(t, c.validate())
+}
+
+func TestValidate_EmptyAdminTokenStillAllowed(t *testing.T) {
+	// Unset is the normal case: the admin endpoint 404s when it is empty.
+	c := baseSelfhost()
+	c.AdminAPIToken = ""
+	require.NoError(t, c.validate())
+}

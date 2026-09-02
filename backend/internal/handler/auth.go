@@ -302,7 +302,9 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		// Only revoke a token that actually belongs to the caller — never let
 		// a presented token revoke another user's row.
 		if err == nil && row.UserID == claims.UserID {
-			if err := h.queries.RevokeRefreshToken(r.Context(), row.ID); err != nil {
+			// Rows-affected is irrelevant here: an already-revoked token is a
+			// double logout, not a race worth reporting.
+			if _, err := h.queries.RevokeRefreshToken(r.Context(), row.ID); err != nil {
 				slog.Error("logout: revoke refresh token failed", "error", err)
 			}
 		}
@@ -366,9 +368,24 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Rotate: revoke the presented token, then issue + sign a fresh pair.
-	if err := h.queries.RevokeRefreshToken(r.Context(), row.ID); err != nil {
+	//
+	// The revoke is a compare-and-swap (`WHERE revoked_at IS NULL`), so the
+	// rows-affected count is the race winner. Losing it means another request
+	// rotated this same token between our read above and this write — two
+	// holders of one refresh token, which is exactly the theft signal the
+	// revoked_at branch above catches in the sequential case. Treat it the
+	// same way: revoke the family rather than handing out a second live pair.
+	rows, err := h.queries.RevokeRefreshToken(r.Context(), row.ID)
+	if err != nil {
 		slog.Error("refresh: revoke on rotate failed", "error", err)
 		writeError(w, http.StatusInternalServerError, "rotation failed")
+		return
+	}
+	if rows == 0 {
+		if err := h.queries.RevokeAllRefreshTokensForUser(r.Context(), row.UserID); err != nil {
+			slog.Error("refresh: revoke-all on concurrent reuse failed", "error", err)
+		}
+		writeError(w, http.StatusUnauthorized, "refresh token revoked")
 		return
 	}
 	writeTokenPair(w, r, h.queries, h.jwt, h.cfg, user)
@@ -447,11 +464,26 @@ func (h *AuthHandler) DeleteMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Per-currency net balance across every group. Mirror the precondition
-	// used by /api/groups/{id}/members/{id} removal — non-zero in any
-	// currency blocks the destructive op so other members aren't stuck
-	// with phantom balances against a deleted ghost.
-	rows, err := h.queries.ListUserBalancesAcrossGroups(r.Context(),
+	// Demo accounts are shared infrastructure, not personal accounts: the
+	// allowlisted address hands its magic-link token to anyone who asks, and
+	// the address itself is public (it ships in scripts/seed-demo.sh). Letting
+	// one delete itself means any passer-by can wipe the account app-store
+	// reviewers sign into, so the deletion path is closed for them.
+	if h.cfg.IsDemoLogin(user.Email) {
+		writeError(w, http.StatusForbidden, "demo accounts cannot be deleted")
+		return
+	}
+
+	// Per-currency net balance across every group, archived ones included.
+	// Mirror the precondition used by /api/groups/{id}/members/{id} removal —
+	// non-zero in any currency blocks the destructive op so other members
+	// aren't stuck with phantom balances against a deleted ghost.
+	//
+	// Archived groups must count here even though they are hidden from
+	// /api/me/balances: archiving is owner-only and has no balance gate of its
+	// own, so filtering them out would let an owner who owes money archive the
+	// group and then delete their account.
+	rows, err := h.queries.ListUserBalancesAcrossGroupsIncludingArchived(r.Context(),
 		pgtype.Text{String: claims.UserID, Valid: true},
 	)
 	if err != nil {

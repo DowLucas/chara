@@ -7,9 +7,12 @@ cd "$(dirname "$0")/backend"
 
 if [[ -z "$(docker ps -aq -f name=^chara-postgres$)" ]]; then
   echo "==> creating chara-postgres"
+  # Loopback only — the password is `chara`, and this box is not alone on its
+  # network. The backend container runs with host networking, so localhost:5433
+  # still reaches it.
   docker run -d --name chara-postgres \
     -e POSTGRES_DB=chara -e POSTGRES_USER=chara -e POSTGRES_PASSWORD=chara \
-    -p 5433:5432 postgres:16-alpine >/dev/null
+    -p 127.0.0.1:5433:5432 postgres:16-alpine >/dev/null
 elif [[ -z "$(docker ps -q -f name=^chara-postgres$)" ]]; then
   echo "==> starting chara-postgres"
   docker start chara-postgres >/dev/null

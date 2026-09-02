@@ -1,12 +1,13 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
+import { Text } from '@/components/Text';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -17,16 +18,34 @@ import { IconButton } from '@/components/IconButton';
 import { EmptyState } from '@/components/EmptyState';
 import { GroupAvatar } from '@/components/GroupAvatar';
 import { useAccounts } from '@/lib/accounts';
-import { useAggregatedArchivedGroups } from '@/lib/aggregated-reads';
+import { useAggregatedArchivedGroups, refreshAggregatedReads } from '@/lib/aggregated-reads';
 import { displayHostFor } from '@/lib/server-url';
 import { isPopupJustClosed } from '@/lib/popup-guard';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import {
+  colors,
+  fontBody,
+  fontDisplay,
+  fontMono,
+  fontMonoMedium,
+  fontSize,
+  spacing,
+} from '@/lib/theme';
 
 export default function ArchivedGroupsScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { accounts } = useAccounts();
   const reads = useAggregatedArchivedGroups();
+  // Pull-to-refresh spinner state: `status` only reports 'loading' on the
+  // first fetch, so a refetch would otherwise show nothing at all. Same
+  // 600 ms courtesy hold as the home tab.
+  const [refreshing, setRefreshing] = useState(false);
+
+  function onRefresh() {
+    setRefreshing(true);
+    refreshAggregatedReads();
+    setTimeout(() => setRefreshing(false), 600);
+  }
 
   // Show the host on each row only when more than one account is linked —
   // otherwise it's redundant noise.
@@ -59,14 +78,27 @@ export default function ArchivedGroupsScreen() {
           <IconButton icon="chevron-left" onPress={() => router.back()} label={t('common.back')} />
         }
       />
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
         <ContentContainer>
           {loading ? (
             <View style={styles.center}>
               <ActivityIndicator color={colors.lead} />
             </View>
           ) : hasError ? (
-            <Text style={styles.errorNote}>{t('archivedGroups.loadError')}</Text>
+            <View style={styles.errorWrap}>
+              <Text style={styles.errorNote}>{t('archivedGroups.loadError')}</Text>
+              <TouchableOpacity
+                onPress={onRefresh}
+                style={styles.retryBtn}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+              >
+                <Text style={styles.retryLabel}>{t('archivedGroups.retry')}</Text>
+              </TouchableOpacity>
+            </View>
           ) : rows.length === 0 ? (
             <EmptyState
               title={t('archivedGroups.empty.title')}
@@ -116,13 +148,27 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.s7,
     alignItems: 'center',
   },
+  errorWrap: {
+    alignItems: 'center',
+    gap: spacing.s3,
+    paddingHorizontal: spacing.s4,
+    paddingVertical: spacing.s6,
+  },
   errorNote: {
     fontFamily: fontBody,
     fontSize: fontSize.body,
     color: colors.lead,
-    paddingHorizontal: spacing.s4,
-    paddingVertical: spacing.s6,
     textAlign: 'center',
+  },
+  retryBtn: {
+    paddingVertical: spacing.s2,
+    paddingHorizontal: spacing.s4,
+  },
+  retryLabel: {
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.caption,
+    color: colors.vermillion,
+    letterSpacing: 0.3,
   },
   list: {
     gap: spacing.s2,

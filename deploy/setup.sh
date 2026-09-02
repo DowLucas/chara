@@ -35,6 +35,11 @@ if [ -z "${KEEP_ENV:-}" ]; then
   echo "   c) Only on my home Wi-Fi (no domain needed)"
   mode=$(ask "Pick a, b or c [c]:" c)
   CHARA_DOMAIN=""; TRUSTED_PROXIES=""; COMPOSE_FILE=docker-compose.yml; PUBLIC=0
+  # Which host address the API port is published on. Loopback unless phones have
+  # to reach that port directly (mode c) — with a proxy in front, a 0.0.0.0
+  # publish would serve the API in cleartext beside it, and Docker writes its own
+  # iptables rules, so a host firewall does not close that door for you.
+  API_BIND=127.0.0.1
   case "$mode" in
     a|A)
       CHARA_DOMAIN=$(ask "   Your domain (e.g. chara.example.com):" "")
@@ -52,7 +57,7 @@ if [ -z "${KEEP_ENV:-}" ]; then
       echo "   Find this machine's Wi-Fi/LAN address (e.g. 192.168.1.10 — on Windows: ipconfig, macOS: System Settings → Wi-Fi)."
       ip=$(ask "   Home-network IP${guess:+ [$guess]}:" "$guess")
       is_lan_ip "$ip" || { echo "'$ip' isn't a home-network IPv4 address (192.168.x.x, 10.x.x.x or 172.16-31.x.x). Names like raspberrypi.local or Tailscale 100.x addresses can't be used over plain http — pick option a or b for those."; exit 1; }
-      BASE_URL="http://$ip:8080" ;;
+      BASE_URL="http://$ip:8080"; API_BIND=0.0.0.0 ;;
   esac
 
   say "2) Chara signs people in with a link sent by email. How should it send email?"
@@ -91,10 +96,18 @@ if [ -z "${KEEP_ENV:-}" ]; then
   MINIO_ROOT_USER=$(envget MINIO_ROOT_USER);     [ -n "$MINIO_ROOT_USER" ]     || MINIO_ROOT_USER=chara
   MINIO_ROOT_PASSWORD=$(envget MINIO_ROOT_PASSWORD); [ -n "$MINIO_ROOT_PASSWORD" ] || MINIO_ROOT_PASSWORD=$(openssl rand -hex 24)
 
+  # Pin the image rather than following `latest`, which moves with every push to
+  # main. CI tags every backend build sha-<7 chars>, so the last commit touching
+  # backend/ names the image this checkout was cut from. Re-pinned on every run,
+  # so `git pull && ./setup.sh` is the update path. No .git (downloaded a
+  # tarball)? Fall back to `latest`.
+  backend_sha=$(git -C .. log -1 --format=%H -- backend 2>/dev/null || true)
+  [ -n "$backend_sha" ] && CHARA_VERSION="sha-${backend_sha:0:7}" || CHARA_VERSION=latest
+
   {
     echo "# Written by setup.sh on $(date -u +%Y-%m-%d). See .env.example for every option."
     echo "COMPOSE_FILE=$COMPOSE_FILE"
-    for k in BASE_URL CHARA_DOMAIN JWT_SECRET POSTGRES_PASSWORD MINIO_ROOT_USER MINIO_ROOT_PASSWORD \
+    for k in BASE_URL CHARA_DOMAIN CHARA_VERSION API_BIND JWT_SECRET POSTGRES_PASSWORD MINIO_ROOT_USER MINIO_ROOT_PASSWORD \
              SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS SMTP_FROM DEV_MODE TRUSTED_PROXIES GEMINI_API_KEY; do
       echo "$k=$(q "${!k}")"
     done

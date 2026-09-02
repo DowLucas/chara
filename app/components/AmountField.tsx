@@ -12,8 +12,10 @@
  */
 
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+
+import { Text } from '@/components/Text';
 
 import { colors, fontMono, spacing } from '@/lib/theme';
 

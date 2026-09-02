@@ -51,3 +51,30 @@ func TestPercentage_Empty(t *testing.T) {
 	_, err := split.Percentage(money.Amount(100), []split.MemberPct{})
 	assert.Error(t, err)
 }
+
+func TestPercentage_RejectsTotalAboveMax(t *testing.T) {
+	// total * basisPoints overflows int64 well before this value, which used
+	// to panic on the remainder loop (index out of range) or silently emit
+	// shares that do not sum to total.
+	input := []split.MemberPct{
+		{MemberID: "a", BasisPoints: 5000},
+		{MemberID: "b", BasisPoints: 5000},
+	}
+	_, err := split.Percentage(money.Amount(1e17), input)
+	require.Error(t, err)
+}
+
+func TestPercentage_MaxAmountSumsExactly(t *testing.T) {
+	input := []split.MemberPct{
+		{MemberID: "a", BasisPoints: 3333},
+		{MemberID: "b", BasisPoints: 3333},
+		{MemberID: "c", BasisPoints: 3334},
+	}
+	result, err := split.Percentage(money.MaxAmount, input)
+	require.NoError(t, err)
+	var sum money.Amount
+	for _, r := range result {
+		sum += r.Share
+	}
+	assert.Equal(t, money.MaxAmount, sum)
+}

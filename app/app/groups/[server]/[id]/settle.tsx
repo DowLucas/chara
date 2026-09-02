@@ -1,5 +1,13 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  RefreshControl,
+  ActivityIndicator,
+} from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TopBar } from '@/components/TopBar';
@@ -9,6 +17,7 @@ import { Button } from '@/components/Button';
 import { Avatar } from '@/components/Avatar';
 import { EmptyState } from '@/components/EmptyState';
 import { MoneyText } from '@/components/MoneyText';
+import { Text } from '@/components/Text';
 import { useTranslation } from 'react-i18next';
 import {
   apiFor,
@@ -20,6 +29,7 @@ import {
   SettlementSuggestion,
 } from '@/lib/api';
 import { showAlert } from '@/lib/app-alert';
+import { userErrorMessage } from '@/lib/user-error';
 import { useAccount } from '@/lib/accounts';
 import { computeSuggestions } from '@/lib/settle';
 import { decimalToMinor, formatMinorUnits } from '@/lib/i18n';
@@ -46,6 +56,7 @@ export default function SettleScreen() {
   const [balances, setBalances] = useState<Balance[]>([]);
   const [suggestions, setSuggestions] = useState<SettlementSuggestion[]>([]);
   const [othersOpen, setOthersOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [reminderBusy, setReminderBusy] = useState(false);
   // Epoch ms until which the reminder button is on cooldown (server-enforced;
@@ -90,6 +101,7 @@ export default function SettleScreen() {
     } else if (b.status === 'fulfilled') {
       setSuggestions(computeSuggestions(b.value));
     }
+    setLoaded(true);
   }, [id, serverUrl]);
 
   useEffect(() => { load(); }, [load]);
@@ -204,7 +216,7 @@ export default function SettleScreen() {
       } else {
         await showAlert({
           title: t('settle.errorTitle'),
-          message: e instanceof Error ? e.message : t('settle.reminderErrorBody'),
+          message: userErrorMessage(e, t('settle.reminderErrorBody')),
         });
       }
     } finally {
@@ -220,20 +232,32 @@ export default function SettleScreen() {
       />
       <ScrollView
         style={styles.scroll}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.graphite}
+          />
+        }
       >
         <ContentContainer>
         <View style={styles.hero}>
           <Text style={styles.eyebrow}>
             {t('settle.yourNet', { group: group?.name ?? '' })}
           </Text>
-          <MoneyText
-            style={[styles.heroBalance, { color: myNet >= 0 ? colors.moss : colors.brick }]}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.4}
-            value={formatMinorUnits(myNet, heroCurrency, { relative: true })}
-          />
+          {loaded ? (
+            <MoneyText
+              style={[styles.heroBalance, { color: myNet >= 0 ? colors.moss : colors.brick }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.4}
+              value={formatMinorUnits(myNet, heroCurrency, { relative: true })}
+            />
+          ) : (
+            <View style={styles.heroLoading}>
+              <ActivityIndicator color={colors.graphite} />
+            </View>
+          )}
           <View style={styles.rule} />
           {hasAnything && naive > suggestions.length && (
             <Text style={styles.caption}>
@@ -259,7 +283,7 @@ export default function SettleScreen() {
           )}
         </View>
 
-        {!hasAnything && (
+        {loaded && !hasAnything && (
           <EmptyState title={t('settle.allQuitsTitle')} body={t('settle.allQuitsBody')} />
         )}
 
@@ -303,7 +327,7 @@ export default function SettleScreen() {
                       style={styles.rowAmount}
                       value={formatMinorUnits(decimalToMinor(s.amount), s.currency)}
                     />
-                    <Text style={styles.chevron}>›</Text>
+                    <Feather name="chevron-right" size={20} color={colors.lead} />
                   </View>
                 </TouchableOpacity>
               );
@@ -321,9 +345,11 @@ export default function SettleScreen() {
               <Text style={styles.sectionLabel}>
                 {t('settle.betweenOthers', { count: others.length })}
               </Text>
-              <Text style={[styles.caret, { transform: [{ rotate: othersOpen ? '0deg' : '-90deg' }] }]}>
-                ▾
-              </Text>
+              <Feather
+                name={othersOpen ? 'chevron-down' : 'chevron-right'}
+                size={16}
+                color={colors.lead}
+              />
             </TouchableOpacity>
             <View style={[styles.softRule, { marginHorizontal: spacing.s5 }]} />
             {othersOpen && others.map((s) => {
@@ -341,7 +367,9 @@ export default function SettleScreen() {
                     </View>
                     <Text style={styles.pairLabel} numberOfLines={1}>
                       {from?.name?.split(' ')[0] ?? '?'}
-                      <Text style={styles.pairArrow}>  →  </Text>
+                      {/* Nested runs don't inherit the parent's family, so
+                          pin the same mono/caption pairing explicitly. */}
+                      <Text variant="monoCaption" style={styles.pairArrow}>  →  </Text>
                       {to?.name?.split(' ')[0] ?? '?'}
                     </Text>
                   </View>
@@ -383,6 +411,11 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
     lineHeight: 64,
     includeFontPadding: false,
+  },
+  heroLoading: {
+    height: 64,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
   rule: {
     height: 1.5,
@@ -435,11 +468,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing.s5,
     paddingBottom: 6,
   },
-  caret: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
-  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -478,11 +506,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize.displayS,
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
-  },
-  chevron: {
-    fontFamily: fontMono,
-    fontSize: 18,
-    color: colors.lead,
   },
   otherRow: {
     flexDirection: 'row',

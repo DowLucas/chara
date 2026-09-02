@@ -180,6 +180,13 @@ func (c *Config) validate() error {
 		if len(c.JWTSecret) < 32 {
 			return fmt.Errorf("config: JWT_SECRET must be at least 32 characters")
 		}
+		// Only enforced outside DEV_MODE. A local dev box running the example
+		// secret is harmless and convenient; a self-hoster who copied
+		// .env.example into a real deployment is the case this catches, and
+		// they have DEV_MODE off.
+		if !c.DevMode && isPlaceholderSecret(c.JWTSecret) {
+			return fmt.Errorf("config: JWT_SECRET is the example placeholder — generate one with `openssl rand -base64 48`")
+		}
 	}
 	if c.InstanceMode == "hosted" {
 		if c.JWTPrivateKeyPEM == "" {
@@ -194,6 +201,13 @@ func (c *Config) validate() error {
 	}
 	if c.JWTPrivateKeyPEM != "" && c.JWTPublicKeyPEM == "" {
 		return fmt.Errorf("config: JWT_PUBLIC_KEY_PEM is required when JWT_PRIVATE_KEY_PEM is set")
+	}
+	// An empty admin token disables /api/admin/* entirely (the handler 404s).
+	// A short one is worse than either: the endpoint fans a push notification
+	// to every registered device and sits outside the auth rate limiters, so
+	// it must not be guessable.
+	if c.AdminAPIToken != "" && len(c.AdminAPIToken) < 32 {
+		return fmt.Errorf("config: ADMIN_API_TOKEN must be at least 32 characters")
 	}
 	if c.ResendAPIKey == "" && c.SMTPHost == "" && !c.DevMode {
 		return fmt.Errorf("config: at least one of RESEND_API_KEY or SMTP_HOST must be set (or DEV_MODE=true)")
@@ -291,4 +305,21 @@ func getDuration(key string, fallback time.Duration) time.Duration {
 		return fallback
 	}
 	return d
+}
+
+// placeholderSecrets are values shipped in .env.example / docs. They are long
+// enough to pass the length check but are public knowledge, so booting with
+// one means anyone can forge tokens for the instance.
+var placeholderSecrets = []string{
+	"change-me-to-a-long-random-secret-32b",
+	"dev-secret-do-not-use-in-prod-1234567890abcdef",
+}
+
+func isPlaceholderSecret(s string) bool {
+	for _, p := range placeholderSecrets {
+		if strings.EqualFold(strings.TrimSpace(s), p) {
+			return true
+		}
+	}
+	return false
 }

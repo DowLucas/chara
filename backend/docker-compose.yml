@@ -21,11 +21,15 @@ services:
   # network so the backend can talk to it via localhost:9000 — same address
   # an AWS deployment would use after swapping endpoints. The Console UI on
   # :9001 is useful for poking at uploaded objects during dev.
+  #
+  # On host networking a `ports:` mapping does nothing, so MinIO is told to
+  # listen on loopback itself: the dev credentials below are the well-known
+  # defaults and must not be reachable from the rest of the network.
   minio:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
     container_name: chara-minio
     network_mode: host
-    command: server /data --console-address ":9001"
+    command: server /data --address 127.0.0.1:9000 --console-address 127.0.0.1:9001
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin

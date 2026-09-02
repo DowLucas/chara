@@ -276,12 +276,16 @@ func (e *GeminiExtractor) extractOne(ctx context.Context, prompt string, img Ima
 		return geminiExtracted{}, err
 	}
 
-	url := fmt.Sprintf("%s/models/%s:generateContent?key=%s", e.baseURL, e.model, e.apiKey)
+	url := fmt.Sprintf("%s/models/%s:generateContent", e.baseURL, e.model)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
 		return geminiExtracted{}, err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	// The key travels in a header, never the URL: a transport-level
+	// *url.Error embeds the full request URL in err.Error(), and this error
+	// is wrapped into the errgroup result the caller may log.
+	req.Header.Set("x-goog-api-key", e.apiKey)
 
 	resp, err := e.client.Do(req)
 	if err != nil {
