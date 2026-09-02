@@ -1,3 +1,12 @@
+# check=skip=SecretsUsedInArgOrEnv
+#
+# The skip is for VITE_POSTHOG_KEY below. BuildKit's lint rule matches on the
+# variable *name* — anything containing KEY/TOKEN/SECRET/PASSWORD — and cannot
+# know that a PostHog project key is public by design: Vite inlines it into the
+# client bundle, so it is served to every visitor either way. Renaming it would
+# not silence the rule, and leaving the warning in place would put a false
+# "secret leaked" line on every marketing build.
+
 # Marketing site (Vite + TanStack Start, SSR) served by Nitro's node-server
 # preset — the repo's default build targets Cloudflare Workers, which is not
 # what the self-hosted deployment runs.
