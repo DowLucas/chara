@@ -18,7 +18,7 @@ export const Route = createFileRoute("/privacy")({
   component: () => (
     <div className="min-h-screen bg-indigo">
       <SiteHeader />
-      <LegalPrint index="lg.01" title="Privacy" updated="26 May 2026">
+      <LegalPrint index="lg.01" title="Privacy" updated="2 September 2026">
         <p className="lead text-lg leading-[1.55]">
           This policy covers the <strong>Chara hosted service operated by Dow Technology</strong>. If you self-host Chara on your own server, you are the data controller and this policy does not apply — you set your own.
         </p>
@@ -58,6 +58,7 @@ export const Route = createFileRoute("/privacy")({
         <ul className="list-disc pl-6 space-y-2">
           <li><strong>Pseudonymous product-interaction events</strong> via PostHog (host: <code>eu.i.posthog.com</code>, EU region). Pseudonymous user ID only; no IDFA, no cross-app tracking. Can be disabled in Settings → Privacy.</li>
           <li><strong>Crash diagnostics</strong> — stack traces, device model, OS version. Not linked to your identity.</li>
+          <li><strong>Marketing-site page views</strong> via PostHog (EU region), in <strong>cookieless mode</strong>: nothing is stored in your browser and visitors are counted by a daily-rotating hash PostHog derives server-side. No identity, no profile, no cross-site tracking. See <a className="underline" href="/cookies">Cookies</a>.</li>
         </ul>
         <p>We do <strong>not</strong> collect: your contacts, your location, advertising identifiers, or payment card data.</p>
         <p>
@@ -70,7 +71,7 @@ export const Route = createFileRoute("/privacy")({
         <H2>3 · Why we collect it (lawful basis)</H2>
         <ul className="list-disc pl-6 space-y-2">
           <li><strong>Contract</strong> (GDPR Art. 6(1)(b)) — to provide the service you signed up for.</li>
-          <li><strong>Legitimate interest</strong> (Art. 6(1)(f)) — request logs for security, abuse prevention, and debugging.</li>
+          <li><strong>Legitimate interest</strong> (Art. 6(1)(f)) — request logs for security, abuse prevention, and debugging; aggregate, cookieless page-view counts on the marketing site, which identify no one.</li>
           <li><strong>Consent</strong> (Art. 6(1)(a)) — push notifications, product analytics, and the optional Gemini-backed features: receipt scanning and voice input.</li>
         </ul>
         <p>Where processing is based on consent, you have the right to withdraw your consent at any time without penalty. You can do so in <strong>Settings → Privacy</strong> (analytics), <strong>Settings → Notifications</strong> (push), or by simply not using the receipt-scanning and voice features. Withdrawal does not affect the lawfulness of processing carried out before withdrawal.</p>
@@ -91,7 +92,7 @@ export const Route = createFileRoute("/privacy")({
               <tr><td className="py-2 px-2">Cloudflare</td><td className="py-2 px-2">DNS, edge, email routing</td><td className="py-2 px-2">US / global</td></tr>
               <tr><td className="py-2 px-2">Brevo (Sendinblue SAS)</td><td className="py-2 px-2">Transactional email delivery (magic links)</td><td className="py-2 px-2">France / EU</td></tr>
               <tr><td className="py-2 px-2">Expo (EAS)</td><td className="py-2 px-2">Mobile app builds, push notification delivery</td><td className="py-2 px-2">US</td></tr>
-              <tr><td className="py-2 px-2">PostHog Cloud EU</td><td className="py-2 px-2">Product analytics</td><td className="py-2 px-2">Germany / EU</td></tr>
+              <tr><td className="py-2 px-2">PostHog Cloud EU</td><td className="py-2 px-2">Product analytics (app) and cookieless page-view analytics (marketing site)</td><td className="py-2 px-2">Germany / EU</td></tr>
               <tr><td className="py-2 px-2">Google (Gemini API)</td><td className="py-2 px-2">Optional receipt OCR and voice input (audio is transient — not retained by us)</td><td className="py-2 px-2">US</td></tr>
               <tr><td className="py-2 px-2">Apple Sign In</td><td className="py-2 px-2">Optional sign-in</td><td className="py-2 px-2">US</td></tr>
               <tr><td className="py-2 px-2">Google Sign In</td><td className="py-2 px-2">Optional sign-in</td><td className="py-2 px-2">US</td></tr>
@@ -101,7 +102,7 @@ export const Route = createFileRoute("/privacy")({
           </table>
         </div>
         <p>US transfers rely on Standard Contractual Clauses and the EU–US Data Privacy Framework where the recipient is certified. We do not sell, rent, license, or trade personal data.</p>
-        <p>The marketing website (<code>getchara.dowtech.dev</code>) loads Google Fonts; it does not run product analytics or advertising trackers.</p>
+        <p>The marketing website (<code>getchara.dowtech.dev</code>) loads Google Fonts and runs cookieless PostHog EU page-view analytics. It runs no advertising trackers and stores nothing on your device.</p>
 
         <H2>5 · Where your data lives</H2>
         <p>Primary storage and backups are in the EU. Transfers to US-based processors rely on Standard Contractual Clauses with supplementary measures as required under EU law.</p>

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -8,6 +9,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 
+import { initAnalytics } from "@/lib/analytics";
 import { SITE_URL } from "@/lib/site";
 import appCss from "../styles.css?url";
 import "@/i18n/config";
@@ -140,6 +142,12 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  // In an effect rather than at module scope: this must not run during SSR,
+  // and it must run after hydration so the first pageview carries the real
+  // URL rather than the one the server happened to render.
+  useEffect(() => {
+    initAnalytics();
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
