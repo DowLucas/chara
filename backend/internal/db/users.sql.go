@@ -17,7 +17,7 @@ SET avatar_object_key = NULL,
     avatar_updated_at = NOW(),
     updated_at        = NOW()
 WHERE id = $1
-RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at, monthly_summary_opt_out
 `
 
 func (q *Queries) ClearUserAvatar(ctx context.Context, id string) (User, error) {
@@ -35,6 +35,7 @@ func (q *Queries) ClearUserAvatar(ctx context.Context, id string) (User, error) 
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
 		&i.DeletedAt,
+		&i.MonthlySummaryOptOut,
 	)
 	return i, err
 }
@@ -58,7 +59,7 @@ func (q *Queries) DeletePushTokensByUser(ctx context.Context, userID string) err
 }
 
 const getActiveUserByID = `-- name: GetActiveUserByID :one
-SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at FROM users WHERE id = $1 AND deleted_at IS NULL
+SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at, monthly_summary_opt_out FROM users WHERE id = $1 AND deleted_at IS NULL
 `
 
 // Used by the auth middleware to reject any JWT whose subject has been
@@ -78,12 +79,13 @@ func (q *Queries) GetActiveUserByID(ctx context.Context, id string) (User, error
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
 		&i.DeletedAt,
+		&i.MonthlySummaryOptOut,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at FROM users WHERE email = $1
+SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at, monthly_summary_opt_out FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -101,12 +103,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
 		&i.DeletedAt,
+		&i.MonthlySummaryOptOut,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at FROM users WHERE id = $1
+SELECT id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at, monthly_summary_opt_out FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
@@ -124,6 +127,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
 		&i.DeletedAt,
+		&i.MonthlySummaryOptOut,
 	)
 	return i, err
 }
@@ -150,7 +154,7 @@ SET avatar_object_key = $2,
     avatar_updated_at = NOW(),
     updated_at        = NOW()
 WHERE id = $1
-RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at, monthly_summary_opt_out
 `
 
 type SetUserAvatarParams struct {
@@ -173,6 +177,7 @@ func (q *Queries) SetUserAvatar(ctx context.Context, arg SetUserAvatarParams) (U
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
 		&i.DeletedAt,
+		&i.MonthlySummaryOptOut,
 	)
 	return i, err
 }
@@ -209,7 +214,7 @@ SET display_name = COALESCE($2, display_name),
     locale       = COALESCE($5, locale),
     updated_at   = NOW()
 WHERE id = $1
-RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at, monthly_summary_opt_out
 `
 
 type UpdateUserParams struct {
@@ -241,6 +246,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
 		&i.DeletedAt,
+		&i.MonthlySummaryOptOut,
 	)
 	return i, err
 }
@@ -252,7 +258,7 @@ ON CONFLICT (email) DO UPDATE
     SET display_name = EXCLUDED.display_name,
         avatar_url   = COALESCE(EXCLUDED.avatar_url, users.avatar_url),
         updated_at   = NOW()
-RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at
+RETURNING id, email, display_name, avatar_url, phone, locale, created_at, updated_at, avatar_object_key, avatar_updated_at, deleted_at, monthly_summary_opt_out
 `
 
 type UpsertUserParams struct {
@@ -284,6 +290,7 @@ func (q *Queries) UpsertUser(ctx context.Context, arg UpsertUserParams) (User, e
 		&i.AvatarObjectKey,
 		&i.AvatarUpdatedAt,
 		&i.DeletedAt,
+		&i.MonthlySummaryOptOut,
 	)
 	return i, err
 }
