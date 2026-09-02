@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { canonicalLink, canonicalMeta, SITE_URL } from "@/lib/site";
 import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { useTranslation } from "react-i18next";
@@ -23,8 +24,8 @@ import sceneCta from "@/assets/scene-cta.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
-    meta: [{ property: "og:url", content: "/" }],
-    links: [{ rel: "canonical", href: "/" }],
+    meta: [...canonicalMeta("/")],
+    links: [canonicalLink("/")],
     scripts: [
       {
         type: "application/ld+json",
@@ -33,10 +34,35 @@ export const Route = createFileRoute("/")({
           "@type": "SoftwareApplication",
           name: "Chara",
           applicationCategory: "FinanceApplication",
-          operatingSystem: "Any",
+          operatingSystem: "iOS, Android, Web",
+          url: SITE_URL,
           description:
             "Open-source, self-hostable bill splitting. No ads, no daily cap, no bank linking.",
           offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+          // Derived from the same REVIEWS array the page renders, so the
+          // markup can never claim a rating the page does not show. The count
+          // is small and stated plainly rather than hidden — search engines
+          // are free to ignore it, but it must never overstate.
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: RATING.toFixed(1),
+            reviewCount: REVIEWS.length,
+            bestRating: "5",
+            worstRating: "1",
+          },
+          review: REVIEWS.map((r) => ({
+            "@type": "Review",
+            name: r.title,
+            reviewBody: r.body,
+            datePublished: r.date,
+            author: { "@type": "Person", name: r.handle },
+            reviewRating: {
+              "@type": "Rating",
+              ratingValue: String(r.rating),
+              bestRating: "5",
+              worstRating: "1",
+            },
+          })),
         }),
       },
     ],

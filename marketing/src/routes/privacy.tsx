@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { canonicalLink, canonicalMeta } from "@/lib/site";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { LegalPrint } from "@/components/LegalPrint";
@@ -10,9 +11,9 @@ export const Route = createFileRoute("/privacy")({
       { name: "description", content: "Learn how Chara handles your data, what we collect, where it lives, and how we protect your privacy as a self-hosted or hosted user." },
       { property: "og:title", content: "Privacy — Chara" },
       { property: "og:description", content: "Plainspoken privacy policy covering what Chara collects, why, and how your data is stored and protected." },
-      { property: "og:url", content: "/privacy" },
+      ...canonicalMeta("/privacy"),
     ],
-    links: [{ rel: "canonical", href: "/privacy" }],
+    links: [canonicalLink("/privacy")],
   }),
   component: () => (
     <div className="min-h-screen bg-indigo">
@@ -100,7 +101,7 @@ export const Route = createFileRoute("/privacy")({
           </table>
         </div>
         <p>US transfers rely on Standard Contractual Clauses and the EU–US Data Privacy Framework where the recipient is certified. We do not sell, rent, license, or trade personal data.</p>
-        <p>The marketing website (<code>getchara.lovable.app</code>) loads Google Fonts and is hosted on Lovable; it does not run product analytics or advertising trackers.</p>
+        <p>The marketing website (<code>getchara.dowtech.dev</code>) loads Google Fonts; it does not run product analytics or advertising trackers.</p>
 
         <H2>5 · Where your data lives</H2>
         <p>Primary storage and backups are in the EU. Transfers to US-based processors rely on Standard Contractual Clauses with supplementary measures as required under EU law.</p>

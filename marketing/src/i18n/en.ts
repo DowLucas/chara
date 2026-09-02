@@ -197,6 +197,9 @@ export const en = {
     alt: "Two roommates on rent day: one frantic at the drawer, one calm with a teacup and Chara open on the phone.",
   },
   footer: {
+    compare: "Compare",
+    alternatives: "Splitwise alternatives",
+    selfHost: "Self-host",
     blurb: "Open-source bill-splitting that does the math, reads the receipts, and handles the currencies. Your groups, your server — or ours. Built in Stockholm.",
     legal: "Legal",
     project: "Project",

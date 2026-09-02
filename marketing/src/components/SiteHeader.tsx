@@ -20,8 +20,8 @@ export function SiteHeader() {
         <nav className="hidden md:flex items-center gap-10 label text-[11px] uppercase tracking-[0.2em] text-bone-mute">
           <a href="/#values" className="hover:text-bone transition-colors">{t("nav.why")}</a>
           <a href="/#features" className="hover:text-bone transition-colors">{t("nav.features")}</a>
-          <a href="/#compare" className="hover:text-bone transition-colors">{t("nav.compare")}</a>
-          <a href="/#self-host" className="hover:text-bone transition-colors">{t("nav.selfHost")}</a>
+          <Link to="/splitwise-alternative" className="hover:text-bone transition-colors">{t("nav.compare")}</Link>
+          <Link to="/self-host" className="hover:text-bone transition-colors">{t("nav.selfHost")}</Link>
           <a href="/#faq" className="hover:text-bone transition-colors">{t("nav.faq")}</a>
           <Link to="/releases" className="hover:text-bone transition-colors">{t("nav.releases")}</Link>
         </nav>
