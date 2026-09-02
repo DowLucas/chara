@@ -8,6 +8,14 @@ COPY package.json bun.lock bunfig.toml ./
 RUN bun install --frozen-lockfile
 
 COPY . .
+
+# PostHog project key. Public by design (it ships in the client bundle), but
+# supplied as a build arg so that forks building this image get an empty value
+# and the analytics module stays a no-op. Vite inlines VITE_* at build time,
+# so it cannot be set at runtime in docker-compose.
+ARG VITE_POSTHOG_KEY=""
+ENV VITE_POSTHOG_KEY=$VITE_POSTHOG_KEY
+
 ENV NITRO_PRESET=node-server
 RUN bun run build
 

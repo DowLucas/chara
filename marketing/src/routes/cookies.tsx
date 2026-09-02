@@ -8,9 +8,9 @@ export const Route = createFileRoute("/cookies")({
   head: () => ({
     meta: [
       { title: "Cookies — Chara" },
-      { name: "description", content: "Chara keeps cookies and storage to the bare minimum." },
+      { name: "description", content: "Chara keeps cookies and storage to the bare minimum. The marketing site measures traffic without storing anything on your device." },
       { property: "og:title", content: "Cookies — Chara" },
-      { property: "og:description", content: "No banner, because there's nothing to consent to." },
+      { property: "og:description", content: "No banner, because nothing is stored on your device." },
       ...canonicalMeta("/cookies"),
     ],
     links: [canonicalLink("/cookies")],
@@ -18,13 +18,15 @@ export const Route = createFileRoute("/cookies")({
   component: () => (
     <div className="min-h-screen bg-indigo">
       <SiteHeader />
-      <LegalPrint index="lg.03" title="Cookies" updated="22 May 2026">
+      <LegalPrint index="lg.03" title="Cookies" updated="2 September 2026">
         <p className="lead text-lg leading-[1.55]">
-          Chara keeps cookies and storage to the bare minimum. We don't run analytics scripts and we don't load advertising tags. There's no cookie banner because there's nothing to consent to.
+          Chara keeps cookies and storage to the bare minimum. We don't load advertising tags and we don't track you across other sites. There's no cookie banner because nothing we run stores anything on your device.
         </p>
 
         <H2>The marketing site (this page)</H2>
-        <p>The marketing site is static. It sets no cookies and uses no localStorage. It does load webfonts from <strong>Google Fonts</strong> (<code>fonts.googleapis.com</code> and <code>fonts.gstatic.com</code>); Google Fonts does not set cookies, but Google can see your IP and user agent when those files load.</p>
+        <p>The marketing site sets no cookies and uses no localStorage or sessionStorage.</p>
+        <p>It does measure how many people read which pages, using <strong>PostHog</strong> in its EU region (<code>eu.i.posthog.com</code>) in <strong>cookieless mode</strong>. In that mode the script stores nothing at all in your browser: PostHog counts visitors with a hash it computes on its own servers from your IP address and browser, and rotates that hash daily, so it cannot recognise you tomorrow or on any other site. There is no account, no profile, and nothing that follows you. This is why there is still no banner — under the ePrivacy rules a banner is required for reading from or writing to your device, and this reads and writes nothing.</p>
+        <p>It also loads webfonts from <strong>Google Fonts</strong> (<code>fonts.googleapis.com</code> and <code>fonts.gstatic.com</code>); Google Fonts does not set cookies, but Google can see your IP and user agent when those files load.</p>
 
         <H2>The app</H2>
         <p>The Chara app authenticates you with a JSON Web Token sent in the HTTP <code>Authorization</code> header. It is <strong>not</strong> a cookie. The token is held in the mobile app's secure storage (Expo SecureStore on iOS / Android, or browser storage on web) and is never visible to third parties.</p>
