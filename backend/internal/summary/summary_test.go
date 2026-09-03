@@ -196,3 +196,83 @@ func TestBuild_CategoryPercentagesAlwaysSumTo100(t *testing.T) {
 		require.Equal(t, 100, sum, "shares %v must apportion to exactly 100", shares)
 	}
 }
+
+// The catalog has its own "other" slug (see internal/category), which means
+// the same thing as the folded tail: "not itemised further". Emitting both
+// produces two rows the app labels identically — and, because the screen
+// keys category rows by slug, a duplicate React key. Real data hit this on
+// the first try.
+func TestBuild_RealOtherCategoryMergesWithTheFoldedTail(t *testing.T) {
+	rows := []ExpenseRow{}
+	add := func(slug string, share int64) {
+		rows = append(rows, ExpenseRow{
+			ExpenseID: slug, GroupID: "g1", GroupName: "G", Currency: "SEK",
+			Category: slug, Title: slug, Date: day("2026-08-01"), ShareMinor: share,
+		})
+	}
+	// Six real categories, one of which IS "other", plus enough tail to fold.
+	add("rent", 8000)
+	add("groceries", 600)
+	add(OtherCategorySlug, 590) // big enough to survive into the top five
+	add("travel", 330)
+	add("transport", 300)
+	add("food", 200)
+	add("pets", 100) // folds
+
+	got := Build(Input{Home: "SEK", Convert: identityConvert, Rows: rows})
+
+	seen := map[string]int{}
+	for _, c := range got.Categories {
+		seen[c.Slug]++
+	}
+	require.Equal(t, 1, seen[OtherCategorySlug],
+		"exactly one Other row, not one per meaning: %+v", got.Categories)
+
+	var other Category
+	for _, c := range got.Categories {
+		if c.Slug == OtherCategorySlug {
+			other = c
+		}
+	}
+	// 590 (the real category) + 100 (pets, the only row that folds).
+	// Keeping "other" out of the ranking frees a top-five slot, so food(200)
+	// is now shown by name instead of being folded — the better outcome,
+	// since "Other" is the least informative label on the screen.
+	require.Equal(t, int64(690), other.ShareMinor,
+		"the real Other and the folded tail are one bucket")
+	slugs := make([]string, 0, len(got.Categories))
+	for _, c := range got.Categories {
+		slugs = append(slugs, c.Slug)
+	}
+	require.Contains(t, slugs, "food", "a real category outranks the Other bucket for a slot")
+
+	sum := 0
+	for _, c := range got.Categories {
+		sum += c.Pct
+	}
+	require.Equal(t, 100, sum, "merging must not break the apportionment")
+}
+
+// A real "other" with nothing to fold must still produce one row, and must
+// not be dropped just because it shares the sentinel's name.
+func TestBuild_RealOtherCategorySurvivesWithoutFolding(t *testing.T) {
+	got := Build(Input{
+		Home: "SEK", Convert: identityConvert,
+		Rows: []ExpenseRow{
+			{ExpenseID: "a", GroupID: "g1", GroupName: "G", Currency: "SEK",
+				Category: "rent", Title: "Rent", Date: day("2026-08-01"), ShareMinor: 900},
+			{ExpenseID: "b", GroupID: "g1", GroupName: "G", Currency: "SEK",
+				Category: OtherCategorySlug, Title: "Bits", Date: day("2026-08-02"), ShareMinor: 100},
+		},
+	})
+
+	require.Len(t, got.Categories, 2)
+	var other *Category
+	for i := range got.Categories {
+		if got.Categories[i].Slug == OtherCategorySlug {
+			other = &got.Categories[i]
+		}
+	}
+	require.NotNil(t, other, "the catalog's own Other is a real category, not a sentinel to drop")
+	require.Equal(t, int64(100), other.ShareMinor)
+}

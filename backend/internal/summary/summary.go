@@ -11,9 +11,12 @@ import (
 	"time"
 )
 
-// OtherCategorySlug is the synthetic bucket the tail of the category
-// breakdown folds into. Not a real category — the app translates it
-// separately.
+// OtherCategorySlug is the bucket the tail of the category breakdown folds
+// into. It is deliberately the catalog's own "other" slug (see
+// internal/category) rather than a synthetic sentinel: the two mean the same
+// thing to a reader — "not itemised further" — so they are merged into one
+// row. Emitting both would render two rows the app labels identically, and
+// the screen keys category rows by slug, so it would also collide.
 const OtherCategorySlug = "other"
 
 // maxCategories is how many real categories survive before folding.
@@ -221,9 +224,16 @@ func foldCategories(totals map[string]int64) []Category {
 	}
 	pairs := make([]kv, 0, len(totals))
 	var grand int64
+	// The catalog's own "other" never competes for a top-five slot: it is
+	// seeded straight into the fold bucket, so however the ranking falls out
+	// there is exactly one Other row.
+	other := totals[OtherCategorySlug]
 	for slug, amt := range totals {
-		pairs = append(pairs, kv{slug, amt})
 		grand += amt
+		if slug == OtherCategorySlug {
+			continue
+		}
+		pairs = append(pairs, kv{slug, amt})
 	}
 	// Descending by amount, then by slug so equal amounts order stably.
 	sort.Slice(pairs, func(i, j int) bool {
@@ -234,7 +244,6 @@ func foldCategories(totals map[string]int64) []Category {
 	})
 
 	out := make([]Category, 0, maxCategories+1)
-	var other int64
 	for i, p := range pairs {
 		if i < maxCategories {
 			out = append(out, Category{Slug: p.slug, ShareMinor: p.amt})
