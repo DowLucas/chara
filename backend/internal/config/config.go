@@ -106,8 +106,8 @@ type Config struct {
 	// goes out on the 1st at 09:00 local. One zone for the whole instance,
 	// not per user: a per-user send window needs a per-user zone the app
 	// does not report, and "everyone gets it on the morning of the 1st" is
-	// the property that matters. Empty means UTC; an unknown name is
-	// rejected at boot rather than silently becoming UTC.
+	// the property that matters. Empty means DefaultSummaryTZ; an unknown
+	// name is rejected at boot rather than silently falling back.
 	SummaryTZ string
 
 	// summaryLoc is SummaryTZ resolved, filled by validate so the lookup
@@ -115,8 +115,19 @@ type Config struct {
 	summaryLoc *time.Location
 }
 
-// SummaryLocation returns the resolved SUMMARY_TZ, or UTC when unset.
-// Only meaningful after validate has run (i.e. on a Config from Load).
+// DefaultSummaryTZ is the zone the monthly summary push fires in when
+// SUMMARY_TZ is unset.
+//
+// Not UTC: nothing in deploy/ sets the variable, so the default is what
+// production actually runs, and a UTC default would send at 11:00 Stockholm
+// in summer and 10:00 in winter — instead of the 09:00 local the feature is
+// specified around. Chara Cloud's users are overwhelmingly Nordic; a
+// self-hoster elsewhere sets SUMMARY_TZ.
+const DefaultSummaryTZ = "Europe/Stockholm"
+
+// SummaryLocation returns the resolved SUMMARY_TZ. Only meaningful after
+// validate has run (i.e. on a Config from Load); UTC is the last-resort
+// answer for a zero-valued Config that never went through it.
 func (c *Config) SummaryLocation() *time.Location {
 	if c.summaryLoc == nil {
 		return time.UTC
@@ -193,15 +204,17 @@ func Load() (*Config, error) {
 }
 
 func (c *Config) validate() error {
-	if c.SummaryTZ == "" {
-		c.summaryLoc = time.UTC
-	} else {
-		loc, err := time.LoadLocation(c.SummaryTZ)
-		if err != nil {
-			return fmt.Errorf("config: SUMMARY_TZ %q is not a known IANA zone: %w", c.SummaryTZ, err)
-		}
-		c.summaryLoc = loc
+	summaryTZ := c.SummaryTZ
+	if summaryTZ == "" {
+		summaryTZ = DefaultSummaryTZ
 	}
+	loc, err := time.LoadLocation(summaryTZ)
+	if err != nil {
+		// Also catches a container with no tzdata: better to fail at boot
+		// than to silently send a month of pushes at the wrong hour.
+		return fmt.Errorf("config: SUMMARY_TZ %q is not a known IANA zone: %w", summaryTZ, err)
+	}
+	c.summaryLoc = loc
 	if c.InstanceMode != "hosted" && c.InstanceMode != "selfhost" {
 		return fmt.Errorf("config: INSTANCE_MODE must be 'hosted' or 'selfhost', got %q", c.InstanceMode)
 	}

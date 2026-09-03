@@ -58,7 +58,8 @@ import {
 } from '@/lib/preferences';
 import { storeReviewUrl, type StorePlatform } from '@/lib/store-url';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
-import { currentPeriod, summaryServerUrl } from '@/lib/summary-view';
+import { currentPeriod } from '@/lib/summary-view';
+import { useSummaryServerUrl } from '@/lib/use-summary-server';
 
 // TODO: real App Store ID once the app is published
 // App Store numeric ID (ascAppId in eas.json). Powers the "Rate us" deep link.
@@ -82,7 +83,10 @@ export default function YouScreen() {
   const { t } = useTranslation();
   const { user, signOut, refreshUser } = useAuth();
   const { accounts, removeAccount, setHomeCurrency } = useAccounts();
-  const summaryServer = summaryServerUrl(accounts);
+  // Live feature read, not the cached account.instance blob — that is only
+  // written at sign-in, so an already-signed-in user would never see these
+  // rows. Same pattern as the ocr / voice / settle-reminder gates.
+  const summaryServer = useSummaryServerUrl();
   const { homeCurrency, isExplicit: homeCurrencyExplicit } = useHomeCurrency();
   const accountCount = accounts.length;
   const hasMultipleAccounts = accountCount >= 2;

@@ -10,6 +10,12 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	// Embeds the IANA zone database in the binary. SUMMARY_TZ resolution
+	// happens in config.validate, so without this a host with no
+	// /usr/share/zoneinfo would fail to boot rather than merely losing the
+	// monthly summary's send hour. The Docker image installs tzdata anyway;
+	// this covers self-hosters running the binary directly. ~450 KB.
+	_ "time/tzdata"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"

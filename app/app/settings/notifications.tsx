@@ -20,15 +20,15 @@ import { IconButton } from '@/components/IconButton';
 import { EmptyState } from '@/components/EmptyState';
 import { showAlert } from '@/lib/app-alert';
 import { apiFor } from '@/lib/api';
-import { useAccounts } from '@/lib/accounts';
-import { summaryServerUrl } from '@/lib/summary-view';
+import { useSummaryServerUrl } from '@/lib/use-summary-server';
 import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
 
 export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  const { accounts } = useAccounts();
-  const serverUrl = summaryServerUrl(accounts);
+  // Live feature read rather than the cached account.instance blob, which is
+  // only written at sign-in — see use-summary-server.ts.
+  const serverUrl = useSummaryServerUrl();
 
   const [optOut, setOptOut] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
