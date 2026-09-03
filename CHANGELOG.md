@@ -5,6 +5,18 @@ All notable changes to Chara are documented here. Format loosely follows
 
 ## Unreleased
 
+### Added
+
+- **Your month, once a month.** On the 1st, Chara sends one notification and
+  shows you the month that just ended: what you paid, what was actually your
+  share, the net effect on your balances, which categories took the money, the
+  single biggest expense and the group that ate the most. Amounts from
+  different currencies are converted at the rate that applied when each
+  expense happened, and anything Chara has no rate for is left out and said so
+  rather than quietly folded in. You can page back through earlier months, and
+  turn the notification off in You → Notifications. Chara Cloud only, and only
+  when you actually spent something — a quiet month sends nothing.
+
 ### Security
 
 - **A sign-in link can no longer add a server behind your back.** Opening a

@@ -402,6 +402,9 @@ export interface User {
   /** ISO-8601 timestamp the user's avatar was last updated. Used to bust the
    *  RN image cache after a fresh upload. */
   avatar_updated_at?: string | null;
+  /** True when the user has turned the monthly summary push off. Absent on
+   *  backends predating the feature. */
+  monthly_summary_opt_out?: boolean;
 }
 
 export function requestMagicLink(email: string) {
@@ -983,6 +986,10 @@ export interface InstanceFeatures {
    *  predating the feature, which the app treats as unsupported, so the
    *  mic stays hidden rather than offering a button that always fails. */
   voice_expense?: boolean;
+  /** GET /api/me/summary and the monthly summary push are available.
+   *  Optional — absent on backends predating the feature, and false on every
+   *  self-hosted instance, which the app treats as unsupported. */
+  monthly_summary?: boolean;
 }
 
 export interface InstanceInfo {
@@ -1429,6 +1436,78 @@ export interface MyNetResponse {
   contributing_groups: number;
 }
 
+
+// --- Monthly summary (hosted-only) -----------------------------------------
+//
+// Shapes mirror backend/internal/handler/summary.go. Every money field is a
+// decimal string in the currency named alongside it, per the Money rule —
+// never a number.
+
+export interface SummaryCurrencyTotals {
+  currency: string;
+  paid: string;
+  share: string;
+  expense_count: number;
+}
+
+export interface SummaryConverted {
+  currency: string;
+  paid: string;
+  share: string;
+  net: string;
+  total_legs: number;
+  converted_legs: number;
+  /** Legs converted at a rate that was not the expense-date rate. Same
+   *  "approximate" contract as /api/me/net. */
+  estimated_legs: number;
+}
+
+export interface SummaryCounts {
+  expenses: number;
+  groups: number;
+  active_days: number;
+}
+
+export interface SummaryCategory {
+  slug: string;
+  share: string;
+  /** Whole percent, apportioned by the backend so the set sums to 100. */
+  pct: number;
+}
+
+export interface SummaryBiggestExpense {
+  expense_id: string;
+  group_id: string;
+  group_name: string;
+  title: string;
+  /** In `currency`, not the home currency — ranking happens converted,
+   *  display stays native. */
+  share: string;
+  currency: string;
+}
+
+export interface SummaryTopGroup {
+  group_id: string;
+  name: string;
+  share: string;
+}
+
+export interface SummaryResponse {
+  period: string;
+  by_currency: SummaryCurrencyTotals[];
+  converted: SummaryConverted;
+  counts: SummaryCounts;
+  categories: SummaryCategory[];
+  highlights: {
+    biggest_expense: SummaryBiggestExpense | null;
+    top_group: SummaryTopGroup | null;
+  };
+  previous: { paid: string; share: string; net: string } | null;
+  /** Earliest month with any qualifying expense, so the screen knows when to
+   *  stop offering "previous month". Empty when there is none. */
+  first_period: string;
+}
+
 export function getMyNet(homeCurrency: string) {
   return request<MyNetResponse>(
     `/api/me/net?in=${encodeURIComponent(homeCurrency)}`,
@@ -1454,7 +1533,14 @@ export function apiFor(serverUrl: string) {
   return {
     // Identity
     getMe: () => requestOn<User>(serverUrl, '/api/me'),
-    updateMe: (input: { name?: string; phone?: string }) =>
+    updateMe: (input: {
+      name?: string;
+      phone?: string;
+      // Optional so an unrelated profile edit cannot silently opt the user
+      // back into the monthly summary — the backend field is a pointer for
+      // the same reason.
+      monthly_summary_opt_out?: boolean;
+    }) =>
       requestOn<User>(serverUrl, '/api/me', {
         method: 'PATCH',
         body: JSON.stringify(input),
@@ -1731,11 +1817,25 @@ export function apiFor(serverUrl: string) {
         `/api/groups/${groupId}/activity?limit=${limit}&offset=${offset}`,
       ),
 
+    // Monthly summary (hosted-only; gated on features.monthly_summary)
+    getSummary: (period: string, homeCurrency: string) =>
+      requestOn<SummaryResponse>(
+        serverUrl,
+        `/api/me/summary?period=${encodeURIComponent(period)}&in=${encodeURIComponent(homeCurrency)}`,
+      ),
+
     // Push tokens (Wave 5)
-    registerPushToken: (token: string, platform: 'ios' | 'android' | 'web') =>
+    // `locale` is the device's UI language. Optional on the wire — an older
+    // backend ignores the field — and it is what lets the server localize
+    // push copy it writes itself, like the monthly summary.
+    registerPushToken: (
+      token: string,
+      platform: 'ios' | 'android' | 'web',
+      locale?: string,
+    ) =>
       requestOn<void>(serverUrl, '/api/me/push-token', {
         method: 'POST',
-        body: JSON.stringify({ token, platform }),
+        body: JSON.stringify({ token, platform, ...(locale ? { locale } : {}) }),
       }),
     deletePushToken: (token: string) =>
       requestOn<void>(serverUrl, '/api/me/push-token', {

@@ -7,7 +7,10 @@
 // adding a language should be a deliberate ship-feature decision.
 package language
 
-import "strings"
+import (
+	"sort"
+	"strings"
+)
 
 // supported is the canonical set. Names are kept here only for the picker
 // UI on the backend side (none today) and to document intent — the mobile
@@ -85,4 +88,17 @@ func Name(code string) string {
 		return supported[c]
 	}
 	return code
+}
+
+// Supported returns every allowlist code, sorted. Callers that keep a
+// per-locale table (push copy, for one) iterate this in a test so adding a
+// language here fails loudly wherever a translation is still missing,
+// rather than silently falling back to English in production.
+func Supported() []string {
+	out := make([]string, 0, len(supported))
+	for code := range supported {
+		out = append(out, code)
+	}
+	sort.Strings(out)
+	return out
 }

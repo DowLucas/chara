@@ -88,6 +88,7 @@ export const sv: Translations = {
       { g: "‡", h: "Pengar som aldrig avrundas fel", b: "Varje öre är ett heltal, hela vägen — dina saldon är aldrig flyttalsgissningar. Avrundningsfel är en felklass vi raderat." },
       { g: "⌘", h: "Logga in som du redan gör", b: "En magisk länk till din mejl eller ditt Google-konto. Inget lösenord att sätta, inget nytt konto att bävra för." },
       { g: "№", h: "Jaga aldrig hyran igen", b: "Hyran, Netflix, städaren — sätt upp varje återkommande räkning en gång. Chara lägger upp och delar den på dagen, och håller tyst tills något ändras." },
+      { g: "◷", h: "En månad du faktiskt kan läsa", b: "Den 1:a visar Chara månaden som just tog slut — vad du betalade, vad som var din andel, vart det gick och vilken grupp som tog mest. En skärm, inget kalkylark." },
     ],
   },
   belief: {

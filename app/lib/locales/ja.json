@@ -909,6 +909,53 @@
     "shareMessage": "Charaで「{{name}}」に参加しよう：{{link}}",
     "you": "自分"
   },
+  "monthlySummary": {
+    "activeDays": "利用日数",
+    "balanceSection": "収支",
+    "biggestExpense": "最大の支出 · {{group}}",
+    "byCurrency": "通貨別",
+    "categories": "カテゴリ",
+    "changeVsPrevious_down": "先月より{{pct}}%少ない",
+    "changeVsPrevious_up": "先月より{{pct}}%多い",
+    "empty": {
+      "title": "この月は記録なし",
+      "body": "この月に追加された支出はありません。"
+    },
+    "excluded": "{{count}}件は含められませんでした。",
+    "excluded_one": "{{count}}件は含められませんでした。",
+    "excluded_other": "{{count}}件は含められませんでした。",
+    "expenses": "支出",
+    "groups": "グループ",
+    "highlights": "ハイライト",
+    "loadError": "この月を読み込めませんでした。",
+    "net": "差引",
+    "nextMonth": "次の月",
+    "noAccount": {
+      "title": "アカウントが見つかりません",
+      "body": "このサマリーのサーバーにはログインしていません。"
+    },
+    "previousMonth": "前の月",
+    "title": "月間サマリー",
+    "topGroup": "最も使ったグループ",
+    "youPaid": "支払った額",
+    "yourShare": "あなたの負担額"
+  },
+  "notifications": {
+    "title": "通知",
+    "eyebrow": "プッシュ",
+    "monthlySummary": {
+      "label": "月間サマリー",
+      "help": "毎月1日、サマリーができたときに通知します。"
+    },
+    "saveFailed": {
+      "title": "保存できませんでした",
+      "body": "通知設定を保存できませんでした。接続を確認してもう一度お試しください。"
+    },
+    "none": {
+      "title": "通知設定はありません",
+      "body": "通知設定に対応しているサーバーはまだありません。"
+    }
+  },
   "onboarding": {
     "createBody": "名前を決めて、QRコードを共有しましょう。",
     "createEyebrow": "新しく始める",
@@ -1334,6 +1381,7 @@
     "homeCurrency": "ホーム通貨",
     "language": "言語",
     "languageAuto": "自動",
+    "monthlySummary": "月間サマリー",
     "openSource": {
       "body": "現在ご利用中のchara.appは、私たちが運営するホスト型ベータ版です。アプリ自体は無料かつオープンソースで、ご自身のマシンで上限なしにセルフホストできます。",
       "eyebrow": "charaはオープンソースです",

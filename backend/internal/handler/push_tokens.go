@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/DowLucas/chara/internal/db"
+	"github.com/DowLucas/chara/internal/language"
 	"github.com/DowLucas/chara/internal/middleware"
 	"github.com/DowLucas/chara/internal/ulid"
 )
@@ -24,6 +25,12 @@ func NewPushTokenHandler(pool *pgxpool.Pool, queries *db.Queries) *PushTokenHand
 type registerPushTokenRequest struct {
 	Token    string `json:"token"`
 	Platform string `json:"platform"`
+	// Locale is the device's UI language, optional. Registration is the one
+	// moment the backend reliably hears from the device on every launch,
+	// which makes it the right place to learn the language localized push
+	// copy needs. Older apps omit it; an unknown value is ignored rather
+	// than rejected — push delivery matters more than its language.
+	Locale string `json:"locale"`
 }
 
 type deletePushTokenRequest struct {
@@ -73,6 +80,18 @@ func (h *PushTokenHandler) Register(w http.ResponseWriter, r *http.Request) {
 		slog.Error("push token: upsert failed", "error", err, "user_id", claims.UserID)
 		writeError(w, http.StatusInternalServerError, "failed to register push token")
 		return
+	}
+
+	// Best-effort, and deliberately after the upsert: the token is the thing
+	// the caller asked us to store, and losing the language must never cost
+	// them push delivery. Store the normalized base (zh-Hans -> zh) so later
+	// lookups need not repeat the normalisation.
+	if code, ok := language.Normalize(req.Locale); ok {
+		if err := h.queries.UpdateUserLocale(r.Context(), db.UpdateUserLocaleParams{
+			ID: claims.UserID, Locale: code,
+		}); err != nil {
+			slog.Warn("push token: locale update failed", "error", err, "user_id", claims.UserID)
+		}
 	}
 
 	w.WriteHeader(http.StatusNoContent)

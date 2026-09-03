@@ -909,6 +909,53 @@
     "shareMessage": "Bli med i «{{name}}» på Chara: {{link}}",
     "you": "du"
   },
+  "monthlySummary": {
+    "activeDays": "Aktive dager",
+    "balanceSection": "SALDO",
+    "biggestExpense": "Største utgift · {{group}}",
+    "byCurrency": "PER VALUTA",
+    "categories": "KATEGORIER",
+    "changeVsPrevious_down": "{{pct}} % mindre enn forrige måned",
+    "changeVsPrevious_up": "{{pct}} % mer enn forrige måned",
+    "empty": {
+      "title": "Ingenting denne måneden",
+      "body": "Ingen utgifter ble lagt til denne måneden."
+    },
+    "excluded": "{{count}} element kunne ikke tas med.",
+    "excluded_one": "1 element kunne ikke inkluderes.",
+    "excluded_other": "{{count}} elementer kunne ikke inkluderes.",
+    "expenses": "Utgifter",
+    "groups": "Grupper",
+    "highlights": "HØYDEPUNKTER",
+    "loadError": "Kunne ikke laste denne måneden.",
+    "net": "Netto",
+    "nextMonth": "Neste måned",
+    "noAccount": {
+      "title": "Fant ikke kontoen",
+      "body": "Du er ikke lenger logget inn på serveren denne oppsummeringen hører til."
+    },
+    "previousMonth": "Forrige måned",
+    "title": "Månedsoppsummering",
+    "topGroup": "Mest brukt i",
+    "youPaid": "Du betalte",
+    "yourShare": "DIN ANDEL"
+  },
+  "notifications": {
+    "title": "Varsler",
+    "eyebrow": "PUSH",
+    "monthlySummary": {
+      "label": "Månedsoppsummering",
+      "help": "Et varsel den 1. hver måned, når oppsummeringen din er klar."
+    },
+    "saveFailed": {
+      "title": "Kunne ikke lagre",
+      "body": "Varselinnstillingen din ble ikke lagret. Sjekk tilkoblingen og prøv igjen."
+    },
+    "none": {
+      "title": "Ingen varselinnstillinger",
+      "body": "Ingen av serverne dine tilbyr varselinnstillinger ennå."
+    }
+  },
   "onboarding": {
     "createBody": "Velg et navn, del QR-koden med venner.",
     "createEyebrow": "start fra null",
@@ -1337,6 +1384,7 @@
     "homeCurrency": "Hjemmevaluta",
     "language": "Språk",
     "languageAuto": "Automatisk",
+    "monthlySummary": "Månedsoppsummering",
     "openSource": {
       "body": "Du bruker chara.app — vår hostede beta. Selve appen er gratis og åpen kildekode. Du kan selvdrifte den på din egen maskin, uten tak.",
       "eyebrow": "chara er åpen kildekode",

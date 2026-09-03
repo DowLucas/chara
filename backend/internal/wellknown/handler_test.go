@@ -154,3 +154,28 @@ func TestFeatures_VoiceExpenseTracksGeminiKey(t *testing.T) {
 		})
 	}
 }
+
+// The monthly summary needs both halves: the endpoint is hosted-only, and
+// without the job queue nothing would ever tell users the page exists.
+func TestFeatures_MonthlySummaryHostedAndQueueOnly(t *testing.T) {
+	cases := []struct {
+		name     string
+		mode     string
+		queue    bool
+		expected bool
+	}{
+		{"hosted with queue", "hosted", true, true},
+		{"hosted without queue", "hosted", false, false},
+		{"selfhost with queue", "selfhost", true, false},
+		{"selfhost without queue", "selfhost", false, false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := &config.Config{InstanceMode: tc.mode, RecurringEnabled: tc.queue}
+			info := buildInfo(cfg, "test")
+			if info.Features.MonthlySummary != tc.expected {
+				t.Errorf("MonthlySummary = %v, want %v", info.Features.MonthlySummary, tc.expected)
+			}
+		})
+	}
+}

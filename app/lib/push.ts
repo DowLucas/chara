@@ -37,6 +37,7 @@ import Constants from 'expo-constants';
 import { snapshot, subscribe } from './accounts-store';
 import { apiFor as defaultApiFor } from './api';
 import { REFRESH_FLOOR_MS } from './aggregated-reads-internal';
+import { currentLanguage } from './i18n';
 
 export interface PushDeviceInfo {
   token: string;
@@ -71,9 +72,19 @@ export interface PushDeps {
   getOrAcquireToken: () => Promise<string | null>;
   /** The platform tag sent to the server. */
   platform: 'ios' | 'android' | 'web';
+  /**
+   * The UI language to report, read fresh on every registration — the user
+   * can change it mid-session from the You tab. The server uses it to
+   * localize push copy it composes itself (the monthly summary).
+   */
+  locale: () => string;
   /** Per-server API factory (defaults to the real `apiFor`). */
   apiFor: (serverUrl: string) => {
-    registerPushToken: (token: string, platform: 'ios' | 'android' | 'web') => Promise<void>;
+    registerPushToken: (
+      token: string,
+      platform: 'ios' | 'android' | 'web',
+      locale: string,
+    ) => Promise<void>;
     deletePushToken: (token: string) => Promise<void>;
   };
   /** Subscribe to push token rotation events. Returns an unsubscribe fn. */
@@ -177,6 +188,7 @@ async function defaultGetOrAcquireToken(): Promise<string | null> {
 const defaultDeps: PushDeps = {
   getOrAcquireToken: defaultGetOrAcquireToken,
   platform: getPlatform(),
+  locale: () => currentLanguage(),
   apiFor: (serverUrl) => defaultApiFor(serverUrl),
   onTokenRotation: (handler) => {
     const sub = Notifications.addPushTokenListener((evt) => {
@@ -203,7 +215,7 @@ async function reconcile(deps: PushDeps): Promise<void> {
 async function registerInternal(serverUrl: string, deps: PushDeps): Promise<void> {
   if (!currentToken) return;
   try {
-    await deps.apiFor(serverUrl).registerPushToken(currentToken, deps.platform);
+    await deps.apiFor(serverUrl).registerPushToken(currentToken, deps.platform, deps.locale());
     registered.add(serverUrl);
     failed.delete(serverUrl);
   } catch {

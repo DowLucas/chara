@@ -196,6 +196,12 @@ type MemberBalance struct {
 	NetBalance int64       `db:"net_balance" json:"net_balance"`
 }
 
+type MonthlySummarySend struct {
+	UserID string             `db:"user_id" json:"user_id"`
+	Period string             `db:"period" json:"period"`
+	SentAt pgtype.Timestamptz `db:"sent_at" json:"sent_at"`
+}
+
 type PushToken struct {
 	ID         string             `db:"id" json:"id"`
 	UserID     string             `db:"user_id" json:"user_id"`
@@ -352,6 +358,8 @@ type User struct {
 	AvatarObjectKey pgtype.Text        `db:"avatar_object_key" json:"avatar_object_key"`
 	AvatarUpdatedAt pgtype.Timestamptz `db:"avatar_updated_at" json:"avatar_updated_at"`
 	DeletedAt       pgtype.Timestamptz `db:"deleted_at" json:"deleted_at"`
+	// When true, the monthly summary job skips this user. See docs/superpowers/specs/2026-09-02-monthly-summary-design.md.
+	MonthlySummaryOptOut bool `db:"monthly_summary_opt_out" json:"monthly_summary_opt_out"`
 }
 
 type UserFeatureCap struct {

@@ -909,6 +909,53 @@
     "shareMessage": "Tritt „{{name}}“ auf Chara bei: {{link}}",
     "you": "du"
   },
+  "monthlySummary": {
+    "activeDays": "Aktive Tage",
+    "balanceSection": "SALDO",
+    "biggestExpense": "Größte Ausgabe · {{group}}",
+    "byCurrency": "NACH WÄHRUNG",
+    "categories": "KATEGORIEN",
+    "changeVsPrevious_down": "{{pct}} % weniger als im letzten Monat",
+    "changeVsPrevious_up": "{{pct}} % mehr als im letzten Monat",
+    "empty": {
+      "title": "Nichts in diesem Monat",
+      "body": "In diesem Monat wurden keine Ausgaben hinzugefügt."
+    },
+    "excluded": "{{count}} Eintrag/Einträge konnten nicht berücksichtigt werden.",
+    "excluded_one": "1 Eintrag konnte nicht berücksichtigt werden.",
+    "excluded_other": "{{count}} Einträge konnten nicht berücksichtigt werden.",
+    "expenses": "Ausgaben",
+    "groups": "Gruppen",
+    "highlights": "HIGHLIGHTS",
+    "loadError": "Dieser Monat konnte nicht geladen werden.",
+    "net": "Netto",
+    "nextMonth": "Nächster Monat",
+    "noAccount": {
+      "title": "Konto nicht gefunden",
+      "body": "Du bist nicht mehr auf dem Server angemeldet, zu dem diese Übersicht gehört."
+    },
+    "previousMonth": "Vorheriger Monat",
+    "title": "Monatsübersicht",
+    "topGroup": "Am meisten ausgegeben in",
+    "youPaid": "Du hast gezahlt",
+    "yourShare": "DEIN ANTEIL"
+  },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "eyebrow": "PUSH",
+    "monthlySummary": {
+      "label": "Monatsübersicht",
+      "help": "Eine Benachrichtigung am 1. jedes Monats, sobald deine Übersicht bereit ist."
+    },
+    "saveFailed": {
+      "title": "Speichern fehlgeschlagen",
+      "body": "Deine Benachrichtigungseinstellung wurde nicht gespeichert. Prüfe deine Verbindung und versuche es erneut."
+    },
+    "none": {
+      "title": "Keine Benachrichtigungseinstellungen",
+      "body": "Noch keiner deiner Server bietet Benachrichtigungseinstellungen an."
+    }
+  },
   "onboarding": {
     "createBody": "Such einen Namen aus und teil den QR-Code mit Freunden.",
     "createEyebrow": "neu anfangen",
@@ -1337,6 +1384,7 @@
     "homeCurrency": "Heimwährung",
     "language": "Sprache",
     "languageAuto": "Automatisch",
+    "monthlySummary": "Monatsübersicht",
     "openSource": {
       "body": "Du nutzt chara.app – unsere gehostete Beta. Die App selbst ist kostenlos und Open Source. Du kannst sie auf deinem eigenen Rechner selbst hosten, ohne Limits.",
       "eyebrow": "chara ist Open Source",

@@ -1013,6 +1013,57 @@
     "shareMessage": "انضم إلى \"{{name}}\" على Chara: {{link}}",
     "you": "أنت"
   },
+  "monthlySummary": {
+    "activeDays": "الأيام النشطة",
+    "balanceSection": "الرصيد",
+    "biggestExpense": "أكبر مصروف · {{group}}",
+    "byCurrency": "حسب العملة",
+    "categories": "الفئات",
+    "changeVsPrevious_down": "أقل بنسبة {{pct}}٪ من الشهر الماضي",
+    "changeVsPrevious_up": "أكثر بنسبة {{pct}}٪ من الشهر الماضي",
+    "empty": {
+      "title": "لا شيء هذا الشهر",
+      "body": "لم تُضَف أي مصروفات هذا الشهر."
+    },
+    "excluded": "تعذر تضمين {{count}} عنصر.",
+    "excluded_few": "تعذر تضمين {{count}} عناصر.",
+    "excluded_many": "تعذر تضمين {{count}} عنصرًا.",
+    "excluded_one": "تعذر تضمين عنصر واحد.",
+    "excluded_other": "تعذر تضمين {{count}} عناصر.",
+    "excluded_two": "تعذر تضمين عنصرين.",
+    "excluded_zero": "تعذر تضمين {{count}} عنصر.",
+    "expenses": "المصروفات",
+    "groups": "المجموعات",
+    "highlights": "أبرز النقاط",
+    "loadError": "تعذّر تحميل هذا الشهر.",
+    "net": "الصافي",
+    "nextMonth": "الشهر التالي",
+    "noAccount": {
+      "title": "الحساب غير موجود",
+      "body": "لم تعد مسجّل الدخول إلى الخادم الذي ينتمي إليه هذا الملخص."
+    },
+    "previousMonth": "الشهر السابق",
+    "title": "الملخص الشهري",
+    "topGroup": "الأكثر إنفاقًا في",
+    "youPaid": "دفعت",
+    "yourShare": "حصتك"
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "eyebrow": "الإشعارات الفورية",
+    "monthlySummary": {
+      "label": "الملخص الشهري",
+      "help": "إشعار في اليوم الأول من كل شهر عندما يصبح ملخصك جاهزًا."
+    },
+    "saveFailed": {
+      "title": "تعذّر الحفظ",
+      "body": "لم يُحفَظ تفضيل الإشعارات. تحقّق من الاتصال وحاول مرة أخرى."
+    },
+    "none": {
+      "title": "لا توجد إعدادات إشعارات",
+      "body": "لا يوفّر أي من خوادمك تفضيلات الإشعارات بعد."
+    }
+  },
   "onboarding": {
     "createBody": "اختر اسمًا، وشارك رمز QR مع الأصدقاء.",
     "createEyebrow": "ابدأ من جديد",
@@ -1525,6 +1576,7 @@
     "homeCurrency": "العملة الأساسية",
     "language": "اللغة",
     "languageAuto": "تلقائي",
+    "monthlySummary": "الملخص الشهري",
     "openSource": {
       "body": "أنت تستخدم chara.app — نسختنا التجريبية المستضافة. التطبيق نفسه مجاني ومفتوح المصدر. يمكنك استضافته على جهازك بنفسك، بلا حدود.",
       "eyebrow": "chara مفتوح المصدر",

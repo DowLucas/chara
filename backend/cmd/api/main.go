@@ -10,6 +10,12 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	// Embeds the IANA zone database in the binary. SUMMARY_TZ resolution
+	// happens in config.validate, so without this a host with no
+	// /usr/share/zoneinfo would fail to boot rather than merely losing the
+	// monthly summary's send hour. The Docker image installs tzdata anyway;
+	// this covers self-hosters running the binary directly. ~450 KB.
+	_ "time/tzdata"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -97,8 +103,14 @@ func main() {
 	var rc *river.Client[pgx.Tx]
 	if cfg.RecurringEnabled {
 		expo := pushsend.NewExpo(cfg.ExpoAccessToken)
-		workers := jobs.RegisterWorkers(pool, queries, cfg.BaseURL, expo)
-		rc, err = jobs.New(pool, workers)
+		// Hosted-only: GET /api/me/summary is behind HostedOnly, so a
+		// self-host tick would push users at a page that 404s.
+		summaryOpts := jobs.MonthlySummaryOptions{
+			Enabled:  cfg.IsHosted(),
+			Location: cfg.SummaryLocation(),
+		}
+		workers := jobs.RegisterWorkers(pool, queries, cfg.BaseURL, expo, summaryOpts)
+		rc, err = jobs.New(pool, workers, summaryOpts)
 		if err != nil {
 			slog.Error("recurring: river client init failed", "error", err)
 			os.Exit(1)

@@ -933,6 +933,54 @@
     "shareMessage": "Únete a \"{{name}}\" en Chara: {{link}}",
     "you": "tú"
   },
+  "monthlySummary": {
+    "activeDays": "Días activos",
+    "balanceSection": "SALDO",
+    "biggestExpense": "Mayor gasto · {{group}}",
+    "byCurrency": "POR MONEDA",
+    "categories": "CATEGORÍAS",
+    "changeVsPrevious_down": "{{pct}} % menos que el mes pasado",
+    "changeVsPrevious_up": "{{pct}} % más que el mes pasado",
+    "empty": {
+      "title": "Nada este mes",
+      "body": "No se añadieron gastos este mes."
+    },
+    "excluded": "{{count}} elemento(s) no se pudieron incluir.",
+    "excluded_many": "{{count}} elementos no se pudieron incluir.",
+    "excluded_one": "1 elemento no se pudo incluir.",
+    "excluded_other": "{{count}} elementos no se pudieron incluir.",
+    "expenses": "Gastos",
+    "groups": "Grupos",
+    "highlights": "DESTACADOS",
+    "loadError": "No se pudo cargar este mes.",
+    "net": "Neto",
+    "nextMonth": "Mes siguiente",
+    "noAccount": {
+      "title": "Cuenta no encontrada",
+      "body": "Ya no has iniciado sesión en el servidor al que pertenece este resumen."
+    },
+    "previousMonth": "Mes anterior",
+    "title": "Resumen mensual",
+    "topGroup": "Donde más gastaste",
+    "youPaid": "Pagaste",
+    "yourShare": "TU PARTE"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "eyebrow": "PUSH",
+    "monthlySummary": {
+      "label": "Resumen mensual",
+      "help": "Una notificación el día 1 de cada mes, cuando tu resumen esté listo."
+    },
+    "saveFailed": {
+      "title": "No se pudo guardar",
+      "body": "Tu preferencia de notificaciones no se guardó. Comprueba la conexión e inténtalo de nuevo."
+    },
+    "none": {
+      "title": "Sin ajustes de notificación",
+      "body": "Ninguno de tus servidores ofrece todavía preferencias de notificación."
+    }
+  },
   "onboarding": {
     "createBody": "Elige un nombre y comparte el código QR con tus amigos.",
     "createEyebrow": "empezar desde cero",
@@ -1379,6 +1427,7 @@
     "homeCurrency": "Moneda principal",
     "language": "Idioma",
     "languageAuto": "Automático",
+    "monthlySummary": "Resumen mensual",
     "openSource": {
       "body": "Estás usando chara.app — nuestra beta alojada. La app en sí es gratuita y de código abierto. Puedes autoalojarla en tu propia máquina, sin límites.",
       "eyebrow": "chara es de código abierto",

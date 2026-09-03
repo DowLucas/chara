@@ -251,6 +251,16 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 		r.Get("/api/me/activity", activityH.ListMyActivity)
 		r.Get("/api/groups/{groupID}/activity", activityH.ListGroupActivity)
 
+		// Monthly summary — hosted-only, because the job that tells users
+		// their summary exists only runs on Chara Cloud. Nested group so
+		// HostedOnly applies to this route alone while the surrounding
+		// auth middleware still applies to it.
+		summaryH := handler.NewSummaryHandler(queries)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.HostedOnly(cfg))
+			r.Get("/api/me/summary", summaryH.Summary)
+		})
+
 		r.Get("/api/fx/rates", fxH.Rates)
 		r.Get("/api/fx/convert", fxH.Convert)
 

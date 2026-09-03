@@ -933,6 +933,54 @@
     "shareMessage": "Entre em \"{{name}}\" no Chara: {{link}}",
     "you": "você"
   },
+  "monthlySummary": {
+    "activeDays": "Dias ativos",
+    "balanceSection": "SALDO",
+    "biggestExpense": "Maior despesa · {{group}}",
+    "byCurrency": "POR MOEDA",
+    "categories": "CATEGORIAS",
+    "changeVsPrevious_down": "{{pct}}% menos do que no mês passado",
+    "changeVsPrevious_up": "{{pct}}% mais do que no mês passado",
+    "empty": {
+      "title": "Nada este mês",
+      "body": "Não foram adicionadas despesas este mês."
+    },
+    "excluded": "{{count}} item(ns) não puderam ser incluídos.",
+    "excluded_many": "{{count}} itens não puderam ser incluídos.",
+    "excluded_one": "{{count}} item não pôde ser incluído.",
+    "excluded_other": "{{count}} itens não puderam ser incluídos.",
+    "expenses": "Despesas",
+    "groups": "Grupos",
+    "highlights": "DESTAQUES",
+    "loadError": "Não foi possível carregar este mês.",
+    "net": "Líquido",
+    "nextMonth": "Mês seguinte",
+    "noAccount": {
+      "title": "Conta não encontrada",
+      "body": "Já não tens sessão iniciada no servidor a que este resumo pertence."
+    },
+    "previousMonth": "Mês anterior",
+    "title": "Resumo mensal",
+    "topGroup": "Onde gastaste mais",
+    "youPaid": "Pagaste",
+    "yourShare": "A TUA PARTE"
+  },
+  "notifications": {
+    "title": "Notificações",
+    "eyebrow": "PUSH",
+    "monthlySummary": {
+      "label": "Resumo mensal",
+      "help": "Uma notificação no dia 1 de cada mês, quando o teu resumo estiver pronto."
+    },
+    "saveFailed": {
+      "title": "Não foi possível guardar",
+      "body": "A tua preferência de notificações não foi guardada. Verifica a ligação e tenta novamente."
+    },
+    "none": {
+      "title": "Sem definições de notificação",
+      "body": "Nenhum dos teus servidores oferece ainda preferências de notificação."
+    }
+  },
   "onboarding": {
     "createBody": "Escolha um nome, compartilhe o QR code com os amigos.",
     "createEyebrow": "começar do zero",
@@ -1379,6 +1427,7 @@
     "homeCurrency": "Moeda principal",
     "language": "Idioma",
     "languageAuto": "Automático",
+    "monthlySummary": "Resumo mensal",
     "openSource": {
       "body": "Você está usando o chara.app — nosso beta hospedado. O app em si é gratuito e open source. Você pode auto-hospedá-lo na sua própria máquina, sem limites.",
       "eyebrow": "o chara é open source",

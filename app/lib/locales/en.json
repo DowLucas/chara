@@ -909,6 +909,53 @@
     "shareMessage": "Join \"{{name}}\" on Chara: {{link}}",
     "you": "you"
   },
+  "monthlySummary": {
+    "activeDays": "Active days",
+    "balanceSection": "BALANCE",
+    "biggestExpense": "Biggest expense · {{group}}",
+    "byCurrency": "BY CURRENCY",
+    "categories": "CATEGORIES",
+    "changeVsPrevious_down": "{{pct}}% less than last month",
+    "changeVsPrevious_up": "{{pct}}% more than last month",
+    "empty": {
+      "title": "Nothing this month",
+      "body": "No expenses were added in this month."
+    },
+    "excluded": "{{count}} item(s) couldn't be included.",
+    "excluded_one": "1 item couldn't be included.",
+    "excluded_other": "{{count}} items couldn't be included.",
+    "expenses": "Expenses",
+    "groups": "Groups",
+    "highlights": "HIGHLIGHTS",
+    "loadError": "Couldn't load this month.",
+    "net": "Net",
+    "nextMonth": "Next month",
+    "noAccount": {
+      "title": "Account not found",
+      "body": "You're no longer signed in to the server this summary belongs to."
+    },
+    "previousMonth": "Previous month",
+    "title": "Monthly summary",
+    "topGroup": "Most spent in",
+    "youPaid": "You paid",
+    "yourShare": "YOUR SHARE"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "eyebrow": "PUSH",
+    "monthlySummary": {
+      "label": "Monthly summary",
+      "help": "A push on the 1st of each month, when your summary is ready."
+    },
+    "saveFailed": {
+      "title": "Couldn't save",
+      "body": "Your notification preference wasn't saved. Check your connection and try again."
+    },
+    "none": {
+      "title": "No notification settings",
+      "body": "None of your servers offer notification preferences yet."
+    }
+  },
   "onboarding": {
     "createBody": "Pick a name, share the QR code with friends.",
     "createEyebrow": "start fresh",
@@ -1337,6 +1384,7 @@
     "homeCurrency": "Home currency",
     "language": "Language",
     "languageAuto": "Automatic",
+    "monthlySummary": "Monthly summary",
     "openSource": {
       "body": "You're using chara.app — our hosted instance. The app itself is free and open-source. You can self-host it on your own machine, with no caps.",
       "eyebrow": "chara is open source",

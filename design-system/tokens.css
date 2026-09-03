@@ -1,0 +1,223 @@
+/* Chara design tokens.
+ *
+ * GENERATED from app/lib/theme.ts — do not edit this region by hand.
+ * Regenerate: UPDATE_DESIGN_TOKENS=1 pnpm test design-tokens
+ */
+
+:root {
+  /* ---------- Colors ---------- */
+  --color-sand-dune: #F0E5CC;
+  --color-dark-coffee: #2D1F1A;
+  --color-tomato-jam: #B83D3D;
+  --color-palm-leaf: #8FA055;
+  --color-honey-bronze: #E0A040;
+  --color-paper: #F0E5CC;
+  --color-bone: #E6D9BB;
+  --color-graphite: #2D1F1A;
+  --color-lead: #6B5A4E;
+  --color-vermillion: #B83D3D;
+  --color-moss: #586D2A;
+  --color-brick: #8A2A2A;
+  --color-citrine: #E0A040;
+  --color-rule-soft: rgba(45, 31, 26, 0.07);
+  --color-fg-on-accent: #F4F1E6;
+
+  /* ---------- Group accents (index is significant — hash % 8 picks here) ---------- */
+  --accent-1: #1F3A6E;
+  --accent-2: #3E6FA8;
+  --accent-3: #5E908A;
+  --accent-4: #6B4B7E;
+  --accent-5: #C26A7F;
+  --accent-6: #C99A2E;
+  --accent-7: #7A4F2E;
+  --accent-8: #1F1A18;
+
+  /* ---------- Font families ---------- */
+  --font-regular: 'SNPro-Regular', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-medium: 'SNPro-Medium', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-semi-bold: 'SNPro-SemiBold', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrainsMono', ui-monospace, 'SFMono-Regular', monospace;
+  --font-mono-medium: 'JetBrainsMono-Medium', ui-monospace, 'SFMono-Regular', monospace;
+  --font-display: var(--font-semi-bold);
+  --font-body: var(--font-regular);
+  --font-body-medium: var(--font-medium);
+
+  /* ---------- Spacing ---------- */
+  --space-s1: 4px;
+  --space-s2: 8px;
+  --space-s3: 12px;
+  --space-s4: 16px;
+  --space-s5: 24px;
+  --space-s6: 32px;
+  --space-s7: 48px;
+  --space-s8: 64px;
+  --space-s9: 96px;
+
+  /* ---------- Radii ---------- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* ---------- Font sizes ---------- */
+  --fs-display-xl: 60px;
+  --fs-display-l: 44px;
+  --fs-display-m: 32px;
+  --fs-display-s: 22px;
+  --fs-body-l: 19px;
+  --fs-body: 17px;
+  --fs-body-s: 15px;
+  --fs-caption: 13px;
+}
+
+/* Typography tokens, one class per `typography` entry. */
+.ty-amount-hero { font-family: var(--font-mono); font-size: 60px; font-weight: 400; }
+.ty-amount-xl { font-family: var(--font-mono-medium); font-size: 48px; font-weight: 500; }
+.ty-amount-l { font-family: var(--font-mono-medium); font-size: 24px; font-weight: 500; }
+.ty-amount-m { font-family: var(--font-mono-medium); font-size: 22px; font-weight: 500; }
+.ty-amount-s { font-family: var(--font-mono-medium); font-size: 19px; font-weight: 500; }
+.ty-display-l { font-family: var(--font-semi-bold); font-size: 44px; font-weight: 600; }
+.ty-display-m { font-family: var(--font-semi-bold); font-size: 32px; font-weight: 600; }
+.ty-display-s { font-family: var(--font-semi-bold); font-size: 22px; font-weight: 600; }
+.ty-title { font-family: var(--font-semi-bold); font-size: 19px; font-weight: 600; }
+.ty-body-l { font-family: var(--font-regular); font-size: 19px; font-weight: 400; }
+.ty-body { font-family: var(--font-regular); font-size: 17px; font-weight: 400; }
+.ty-body-emphasis { font-family: var(--font-medium); font-size: 17px; font-weight: 500; }
+.ty-body-s { font-family: var(--font-regular); font-size: 15px; font-weight: 400; }
+.ty-mono-body { font-family: var(--font-mono); font-size: 17px; font-weight: 400; }
+.ty-mono-body-l { font-family: var(--font-mono); font-size: 19px; font-weight: 400; }
+.ty-mono-body-s { font-family: var(--font-mono); font-size: 15px; font-weight: 400; }
+.ty-mono-caption { font-family: var(--font-mono); font-size: 13px; font-weight: 400; }
+.ty-mono-label { font-family: var(--font-mono-medium); font-size: 13px; font-weight: 500; letter-spacing: 0.4px; }
+.ty-mono-stamp { font-family: var(--font-mono-medium); font-size: 13px; font-weight: 500; letter-spacing: 1px; }
+
+/* ==== END GENERATED — hand-authored component classes below ==== */
+
+/* Typefaces. TTF is fine for @font-face; these are the five static faces the
+   app actually loads at runtime (app/app/_layout.tsx), not the variable files
+   the build plugin embeds. */
+@font-face { font-family: 'SNPro-Regular';  src: url('fonts/SNPro-Regular.ttf')  format('truetype'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'SNPro-Medium';   src: url('fonts/SNPro-Medium.ttf')   format('truetype'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'SNPro-SemiBold'; src: url('fonts/SNPro-SemiBold.ttf') format('truetype'); font-weight: 600; font-display: swap; }
+@font-face { font-family: 'JetBrainsMono';        src: url('fonts/JetBrainsMono-Regular.ttf') format('truetype'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'JetBrainsMono-Medium'; src: url('fonts/JetBrainsMono-Medium.ttf')  format('truetype'); font-weight: 500; font-display: swap; }
+
+/* ==========================================================================
+   Component classes — transcribed from app/components/*.tsx.
+   Every value below appears in the real component; nothing is invented.
+   ========================================================================== */
+
+.ds, body.ds {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-graphite);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- Button (Button.tsx) — height 52, radius 6, 0.5px border ------------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 52px; padding: 0 20px; border-radius: 6px; border: 0.5px solid transparent;
+  font-family: var(--font-body-medium); font-size: var(--fs-body); font-weight: 500;
+  letter-spacing: -0.1px; cursor: pointer;
+}
+.btn-primary   { background: var(--color-vermillion); border-color: var(--color-vermillion); color: var(--color-fg-on-accent); }
+/* "positive" closes a positive loop (settle, mark paid) — dark-on-cream, so it
+   never shares visual weight with the destructive brick family. */
+.btn-positive  { background: var(--color-graphite);   border-color: var(--color-graphite);   color: var(--color-fg-on-accent); }
+.btn-secondary { background: transparent; border-color: var(--color-graphite); color: var(--color-graphite); }
+.btn-ghost     { background: transparent; border-color: transparent;           color: var(--color-graphite); }
+.btn:disabled  { opacity: 0.4; }
+
+/* --- Chip (Chip.tsx) ----------------------------------------------------- */
+.chip {
+  display: inline-flex; align-items: center;
+  padding: 5px 10px; border-radius: var(--radius-pill);
+  border: 0.5px solid var(--color-rule-soft);
+  font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--color-lead);
+}
+.chip-solid { background: var(--color-graphite); border-color: var(--color-graphite); color: var(--color-paper); }
+
+/* --- Bone card: the primary content-list vocabulary ---------------------- */
+/* Background bone, radius 10, NO border — the bone-vs-paper contrast does the
+   separation. Cards stack with an 8px gap. */
+.card {
+  background: var(--color-bone);
+  border-radius: 10px;
+  padding: var(--space-s4);
+}
+.card + .card { margin-top: var(--space-s2); }
+
+/* --- ListRow (ListRow.tsx) — hairline divider list on paper -------------- */
+.list-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+  background: var(--color-paper);
+  border-bottom: 0.5px solid var(--color-rule-soft);
+}
+.list-row .title { font-family: var(--font-display); font-size: var(--fs-body-l); font-weight: 600; letter-spacing: -0.3px; color: var(--color-graphite); }
+.list-row .meta  { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--color-lead); margin-top: 3px; }
+.list-row.settled { opacity: 0.6; }
+.list-row.settled .title { text-decoration: line-through; color: var(--color-lead); }
+
+/* --- Settings-hub list (You tab, group settings) ------------------------- */
+.settings-eyebrow {
+  font-family: var(--font-mono); font-size: var(--fs-body-s);
+  color: var(--color-lead); letter-spacing: 0.3px; margin-bottom: var(--space-s2);
+}
+.settings-list { border-top: 1px solid var(--color-rule-soft); }
+.settings-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-s3);
+  padding: var(--space-s4) 0;
+  border-bottom: 1px solid var(--color-rule-soft);
+}
+.settings-row .label { font-family: var(--font-body); font-size: var(--fs-body); color: var(--color-graphite); }
+.settings-row .value { font-family: var(--font-mono); font-size: var(--fs-body-s); color: var(--color-lead); letter-spacing: 0.3px; }
+
+/* --- Amounts ------------------------------------------------------------- */
+/* Always tabular. Tone is applied only where direction actually matters. */
+.amount { font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
+.amount-neutral { color: var(--color-lead); }
+.amount-pos     { color: var(--color-moss); }
+.amount-neg     { color: var(--color-brick); }
+
+/* --- TopBar (TopBar.tsx) — 44px, heavy 1.5px graphite rule -------------- */
+.topbar {
+  display: flex; align-items: center; height: 44px; padding: 0 12px;
+  background: var(--color-paper);
+  border-bottom: 1.5px solid var(--color-graphite);
+}
+.topbar .wordmark { display: flex; align-items: center; gap: 10px; margin: 0 auto; }
+.topbar .wordmark-text { font-family: var(--font-display); font-size: 20px; letter-spacing: -0.7px; color: var(--color-graphite); }
+.topbar .wordmark-rule { width: 40px; height: 1.5px; background: var(--color-graphite); }
+.topbar .title { margin: 0 auto; font-family: var(--font-body-medium); font-size: var(--fs-body); letter-spacing: -0.3px; color: var(--color-graphite); }
+
+/* --- Avatar (Avatar.tsx) — 34 / 26px circles, stacked at -8px ----------- */
+.avatar {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--color-bone); border: 1px solid var(--color-rule-soft);
+  font-family: var(--font-mono-medium); font-size: var(--fs-caption); font-weight: 500;
+  color: var(--color-graphite); overflow: hidden;
+}
+.avatar-sm { width: 26px; height: 26px; font-size: 11px; }
+.avatar-stack { display: flex; align-items: center; }
+.avatar-stack .avatar + .avatar,
+.avatar-stack .avatar + .avatar-overflow { margin-left: -8px; border: 1.5px solid var(--color-paper); }
+
+/* --- Stamp (Stamp.tsx) — settled seal, rotated -2deg -------------------- */
+.stamp {
+  display: inline-block; transform: rotate(-2deg);
+  padding: 3px 8px; border: 1.5px solid var(--color-vermillion); border-radius: var(--radius-sm);
+  font-family: var(--font-mono-medium); font-size: var(--fs-caption); font-weight: 500;
+  letter-spacing: 1px; color: var(--color-vermillion);
+}
+.stamp-lg { padding: 8px 16px; font-size: 22px; letter-spacing: 2px; }
+
+/* --- EmptyState (EmptyState.tsx) ---------------------------------------- */
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-s2); padding: 40px; text-align: center; }
+.empty-state .title { font-family: var(--font-display); font-size: var(--fs-display-s); font-weight: 600; letter-spacing: -0.5px; color: var(--color-graphite); }
+.empty-state .body  { font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 20px; color: var(--color-lead); }

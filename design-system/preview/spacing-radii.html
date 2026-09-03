@@ -1,0 +1,18 @@
+<!doctype html>
+<!-- @dsCard group="Spacing" name="Spacing · Radii" subtitle="4 / 8 / 16 / pill — plus the bone card 10" viewport="700x230" -->
+<html><head><meta charset="utf-8"><title>Spacing · Radii</title>
+<link rel="stylesheet" href="../tokens.css">
+<style>.wrap{padding:24px}
+.row{display:flex;align-items:center;gap:14px;margin-bottom:9px}
+.tok{font-family:var(--font-mono);font-size:12px;color:var(--color-lead);min-width:120px}
+.bar{height:18px;background:var(--color-graphite)}
+.bx{background:var(--color-bone);width:96px;height:64px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;color:var(--color-lead)}
+.grid{display:flex;gap:16px;flex-wrap:wrap}
+.note{font-family:var(--font-body);font-size:14px;color:var(--color-lead);margin-top:18px;max-width:640px;line-height:1.5}</style></head><body class="ds">
+<div class="wrap"><div class="grid">
+<div class="bx" style="border-radius:4px">sm · 4</div>
+<div class="bx" style="border-radius:8px">md · 8</div>
+<div class="bx" style="border-radius:10px">card · 10</div>
+<div class="bx" style="border-radius:16px">lg · 16</div>
+<div class="bx" style="border-radius:999px">pill · 999</div>
+</div><div class="note">The bone card uses <strong>10</strong>, which sits between <code>md</code> and <code>lg</code> and is not in the <code>radii</code> scale. Buttons use 6. Both are historical and hardcoded in the components.</div></div></body></html>
