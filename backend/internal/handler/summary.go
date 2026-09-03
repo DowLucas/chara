@@ -50,6 +50,11 @@ type summaryCountsResponse struct {
 	Expenses   int64 `json:"expenses"`
 	Groups     int64 `json:"groups"`
 	ActiveDays int64 `json:"active_days"`
+	// ActiveDates are the days of the month (1-31) the user had spend on.
+	// active_days is the tally; the summary screen's day grid needs to know
+	// WHICH days, and a count cannot be turned back into a set. Always a
+	// list, never null — the app indexes it.
+	ActiveDates []int `json:"active_dates"`
 }
 
 type summaryCategoryResponse struct {
@@ -160,9 +165,10 @@ func (h *SummaryHandler) Summary(w http.ResponseWriter, r *http.Request) {
 			EstimatedLegs: built.Converted.EstimatedLegs,
 		},
 		Counts: summaryCountsResponse{
-			Expenses:   built.Counts.Expenses,
-			Groups:     built.Counts.Groups,
-			ActiveDays: built.Counts.ActiveDays,
+			Expenses:    built.Counts.Expenses,
+			Groups:      built.Counts.Groups,
+			ActiveDays:  built.Counts.ActiveDays,
+			ActiveDates: []int{},
 		},
 	}
 	// Explicit empty slices, not nil: the app reads `by_currency.length`
@@ -198,6 +204,23 @@ func (h *SummaryHandler) Summary(w http.ResponseWriter, r *http.Request) {
 			Paid:  money.Amount(p.PaidMinor).String(),
 			Share: money.Amount(p.ShareMinor).String(),
 			Net:   money.Amount(p.NetMinor).String(),
+		}
+	}
+
+	// Day-of-month numbers for the grid. A failure is not worth failing the
+	// page over: the grid degrades to "no days marked" while every number on
+	// the screen stays right.
+	if dates, err := h.queries.SummaryActiveDays(r.Context(), db.SummaryActiveDaysParams{
+		UserID:      pgtype.Text{String: claims.UserID, Valid: true},
+		PeriodStart: pgtype.Date{Time: start, Valid: true},
+		PeriodEnd:   pgtype.Date{Time: end, Valid: true},
+	}); err != nil {
+		slog.Warn("summary: active days lookup failed", "error", err, "user_id", claims.UserID)
+	} else {
+		for _, d := range dates {
+			if d.Valid {
+				resp.Counts.ActiveDates = append(resp.Counts.ActiveDates, d.Time.Day())
+			}
 		}
 	}
 

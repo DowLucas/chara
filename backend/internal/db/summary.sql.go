@@ -115,6 +115,48 @@ func (q *Queries) MarkMonthlySummarySent(ctx context.Context, arg MarkMonthlySum
 	return err
 }
 
+const summaryActiveDays = `-- name: SummaryActiveDays :many
+WITH mine AS (
+    SELECT e.id, e.expense_date
+    FROM expenses e
+    JOIN group_members gm ON gm.group_id = e.group_id AND gm.user_id = $1
+    LEFT JOIN expense_splits es ON es.expense_id = e.id AND es.member_id = gm.id
+    WHERE NOT e.is_deleted AND NOT e.is_reimbursement
+      AND e.expense_date >= $2 AND e.expense_date < $3
+      AND (e.paid_by_id = gm.id OR es.id IS NOT NULL)
+)
+SELECT DISTINCT expense_date FROM mine ORDER BY expense_date
+`
+
+type SummaryActiveDaysParams struct {
+	UserID      pgtype.Text `db:"user_id" json:"user_id"`
+	PeriodStart pgtype.Date `db:"period_start" json:"period_start"`
+	PeriodEnd   pgtype.Date `db:"period_end" json:"period_end"`
+}
+
+// The distinct dates the user had qualifying spend on, for the day grid in
+// the summary screen. counts.active_days gives the tally; the grid needs to
+// know WHICH days, and there is no way to derive that from a count.
+func (q *Queries) SummaryActiveDays(ctx context.Context, arg SummaryActiveDaysParams) ([]pgtype.Date, error) {
+	rows, err := q.db.Query(ctx, summaryActiveDays, arg.UserID, arg.PeriodStart, arg.PeriodEnd)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []pgtype.Date{}
+	for rows.Next() {
+		var expense_date pgtype.Date
+		if err := rows.Scan(&expense_date); err != nil {
+			return nil, err
+		}
+		items = append(items, expense_date)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const summaryCounts = `-- name: SummaryCounts :one
 WITH mine AS (
     SELECT e.id, e.group_id, e.expense_date

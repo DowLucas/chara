@@ -1466,6 +1466,10 @@ export interface SummaryCounts {
   expenses: number;
   groups: number;
   active_days: number;
+  /** Days of the month (1-31) with spend, for the summary screen's day
+   *  grid. Always present on servers that support it; older ones omit it
+   *  and the grid simply marks nothing. */
+  active_dates?: number[];
 }
 
 export interface SummaryCategory {

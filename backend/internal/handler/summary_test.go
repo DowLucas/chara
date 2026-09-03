@@ -41,9 +41,10 @@ type summaryResp struct {
 		EstimatedLegs int    `json:"estimated_legs"`
 	} `json:"converted"`
 	Counts struct {
-		Expenses   int64 `json:"expenses"`
-		Groups     int64 `json:"groups"`
-		ActiveDays int64 `json:"active_days"`
+		Expenses    int64 `json:"expenses"`
+		Groups      int64 `json:"groups"`
+		ActiveDays  int64 `json:"active_days"`
+		ActiveDates []int `json:"active_dates"`
 	} `json:"counts"`
 	Categories []struct {
 		Slug  string `json:"slug"`
@@ -98,6 +99,9 @@ func TestMonthlySummary_HappyPath(t *testing.T) {
 	require.Equal(t, int64(2), got.Counts.Expenses)
 	require.Equal(t, int64(1), got.Counts.Groups)
 	require.Equal(t, int64(2), got.Counts.ActiveDays)
+	// The grid needs the days themselves: the two August expenses fall on
+	// the 3rd and 4th, and the September one must not leak in.
+	require.Equal(t, []int{3, 4}, got.Counts.ActiveDates)
 	require.NotNil(t, got.Highlights.BiggestExpense)
 	require.Equal(t, "Dinner", got.Highlights.BiggestExpense.Title)
 	require.NotNil(t, got.Highlights.TopGroup)
@@ -177,6 +181,8 @@ func TestMonthlySummary_EmptyMonthIsOKNotError(t *testing.T) {
 	require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &got))
 	require.Empty(t, got.ByCurrency)
 	require.Nil(t, got.Previous, "no prior month means no delta, not a zero delta")
+	require.NotNil(t, got.Counts.ActiveDates, "always a list, never null — the app indexes it")
+	require.Empty(t, got.Counts.ActiveDates)
 }
 
 func TestMonthlySummary_OptOutRoundTrips(t *testing.T) {
