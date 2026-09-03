@@ -33,6 +33,8 @@ import { REFRESH_FLOOR_MS } from '@/lib/aggregated-reads-internal';
 import { classifyInvite } from '@/lib/invite-handler';
 import { dispatchInviteIntent } from '@/lib/invite-dispatcher';
 import { classifyGroupDeepLink } from '@/lib/deep-link';
+import { classifySummaryDeepLink } from '@/lib/summary-deep-link';
+import { legacyHostedUrl } from '@/lib/legacy-hosted-url';
 import { classifyShareIntent, isShareArtifact, sweepShareFiles } from '@/lib/share-inbox';
 import { setPendingShare } from '@/lib/pending-share';
 import { normalizeServerUrl } from '@/lib/server-url';
@@ -49,6 +51,9 @@ import '@/lib/i18n';
  *   2. `chara://groups/<urlencodedServerUrl>/<groupId>?event=…`
  *      → push the server-qualified group route. The `event` query param
  *        is informational only (potential analytics hook later).
+ *   3. `chara://summary/<period>` (monthly summary push)
+ *      → resolve the hosted account and push its summary route. Carries no
+ *        server segment; see summary-deep-link.ts.
  */
 function handleDeepLink(url: string | null | undefined): void {
   if (!url) return;
@@ -90,6 +95,34 @@ function handleDeepLink(url: string | null | undefined): void {
       router.push(`/(auth)/sign-in?${params.toString()}` as never);
     }
     return;
+  }
+
+  // Monthly summary — `chara://summary/<period>`, carrying no server. The
+  // feature is hosted-only, so the classifier resolves the account itself;
+  // see the note in summary-deep-link.ts for why that is the safer shape.
+  {
+    const intent = classifySummaryDeepLink(url, {
+      accounts: accountsSnapshot().accounts,
+      isLoaded: accountsIsLoaded(),
+      hostedUrl: legacyHostedUrl(),
+    });
+    switch (intent.kind) {
+      case 'navigate':
+        router.push(`/summary/${encodeURIComponent(intent.serverUrl)}/${intent.period}`);
+        return;
+      case 'not_loaded':
+        retryDeepLinkOnceLoaded(url);
+        return;
+      case 'no_account':
+        // Signed out of Chara Cloud since the push was sent. Silent: an
+        // alert here would fire on a notification the user may have tapped
+        // by accident, about an account they deliberately removed.
+        return;
+      case 'malformed':
+      case 'ignore':
+      default:
+        break;
+    }
   }
 
   // Notification-tap / widget-tap group route:

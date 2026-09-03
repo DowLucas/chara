@@ -983,6 +983,10 @@ export interface InstanceFeatures {
    *  predating the feature, which the app treats as unsupported, so the
    *  mic stays hidden rather than offering a button that always fails. */
   voice_expense?: boolean;
+  /** GET /api/me/summary and the monthly summary push are available.
+   *  Optional — absent on backends predating the feature, and false on every
+   *  self-hosted instance, which the app treats as unsupported. */
+  monthly_summary?: boolean;
 }
 
 export interface InstanceInfo {
@@ -1429,6 +1433,78 @@ export interface MyNetResponse {
   contributing_groups: number;
 }
 
+
+// --- Monthly summary (hosted-only) -----------------------------------------
+//
+// Shapes mirror backend/internal/handler/summary.go. Every money field is a
+// decimal string in the currency named alongside it, per the Money rule —
+// never a number.
+
+export interface SummaryCurrencyTotals {
+  currency: string;
+  paid: string;
+  share: string;
+  expense_count: number;
+}
+
+export interface SummaryConverted {
+  currency: string;
+  paid: string;
+  share: string;
+  net: string;
+  total_legs: number;
+  converted_legs: number;
+  /** Legs converted at a rate that was not the expense-date rate. Same
+   *  "approximate" contract as /api/me/net. */
+  estimated_legs: number;
+}
+
+export interface SummaryCounts {
+  expenses: number;
+  groups: number;
+  active_days: number;
+}
+
+export interface SummaryCategory {
+  slug: string;
+  share: string;
+  /** Whole percent, apportioned by the backend so the set sums to 100. */
+  pct: number;
+}
+
+export interface SummaryBiggestExpense {
+  expense_id: string;
+  group_id: string;
+  group_name: string;
+  title: string;
+  /** In `currency`, not the home currency — ranking happens converted,
+   *  display stays native. */
+  share: string;
+  currency: string;
+}
+
+export interface SummaryTopGroup {
+  group_id: string;
+  name: string;
+  share: string;
+}
+
+export interface SummaryResponse {
+  period: string;
+  by_currency: SummaryCurrencyTotals[];
+  converted: SummaryConverted;
+  counts: SummaryCounts;
+  categories: SummaryCategory[];
+  highlights: {
+    biggest_expense: SummaryBiggestExpense | null;
+    top_group: SummaryTopGroup | null;
+  };
+  previous: { paid: string; share: string; net: string } | null;
+  /** Earliest month with any qualifying expense, so the screen knows when to
+   *  stop offering "previous month". Empty when there is none. */
+  first_period: string;
+}
+
 export function getMyNet(homeCurrency: string) {
   return request<MyNetResponse>(
     `/api/me/net?in=${encodeURIComponent(homeCurrency)}`,
@@ -1729,6 +1805,13 @@ export function apiFor(serverUrl: string) {
       requestOn<ActivityEvent[]>(
         serverUrl,
         `/api/groups/${groupId}/activity?limit=${limit}&offset=${offset}`,
+      ),
+
+    // Monthly summary (hosted-only; gated on features.monthly_summary)
+    getSummary: (period: string, homeCurrency: string) =>
+      requestOn<SummaryResponse>(
+        serverUrl,
+        `/api/me/summary?period=${encodeURIComponent(period)}&in=${encodeURIComponent(homeCurrency)}`,
       ),
 
     // Push tokens (Wave 5)

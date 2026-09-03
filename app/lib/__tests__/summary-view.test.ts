@@ -1,0 +1,124 @@
+/**
+ * Pure helpers behind the monthly summary screen. This repo has no
+ * component-render testing, so the logic lives here and the screen is a thin
+ * dispatcher over it.
+ */
+
+import {
+  shiftPeriod,
+  canGoPrevious,
+  canGoNext,
+  isApproximate,
+  netDirection,
+  changeVsPrevious,
+  hasContent,
+} from '../summary-view';
+
+describe('shiftPeriod', () => {
+  it('steps backwards and forwards a month', () => {
+    expect(shiftPeriod('2026-08', -1)).toBe('2026-07');
+    expect(shiftPeriod('2026-08', 1)).toBe('2026-09');
+  });
+
+  // The year boundary is what a naive month +/- 1 gets wrong.
+  it('crosses the year boundary', () => {
+    expect(shiftPeriod('2026-01', -1)).toBe('2025-12');
+    expect(shiftPeriod('2025-12', 1)).toBe('2026-01');
+  });
+
+  it('pads single-digit months', () => {
+    expect(shiftPeriod('2026-10', -1)).toBe('2026-09');
+    expect(shiftPeriod('2026-09', -8)).toBe('2026-01');
+  });
+});
+
+describe('canGoPrevious', () => {
+  // first_period is what stops the screen paging into empty months forever.
+  it('is false at the first month with any spend', () => {
+    expect(canGoPrevious('2026-03', '2026-03')).toBe(false);
+  });
+
+  it('is true above it', () => {
+    expect(canGoPrevious('2026-04', '2026-03')).toBe(true);
+  });
+
+  it('is false below it', () => {
+    expect(canGoPrevious('2026-02', '2026-03')).toBe(false);
+  });
+
+  // A user with no expenses at all gets an empty first_period; there is
+  // nothing earlier to show.
+  it('is false when there is no first period', () => {
+    expect(canGoPrevious('2026-04', '')).toBe(false);
+  });
+});
+
+describe('canGoNext', () => {
+  const now = new Date('2026-09-15T12:00:00Z');
+
+  it('is true for a month before the current one', () => {
+    expect(canGoNext('2026-08', now)).toBe(true);
+  });
+
+  // The endpoint rejects a future period with a 400, so the affordance must
+  // not offer one.
+  it('is false in the current month', () => {
+    expect(canGoNext('2026-09', now)).toBe(false);
+  });
+
+  it('is false beyond it', () => {
+    expect(canGoNext('2026-10', now)).toBe(false);
+  });
+});
+
+describe('isApproximate', () => {
+  it('is true when any leg was converted at a substitute rate', () => {
+    expect(isApproximate({ estimated_legs: 1 })).toBe(true);
+  });
+
+  it('is false when every leg converted exactly', () => {
+    expect(isApproximate({ estimated_legs: 0 })).toBe(false);
+  });
+});
+
+describe('netDirection', () => {
+  // Only the sign matters, and zero is its own case — colouring "0.00" as
+  // either owed or owing is a lie.
+  it('reads the sign of the decimal string', () => {
+    expect(netDirection('120.00')).toBe('owed');
+    expect(netDirection('-120.00')).toBe('owe');
+    expect(netDirection('0.00')).toBe('even');
+    expect(netDirection('-0.00')).toBe('even');
+    expect(netDirection('0')).toBe('even');
+  });
+});
+
+describe('changeVsPrevious', () => {
+  it('reports the percent change in share', () => {
+    expect(changeVsPrevious('120.00', '100.00')).toBe(20);
+    expect(changeVsPrevious('80.00', '100.00')).toBe(-20);
+    expect(changeVsPrevious('100.00', '100.00')).toBe(0);
+  });
+
+  it('rounds to a whole percent', () => {
+    expect(changeVsPrevious('103.33', '100.00')).toBe(3);
+  });
+
+  // A first month has no previous, and dividing by a zero previous month is
+  // an infinite increase — neither is a number worth showing.
+  it('returns null when there is nothing to compare against', () => {
+    expect(changeVsPrevious('120.00', null)).toBeNull();
+    expect(changeVsPrevious('120.00', '0.00')).toBeNull();
+  });
+});
+
+describe('hasContent', () => {
+  // An empty month must render an empty state, not a page of zeroes.
+  it('is false when the month had no expenses', () => {
+    expect(hasContent({ counts: { expenses: 0 } })).toBe(false);
+  });
+
+  it('is true as soon as there is one', () => {
+    expect(hasContent({ counts: { expenses: 1 } })).toBe(true);
+  });
+});
