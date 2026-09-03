@@ -557,6 +557,47 @@ unambiguously positive moment — instead of waiting to be found under
       backup (volume copy), update, reset
 - [ ] Backup/restore CLI scripts (volume-copy one-liner documented instead)
 
+### Monthly summary ✅ (PR #126)
+
+Hosted-only. One push on the 1st of each month telling the user their
+summary is ready, and an in-app screen showing it.
+
+- [x] Migrations 000058/000059 — `users.monthly_summary_opt_out`, and the
+      `monthly_summary_sends(user_id, period)` idempotency ledger
+- [x] `sqlc/queries/summary.sql` — every aggregate derives from one `mine`
+      CTE whose filter mirrors the `member_balances` view, so the summary's
+      "net" reconciles with the balances shown everywhere else
+- [x] `internal/summary` — pure aggregator (no DB, no HTTP, no clock)
+- [x] `GET /api/me/summary?period=YYYY-MM&in=SEK`, behind `HostedOnly`
+- [x] `features.monthly_summary` in `/.well-known/chara-instance`, tracking
+      `IsHosted() && RecurringEnabled`
+- [x] Opt-out on `GET`/`PATCH /api/me` (a `*bool`, so an unrelated profile
+      edit cannot silently opt someone back in)
+- [x] Per-locale push copy for all 16 allowlist languages, zero
+      interpolation — Go has no localized month names and applies no plural
+      rules, so the numbers stay on the screen the push opens
+- [x] Hourly River tick + `SUMMARY_TZ`; fires on the 1st at 09:00 local and
+      enqueues one fan-out job, which pages recipients and writes the ledger
+- [x] `users.locale` written from the device on push-token registration —
+      it was never written before, so localized push would have been English
+      for everyone
+- [x] App: `chara://summary/<period>` deep link (no server segment),
+      `/summary/[server]/[period]` screen, You-tab rows gated on the
+      advertised feature, and a notification-preferences screen
+- [x] `monthlySummary` + `notifications` namespaces in all 15 locale files
+
+**Computed on demand, no snapshot table.** A back-dated or corrected expense
+is reflected the next time the page opens. The trade is that a summary can
+change after the user was notified about it; the alternative freezes numbers
+that were legitimately wrong.
+
+**Tests**: `internal/summary` 7 unit; `internal/jobs` 5 unit (`shouldFire`,
+the deep link) + 6 unit (the copy catalog) + 7 integration (fan-out,
+idempotency, opt-out, locale, send failure); `internal/language` 3;
+`internal/handler` 7 integration for the endpoint + 4 for locale
+reporting; `internal/config` 4 for `SUMMARY_TZ`; app-side `summary-view`
+24 and `summary-deep-link` 8.
+
 ---
 
 ## Integration test coverage

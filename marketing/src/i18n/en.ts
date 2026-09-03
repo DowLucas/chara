@@ -87,6 +87,7 @@ export const en = {
       { g: "‡", h: "Money that never rounds wrong", b: "Every öre is an integer, end to end — your balances are never floating-point guesses. Rounding errors are a bug class we deleted." },
       { g: "⌘", h: "Sign in the way you already do", b: "A magic link to your email or your Google account. No password to set, no new account to dread." },
       { g: "№", h: "Never chase rent again", b: "Rent, Netflix, the cleaner — set each recurring bill once. Chara posts and splits it on the day, then stays quiet until something changes." },
+      { g: "◷", h: "A month you can actually read", b: "On the 1st, Chara shows you the month that just ended — what you paid, what was yours, where it went and which group ate the most. One screen, no spreadsheet." },
     ],
   },
   belief: {
