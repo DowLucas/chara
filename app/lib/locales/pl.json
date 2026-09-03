@@ -961,6 +961,54 @@
     "shareMessage": "Dołącz do „{{name}}” w Chara: {{link}}",
     "you": "ty"
   },
+  "monthlySummary": {
+    "title": "Podsumowanie miesiąca",
+    "previousMonth": "Poprzedni miesiąc",
+    "nextMonth": "Następny miesiąc",
+    "yourShare": "TWÓJ UDZIAŁ",
+    "changeVsPrevious_up": "{{pct}}% więcej niż w zeszłym miesiącu",
+    "changeVsPrevious_down": "{{pct}}% mniej niż w zeszłym miesiącu",
+    "approximate_one": "Jedna kwota została przeliczona po przybliżonym kursie.",
+    "approximate_few": "{{count}} kwoty zostały przeliczone po przybliżonych kursach.",
+    "approximate_many": "{{count}} kwot zostało przeliczonych po przybliżonych kursach.",
+    "approximate_other": "{{count}} kwoty zostały przeliczone po przybliżonych kursach.",
+    "expenses": "Wydatki",
+    "groups": "Grupy",
+    "activeDays": "Aktywne dni",
+    "balanceSection": "SALDO",
+    "youPaid": "Zapłacono przez Ciebie",
+    "net": "Netto",
+    "byCurrency": "WEDŁUG WALUTY",
+    "categories": "KATEGORIE",
+    "highlights": "NAJWAŻNIEJSZE",
+    "biggestExpense": "Największy wydatek · {{group}}",
+    "topGroup": "Najwięcej wydano w",
+    "loadError": "Nie udało się wczytać tego miesiąca.",
+    "empty": {
+      "title": "Nic w tym miesiącu",
+      "body": "W tym miesiącu nie dodano żadnych wydatków."
+    },
+    "noAccount": {
+      "title": "Nie znaleziono konta",
+      "body": "Nie masz już zalogowanej sesji na serwerze, do którego należy to podsumowanie."
+    }
+  },
+  "notifications": {
+    "title": "Powiadomienia",
+    "eyebrow": "PUSH",
+    "monthlySummary": {
+      "label": "Podsumowanie miesiąca",
+      "help": "Powiadomienie 1. dnia każdego miesiąca, gdy podsumowanie będzie gotowe."
+    },
+    "saveFailed": {
+      "title": "Nie udało się zapisać",
+      "body": "Twoje ustawienie powiadomień nie zostało zapisane. Sprawdź połączenie i spróbuj ponownie."
+    },
+    "none": {
+      "title": "Brak ustawień powiadomień",
+      "body": "Żaden z Twoich serwerów nie oferuje jeszcze ustawień powiadomień."
+    }
+  },
   "onboarding": {
     "createBody": "Wybierz nazwę, udostępnij kod QR znajomym.",
     "createEyebrow": "zacznij od nowa",
@@ -1431,6 +1479,7 @@
     "homeCurrency": "Waluta domowa",
     "language": "Język",
     "languageAuto": "Automatycznie",
+    "monthlySummary": "Podsumowanie miesiąca",
     "openSource": {
       "body": "Używasz chara.app — naszej hostowanej wersji beta. Sama aplikacja jest darmowa i open-source. Możesz ją postawić na własnej maszynie, bez limitów.",
       "eyebrow": "chara jest open source",

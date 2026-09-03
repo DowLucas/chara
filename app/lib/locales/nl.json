@@ -909,6 +909,52 @@
     "shareMessage": "Word lid van \"{{name}}\" op Chara: {{link}}",
     "you": "jij"
   },
+  "monthlySummary": {
+    "title": "Maandoverzicht",
+    "previousMonth": "Vorige maand",
+    "nextMonth": "Volgende maand",
+    "yourShare": "JOUW DEEL",
+    "changeVsPrevious_up": "{{pct}}% meer dan vorige maand",
+    "changeVsPrevious_down": "{{pct}}% minder dan vorige maand",
+    "approximate_one": "Eén bedrag is omgerekend tegen een geschatte koers.",
+    "approximate_other": "{{count}} bedragen zijn omgerekend tegen geschatte koersen.",
+    "expenses": "Uitgaven",
+    "groups": "Groepen",
+    "activeDays": "Actieve dagen",
+    "balanceSection": "SALDO",
+    "youPaid": "Jij betaalde",
+    "net": "Netto",
+    "byCurrency": "PER VALUTA",
+    "categories": "CATEGORIEËN",
+    "highlights": "HOOGTEPUNTEN",
+    "biggestExpense": "Grootste uitgave · {{group}}",
+    "topGroup": "Meest uitgegeven in",
+    "loadError": "Deze maand kon niet worden geladen.",
+    "empty": {
+      "title": "Niets deze maand",
+      "body": "Deze maand zijn er geen uitgaven toegevoegd."
+    },
+    "noAccount": {
+      "title": "Account niet gevonden",
+      "body": "Je bent niet meer ingelogd op de server waar dit overzicht bij hoort."
+    }
+  },
+  "notifications": {
+    "title": "Meldingen",
+    "eyebrow": "PUSH",
+    "monthlySummary": {
+      "label": "Maandoverzicht",
+      "help": "Een melding op de 1e van elke maand, zodra je overzicht klaar is."
+    },
+    "saveFailed": {
+      "title": "Opslaan mislukt",
+      "body": "Je meldingsvoorkeur is niet opgeslagen. Controleer je verbinding en probeer het opnieuw."
+    },
+    "none": {
+      "title": "Geen meldingsinstellingen",
+      "body": "Nog geen van je servers biedt meldingsvoorkeuren aan."
+    }
+  },
   "onboarding": {
     "createBody": "Kies een naam en deel de QR-code met je vrienden.",
     "createEyebrow": "vers beginnen",
@@ -1337,6 +1383,7 @@
     "homeCurrency": "Thuisvaluta",
     "language": "Taal",
     "languageAuto": "Automatisch",
+    "monthlySummary": "Maandoverzicht",
     "openSource": {
       "body": "Je gebruikt chara.app — onze gehoste beta. De app zelf is gratis en open-source. Je kunt hem zelf hosten op je eigen machine, zonder limieten.",
       "eyebrow": "chara is open source",

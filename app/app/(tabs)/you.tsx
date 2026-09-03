@@ -58,6 +58,7 @@ import {
 } from '@/lib/preferences';
 import { storeReviewUrl, type StorePlatform } from '@/lib/store-url';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { currentPeriod, summaryServerUrl } from '@/lib/summary-view';
 
 // TODO: real App Store ID once the app is published
 // App Store numeric ID (ascAppId in eas.json). Powers the "Rate us" deep link.
@@ -81,6 +82,7 @@ export default function YouScreen() {
   const { t } = useTranslation();
   const { user, signOut, refreshUser } = useAuth();
   const { accounts, removeAccount, setHomeCurrency } = useAccounts();
+  const summaryServer = summaryServerUrl(accounts);
   const { homeCurrency, isExplicit: homeCurrencyExplicit } = useHomeCurrency();
   const accountCount = accounts.length;
   const hasMultipleAccounts = accountCount >= 2;
@@ -558,6 +560,25 @@ export default function YouScreen() {
             }
             onPress={() => setCurrencySheetVisible(true)}
           />
+          {/* Hosted-only, so the row is gated on the server actually
+              advertising the feature rather than shown-then-404. Opens the
+              month in progress; the push opens the month it is about. */}
+          {summaryServer && (
+            <NavRow
+              label={t('you.monthlySummary')}
+              onPress={() =>
+                router.push(
+                  `/summary/${encodeURIComponent(summaryServer)}/${currentPeriod()}`,
+                )
+              }
+            />
+          )}
+          {summaryServer && (
+            <NavRow
+              label={t('notifications.title')}
+              onPress={() => router.push('/settings/notifications')}
+            />
+          )}
           <NavRow label={t('privacy.title')} onPress={() => router.push('/settings/privacy')} />
           <NavRow label={t('you.about')} onPress={() => router.push('/settings/about')} />
           <NavRow label={t('you.tellFriend')} onPress={handleTellFriend} />

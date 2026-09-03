@@ -909,6 +909,52 @@
     "shareMessage": "Liity ryhmään ”{{name}}” Charassa: {{link}}",
     "you": "sinä"
   },
+  "monthlySummary": {
+    "title": "Kuukausiyhteenveto",
+    "previousMonth": "Edellinen kuukausi",
+    "nextMonth": "Seuraava kuukausi",
+    "yourShare": "OMA OSUUTESI",
+    "changeVsPrevious_up": "{{pct}} % enemmän kuin viime kuussa",
+    "changeVsPrevious_down": "{{pct}} % vähemmän kuin viime kuussa",
+    "approximate_one": "Yksi summa muunnettiin likimääräisellä kurssilla.",
+    "approximate_other": "{{count}} summaa muunnettiin likimääräisillä kursseilla.",
+    "expenses": "Kulut",
+    "groups": "Ryhmät",
+    "activeDays": "Aktiiviset päivät",
+    "balanceSection": "SALDO",
+    "youPaid": "Maksoit",
+    "net": "Netto",
+    "byCurrency": "VALUUTOITTAIN",
+    "categories": "LUOKAT",
+    "highlights": "KOHOKOHDAT",
+    "biggestExpense": "Suurin kulu · {{group}}",
+    "topGroup": "Eniten kulutettu",
+    "loadError": "Tämän kuukauden lataaminen epäonnistui.",
+    "empty": {
+      "title": "Ei mitään tässä kuussa",
+      "body": "Tässä kuussa ei lisätty kuluja."
+    },
+    "noAccount": {
+      "title": "Tiliä ei löytynyt",
+      "body": "Et ole enää kirjautuneena palvelimelle, jolle tämä yhteenveto kuuluu."
+    }
+  },
+  "notifications": {
+    "title": "Ilmoitukset",
+    "eyebrow": "PUSH",
+    "monthlySummary": {
+      "label": "Kuukausiyhteenveto",
+      "help": "Ilmoitus kuukauden 1. päivänä, kun yhteenvetosi on valmis."
+    },
+    "saveFailed": {
+      "title": "Tallennus epäonnistui",
+      "body": "Ilmoitusasetustasi ei tallennettu. Tarkista yhteys ja yritä uudelleen."
+    },
+    "none": {
+      "title": "Ei ilmoitusasetuksia",
+      "body": "Yksikään palvelimistasi ei vielä tarjoa ilmoitusasetuksia."
+    }
+  },
   "onboarding": {
     "createBody": "Anna ryhmälle nimi ja jaa QR-koodi kavereille.",
     "createEyebrow": "aloita alusta",
@@ -1337,6 +1383,7 @@
     "homeCurrency": "Kotivaluutta",
     "language": "Kieli",
     "languageAuto": "Automaattinen",
+    "monthlySummary": "Kuukausiyhteenveto",
     "openSource": {
       "body": "Käytät chara.app-palvelua — hostattua beetaversiota. Itse sovellus on ilmainen ja avointa lähdekoodia. Voit pystyttää sen omalle koneellesi ilman rajoja.",
       "eyebrow": "chara on avointa lähdekoodia",

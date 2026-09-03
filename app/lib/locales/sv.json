@@ -909,6 +909,52 @@
     "shareMessage": "Gå med i ”{{name}}” på Chara: {{link}}",
     "you": "du"
   },
+  "monthlySummary": {
+    "title": "Månadssammanfattning",
+    "previousMonth": "Föregående månad",
+    "nextMonth": "Nästa månad",
+    "yourShare": "DIN ANDEL",
+    "changeVsPrevious_up": "{{pct}} % mer än förra månaden",
+    "changeVsPrevious_down": "{{pct}} % mindre än förra månaden",
+    "approximate_one": "Ett belopp räknades om till en ungefärlig kurs.",
+    "approximate_other": "{{count}} belopp räknades om till ungefärliga kurser.",
+    "expenses": "Utgifter",
+    "groups": "Grupper",
+    "activeDays": "Aktiva dagar",
+    "balanceSection": "SALDO",
+    "youPaid": "Du betalade",
+    "net": "Netto",
+    "byCurrency": "PER VALUTA",
+    "categories": "KATEGORIER",
+    "highlights": "HÖJDPUNKTER",
+    "biggestExpense": "Största utgift · {{group}}",
+    "topGroup": "Mest spenderat i",
+    "loadError": "Kunde inte ladda den här månaden.",
+    "empty": {
+      "title": "Inget den här månaden",
+      "body": "Inga utgifter lades till den här månaden."
+    },
+    "noAccount": {
+      "title": "Kontot hittades inte",
+      "body": "Du är inte längre inloggad på servern som den här sammanfattningen tillhör."
+    }
+  },
+  "notifications": {
+    "title": "Aviseringar",
+    "eyebrow": "PUSH",
+    "monthlySummary": {
+      "label": "Månadssammanfattning",
+      "help": "En avisering den 1:a varje månad, när din sammanfattning är klar."
+    },
+    "saveFailed": {
+      "title": "Kunde inte spara",
+      "body": "Din aviseringsinställning sparades inte. Kontrollera anslutningen och försök igen."
+    },
+    "none": {
+      "title": "Inga aviseringsinställningar",
+      "body": "Ingen av dina servrar erbjuder aviseringsinställningar än."
+    }
+  },
   "onboarding": {
     "createBody": "Välj ett namn och dela QR-koden med vänner.",
     "createEyebrow": "börja från noll",
@@ -1337,6 +1383,7 @@
     "homeCurrency": "Hemvaluta",
     "language": "Språk",
     "languageAuto": "Automatiskt",
+    "monthlySummary": "Månadssammanfattning",
     "openSource": {
       "body": "Du använder chara.app — vår hostade beta. Själva appen är gratis och har öppen källkod. Du kan drifta den själv på din egen maskin, helt utan tak.",
       "eyebrow": "chara har öppen källkod",

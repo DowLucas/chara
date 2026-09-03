@@ -933,6 +933,53 @@
     "shareMessage": "Vieni nel gruppo \"{{name}}\" su Chara: {{link}}",
     "you": "tu"
   },
+  "monthlySummary": {
+    "title": "Riepilogo mensile",
+    "previousMonth": "Mese precedente",
+    "nextMonth": "Mese successivo",
+    "yourShare": "LA TUA QUOTA",
+    "changeVsPrevious_up": "{{pct}}% in più rispetto al mese scorso",
+    "changeVsPrevious_down": "{{pct}}% in meno rispetto al mese scorso",
+    "approximate_one": "Un importo è stato convertito a un tasso approssimativo.",
+    "approximate_many": "{{count}} importi sono stati convertiti a tassi approssimativi.",
+    "approximate_other": "{{count}} importi sono stati convertiti a tassi approssimativi.",
+    "expenses": "Spese",
+    "groups": "Gruppi",
+    "activeDays": "Giorni attivi",
+    "balanceSection": "SALDO",
+    "youPaid": "Hai pagato",
+    "net": "Netto",
+    "byCurrency": "PER VALUTA",
+    "categories": "CATEGORIE",
+    "highlights": "IN EVIDENZA",
+    "biggestExpense": "Spesa più grande · {{group}}",
+    "topGroup": "Dove hai speso di più",
+    "loadError": "Impossibile caricare questo mese.",
+    "empty": {
+      "title": "Niente questo mese",
+      "body": "Questo mese non sono state aggiunte spese."
+    },
+    "noAccount": {
+      "title": "Account non trovato",
+      "body": "Non hai più effettuato l'accesso al server a cui appartiene questo riepilogo."
+    }
+  },
+  "notifications": {
+    "title": "Notifiche",
+    "eyebrow": "PUSH",
+    "monthlySummary": {
+      "label": "Riepilogo mensile",
+      "help": "Una notifica il 1° di ogni mese, quando il tuo riepilogo è pronto."
+    },
+    "saveFailed": {
+      "title": "Salvataggio non riuscito",
+      "body": "La tua preferenza di notifica non è stata salvata. Controlla la connessione e riprova."
+    },
+    "none": {
+      "title": "Nessuna impostazione di notifica",
+      "body": "Nessuno dei tuoi server offre ancora preferenze di notifica."
+    }
+  },
   "onboarding": {
     "createBody": "Scegli un nome, condividi il QR con gli amici.",
     "createEyebrow": "parti da zero",
@@ -1379,6 +1426,7 @@
     "homeCurrency": "Valuta principale",
     "language": "Lingua",
     "languageAuto": "Automatica",
+    "monthlySummary": "Riepilogo mensile",
     "openSource": {
       "body": "Stai usando chara.app — la nostra beta ospitata. L'app è gratuita e open source. Puoi auto-ospitarla sulla tua macchina, senza limiti.",
       "eyebrow": "chara è open source",

@@ -909,6 +909,52 @@
     "shareMessage": "Bli med i «{{name}}» på Chara: {{link}}",
     "you": "du"
   },
+  "monthlySummary": {
+    "title": "Månedsoppsummering",
+    "previousMonth": "Forrige måned",
+    "nextMonth": "Neste måned",
+    "yourShare": "DIN ANDEL",
+    "changeVsPrevious_up": "{{pct}} % mer enn forrige måned",
+    "changeVsPrevious_down": "{{pct}} % mindre enn forrige måned",
+    "approximate_one": "Ett beløp ble omregnet til en omtrentlig kurs.",
+    "approximate_other": "{{count}} beløp ble omregnet til omtrentlige kurser.",
+    "expenses": "Utgifter",
+    "groups": "Grupper",
+    "activeDays": "Aktive dager",
+    "balanceSection": "SALDO",
+    "youPaid": "Du betalte",
+    "net": "Netto",
+    "byCurrency": "PER VALUTA",
+    "categories": "KATEGORIER",
+    "highlights": "HØYDEPUNKTER",
+    "biggestExpense": "Største utgift · {{group}}",
+    "topGroup": "Mest brukt i",
+    "loadError": "Kunne ikke laste denne måneden.",
+    "empty": {
+      "title": "Ingenting denne måneden",
+      "body": "Ingen utgifter ble lagt til denne måneden."
+    },
+    "noAccount": {
+      "title": "Fant ikke kontoen",
+      "body": "Du er ikke lenger logget inn på serveren denne oppsummeringen hører til."
+    }
+  },
+  "notifications": {
+    "title": "Varsler",
+    "eyebrow": "PUSH",
+    "monthlySummary": {
+      "label": "Månedsoppsummering",
+      "help": "Et varsel den 1. hver måned, når oppsummeringen din er klar."
+    },
+    "saveFailed": {
+      "title": "Kunne ikke lagre",
+      "body": "Varselinnstillingen din ble ikke lagret. Sjekk tilkoblingen og prøv igjen."
+    },
+    "none": {
+      "title": "Ingen varselinnstillinger",
+      "body": "Ingen av serverne dine tilbyr varselinnstillinger ennå."
+    }
+  },
   "onboarding": {
     "createBody": "Velg et navn, del QR-koden med venner.",
     "createEyebrow": "start fra null",
@@ -1337,6 +1383,7 @@
     "homeCurrency": "Hjemmevaluta",
     "language": "Språk",
     "languageAuto": "Automatisk",
+    "monthlySummary": "Månedsoppsummering",
     "openSource": {
       "body": "Du bruker chara.app — vår hostede beta. Selve appen er gratis og åpen kildekode. Du kan selvdrifte den på din egen maskin, uten tak.",
       "eyebrow": "chara er åpen kildekode",

@@ -909,6 +909,52 @@
     "shareMessage": "来加入“{{name}}”：{{link}}",
     "you": "我"
   },
+  "monthlySummary": {
+    "title": "月度总结",
+    "previousMonth": "上个月",
+    "nextMonth": "下个月",
+    "yourShare": "你的分摊",
+    "changeVsPrevious_up": "比上月多 {{pct}}%",
+    "changeVsPrevious_down": "比上月少 {{pct}}%",
+    "approximate_one": "有 1 笔金额按近似汇率换算。",
+    "approximate_other": "有 {{count}} 笔金额按近似汇率换算。",
+    "expenses": "支出",
+    "groups": "群组",
+    "activeDays": "活跃天数",
+    "balanceSection": "结余",
+    "youPaid": "你支付",
+    "net": "净额",
+    "byCurrency": "按货币",
+    "categories": "分类",
+    "highlights": "亮点",
+    "biggestExpense": "最大支出 · {{group}}",
+    "topGroup": "花得最多的群组",
+    "loadError": "无法加载该月数据。",
+    "empty": {
+      "title": "本月暂无记录",
+      "body": "这个月没有添加任何支出。"
+    },
+    "noAccount": {
+      "title": "找不到账户",
+      "body": "你已不再登录该总结所属的服务器。"
+    }
+  },
+  "notifications": {
+    "title": "通知",
+    "eyebrow": "推送",
+    "monthlySummary": {
+      "label": "月度总结",
+      "help": "每月 1 日总结生成时推送一条通知。"
+    },
+    "saveFailed": {
+      "title": "保存失败",
+      "body": "通知偏好未保存。请检查网络后重试。"
+    },
+    "none": {
+      "title": "没有通知设置",
+      "body": "你的服务器暂不提供通知偏好设置。"
+    }
+  },
   "onboarding": {
     "createBody": "起个名字，把二维码分享给朋友。",
     "createEyebrow": "从头开始",
@@ -1334,6 +1380,7 @@
     "homeCurrency": "本位币",
     "language": "语言",
     "languageAuto": "自动",
+    "monthlySummary": "月度总结",
     "openSource": {
       "body": "您正在使用 chara.app · 我们的托管测试版。应用本身免费且开源，可在自己的服务器上自托管，无任何限制。",
       "eyebrow": "Chara 是开源的",

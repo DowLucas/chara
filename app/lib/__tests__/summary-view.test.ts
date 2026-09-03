@@ -5,6 +5,8 @@
  */
 
 import {
+  currentPeriod,
+  summaryServerUrl,
   shiftPeriod,
   canGoPrevious,
   canGoNext,
@@ -120,5 +122,46 @@ describe('hasContent', () => {
 
   it('is true as soon as there is one', () => {
     expect(hasContent({ counts: { expenses: 1 } })).toBe(true);
+  });
+});
+
+describe('currentPeriod', () => {
+  it('is the calendar month the date falls in', () => {
+    expect(currentPeriod(new Date('2026-09-15T12:00:00Z'))).toBe('2026-09');
+  });
+
+  it('zero-pads single-digit months', () => {
+    expect(currentPeriod(new Date('2026-03-01T00:00:00Z'))).toBe('2026-03');
+  });
+});
+
+describe('summaryServerUrl', () => {
+  const withFeature = (serverUrl: string, monthly_summary?: boolean) => ({
+    serverUrl,
+    instance: monthly_summary === undefined ? null : { features: { monthly_summary } },
+  });
+
+  it('picks the account whose server advertises the feature', () => {
+    expect(
+      summaryServerUrl([
+        withFeature('https://self.host', false),
+        withFeature('https://cloud.example', true),
+      ]),
+    ).toBe('https://cloud.example');
+  });
+
+  // A self-hosted-only user has no summary anywhere, so the entry point must
+  // not appear at all rather than opening a screen that 404s.
+  it('returns null when no account advertises it', () => {
+    expect(summaryServerUrl([withFeature('https://self.host', false)])).toBeNull();
+  });
+
+  // Backends predating the feature omit the flag entirely.
+  it('treats a missing flag as unsupported', () => {
+    expect(summaryServerUrl([withFeature('https://old.example')])).toBeNull();
+  });
+
+  it('returns null for no accounts at all', () => {
+    expect(summaryServerUrl([])).toBeNull();
   });
 });

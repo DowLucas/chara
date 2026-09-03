@@ -402,6 +402,9 @@ export interface User {
   /** ISO-8601 timestamp the user's avatar was last updated. Used to bust the
    *  RN image cache after a fresh upload. */
   avatar_updated_at?: string | null;
+  /** True when the user has turned the monthly summary push off. Absent on
+   *  backends predating the feature. */
+  monthly_summary_opt_out?: boolean;
 }
 
 export function requestMagicLink(email: string) {
@@ -1530,7 +1533,14 @@ export function apiFor(serverUrl: string) {
   return {
     // Identity
     getMe: () => requestOn<User>(serverUrl, '/api/me'),
-    updateMe: (input: { name?: string; phone?: string }) =>
+    updateMe: (input: {
+      name?: string;
+      phone?: string;
+      // Optional so an unrelated profile edit cannot silently opt the user
+      // back into the monthly summary — the backend field is a pointer for
+      // the same reason.
+      monthly_summary_opt_out?: boolean;
+    }) =>
       requestOn<User>(serverUrl, '/api/me', {
         method: 'PATCH',
         body: JSON.stringify(input),

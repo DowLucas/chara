@@ -933,6 +933,53 @@
     "shareMessage": "Rejoins « {{name}} » sur Chara : {{link}}",
     "you": "toi"
   },
+  "monthlySummary": {
+    "title": "Récapitulatif mensuel",
+    "previousMonth": "Mois précédent",
+    "nextMonth": "Mois suivant",
+    "yourShare": "VOTRE PART",
+    "changeVsPrevious_up": "{{pct}} % de plus que le mois dernier",
+    "changeVsPrevious_down": "{{pct}} % de moins que le mois dernier",
+    "approximate_one": "Un montant a été converti à un taux approximatif.",
+    "approximate_many": "{{count}} montants ont été convertis à des taux approximatifs.",
+    "approximate_other": "{{count}} montants ont été convertis à des taux approximatifs.",
+    "expenses": "Dépenses",
+    "groups": "Groupes",
+    "activeDays": "Jours actifs",
+    "balanceSection": "SOLDE",
+    "youPaid": "Vous avez payé",
+    "net": "Net",
+    "byCurrency": "PAR DEVISE",
+    "categories": "CATÉGORIES",
+    "highlights": "POINTS FORTS",
+    "biggestExpense": "Plus grosse dépense · {{group}}",
+    "topGroup": "Le plus dépensé dans",
+    "loadError": "Impossible de charger ce mois.",
+    "empty": {
+      "title": "Rien ce mois-ci",
+      "body": "Aucune dépense n'a été ajoutée ce mois-ci."
+    },
+    "noAccount": {
+      "title": "Compte introuvable",
+      "body": "Vous n'êtes plus connecté au serveur auquel appartient ce récapitulatif."
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "eyebrow": "PUSH",
+    "monthlySummary": {
+      "label": "Récapitulatif mensuel",
+      "help": "Une notification le 1er de chaque mois, quand votre récapitulatif est prêt."
+    },
+    "saveFailed": {
+      "title": "Échec de l'enregistrement",
+      "body": "Votre préférence de notification n'a pas été enregistrée. Vérifiez votre connexion et réessayez."
+    },
+    "none": {
+      "title": "Aucun réglage de notification",
+      "body": "Aucun de vos serveurs ne propose encore de préférences de notification."
+    }
+  },
   "onboarding": {
     "createBody": "Choisis un nom, partage le QR code à tes amis.",
     "createEyebrow": "partir de zéro",
@@ -1379,6 +1426,7 @@
     "homeCurrency": "Devise principale",
     "language": "Langue",
     "languageAuto": "Automatique",
+    "monthlySummary": "Récapitulatif mensuel",
     "openSource": {
       "body": "Tu utilises chara.app — notre bêta hébergée. L'appli en elle-même est gratuite et open source. Tu peux l'auto-héberger sur ta propre machine, sans limites.",
       "eyebrow": "chara est open source",

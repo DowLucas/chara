@@ -1013,6 +1013,56 @@
     "shareMessage": "انضم إلى \"{{name}}\" على Chara: {{link}}",
     "you": "أنت"
   },
+  "monthlySummary": {
+    "title": "الملخص الشهري",
+    "previousMonth": "الشهر السابق",
+    "nextMonth": "الشهر التالي",
+    "yourShare": "حصتك",
+    "changeVsPrevious_up": "أكثر بنسبة {{pct}}٪ من الشهر الماضي",
+    "changeVsPrevious_down": "أقل بنسبة {{pct}}٪ من الشهر الماضي",
+    "approximate_zero": "لم تُحوَّل أي مبالغ بسعر تقريبي.",
+    "approximate_one": "حُوِّل مبلغ واحد بسعر تقريبي.",
+    "approximate_two": "حُوِّل مبلغان بأسعار تقريبية.",
+    "approximate_few": "حُوِّلت {{count}} مبالغ بأسعار تقريبية.",
+    "approximate_many": "حُوِّل {{count}} مبلغًا بأسعار تقريبية.",
+    "approximate_other": "حُوِّل {{count}} مبلغ بأسعار تقريبية.",
+    "expenses": "المصروفات",
+    "groups": "المجموعات",
+    "activeDays": "الأيام النشطة",
+    "balanceSection": "الرصيد",
+    "youPaid": "دفعت",
+    "net": "الصافي",
+    "byCurrency": "حسب العملة",
+    "categories": "الفئات",
+    "highlights": "أبرز النقاط",
+    "biggestExpense": "أكبر مصروف · {{group}}",
+    "topGroup": "الأكثر إنفاقًا في",
+    "loadError": "تعذّر تحميل هذا الشهر.",
+    "empty": {
+      "title": "لا شيء هذا الشهر",
+      "body": "لم تُضَف أي مصروفات هذا الشهر."
+    },
+    "noAccount": {
+      "title": "الحساب غير موجود",
+      "body": "لم تعد مسجّل الدخول إلى الخادم الذي ينتمي إليه هذا الملخص."
+    }
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "eyebrow": "الإشعارات الفورية",
+    "monthlySummary": {
+      "label": "الملخص الشهري",
+      "help": "إشعار في اليوم الأول من كل شهر عندما يصبح ملخصك جاهزًا."
+    },
+    "saveFailed": {
+      "title": "تعذّر الحفظ",
+      "body": "لم يُحفَظ تفضيل الإشعارات. تحقّق من الاتصال وحاول مرة أخرى."
+    },
+    "none": {
+      "title": "لا توجد إعدادات إشعارات",
+      "body": "لا يوفّر أي من خوادمك تفضيلات الإشعارات بعد."
+    }
+  },
   "onboarding": {
     "createBody": "اختر اسمًا، وشارك رمز QR مع الأصدقاء.",
     "createEyebrow": "ابدأ من جديد",
@@ -1525,6 +1575,7 @@
     "homeCurrency": "العملة الأساسية",
     "language": "اللغة",
     "languageAuto": "تلقائي",
+    "monthlySummary": "الملخص الشهري",
     "openSource": {
       "body": "أنت تستخدم chara.app — نسختنا التجريبية المستضافة. التطبيق نفسه مجاني ومفتوح المصدر. يمكنك استضافته على جهازك بنفسك، بلا حدود.",
       "eyebrow": "chara مفتوح المصدر",

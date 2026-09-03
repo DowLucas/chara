@@ -909,6 +909,52 @@
     "shareMessage": "Kom med i \"{{name}}\" på Chara: {{link}}",
     "you": "dig"
   },
+  "monthlySummary": {
+    "title": "Månedsoversigt",
+    "previousMonth": "Forrige måned",
+    "nextMonth": "Næste måned",
+    "yourShare": "DIN ANDEL",
+    "changeVsPrevious_up": "{{pct}} % mere end sidste måned",
+    "changeVsPrevious_down": "{{pct}} % mindre end sidste måned",
+    "approximate_one": "Ét beløb blev omregnet til en omtrentlig kurs.",
+    "approximate_other": "{{count}} beløb blev omregnet til omtrentlige kurser.",
+    "expenses": "Udgifter",
+    "groups": "Grupper",
+    "activeDays": "Aktive dage",
+    "balanceSection": "SALDO",
+    "youPaid": "Du betalte",
+    "net": "Netto",
+    "byCurrency": "PR. VALUTA",
+    "categories": "KATEGORIER",
+    "highlights": "HØJDEPUNKTER",
+    "biggestExpense": "Største udgift · {{group}}",
+    "topGroup": "Mest brugt i",
+    "loadError": "Kunne ikke indlæse denne måned.",
+    "empty": {
+      "title": "Intet denne måned",
+      "body": "Der blev ikke tilføjet nogen udgifter denne måned."
+    },
+    "noAccount": {
+      "title": "Kontoen blev ikke fundet",
+      "body": "Du er ikke længere logget ind på den server, denne oversigt hører til."
+    }
+  },
+  "notifications": {
+    "title": "Notifikationer",
+    "eyebrow": "PUSH",
+    "monthlySummary": {
+      "label": "Månedsoversigt",
+      "help": "En notifikation den 1. i hver måned, når din oversigt er klar."
+    },
+    "saveFailed": {
+      "title": "Kunne ikke gemme",
+      "body": "Din notifikationsindstilling blev ikke gemt. Tjek din forbindelse, og prøv igen."
+    },
+    "none": {
+      "title": "Ingen notifikationsindstillinger",
+      "body": "Ingen af dine servere tilbyder notifikationsindstillinger endnu."
+    }
+  },
   "onboarding": {
     "createBody": "Giv den et navn, og del QR-koden med dine venner.",
     "createEyebrow": "start forfra",
@@ -1337,6 +1383,7 @@
     "homeCurrency": "Hjemmevaluta",
     "language": "Sprog",
     "languageAuto": "Automatisk",
+    "monthlySummary": "Månedsoversigt",
     "openSource": {
       "body": "Du bruger chara.app — vores hostede beta. Selve appen er gratis og open source. Du kan selv-hoste den på din egen maskine, uden begrænsninger.",
       "eyebrow": "chara er open source",

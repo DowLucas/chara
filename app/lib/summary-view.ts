@@ -70,3 +70,23 @@ export function changeVsPrevious(share: string, previousShare: string | null): n
 export function hasContent(summary: { counts: { expenses: number } }): boolean {
   return summary.counts.expenses > 0;
 }
+
+/** The calendar month a date falls in, as a 'YYYY-MM' period. */
+export function currentPeriod(now: Date = new Date()): string {
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+/**
+ * Which linked account, if any, has a monthly summary to show.
+ *
+ * The feature is hosted-only, so at most one account normally qualifies.
+ * Gating on the server's advertised feature rather than on "is this the
+ * hosted URL" means a self-hoster who later enables it is picked up for
+ * free, and a backend predating the feature (flag absent) reads as
+ * unsupported rather than being offered a screen that 404s.
+ */
+export function summaryServerUrl(
+  accounts: { serverUrl: string; instance?: { features?: { monthly_summary?: boolean } } | null }[],
+): string | null {
+  return accounts.find((a) => a.instance?.features?.monthly_summary === true)?.serverUrl ?? null;
+}
