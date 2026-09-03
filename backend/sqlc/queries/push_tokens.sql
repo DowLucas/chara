@@ -31,4 +31,10 @@ SELECT * FROM push_tokens WHERE user_id = ANY($1::text[]);
 -- name: ListAllPushTokens :many
 -- Every registered device. Used by the operator broadcast endpoint to fan a
 -- release-note notification out to all users.
-SELECT * FROM push_tokens;
+-- DISTINCT ON (token) because the same raw Expo token may legitimately be
+-- owned by several users (see UpsertPushToken) — that is one physical device,
+-- and it must not receive the broadcast once per owning account. The most
+-- recently used row wins, so the device is attributed to the account actually
+-- signed in on it rather than a stale one.
+SELECT DISTINCT ON (token) * FROM push_tokens
+ORDER BY token, last_used_at DESC NULLS LAST, created_at DESC;

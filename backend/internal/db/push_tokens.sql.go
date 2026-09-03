@@ -26,11 +26,17 @@ func (q *Queries) DeletePushToken(ctx context.Context, arg DeletePushTokenParams
 }
 
 const listAllPushTokens = `-- name: ListAllPushTokens :many
-SELECT id, user_id, token, platform, created_at, last_used_at FROM push_tokens
+SELECT DISTINCT ON (token) id, user_id, token, platform, created_at, last_used_at FROM push_tokens
+ORDER BY token, last_used_at DESC NULLS LAST, created_at DESC
 `
 
 // Every registered device. Used by the operator broadcast endpoint to fan a
 // release-note notification out to all users.
+// DISTINCT ON (token) because the same raw Expo token may legitimately be
+// owned by several users (see UpsertPushToken) — that is one physical device,
+// and it must not receive the broadcast once per owning account. The most
+// recently used row wins, so the device is attributed to the account actually
+// signed in on it rather than a stale one.
 func (q *Queries) ListAllPushTokens(ctx context.Context) ([]PushToken, error) {
 	rows, err := q.db.Query(ctx, listAllPushTokens)
 	if err != nil {
