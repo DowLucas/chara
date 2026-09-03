@@ -2,7 +2,7 @@
 
 Track what has been built so far. Update this file whenever a milestone is completed.
 
-Last updated: 2026-07-02 (push notifications: Expo send-side)
+Last updated: 2026-09-03 (App Store / Google Play release 1.4.2)
 
 ## Auth endpoints (Week 9, in progress)
 
@@ -580,10 +580,17 @@ cd backend && go test -tags integration ./...
 
 ## Known deferred work (out of MVP scope)
 
-- Activity feed UI
+Shipped since this list was written (see the handlers in
+`backend/internal/handler/` and the screens in `app/app/`):
+
+- Activity feed UI — `app/app/(tabs)/activity.tsx` and per-group activity
+- Image attachments — `handler/attachments.go`
+- Splitwise importer — `backend/internal/importer/`
+- Social auth — Google OAuth and Apple Sign In on the hosted tier
+  (`handler/google_auth.go`, `handler/apple_auth.go`)
+
+Still deferred:
+
 - Full-text search (basic ilike query acceptable for Phase 1)
-- Image attachments (Phase 2)
-- Splitwise importer (Phase 2)
-- Social auth — Google OAuth, Apple Sign In (hosted tier only, Phase 2)
-- JWT server-side revocation (Phase 2; advisory `POST /api/me/logout` already in place as a hook)
+- JWT server-side revocation (advisory `POST /api/me/logout` already in place as a hook)
 - Federation between Chara instances (P3 per `docs/02-product-strategy.md`; the multi-server work above is aggregator-only)
