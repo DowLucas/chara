@@ -100,3 +100,90 @@ export function summaryServerUrl(
 ): string | null {
   return accounts.find((a) => a.instance?.features?.monthly_summary === true)?.serverUrl ?? null;
 }
+
+/** How many months the 1c strip shows at once. */
+const STRIP_MONTHS = 3;
+
+export interface StripMonth {
+  period: string;
+  /** Three-letter month label, uppercased — 'JUL'. Locale-formatted by the
+   *  caller, which has the i18n context this module deliberately lacks. */
+  monthIndex: number;
+  selected: boolean;
+}
+
+/**
+ * The three-month strip that replaces the prev/next arrows in 1c.
+ *
+ * Same bounds the arrows had: never past the current month, never before the
+ * first month with any spend. The window slides to keep the selected month
+ * visible rather than always centring it, so the ends of the range still
+ * show a full strip instead of a stub.
+ */
+export function monthStrip(period: string, firstPeriod: string, now: Date = new Date()): StripMonth[] {
+  if (!period) return [];
+  const latest = currentPeriod(now);
+  const first = firstPeriod && firstPeriod <= latest ? firstPeriod : period;
+
+  // Start one month back, then pull the window inside the range.
+  let start = shiftPeriod(period, -1);
+  if (start < first) start = first;
+  // If the window would overrun the current month, slide it back.
+  let end = shiftPeriod(start, STRIP_MONTHS - 1);
+  while (end > latest && start > first) {
+    start = shiftPeriod(start, -1);
+    end = shiftPeriod(start, STRIP_MONTHS - 1);
+  }
+
+  const out: StripMonth[] = [];
+  for (let i = 0; i < STRIP_MONTHS; i++) {
+    const p = shiftPeriod(start, i);
+    if (p > latest) break;
+    out.push({ period: p, monthIndex: Number(p.slice(5, 7)) - 1, selected: p === period });
+  }
+  return out;
+}
+
+export interface DayCell {
+  /** null for the leading blanks that align the 1st to its weekday. */
+  day: number | null;
+  active: boolean;
+}
+
+/**
+ * The active-day grid for 1c: leading blanks so the 1st lands under its
+ * weekday, then one cell per day of the month.
+ *
+ * Monday-first, matching the M T W T F S S header in the design (and every
+ * locale Chara ships except en-US, which the app does not target).
+ */
+export function dayGrid(period: string, activeDates: number[]): DayCell[] {
+  const m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(period);
+  if (!m) return [];
+  const year = Number(m[1]);
+  const monthIndex = Number(m[2]) - 1;
+  // UTC throughout: a local-time Date would shift the 1st across a timezone
+  // boundary and rotate the whole grid by a day.
+  const daysInMonth = new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
+  const jsDow = new Date(Date.UTC(year, monthIndex, 1)).getUTCDay(); // 0 = Sunday
+  const leading = (jsDow + 6) % 7; // Monday-first
+
+  const active = new Set(activeDates);
+  const cells: DayCell[] = [];
+  for (let i = 0; i < leading; i++) cells.push({ day: null, active: false });
+  for (let d = 1; d <= daysInMonth; d++) cells.push({ day: d, active: active.has(d) });
+  return cells;
+}
+
+/**
+ * Category bar width, as a percentage of the track.
+ *
+ * Scaled against the biggest category rather than against 100: the top row
+ * always fills the track, so the shape of the month stays readable even when
+ * every category is a single-digit share. A non-zero category never rounds
+ * away to an invisible bar.
+ */
+export function barWidthPct(pct: number, topPct: number): number {
+  if (topPct <= 0 || pct <= 0) return 0;
+  return Math.max(2, Math.round((pct / topPct) * 100));
+}

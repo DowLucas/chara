@@ -14,6 +14,9 @@ import {
   netDirection,
   changeVsPrevious,
   hasContent,
+  monthStrip,
+  dayGrid,
+  barWidthPct,
 } from '../summary-view';
 
 describe('shiftPeriod', () => {
@@ -163,5 +166,103 @@ describe('summaryServerUrl', () => {
 
   it('returns null for no accounts at all', () => {
     expect(summaryServerUrl([])).toBeNull();
+  });
+});
+
+describe('monthStrip (1c)', () => {
+  const today = new Date(Date.UTC(2026, 8, 15)); // September 2026
+
+  it('centres on the selected month with a neighbour each side', () => {
+    expect(monthStrip('2026-08', '2026-01', today).map((m) => m.period)).toEqual([
+      '2026-07',
+      '2026-08',
+      '2026-09',
+    ]);
+  });
+
+  it('marks exactly one month selected', () => {
+    const strip = monthStrip('2026-08', '2026-01', today);
+    expect(strip.filter((m) => m.selected).map((m) => m.period)).toEqual(['2026-08']);
+  });
+
+  // The strip replaces the arrows, so it inherits their bounds: never past
+  // the current month, never before the first month with any spend.
+  it('shifts the window forward at the start of the range', () => {
+    expect(monthStrip('2026-01', '2026-01', today).map((m) => m.period)).toEqual([
+      '2026-01',
+      '2026-02',
+      '2026-03',
+    ]);
+  });
+
+  it('shifts the window back at the current month', () => {
+    expect(monthStrip('2026-09', '2026-01', today).map((m) => m.period)).toEqual([
+      '2026-07',
+      '2026-08',
+      '2026-09',
+    ]);
+  });
+
+  it('never runs past the current month', () => {
+    for (const m of monthStrip('2026-09', '2026-01', today)) {
+      expect(m.period <= '2026-09').toBe(true);
+    }
+  });
+
+  it('shrinks when the whole history is shorter than the strip', () => {
+    expect(monthStrip('2026-09', '2026-08', today).map((m) => m.period)).toEqual([
+      '2026-08',
+      '2026-09',
+    ]);
+    expect(monthStrip('2026-09', '2026-09', today).map((m) => m.period)).toEqual(['2026-09']);
+  });
+
+  it('falls back to the selected month alone when there is no history', () => {
+    expect(monthStrip('2026-09', '', today).map((m) => m.period)).toEqual(['2026-09']);
+  });
+});
+
+describe('dayGrid (1c)', () => {
+  it('pads to the weekday the month starts on, Monday first', () => {
+    // 1 August 2026 is a Saturday, so five blanks precede it.
+    const g = dayGrid('2026-08', []);
+    expect(g.filter((c) => c.day === null)).toHaveLength(5);
+    expect(g.filter((c) => c.day !== null)).toHaveLength(31);
+  });
+
+  it('uses the real length of the month', () => {
+    expect(dayGrid('2026-09', []).filter((c) => c.day !== null)).toHaveLength(30);
+    expect(dayGrid('2026-02', []).filter((c) => c.day !== null)).toHaveLength(28);
+  });
+
+  it('marks only the active days', () => {
+    const active = dayGrid('2026-08', [3, 4, 31]).filter((c) => c.active);
+    expect(active.map((c) => c.day)).toEqual([3, 4, 31]);
+  });
+
+  it('ignores days outside the month', () => {
+    expect(dayGrid('2026-09', [31, 0, 99]).filter((c) => c.active)).toHaveLength(0);
+  });
+});
+
+describe('barWidthPct (1c)', () => {
+  // Bars are scaled against the biggest category, not against 100, so the
+  // top row always fills the track and the shape stays readable when every
+  // category is small.
+  it('gives the largest category a full bar', () => {
+    expect(barWidthPct(70, 70)).toBe(100);
+  });
+
+  it('scales the rest against it', () => {
+    expect(barWidthPct(35, 70)).toBe(50);
+    expect(barWidthPct(7, 70)).toBe(10);
+  });
+
+  it('never divides by zero', () => {
+    expect(barWidthPct(0, 0)).toBe(0);
+  });
+
+  it('keeps a hairline for a non-zero category that rounds to nothing', () => {
+    expect(barWidthPct(1, 100)).toBeGreaterThan(0);
   });
 });

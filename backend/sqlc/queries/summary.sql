@@ -118,3 +118,18 @@ LIMIT @lim OFFSET @off;
 INSERT INTO monthly_summary_sends (user_id, period)
 VALUES (@user_id, @period)
 ON CONFLICT (user_id, period) DO NOTHING;
+
+-- name: SummaryActiveDays :many
+-- The distinct dates the user had qualifying spend on, for the day grid in
+-- the summary screen. counts.active_days gives the tally; the grid needs to
+-- know WHICH days, and there is no way to derive that from a count.
+WITH mine AS (
+    SELECT e.id, e.expense_date
+    FROM expenses e
+    JOIN group_members gm ON gm.group_id = e.group_id AND gm.user_id = @user_id
+    LEFT JOIN expense_splits es ON es.expense_id = e.id AND es.member_id = gm.id
+    WHERE NOT e.is_deleted AND NOT e.is_reimbursement
+      AND e.expense_date >= @period_start AND e.expense_date < @period_end
+      AND (e.paid_by_id = gm.id OR es.id IS NOT NULL)
+)
+SELECT DISTINCT expense_date FROM mine ORDER BY expense_date;

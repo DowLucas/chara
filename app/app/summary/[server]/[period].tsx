@@ -3,16 +3,20 @@
  * server. Hosted-only; reached from the You tab or the monthly push's
  * `chara://summary/<period>` deep link.
  *
- * Deliberately thin: every decision (period arithmetic, the prev/next
- * bounds, the approximate flag, the sign of a net, the change vs last
- * month) lives in `lib/summary-view.ts` and is unit-tested there.
+ * Layout follows approach 1c ("shape of the month") from the design canvas
+ * "Mobile app screen design approaches": a three-month strip instead of
+ * prev/next arrows, an active-day grid, and share bars on the categories —
+ * so the month has a shape before you read a number.
+ *
+ * Deliberately thin: every decision (period arithmetic, strip bounds, grid
+ * padding, bar widths, the approximate flag, the sign of a net, the change
+ * vs last month) lives in `lib/summary-view.ts` and is unit-tested there.
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { Text } from '@/components/Text';
@@ -27,24 +31,34 @@ import { categoryLabel } from '@/lib/categories';
 import { formatMinorUnits, currentLocale } from '@/lib/i18n';
 import { decimalToMinor } from '@/lib/money-utils';
 import {
-  canGoNext,
-  canGoPrevious,
+  barWidthPct,
   changeVsPrevious,
+  dayGrid,
   hasContent,
   hasExcludedLegs,
+  monthStrip,
   netDirection,
-  shiftPeriod,
 } from '@/lib/summary-view';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import {
+  colors,
+  fontBody,
+  fontDisplay,
+  fontMono,
+  fontMonoMedium,
+  fontSize,
+  groupAccentSwatches,
+  spacing,
+} from '@/lib/theme';
 
-/** 'YYYY-MM' as a month the user reads, in their own locale. Formatting
- *  lives here rather than in summary-view because it needs the locale. */
-function monthLabel(period: string): string {
+/** Asagi. --accent-3 in the canvas, which is what 1c is drawn with. */
+const ACCENT = groupAccentSwatches[2];
+
+/** 'YYYY-MM' as a month the user reads, in their own locale. */
+function monthLabel(period: string, opts: Intl.DateTimeFormatOptions): string {
   const [y, m] = period.split('-').map((p) => parseInt(p, 10));
   if (!Number.isFinite(y) || !Number.isFinite(m)) return period;
   return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(currentLocale(), {
-    month: 'long',
-    year: 'numeric',
+    ...opts,
     timeZone: 'UTC',
   });
 }
@@ -52,6 +66,13 @@ function monthLabel(period: string): string {
 /** Money on the wire is a decimal string; the formatter takes minor units. */
 function money(amount: string, currency: string): string {
   return formatMinorUnits(decimalToMinor(amount), currency);
+}
+
+/** Net is the one figure with a direction, so it is the one that shows a
+ *  sign. formatMinorUnits already renders the minus. */
+function signedNet(net: string, currency: string): string {
+  const formatted = money(net, currency);
+  return decimalToMinor(net) > 0 ? `+${formatted}` : formatted;
 }
 
 export default function MonthlySummaryScreen() {
@@ -63,15 +84,14 @@ export default function MonthlySummaryScreen() {
   const { homeCurrency } = useHomeCurrency();
 
   // The period is screen state, not a route push per step: paging months
-  // should not stack a dozen entries on the back stack for the user to
-  // unwind one at a time.
+  // should not stack a dozen entries on the back stack to unwind one by one.
   const [period, setPeriod] = useState(params.period ?? '');
   const [data, setData] = useState<SummaryResponse | null>(null);
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
 
-  // Latest-wins guard. Paging months fires a request per tap, and without
-  // this two quick taps can resolve out of order, leaving the header showing
-  // one month and the numbers another. Same pattern as use-summary-server.ts.
+  // Latest-wins guard: tapping through the strip fires a request per tap,
+  // and without this two quick taps can resolve out of order, leaving the
+  // strip showing one month and the numbers another.
   const requestSeq = useRef(0);
 
   const load = useCallback(
@@ -81,7 +101,7 @@ export default function MonthlySummaryScreen() {
       setStatus('loading');
       try {
         const next = await apiFor(serverUrl).getSummary(p, homeCurrency);
-        if (seq !== requestSeq.current) return; // a newer month is in flight
+        if (seq !== requestSeq.current) return;
         setData(next);
         setStatus('ok');
       } catch {
@@ -97,22 +117,33 @@ export default function MonthlySummaryScreen() {
     void load(period);
   }, [load, period]);
 
-  const showPrev = useMemo(
-    () => (data ? canGoPrevious(period, data.first_period) : false),
-    [data, period],
+  const strip = useMemo(
+    () => monthStrip(period, data?.first_period ?? '', new Date()),
+    [period, data?.first_period],
   );
-  const showNext = useMemo(() => canGoNext(period), [period]);
+  const cells = useMemo(
+    () => dayGrid(period, data?.counts.active_dates ?? []),
+    [period, data?.counts.active_dates],
+  );
+  const topPct = useMemo(
+    () => (data?.categories ?? []).reduce((max, c) => Math.max(max, c.pct), 0),
+    [data?.categories],
+  );
+
+  const header = (
+    <TopBar
+      title={t('monthlySummary.title')}
+      left={
+        <IconButton icon="chevron-left" onPress={() => router.back()} label={t('common.back')} />
+      }
+    />
+  );
 
   // The user signed out of this server between the push and the tap.
   if (!account) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <TopBar
-          title={t('monthlySummary.title')}
-          left={
-            <IconButton icon="chevron-left" onPress={() => router.back()} label={t('common.back')} />
-          }
-        />
+        {header}
         <EmptyState
           title={t('monthlySummary.noAccount.title')}
           body={t('monthlySummary.noAccount.body')}
@@ -122,49 +153,43 @@ export default function MonthlySummaryScreen() {
     );
   }
 
-  const change = data?.previous ? changeVsPrevious(data.converted.share, data.previous.share) : null;
+  const change = data?.previous
+    ? changeVsPrevious(data.converted.share, data.previous.share)
+    : null;
+  const currency = data?.converted.currency ?? homeCurrency;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <TopBar
-        title={t('monthlySummary.title')}
-        left={
-          <IconButton icon="chevron-left" onPress={() => router.back()} label={t('common.back')} />
-        }
-      />
+      {header}
       <ScrollView contentContainerStyle={styles.scroll}>
         <ContentContainer>
-          <View style={styles.monthNav}>
-            {/* Hidden rather than disabled: IconButton has no disabled
-                state, and a tappable-looking arrow that does nothing is
-                worse than no arrow. The spacer keeps the month centred. */}
-            {showPrev ? (
-              <IconButton
-                icon="chevron-left"
-                onPress={() => setPeriod(shiftPeriod(period, -1))}
-                label={t('monthlySummary.previousMonth')}
-              />
-            ) : (
-              <View style={styles.navSpacer} />
-            )}
-            <Text style={styles.month}>{monthLabel(period)}</Text>
-            {showNext ? (
-              <IconButton
-                icon="chevron-right"
-                onPress={() => setPeriod(shiftPeriod(period, 1))}
-                label={t('monthlySummary.nextMonth')}
-              />
-            ) : (
-              <View style={styles.navSpacer} />
-            )}
-          </View>
+          {/* MONTH STRIP — replaces the prev/next arrows. Selected month is
+              graphite-on-paper; the others sit quiet in bone. */}
+          {strip.length > 1 && (
+            <View style={styles.strip}>
+              {strip.map((m) => (
+                <TouchableOpacity
+                  key={m.period}
+                  style={[styles.stripBtn, m.selected && styles.stripBtnOn]}
+                  activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: m.selected }}
+                  onPress={() => setPeriod(m.period)}
+                >
+                  <Text style={[styles.stripLabel, m.selected && styles.stripLabelOn]}>
+                    {monthLabel(m.period, { month: 'short' }).toUpperCase()}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
           {status === 'loading' ? (
             <View style={styles.center}>
-              <ActivityIndicator color={colors.lead} />
+              <ActivityIndicator color={colors.graphite} />
             </View>
           ) : status === 'error' || !data ? (
-            <View style={styles.errorWrap}>
+            <View style={styles.center}>
               <Text style={styles.errorNote}>{t('monthlySummary.loadError')}</Text>
               <TouchableOpacity
                 onPress={() => void load(period)}
@@ -183,150 +208,203 @@ export default function MonthlySummaryScreen() {
             />
           ) : (
             <>
-              {/* Hero: what the month cost this user. */}
+              {/* HERO — share, then net and paid folded in beneath a rule.
+                  1c puts the balance in the hero rather than a section of
+                  its own, so the card answers "what did the month cost me". */}
               <View style={styles.hero}>
-                <Text style={styles.heroLabel}>{t('monthlySummary.yourShare')}</Text>
-                <Text style={styles.heroAmount}>
-                  {money(data.converted.share, data.converted.currency)}
+                <View style={styles.heroTop}>
+                  <Text style={styles.eyebrow}>{t('monthlySummary.yourShare')}</Text>
+                  {change !== null && (
+                    <View style={styles.cmpPill}>
+                      <Text style={styles.cmpText}>
+                        {`${change >= 0 ? '+' : '−'}${Math.abs(change)}%`}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.heroAmount} numberOfLines={1} adjustsFontSizeToFit>
+                  {money(data.converted.share, currency)}
                 </Text>
-                {change !== null && (
-                  <Text style={styles.heroMeta}>
-                    {t('monthlySummary.changeVsPrevious', {
-                      pct: Math.abs(change),
-                      context: change >= 0 ? 'up' : 'down',
-                    })}
+
+                <View style={styles.heroRule} />
+                <View style={styles.heroRow}>
+                  <Text style={styles.heroRowLabel}>{t('monthlySummary.net')}</Text>
+                  <Text
+                    style={[
+                      styles.heroNet,
+                      {
+                        color:
+                          netDirection(data.converted.net) === 'owed'
+                            ? colors.moss
+                            : netDirection(data.converted.net) === 'owe'
+                              ? colors.brick
+                              : colors.graphite,
+                      },
+                    ]}
+                  >
+                    {signedNet(data.converted.net, currency)}
                   </Text>
-                )}
+                </View>
+                <View style={styles.heroRowTight}>
+                  <Text style={styles.heroRowLabel}>{t('monthlySummary.youPaid')}</Text>
+                  <Text style={styles.heroPaid}>{money(data.converted.paid, currency)}</Text>
+                </View>
+
                 {hasExcludedLegs(data.converted) && (
-                  <Text style={styles.approxNote}>
-                    {t('monthlySummary.excluded', { count: data.converted.estimated_legs })}
-                  </Text>
+                  <View style={styles.exclRow}>
+                    <View style={styles.exclDot} />
+                    <Text style={styles.exclText}>
+                      {t('monthlySummary.excluded', { count: data.converted.estimated_legs })}
+                    </Text>
+                  </View>
                 )}
               </View>
 
-              {/* Counts. Neutral facts, so graphite throughout. */}
-              <View style={styles.statRow}>
-                <Stat value={String(data.counts.expenses)} label={t('monthlySummary.expenses')} />
-                <Stat value={String(data.counts.groups)} label={t('monthlySummary.groups')} />
-                <Stat value={String(data.counts.active_days)} label={t('monthlySummary.activeDays')} />
-              </View>
-
-              {/* Paid vs net. Net is the only value with a direction, so it
-                  is the only one that gets a signal colour. */}
-              <Text style={styles.eyebrow}>{t('monthlySummary.balanceSection')}</Text>
-              <View style={styles.list}>
-                <InfoRow
-                  label={t('monthlySummary.youPaid')}
-                  value={money(data.converted.paid, data.converted.currency)}
-                />
-                <InfoRow
-                  label={t('monthlySummary.net')}
-                  value={money(data.converted.net, data.converted.currency)}
-                  color={
-                    netDirection(data.converted.net) === 'owed'
-                      ? colors.moss
-                      : netDirection(data.converted.net) === 'owe'
-                        ? colors.brick
-                        : colors.graphite
-                  }
-                />
-              </View>
-
-              {/* Per-currency truth, shown whenever the month was not a
-                  single-currency one — `converted` is a derived number and
-                  this is the unconverted source. */}
+              {/* Per-currency truth as pills — shown only when the month
+                  spanned more than one currency. */}
               {data.by_currency.length > 1 && (
-                <>
-                  <Text style={styles.eyebrow}>{t('monthlySummary.byCurrency')}</Text>
-                  <View style={styles.list}>
-                    {data.by_currency.map((c) => (
-                      <InfoRow
-                        key={c.currency}
-                        label={c.currency}
-                        value={money(c.share, c.currency)}
-                      />
-                    ))}
-                  </View>
-                </>
+                <View style={styles.pills}>
+                  {data.by_currency.map((c) => (
+                    <View key={c.currency} style={styles.pill}>
+                      <Text style={styles.pillCode}>{c.currency}</Text>
+                      <Text style={styles.pillAmt}>{money(c.share, c.currency)}</Text>
+                    </View>
+                  ))}
+                </View>
               )}
 
+              {/* ACTIVE DAYS — the shape of the month at a glance. */}
+              <View style={styles.card}>
+                <View style={styles.heroTop}>
+                  <Text style={styles.eyebrow}>{t('monthlySummary.activeDays')}</Text>
+                  <Text style={styles.daysOf}>
+                    {`${data.counts.active_days}/${cells.filter((c) => c.day !== null).length}`}
+                  </Text>
+                </View>
+                <View style={styles.grid}>
+                  {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
+                    <View key={`dow-${i}`} style={styles.cell}>
+                      <Text style={styles.dowLabel}>{d}</Text>
+                    </View>
+                  ))}
+                  {cells.map((c, i) => (
+                    <View
+                      key={`c-${i}`}
+                      style={[
+                        styles.cell,
+                        styles.dayCell,
+                        c.day === null
+                          ? styles.dayBlank
+                          : c.active
+                            ? { backgroundColor: ACCENT }
+                            : styles.dayOff,
+                      ]}
+                    >
+                      {c.day !== null && (
+                        <Text style={[styles.dayText, c.active && styles.dayTextOn]}>
+                          {String(c.day)}
+                        </Text>
+                      )}
+                    </View>
+                  ))}
+                </View>
+                <View style={styles.legend}>
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendSwatch, { backgroundColor: ACCENT }]} />
+                    <Text style={styles.legendText}>
+                      {`${data.counts.expenses} ${t('monthlySummary.expenses').toLowerCase()}`}
+                    </Text>
+                  </View>
+                  <Text style={styles.legendText}>
+                    {`${data.counts.groups} ${t('monthlySummary.groups').toLowerCase()}`}
+                  </Text>
+                </View>
+              </View>
+
+              {/* CATEGORIES — bars scaled against the biggest category. */}
               {data.categories.length > 0 && (
                 <>
-                  <Text style={styles.eyebrow}>{t('monthlySummary.categories')}</Text>
-                  <View style={styles.list}>
-                    {data.categories.map((c) => (
-                      <View key={c.slug} style={styles.categoryRow}>
-                        <Text style={styles.rowLabel} numberOfLines={1}>
+                  <Text style={styles.sectionEyebrow}>{t('monthlySummary.categories')}</Text>
+                  {data.categories.map((c) => (
+                    <View key={c.slug} style={styles.catRow}>
+                      <View style={styles.catTop}>
+                        <Text style={styles.catLabel} numberOfLines={1}>
                           {categoryLabel(c.slug, t)}
                         </Text>
-                        <Text style={styles.categoryPct}>{`${c.pct}%`}</Text>
-                        <Text style={styles.rowValue}>
-                          {money(c.share, data.converted.currency)}
-                        </Text>
+                        <Text style={styles.catPct}>{`${c.pct}%`}</Text>
+                        <Text style={styles.catAmt}>{money(c.share, currency)}</Text>
                       </View>
-                    ))}
-                  </View>
+                      <View style={styles.track}>
+                        <View
+                          style={[
+                            styles.fill,
+                            { width: `${barWidthPct(c.pct, topPct)}%`, backgroundColor: ACCENT },
+                          ]}
+                        />
+                      </View>
+                    </View>
+                  ))}
                 </>
               )}
 
+              {/* HIGHLIGHTS — bone cards rather than list rows in 1c. */}
               {(data.highlights.biggest_expense || data.highlights.top_group) && (
                 <>
-                  <Text style={styles.eyebrow}>{t('monthlySummary.highlights')}</Text>
-                  <View style={styles.list}>
-                    {data.highlights.biggest_expense && (
-                      <TouchableOpacity
-                        style={styles.navRow}
-                        activeOpacity={0.7}
-                        onPress={() =>
-                          router.push(
-                            `/expenses/${encodeURIComponent(serverUrl)}/${data.highlights.biggest_expense!.expense_id}`,
-                          )
-                        }
-                      >
-                        <View style={styles.navRowMid}>
-                          <Text style={styles.rowLabel} numberOfLines={1}>
-                            {data.highlights.biggest_expense.title}
-                          </Text>
-                          <Text style={styles.rowMeta} numberOfLines={1}>
-                            {t('monthlySummary.biggestExpense', {
-                              group: data.highlights.biggest_expense.group_name,
-                            })}
-                          </Text>
-                        </View>
-                        {/* Native currency, not the home one: the amount is
-                            what the user actually spent. */}
-                        <Text style={styles.rowValue}>
+                  <Text style={styles.sectionEyebrow}>{t('monthlySummary.highlights')}</Text>
+                  {data.highlights.biggest_expense && (
+                    <TouchableOpacity
+                      style={styles.hlCard}
+                      activeOpacity={0.6}
+                      accessibilityRole="button"
+                      onPress={() =>
+                        router.push(
+                          `/expenses/${encodeURIComponent(serverUrl)}/${data.highlights.biggest_expense!.expense_id}`,
+                        )
+                      }
+                    >
+                      <View style={styles.hlMid}>
+                        <Text style={styles.hlEyebrow}>
+                          {t('monthlySummary.biggestExpense', {
+                            group: data.highlights.biggest_expense.group_name,
+                          })}
+                        </Text>
+                        <Text style={styles.hlName} numberOfLines={1}>
+                          {data.highlights.biggest_expense.title}
+                        </Text>
+                        {/* Native currency: this is what was actually spent. */}
+                        <Text style={styles.hlAmt}>
                           {money(
                             data.highlights.biggest_expense.share,
                             data.highlights.biggest_expense.currency,
                           )}
                         </Text>
-                        <Feather name="chevron-right" size={18} color={colors.lead} />
-                      </TouchableOpacity>
-                    )}
-                    {data.highlights.top_group && (
-                      <TouchableOpacity
-                        style={styles.navRow}
-                        activeOpacity={0.7}
-                        onPress={() =>
-                          router.push(
-                            `/groups/${encodeURIComponent(serverUrl)}/${data.highlights.top_group!.group_id}`,
-                          )
-                        }
-                      >
-                        <View style={styles.navRowMid}>
-                          <Text style={styles.rowLabel} numberOfLines={1}>
-                            {data.highlights.top_group.name}
-                          </Text>
-                          <Text style={styles.rowMeta}>{t('monthlySummary.topGroup')}</Text>
-                        </View>
-                        <Text style={styles.rowValue}>
-                          {money(data.highlights.top_group.share, data.converted.currency)}
+                      </View>
+                      <Text style={styles.hlChev}>›</Text>
+                    </TouchableOpacity>
+                  )}
+                  {data.highlights.top_group && (
+                    <TouchableOpacity
+                      style={styles.hlCard}
+                      activeOpacity={0.6}
+                      accessibilityRole="button"
+                      onPress={() =>
+                        router.push(
+                          `/groups/${encodeURIComponent(serverUrl)}/${data.highlights.top_group!.group_id}`,
+                        )
+                      }
+                    >
+                      <View style={styles.hlMid}>
+                        <Text style={styles.hlEyebrow}>{t('monthlySummary.topGroup')}</Text>
+                        <Text style={styles.hlName} numberOfLines={1}>
+                          {data.highlights.top_group.name}
                         </Text>
-                        <Feather name="chevron-right" size={18} color={colors.lead} />
-                      </TouchableOpacity>
-                    )}
-                  </View>
+                        <Text style={styles.hlAmt}>
+                          {money(data.highlights.top_group.share, currency)}
+                        </Text>
+                      </View>
+                      <Text style={styles.hlChev}>›</Text>
+                    </TouchableOpacity>
+                  )}
                 </>
               )}
             </>
@@ -337,132 +415,214 @@ export default function MonthlySummaryScreen() {
   );
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <View style={styles.stat}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-
-function InfoRow({ label, value, color }: { label: string; value: string; color?: string }) {
-  return (
-    <View style={styles.infoRow}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={[styles.rowValue, color ? { color } : null]}>{value}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper },
-  scroll: { paddingBottom: spacing.s8 },
-  center: { paddingVertical: spacing.s8, alignItems: 'center' },
-
-  monthNav: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.s4,
-    paddingVertical: spacing.s3,
-  },
-  month: { fontFamily: fontDisplay, fontSize: fontSize.displayS, color: colors.graphite },
-  navSpacer: { width: 40 },
-
-  hero: { alignItems: 'center', paddingVertical: spacing.s6 },
-  heroLabel: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
-    letterSpacing: 0.3,
-  },
-  heroAmount: {
-    fontFamily: fontDisplay,
-    fontSize: fontSize.displayM,
-    color: colors.graphite,
-    marginTop: spacing.s2,
-    fontVariant: ['tabular-nums'],
-  },
-  heroMeta: { fontFamily: fontBody, fontSize: fontSize.bodyS, color: colors.lead, marginTop: spacing.s2 },
-  approxNote: {
+  scroll: { paddingBottom: spacing.s7 },
+  center: { paddingVertical: spacing.s8, alignItems: 'center', gap: spacing.s4 },
+  errorNote: {
     fontFamily: fontBody,
-    fontSize: fontSize.caption,
+    fontSize: fontSize.bodyS,
     color: colors.lead,
-    marginTop: spacing.s1,
+    textAlign: 'center',
+    paddingHorizontal: spacing.s5,
   },
+  retryBtn: {
+    height: 44,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.s5,
+    borderRadius: 6,
+    borderWidth: 0.5,
+    borderColor: colors.graphite,
+  },
+  retryLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite },
 
-  statRow: { flexDirection: 'row', paddingHorizontal: spacing.s4, gap: spacing.s2 },
-  stat: {
+  strip: {
+    flexDirection: 'row',
+    gap: spacing.s2,
+    paddingHorizontal: spacing.s4,
+    paddingVertical: spacing.s4,
+  },
+  stripBtn: {
     flex: 1,
+    height: 38,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bone,
+  },
+  stripBtnOn: { backgroundColor: colors.graphite },
+  stripLabel: {
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.caption,
+    letterSpacing: 0.8,
+    color: colors.lead,
+  },
+  stripLabelOn: { color: colors.paper },
+
+  hero: {
     backgroundColor: colors.bone,
     borderRadius: 10,
-    paddingVertical: spacing.s4,
-    alignItems: 'center',
+    marginHorizontal: spacing.s4,
+    padding: spacing.s5,
   },
-  statValue: {
-    fontFamily: fontMono,
-    fontSize: fontSize.displayS,
-    color: colors.graphite,
-    fontVariant: ['tabular-nums'],
-  },
-  statLabel: { fontFamily: fontBody, fontSize: fontSize.caption, color: colors.lead },
-
+  heroTop: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
   eyebrow: {
-    fontFamily: fontMono,
+    fontFamily: fontMonoMedium,
     fontSize: fontSize.caption,
+    letterSpacing: 0.4,
     color: colors.lead,
-    letterSpacing: 0.3,
-    paddingHorizontal: spacing.s5,
-    marginTop: spacing.s6,
-    marginBottom: spacing.s2,
   },
-  list: { borderTopWidth: 1, borderTopColor: colors.ruleSoft },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.s5,
-    paddingVertical: spacing.s4,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.ruleSoft,
+  cmpPill: {
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 0.5,
+    borderColor: colors.ruleSoft,
   },
-  categoryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.s3,
-    paddingHorizontal: spacing.s5,
-    paddingVertical: spacing.s4,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.ruleSoft,
-  },
-  categoryPct: {
+  cmpText: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
+  heroAmount: {
+    marginTop: spacing.s3,
     fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.lead,
-    fontVariant: ['tabular-nums'],
-  },
-  navRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.s3,
-    paddingHorizontal: spacing.s5,
-    paddingVertical: spacing.s4,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.ruleSoft,
-  },
-  navRowMid: { flex: 1 },
-  rowLabel: { flex: 1, fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite },
-  rowMeta: { fontFamily: fontBody, fontSize: fontSize.caption, color: colors.lead },
-  rowValue: {
-    fontFamily: fontMono,
-    fontSize: fontSize.body,
+    fontSize: fontSize.displayL,
+    letterSpacing: -1.6,
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
   },
+  heroRule: {
+    marginTop: spacing.s4,
+    borderTopWidth: 1,
+    borderTopColor: colors.ruleSoft,
+    paddingTop: spacing.s4,
+  },
+  heroRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  heroRowTight: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    marginTop: spacing.s1,
+  },
+  heroRowLabel: { fontFamily: fontBody, fontSize: fontSize.bodyS, color: colors.lead },
+  heroNet: {
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.displayS,
+    fontVariant: ['tabular-nums'],
+  },
+  heroPaid: {
+    fontFamily: fontMono,
+    fontSize: fontSize.bodyS,
+    color: colors.lead,
+    fontVariant: ['tabular-nums'],
+  },
+  exclRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.s3 },
+  exclDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: colors.citrine },
+  exclText: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead, flexShrink: 1 },
 
-  errorWrap: { alignItems: 'center', paddingVertical: spacing.s8, gap: spacing.s3 },
-  errorNote: { fontFamily: fontBody, fontSize: fontSize.bodyS, color: colors.brick },
-  retryBtn: { paddingHorizontal: spacing.s5, paddingVertical: spacing.s2 },
-  retryLabel: { fontFamily: fontBody, fontSize: fontSize.bodyS, color: colors.graphite },
+  pills: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.s2,
+    marginHorizontal: spacing.s4,
+    marginTop: spacing.s2,
+  },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 7,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 0.5,
+    borderColor: colors.ruleSoft,
+  },
+  pillCode: { fontFamily: fontMonoMedium, fontSize: fontSize.caption, letterSpacing: 0.6 },
+  pillAmt: {
+    fontFamily: fontMono,
+    fontSize: fontSize.caption,
+    color: colors.lead,
+    fontVariant: ['tabular-nums'],
+  },
+
+  card: {
+    backgroundColor: colors.bone,
+    borderRadius: 10,
+    marginHorizontal: spacing.s4,
+    marginTop: spacing.s5,
+    padding: spacing.s4,
+  },
+  daysOf: {
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.bodyS,
+    fontVariant: ['tabular-nums'],
+    color: colors.graphite,
+  },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: spacing.s3 },
+  cell: { width: `${100 / 7}%`, alignItems: 'center', justifyContent: 'center', paddingVertical: 2 },
+  dowLabel: { fontFamily: fontMono, fontSize: 11, color: colors.lead },
+  dayCell: { height: 26 },
+  dayBlank: { backgroundColor: 'transparent' },
+  dayOff: { backgroundColor: 'rgba(45,31,26,0.05)', borderRadius: 4 },
+  dayText: { fontFamily: fontMono, fontSize: 11, color: colors.lead, fontVariant: ['tabular-nums'] },
+  dayTextOn: { color: colors.fgOnAccent },
+  legend: { flexDirection: 'row', gap: spacing.s4, marginTop: spacing.s3 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendSwatch: { width: 10, height: 10, borderRadius: 2 },
+  legendText: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
+
+  sectionEyebrow: {
+    fontFamily: fontMono,
+    fontSize: fontSize.bodyS,
+    letterSpacing: 0.3,
+    color: colors.lead,
+    marginHorizontal: spacing.s5,
+    marginTop: spacing.s5,
+    marginBottom: spacing.s3,
+  },
+  catRow: { marginHorizontal: spacing.s4, marginBottom: spacing.s3 },
+  catTop: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.s3 },
+  catLabel: { flex: 1, fontFamily: fontBody, fontSize: fontSize.bodyS, color: colors.graphite },
+  catPct: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
+  catAmt: {
+    width: 100,
+    textAlign: 'right',
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.bodyS,
+    color: colors.graphite,
+    fontVariant: ['tabular-nums'],
+  },
+  track: {
+    marginTop: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.bone,
+    overflow: 'hidden',
+  },
+  fill: { height: '100%', borderRadius: 3 },
+
+  hlCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.s3,
+    backgroundColor: colors.bone,
+    borderRadius: 10,
+    marginHorizontal: spacing.s4,
+    marginTop: spacing.s2,
+    padding: spacing.s4,
+  },
+  hlMid: { flex: 1, minWidth: 0 },
+  hlEyebrow: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
+  hlName: {
+    marginTop: 4,
+    fontFamily: fontDisplay,
+    fontSize: fontSize.bodyL,
+    letterSpacing: -0.3,
+    color: colors.graphite,
+  },
+  hlAmt: {
+    marginTop: 3,
+    fontFamily: fontMonoMedium,
+    fontSize: fontSize.bodyS,
+    color: colors.graphite,
+    fontVariant: ['tabular-nums'],
+  },
+  hlChev: { fontFamily: fontMono, fontSize: fontSize.bodyL, color: colors.lead },
 });
