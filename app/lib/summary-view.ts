@@ -84,6 +84,13 @@ export function currentPeriod(now: Date = new Date()): string {
  * hosted URL" means a self-hoster who later enables it is picked up for
  * free, and a backend predating the feature (flag absent) reads as
  * unsupported rather than being offered a screen that 404s.
+ *
+ * Feed this LIVE instance data — see `summary-server.ts`, which is the only
+ * caller. Passing the accounts array straight from `useAccounts()` looks
+ * like it works and does not: `account.instance` is written only at
+ * sign-in, so anyone already signed in when the feature shipped has a
+ * snapshot with no `monthly_summary` key and would never see the entry
+ * point.
  */
 export function summaryServerUrl(
   accounts: { serverUrl: string; instance?: { features?: { monthly_summary?: boolean } } | null }[],
