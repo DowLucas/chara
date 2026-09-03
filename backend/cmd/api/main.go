@@ -97,8 +97,14 @@ func main() {
 	var rc *river.Client[pgx.Tx]
 	if cfg.RecurringEnabled {
 		expo := pushsend.NewExpo(cfg.ExpoAccessToken)
-		workers := jobs.RegisterWorkers(pool, queries, cfg.BaseURL, expo)
-		rc, err = jobs.New(pool, workers)
+		// Hosted-only: GET /api/me/summary is behind HostedOnly, so a
+		// self-host tick would push users at a page that 404s.
+		summaryOpts := jobs.MonthlySummaryOptions{
+			Enabled:  cfg.IsHosted(),
+			Location: cfg.SummaryLocation(),
+		}
+		workers := jobs.RegisterWorkers(pool, queries, cfg.BaseURL, expo, summaryOpts)
+		rc, err = jobs.New(pool, workers, summaryOpts)
 		if err != nil {
 			slog.Error("recurring: river client init failed", "error", err)
 			os.Exit(1)

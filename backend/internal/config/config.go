@@ -101,6 +101,27 @@ type Config struct {
 	// it. Default on; set to "false"/"0" so the API can still boot on
 	// instances without the River tables present.
 	RecurringEnabled bool
+
+	// SummaryTZ is the IANA zone the monthly summary push fires in — it
+	// goes out on the 1st at 09:00 local. One zone for the whole instance,
+	// not per user: a per-user send window needs a per-user zone the app
+	// does not report, and "everyone gets it on the morning of the 1st" is
+	// the property that matters. Empty means UTC; an unknown name is
+	// rejected at boot rather than silently becoming UTC.
+	SummaryTZ string
+
+	// summaryLoc is SummaryTZ resolved, filled by validate so the lookup
+	// happens once at boot instead of on every tick.
+	summaryLoc *time.Location
+}
+
+// SummaryLocation returns the resolved SUMMARY_TZ, or UTC when unset.
+// Only meaningful after validate has run (i.e. on a Config from Load).
+func (c *Config) SummaryLocation() *time.Location {
+	if c.summaryLoc == nil {
+		return time.UTC
+	}
+	return c.summaryLoc
 }
 
 func Load() (*Config, error) {
@@ -161,6 +182,8 @@ func Load() (*Config, error) {
 		// React Native UI. Self-hosters can opt out with RECURRING_ENABLED=false
 		// (e.g. to skip the River background job system entirely).
 		RecurringEnabled: getEnv("RECURRING_ENABLED", "true") != "false" && getEnv("RECURRING_ENABLED", "true") != "0",
+
+		SummaryTZ: getEnv("SUMMARY_TZ", ""),
 	}
 
 	if err := cfg.validate(); err != nil {
@@ -170,6 +193,15 @@ func Load() (*Config, error) {
 }
 
 func (c *Config) validate() error {
+	if c.SummaryTZ == "" {
+		c.summaryLoc = time.UTC
+	} else {
+		loc, err := time.LoadLocation(c.SummaryTZ)
+		if err != nil {
+			return fmt.Errorf("config: SUMMARY_TZ %q is not a known IANA zone: %w", c.SummaryTZ, err)
+		}
+		c.summaryLoc = loc
+	}
 	if c.InstanceMode != "hosted" && c.InstanceMode != "selfhost" {
 		return fmt.Errorf("config: INSTANCE_MODE must be 'hosted' or 'selfhost', got %q", c.InstanceMode)
 	}
