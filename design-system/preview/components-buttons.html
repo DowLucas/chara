@@ -1,0 +1,22 @@
+<!doctype html>
+<!-- @dsCard group="Components" name="Components · Buttons" subtitle="Primary / Positive / Secondary / Ghost" viewport="700x380" -->
+<html><head><meta charset="utf-8"><title>Components · Buttons</title>
+<link rel="stylesheet" href="../tokens.css">
+<style>.wrap{padding:24px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.lbl{font-family:var(--font-mono);font-size:11px;color:var(--color-lead);min-width:92px}
+.note{font-family:var(--font-body);font-size:14px;color:var(--color-lead);margin-top:16px;max-width:640px;line-height:1.5}
+.pane{max-width:420px}</style></head><body class="ds">
+<div class="wrap">
+ <div class="row"><div class="lbl">PRIMARY</div>
+   <button class="btn btn-primary">Add expense</button>
+   <button class="btn btn-primary" disabled>Disabled</button></div>
+ <div class="row"><div class="lbl">POSITIVE</div>
+   <button class="btn btn-positive">Settle up</button>
+   <button class="btn btn-positive">Mark as paid</button></div>
+ <div class="row"><div class="lbl">SECONDARY</div>
+   <button class="btn btn-secondary">Cancel</button></div>
+ <div class="row"><div class="lbl">GHOST</div>
+   <button class="btn btn-ghost">Skip for now</button></div>
+ <div class="note">Primary is vermillion. <strong>Positive</strong> is graphite, not moss — it closes a positive loop (settle, mark paid) using the active-tab vocabulary, so it never shares visual weight with the destructive brick family. Destructive actions use brick text, not a filled button.</div>
+</div></body></html>

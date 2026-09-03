@@ -1,0 +1,18 @@
+<!doctype html>
+<!-- @dsCard group="Components" name="Components · List rows" subtitle="Hairline divider list on paper" viewport="700x350" -->
+<html><head><meta charset="utf-8"><title>Components · List rows</title>
+<link rel="stylesheet" href="../tokens.css">
+<style>.wrap{padding:24px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.lbl{font-family:var(--font-mono);font-size:11px;color:var(--color-lead);min-width:92px}
+.note{font-family:var(--font-body);font-size:14px;color:var(--color-lead);margin-top:16px;max-width:640px;line-height:1.5}
+.pane{max-width:420px}</style></head><body class="ds">
+<div class="wrap"><div class="pane">
+ <div class="list-row"><div><div class="title">Groceries</div><div class="meta">you paid · split 4 ways · May 15</div></div>
+   <div class="ty-mono-body-l amount amount-neutral">340,00</div></div>
+ <div class="list-row"><div><div class="title">Train tickets</div><div class="meta">Mira paid · split 2 ways · May 14</div></div>
+   <div class="ty-mono-body-l amount amount-neutral">1 120,00</div></div>
+ <div class="list-row settled"><div><div class="title">Dinner at Kōya</div><div class="meta">settled · May 02</div></div>
+   <div class="ty-mono-body-l amount amount-neutral">880,00</div></div>
+ <div class="note">The expenses list is <strong>neutral</strong> — it is spend history, not balance, so amounts stay lead with no sign prefix. Settled rows drop to 60% and strike the title.</div>
+</div></div></body></html>

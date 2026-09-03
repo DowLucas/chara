@@ -1,0 +1,19 @@
+<!doctype html>
+<!-- @dsCard group="Components" name="Components · Avatars" subtitle="Initials, image fallback, stack" viewport="700x240" -->
+<html><head><meta charset="utf-8"><title>Components · Avatars</title>
+<link rel="stylesheet" href="../tokens.css">
+<style>.wrap{padding:24px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.lbl{font-family:var(--font-mono);font-size:11px;color:var(--color-lead);min-width:92px}
+.note{font-family:var(--font-body);font-size:14px;color:var(--color-lead);margin-top:16px;max-width:640px;line-height:1.5}
+.pane{max-width:420px}</style></head><body class="ds">
+<div class="wrap">
+ <div class="row"><div class="lbl">SIZES</div>
+   <span class="avatar">LD</span><span class="avatar avatar-sm">MK</span></div>
+ <div class="row"><div class="lbl">GROUP</div>
+   <span class="avatar" style="background:var(--accent-4);color:var(--color-fg-on-accent);border-color:transparent">KY</span>
+   <span class="avatar" style="background:var(--accent-6);color:var(--color-fg-on-accent);border-color:transparent">FL</span></div>
+ <div class="row"><div class="lbl">STACK</div>
+   <span class="avatar-stack"><span class="avatar avatar-sm">LD</span><span class="avatar avatar-sm">MK</span><span class="avatar avatar-sm">AR</span><span class="avatar avatar-sm avatar-overflow">+2</span></span></div>
+ <div class="note">34px default, 26px small, overlapped at −8px with a 1.5px ring in the surface colour behind them. Initials are mono; a failed image load falls back to initials.</div>
+</div></body></html>

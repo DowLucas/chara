@@ -1,0 +1,16 @@
+<!doctype html>
+<!-- @dsCard group="Type" name="Type · Amounts" subtitle="amountHero → amountS, tabular" viewport="700x415" -->
+<html><head><meta charset="utf-8"><title>Type · Amounts</title>
+<link rel="stylesheet" href="../tokens.css">
+<style>.wrap{padding:24px}
+.row{display:flex;align-items:baseline;gap:16px;padding:7px 0;border-bottom:1px solid var(--color-rule-soft)}
+.tok{font-family:var(--font-mono);font-size:12px;color:var(--color-lead);min-width:150px;flex:none}
+.note{font-family:var(--font-body);font-size:14px;color:var(--color-lead);margin-top:18px;max-width:640px;line-height:1.5} .amount{font-variant-numeric:tabular-nums}</style></head><body class="ds">
+<div class="wrap">
+<div class="row"><div class="tok">amountHero · 60</div><div class="ty-amount-hero amount">1 240,00</div></div>
+<div class="row"><div class="tok">amountXL · 48</div><div class="ty-amount-xl amount">1 240,00</div></div>
+<div class="row"><div class="tok">amountL · 24</div><div class="ty-amount-l amount">1 240,00</div></div>
+<div class="row"><div class="tok">amountM · 22</div><div class="ty-amount-m amount">1 240,00</div></div>
+<div class="row"><div class="tok">amountS · 19</div><div class="ty-amount-s amount">1 240,00</div></div>
+<div class="note">Always <code>tabular-nums</code> on amount columns so digits align down a list. The <code>+</code> / <code>−</code> prefix belongs only where the value is a balance delta — never where it is simply an amount.</div>
+</div></body></html>

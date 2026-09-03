@@ -1,0 +1,18 @@
+<!doctype html>
+<!-- @dsCard group="Components" name="Components · Amounts" subtitle="Neutral vs. signed balance deltas" viewport="700x260" -->
+<html><head><meta charset="utf-8"><title>Components · Amounts</title>
+<link rel="stylesheet" href="../tokens.css">
+<style>.wrap{padding:24px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.lbl{font-family:var(--font-mono);font-size:11px;color:var(--color-lead);min-width:92px}
+.note{font-family:var(--font-body);font-size:14px;color:var(--color-lead);margin-top:16px;max-width:640px;line-height:1.5}
+.pane{max-width:420px}</style></head><body class="ds">
+<div class="wrap">
+ <div class="row"><div class="lbl">NEUTRAL</div><span class="ty-amount-l amount amount-neutral">1 240,00</span>
+   <span class="ty-body-s" style="color:var(--color-lead)">an expense amount · a per-person share</span></div>
+ <div class="row"><div class="lbl">OWED TO YOU</div><span class="ty-amount-l amount amount-pos">+420,00</span>
+   <span class="ty-body-s" style="color:var(--color-lead)">moss</span></div>
+ <div class="row"><div class="lbl">YOU OWE</div><span class="ty-amount-l amount amount-neg">−1 240,00</span>
+   <span class="ty-body-s" style="color:var(--color-lead)">brick</span></div>
+ <div class="note">Money is int64 minor units everywhere in the app; decimal strings only on the wire and on screen. Never a float. Totals are per-currency — never summed across currencies.</div>
+</div></body></html>

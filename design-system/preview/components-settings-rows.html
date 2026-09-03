@@ -1,0 +1,22 @@
+<!doctype html>
+<!-- @dsCard group="Components" name="Components · Settings rows" subtitle="You-tab / group-settings hub pattern" viewport="700x440" -->
+<html><head><meta charset="utf-8"><title>Components · Settings rows</title>
+<link rel="stylesheet" href="../tokens.css">
+<style>.wrap{padding:24px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.lbl{font-family:var(--font-mono);font-size:11px;color:var(--color-lead);min-width:92px}
+.note{font-family:var(--font-body);font-size:14px;color:var(--color-lead);margin-top:16px;max-width:640px;line-height:1.5}
+.pane{max-width:420px}</style></head><body class="ds">
+<div class="wrap"><div class="pane">
+ <div class="settings-eyebrow">ACCOUNTS</div>
+ <div class="settings-list">
+   <div class="settings-row"><div class="label">Chara Cloud</div><div class="value">default</div></div>
+   <div class="settings-row"><div class="label">Add a server</div><div class="value">›</div></div>
+ </div>
+ <div class="settings-eyebrow" style="margin-top:32px">PREFERENCES</div>
+ <div class="settings-list">
+   <div class="settings-row"><div class="label">Language</div><div class="value">svenska</div></div>
+   <div class="settings-row"><div class="label">Monthly summary</div><div class="value">on</div></div>
+ </div>
+ <div class="note">Mono eyebrow above each block, 1px <code>ruleSoft</code> top hairline, one hairline under every row. Navigation rows carry a chevron; read-only rows carry a right-aligned mono value.</div>
+</div></div></body></html>
