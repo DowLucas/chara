@@ -81,11 +81,15 @@ describe('classifySummaryDeepLink', () => {
     }
   });
 
-  // Signed into a self-host but not Chara Cloud: there is no account the
-  // summary could belong to, so this must not navigate.
-  it('reports no_account when the user has no hosted account', () => {
+  // Signed into several servers, none of them the hosted one: there is no
+  // way to tell which sent the push, so this must not navigate. (With a
+  // single account the answer is unambiguous — see the fallback tests.)
+  it('reports no_account when no hosted account and the choice is ambiguous', () => {
     expect(
-      classifySummaryDeepLink('chara://summary/2026-08', deps([makeAccount('https://self.host')])),
+      classifySummaryDeepLink(
+        'chara://summary/2026-08',
+        deps([makeAccount('https://self.host'), makeAccount('https://second.host')]),
+      ),
     ).toEqual({ kind: 'no_account' });
   });
 
@@ -104,5 +108,61 @@ describe('classifySummaryDeepLink', () => {
     expect(
       classifySummaryDeepLink('chara://summary/2026-08?src=push', deps([makeAccount(HOSTED)])),
     ).toEqual({ kind: 'navigate', serverUrl: HOSTED, period: '2026-08' });
+  });
+
+  // Regression: a dev build reaches the backend over Tailscale, so
+  // legacyHostedUrl() is http://100.80.90.5:8080 — and 100.64.0.0/10 is not
+  // in normalizeServerUrl's private-http allowlist, so the hosted URL itself
+  // fails to normalize. The classifier used to return `malformed` and the
+  // tap did nothing at all. The link is still unambiguous: the push came
+  // from the one server the user has an account on.
+  it('falls back to the sole account when the hosted URL will not normalize', () => {
+    const dev = 'http://192.168.0.45:8080';
+    expect(
+      classifySummaryDeepLink('chara://summary/2026-08', {
+        accounts: [makeAccount(dev)],
+        isLoaded: true,
+        hostedUrl: 'http://100.80.90.5:8080', // Tailscale — rejected by normalizeServerUrl
+      }),
+    ).toEqual({ kind: 'navigate', serverUrl: dev, period: '2026-08' });
+  });
+
+  // Same fallback when the hosted URL is fine but the user simply has no
+  // account there — one account is still unambiguous.
+  it('falls back to the sole account when it is not the hosted one', () => {
+    expect(
+      classifySummaryDeepLink(
+        'chara://summary/2026-08',
+        deps([makeAccount('https://self.host')]),
+      ),
+    ).toEqual({ kind: 'navigate', serverUrl: 'https://self.host', period: '2026-08' });
+  });
+
+  // With several accounts and no hosted match there is no way to tell which
+  // server sent the push, so guessing would open the wrong data.
+  it('refuses to guess between several non-hosted accounts', () => {
+    expect(
+      classifySummaryDeepLink(
+        'chara://summary/2026-08',
+        deps([makeAccount('https://self.host'), makeAccount('https://other.host')]),
+      ),
+    ).toEqual({ kind: 'no_account' });
+  });
+
+  // The hosted account still wins when it is present, so production keeps
+  // its exact previous behaviour.
+  it('prefers the hosted account over the fallback', () => {
+    expect(
+      classifySummaryDeepLink(
+        'chara://summary/2026-08',
+        deps([makeAccount('https://self.host'), makeAccount(HOSTED)]),
+      ),
+    ).toEqual({ kind: 'navigate', serverUrl: HOSTED, period: '2026-08' });
+  });
+
+  it('still reports no_account with no accounts at all', () => {
+    expect(classifySummaryDeepLink('chara://summary/2026-08', deps([]))).toEqual({
+      kind: 'no_account',
+    });
   });
 });

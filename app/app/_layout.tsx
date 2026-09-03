@@ -114,11 +114,20 @@ function handleDeepLink(url: string | null | undefined): void {
         retryDeepLinkOnceLoaded(url);
         return;
       case 'no_account':
-        // Signed out of Chara Cloud since the push was sent. Silent: an
-        // alert here would fire on a notification the user may have tapped
-        // by accident, about an account they deliberately removed.
+        // Signed out since the push was sent, or several accounts and no way
+        // to tell which one it came from. No alert — it would fire on a
+        // notification the user may have tapped by accident, about an
+        // account they deliberately removed. But say so in dev: a tap that
+        // does nothing at all is the hardest kind of bug to chase.
+        if (__DEV__) {
+          console.warn('[deep-link] summary link matched no account:', url);
+        }
         return;
       case 'malformed':
+        if (__DEV__) {
+          console.warn('[deep-link] summary link malformed:', url);
+        }
+        break;
       case 'ignore':
       default:
         break;

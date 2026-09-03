@@ -56,9 +56,31 @@ export function classifySummaryDeepLink(
   // give the link a shape it does not have.
   if (parts.length !== 2 || !PERIOD_RE.test(parts[1])) return { kind: 'malformed' };
 
-  const hosted = normalizeServerUrl(deps.hostedUrl);
-  if (typeof hosted !== 'string') return { kind: 'malformed' };
-  if (!deps.accounts.some((a) => a.serverUrl === hosted)) return { kind: 'no_account' };
+  const period = parts[1];
 
-  return { kind: 'navigate', serverUrl: hosted, period: parts[1] };
+  // Prefer the hosted account: in production that is the only server the
+  // feature exists on, so this is the exact answer.
+  const hosted = normalizeServerUrl(deps.hostedUrl);
+  if (typeof hosted === 'string' && deps.accounts.some((a) => a.serverUrl === hosted)) {
+    return { kind: 'navigate', serverUrl: hosted, period };
+  }
+
+  // Otherwise fall back to the sole account. Two cases reach here and both
+  // are unambiguous: a dev build whose hostedUrl does not even normalize
+  // (Metro over Tailscale gives http://100.x, and 100.64.0.0/10 is not in
+  // normalizeServerUrl's private-http allowlist), and a user signed into one
+  // server that is not the hosted constant. Returning `malformed` there made
+  // the notification tap do nothing at all.
+  //
+  // This is not a hole: the link names no server, and the candidates are
+  // only ever servers the user already signed into. The attack the
+  // server-less shape closes — pointing the app at a host of the attacker's
+  // choosing — stays closed, because nothing here reads a server from the URL.
+  if (deps.accounts.length === 1) {
+    return { kind: 'navigate', serverUrl: deps.accounts[0].serverUrl, period };
+  }
+
+  // Several accounts and no hosted match: nothing in the link says which
+  // server sent the push, and guessing would open another server's month.
+  return { kind: 'no_account' };
 }
