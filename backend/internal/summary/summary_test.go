@@ -276,3 +276,55 @@ func TestBuild_RealOtherCategorySurvivesWithoutFolding(t *testing.T) {
 	require.NotNil(t, other, "the catalog's own Other is a real category, not a sentinel to drop")
 	require.Equal(t, int64(100), other.ShareMinor)
 }
+
+// The Other bucket is appended after the ranked categories, so before this
+// it could sit below rows it outranks — the screen renders the slice in
+// order, giving percentages that descend and then jump back up on the last
+// row. Seeding the catalog's own "other" into the bucket made it big enough
+// for that to happen on real data.
+func TestBuild_OtherBucketIsRankedNotAppended(t *testing.T) {
+	rows := []ExpenseRow{}
+	add := func(slug string, share int64) {
+		rows = append(rows, ExpenseRow{
+			ExpenseID: slug, GroupID: "g1", GroupName: "G", Currency: "SEK",
+			Category: slug, Title: slug, Date: day("2026-08-01"), ShareMinor: share,
+		})
+	}
+	add("rent", 8000)
+	add(OtherCategorySlug, 590) // plus the folded tail below, so 690 total
+	add("groceries", 600)
+	add("travel", 330)
+	add("transport", 300)
+	add("food", 200)
+	add("pets", 100) // folds into Other
+
+	got := Build(Input{Home: "SEK", Convert: identityConvert, Rows: rows})
+
+	for i := 1; i < len(got.Categories); i++ {
+		require.GreaterOrEqual(t, got.Categories[i-1].ShareMinor, got.Categories[i].ShareMinor,
+			"categories must read in descending order, got %+v", got.Categories)
+	}
+}
+
+// A previous month whose legs cannot be converted is not a smaller month —
+// it is an unknown one. Reporting it as a number lets the screen print
+// "80% less than last month" purely because last month had a currency with
+// no rate.
+func TestBuild_PreviousDropsOutWhenALegCannotConvert(t *testing.T) {
+	in := Input{
+		Home:    "SEK",
+		Convert: rateConvert(map[string]int64{"SEK": 1}), // no HUF rate
+		Totals:  []CurrencyTotal{{Currency: "SEK", PaidMinor: 1000, ShareMinor: 1000, ExpenseCount: 1}},
+		Counts:  Counts{Expenses: 1, Groups: 1, ActiveDays: 1},
+		Previous: []CurrencyTotal{
+			{Currency: "SEK", PaidMinor: 500, ShareMinor: 500},
+			{Currency: "HUF", PaidMinor: 90000, ShareMinor: 90000},
+		},
+	}
+	require.Nil(t, Build(in).Previous,
+		"an incomplete previous month must be withheld, not silently understated")
+
+	// All legs convertible: the comparison is sound, so it is reported.
+	in.Previous = []CurrencyTotal{{Currency: "SEK", PaidMinor: 500, ShareMinor: 500}}
+	require.NotNil(t, Build(in).Previous)
+}

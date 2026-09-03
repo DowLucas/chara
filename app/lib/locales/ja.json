@@ -910,34 +910,35 @@
     "you": "自分"
   },
   "monthlySummary": {
-    "title": "月間サマリー",
-    "previousMonth": "前の月",
-    "nextMonth": "次の月",
-    "yourShare": "あなたの負担額",
-    "changeVsPrevious_up": "先月より{{pct}}%多い",
-    "changeVsPrevious_down": "先月より{{pct}}%少ない",
-    "approximate_one": "1件の金額は概算レートで換算されました。",
-    "approximate_other": "{{count}}件の金額は概算レートで換算されました。",
-    "expenses": "支出",
-    "groups": "グループ",
     "activeDays": "利用日数",
     "balanceSection": "収支",
-    "youPaid": "支払った額",
-    "net": "差引",
+    "biggestExpense": "最大の支出 · {{group}}",
     "byCurrency": "通貨別",
     "categories": "カテゴリ",
-    "highlights": "ハイライト",
-    "biggestExpense": "最大の支出 · {{group}}",
-    "topGroup": "最も使ったグループ",
-    "loadError": "この月を読み込めませんでした。",
+    "changeVsPrevious_down": "先月より{{pct}}%少ない",
+    "changeVsPrevious_up": "先月より{{pct}}%多い",
     "empty": {
       "title": "この月は記録なし",
       "body": "この月に追加された支出はありません。"
     },
+    "excluded": "{{count}}件は含められませんでした。",
+    "excluded_one": "{{count}}件は含められませんでした。",
+    "excluded_other": "{{count}}件は含められませんでした。",
+    "expenses": "支出",
+    "groups": "グループ",
+    "highlights": "ハイライト",
+    "loadError": "この月を読み込めませんでした。",
+    "net": "差引",
+    "nextMonth": "次の月",
     "noAccount": {
       "title": "アカウントが見つかりません",
       "body": "このサマリーのサーバーにはログインしていません。"
-    }
+    },
+    "previousMonth": "前の月",
+    "title": "月間サマリー",
+    "topGroup": "最も使ったグループ",
+    "youPaid": "支払った額",
+    "yourShare": "あなたの負担額"
   },
   "notifications": {
     "title": "通知",

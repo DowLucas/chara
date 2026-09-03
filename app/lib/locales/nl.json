@@ -910,34 +910,35 @@
     "you": "jij"
   },
   "monthlySummary": {
-    "title": "Maandoverzicht",
-    "previousMonth": "Vorige maand",
-    "nextMonth": "Volgende maand",
-    "yourShare": "JOUW DEEL",
-    "changeVsPrevious_up": "{{pct}}% meer dan vorige maand",
-    "changeVsPrevious_down": "{{pct}}% minder dan vorige maand",
-    "approximate_one": "Eén bedrag is omgerekend tegen een geschatte koers.",
-    "approximate_other": "{{count}} bedragen zijn omgerekend tegen geschatte koersen.",
-    "expenses": "Uitgaven",
-    "groups": "Groepen",
     "activeDays": "Actieve dagen",
     "balanceSection": "SALDO",
-    "youPaid": "Jij betaalde",
-    "net": "Netto",
+    "biggestExpense": "Grootste uitgave · {{group}}",
     "byCurrency": "PER VALUTA",
     "categories": "CATEGORIEËN",
-    "highlights": "HOOGTEPUNTEN",
-    "biggestExpense": "Grootste uitgave · {{group}}",
-    "topGroup": "Meest uitgegeven in",
-    "loadError": "Deze maand kon niet worden geladen.",
+    "changeVsPrevious_down": "{{pct}}% minder dan vorige maand",
+    "changeVsPrevious_up": "{{pct}}% meer dan vorige maand",
     "empty": {
       "title": "Niets deze maand",
       "body": "Deze maand zijn er geen uitgaven toegevoegd."
     },
+    "excluded": "{{count}} items konden niet worden meegenomen.",
+    "excluded_one": "{{count}} item kon niet worden meegenomen.",
+    "excluded_other": "{{count}} items konden niet worden meegenomen.",
+    "expenses": "Uitgaven",
+    "groups": "Groepen",
+    "highlights": "HOOGTEPUNTEN",
+    "loadError": "Deze maand kon niet worden geladen.",
+    "net": "Netto",
+    "nextMonth": "Volgende maand",
     "noAccount": {
       "title": "Account niet gevonden",
       "body": "Je bent niet meer ingelogd op de server waar dit overzicht bij hoort."
-    }
+    },
+    "previousMonth": "Vorige maand",
+    "title": "Maandoverzicht",
+    "topGroup": "Meest uitgegeven in",
+    "youPaid": "Jij betaalde",
+    "yourShare": "JOUW DEEL"
   },
   "notifications": {
     "title": "Meldingen",

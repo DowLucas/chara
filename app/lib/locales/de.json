@@ -910,34 +910,35 @@
     "you": "du"
   },
   "monthlySummary": {
-    "title": "Monatsübersicht",
-    "previousMonth": "Vorheriger Monat",
-    "nextMonth": "Nächster Monat",
-    "yourShare": "DEIN ANTEIL",
-    "changeVsPrevious_up": "{{pct}} % mehr als im letzten Monat",
-    "changeVsPrevious_down": "{{pct}} % weniger als im letzten Monat",
-    "approximate_one": "Ein Betrag wurde zu einem ungefähren Kurs umgerechnet.",
-    "approximate_other": "{{count}} Beträge wurden zu ungefähren Kursen umgerechnet.",
-    "expenses": "Ausgaben",
-    "groups": "Gruppen",
     "activeDays": "Aktive Tage",
     "balanceSection": "SALDO",
-    "youPaid": "Du hast gezahlt",
-    "net": "Netto",
+    "biggestExpense": "Größte Ausgabe · {{group}}",
     "byCurrency": "NACH WÄHRUNG",
     "categories": "KATEGORIEN",
-    "highlights": "HIGHLIGHTS",
-    "biggestExpense": "Größte Ausgabe · {{group}}",
-    "topGroup": "Am meisten ausgegeben in",
-    "loadError": "Dieser Monat konnte nicht geladen werden.",
+    "changeVsPrevious_down": "{{pct}} % weniger als im letzten Monat",
+    "changeVsPrevious_up": "{{pct}} % mehr als im letzten Monat",
     "empty": {
       "title": "Nichts in diesem Monat",
       "body": "In diesem Monat wurden keine Ausgaben hinzugefügt."
     },
+    "excluded": "{{count}} Eintrag/Einträge konnten nicht berücksichtigt werden.",
+    "excluded_one": "1 Eintrag konnte nicht berücksichtigt werden.",
+    "excluded_other": "{{count}} Einträge konnten nicht berücksichtigt werden.",
+    "expenses": "Ausgaben",
+    "groups": "Gruppen",
+    "highlights": "HIGHLIGHTS",
+    "loadError": "Dieser Monat konnte nicht geladen werden.",
+    "net": "Netto",
+    "nextMonth": "Nächster Monat",
     "noAccount": {
       "title": "Konto nicht gefunden",
       "body": "Du bist nicht mehr auf dem Server angemeldet, zu dem diese Übersicht gehört."
-    }
+    },
+    "previousMonth": "Vorheriger Monat",
+    "title": "Monatsübersicht",
+    "topGroup": "Am meisten ausgegeben in",
+    "youPaid": "Du hast gezahlt",
+    "yourShare": "DEIN ANTEIL"
   },
   "notifications": {
     "title": "Benachrichtigungen",

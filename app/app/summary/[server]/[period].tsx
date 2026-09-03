@@ -8,7 +8,7 @@
  * month) lives in `lib/summary-view.ts` and is unit-tested there.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -31,7 +31,7 @@ import {
   canGoPrevious,
   changeVsPrevious,
   hasContent,
-  isApproximate,
+  hasExcludedLegs,
   netDirection,
   shiftPeriod,
 } from '@/lib/summary-view';
@@ -69,14 +69,23 @@ export default function MonthlySummaryScreen() {
   const [data, setData] = useState<SummaryResponse | null>(null);
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
 
+  // Latest-wins guard. Paging months fires a request per tap, and without
+  // this two quick taps can resolve out of order, leaving the header showing
+  // one month and the numbers another. Same pattern as use-summary-server.ts.
+  const requestSeq = useRef(0);
+
   const load = useCallback(
     async (p: string) => {
       if (!serverUrl || !p) return;
+      const seq = ++requestSeq.current;
       setStatus('loading');
       try {
-        setData(await apiFor(serverUrl).getSummary(p, homeCurrency));
+        const next = await apiFor(serverUrl).getSummary(p, homeCurrency);
+        if (seq !== requestSeq.current) return; // a newer month is in flight
+        setData(next);
         setStatus('ok');
       } catch {
+        if (seq !== requestSeq.current) return;
         setData(null);
         setStatus('error');
       }
@@ -188,9 +197,9 @@ export default function MonthlySummaryScreen() {
                     })}
                   </Text>
                 )}
-                {isApproximate(data.converted) && (
+                {hasExcludedLegs(data.converted) && (
                   <Text style={styles.approxNote}>
-                    {t('monthlySummary.approximate', { count: data.converted.estimated_legs })}
+                    {t('monthlySummary.excluded', { count: data.converted.estimated_legs })}
                   </Text>
                 )}
               </View>

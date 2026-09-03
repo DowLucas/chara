@@ -34,9 +34,12 @@ export function canGoNext(period: string, now: Date = new Date()): boolean {
   return period < current;
 }
 
-/** True when at least one leg was converted at a substitute rate, which is
- *  the same "approximate" contract /api/me/net established. */
-export function isApproximate(converted: { estimated_legs: number }): boolean {
+/** True when at least one leg had no exchange rate and was therefore
+ *  EXCLUDED from the converted totals — not converted at a substitute rate.
+ *  The distinction matters: the headline is understated, not imprecise, so
+ *  the copy says "couldn't be included" (matching home.homeNetSheetEstimated,
+ *  which reports the identical backend semantics). */
+export function hasExcludedLegs(converted: { estimated_legs: number }): boolean {
   return converted.estimated_legs > 0;
 }
 

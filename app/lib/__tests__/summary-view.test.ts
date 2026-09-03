@@ -10,7 +10,7 @@ import {
   shiftPeriod,
   canGoPrevious,
   canGoNext,
-  isApproximate,
+  hasExcludedLegs,
   netDirection,
   changeVsPrevious,
   hasContent,
@@ -73,13 +73,13 @@ describe('canGoNext', () => {
   });
 });
 
-describe('isApproximate', () => {
+describe('hasExcludedLegs', () => {
   it('is true when any leg was converted at a substitute rate', () => {
-    expect(isApproximate({ estimated_legs: 1 })).toBe(true);
+    expect(hasExcludedLegs({ estimated_legs: 1 })).toBe(true);
   });
 
   it('is false when every leg converted exactly', () => {
-    expect(isApproximate({ estimated_legs: 0 })).toBe(false);
+    expect(hasExcludedLegs({ estimated_legs: 0 })).toBe(false);
   });
 });
 

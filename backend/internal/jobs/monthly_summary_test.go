@@ -25,7 +25,16 @@ func TestShouldFireOnlyOnTheFirstAtNine(t *testing.T) {
 		{"the 1st at 09:00", time.Date(2026, 9, 1, 9, 0, 0, 0, loc), true},
 		{"still inside the 09:00 hour", time.Date(2026, 9, 1, 9, 59, 59, 0, loc), true},
 		{"an hour early", time.Date(2026, 9, 1, 8, 59, 59, 0, loc), false},
-		{"an hour late", time.Date(2026, 9, 1, 10, 0, 0, 0, loc), false},
+		// Later on the 1st must still fire. River anchors an hourly periodic
+		// job's phase to process start, so a restart at 09:05 ticks at 10:05,
+		// 11:05, … and never samples hour 9 again that day — with an
+		// exact-hour test, a deploy inside the fire hour silently skipped the
+		// whole month's push for every user, and the next hour-9 tick lands
+		// on the 2nd, which fails the day check. Re-firing is safe: the
+		// enqueue is unique-by-args and the (user, period) ledger makes the
+		// fan-out at-most-once, so a later tick finds nobody left to notify.
+		{"an hour late, after a restart in the fire hour", time.Date(2026, 9, 1, 10, 0, 0, 0, loc), true},
+		{"late evening on the 1st", time.Date(2026, 9, 1, 23, 59, 59, 0, loc), true},
 		{"midnight on the 1st", time.Date(2026, 9, 1, 0, 0, 0, 0, loc), false},
 		{"09:00 on the 2nd", time.Date(2026, 9, 2, 9, 0, 0, 0, loc), false},
 		{"09:00 on the last day of the month", time.Date(2026, 8, 31, 9, 0, 0, 0, loc), false},
@@ -67,9 +76,13 @@ func TestShouldFireJudgesLocalTimeNotUTC(t *testing.T) {
 	if _, ok := shouldFire(time.Date(2026, 9, 1, 7, 0, 0, 0, time.UTC), loc); !ok {
 		t.Error("07:00Z on the 1st is 09:00 Stockholm; want fire")
 	}
-	// 09:00 UTC is 11:00 local: does not.
-	if _, ok := shouldFire(time.Date(2026, 9, 1, 9, 0, 0, 0, time.UTC), loc); ok {
-		t.Error("09:00Z on the 1st is 11:00 Stockholm; want no fire")
+	// 23:30 UTC on the 1st is 01:30 on the 2nd in Stockholm. Judged in UTC
+	// this is inside the window (day 1, hour >= 9) and would fire; judged
+	// locally the month has already moved on, so it must not. This is the
+	// assertion that actually discriminates now that the window spans the
+	// day rather than a single hour.
+	if _, ok := shouldFire(time.Date(2026, 9, 1, 23, 30, 0, 0, time.UTC), loc); ok {
+		t.Error("23:30Z on the 1st is 01:30 on the 2nd in Stockholm; want no fire")
 	}
 	// And the last hour of the 31st in UTC is already the 1st locally.
 	if _, ok := shouldFire(time.Date(2026, 8, 31, 23, 30, 0, 0, time.UTC), loc); ok {

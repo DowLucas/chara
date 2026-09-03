@@ -910,34 +910,35 @@
     "you": "sinä"
   },
   "monthlySummary": {
-    "title": "Kuukausiyhteenveto",
-    "previousMonth": "Edellinen kuukausi",
-    "nextMonth": "Seuraava kuukausi",
-    "yourShare": "OMA OSUUTESI",
-    "changeVsPrevious_up": "{{pct}} % enemmän kuin viime kuussa",
-    "changeVsPrevious_down": "{{pct}} % vähemmän kuin viime kuussa",
-    "approximate_one": "Yksi summa muunnettiin likimääräisellä kurssilla.",
-    "approximate_other": "{{count}} summaa muunnettiin likimääräisillä kursseilla.",
-    "expenses": "Kulut",
-    "groups": "Ryhmät",
     "activeDays": "Aktiiviset päivät",
     "balanceSection": "SALDO",
-    "youPaid": "Maksoit",
-    "net": "Netto",
+    "biggestExpense": "Suurin kulu · {{group}}",
     "byCurrency": "VALUUTOITTAIN",
     "categories": "LUOKAT",
-    "highlights": "KOHOKOHDAT",
-    "biggestExpense": "Suurin kulu · {{group}}",
-    "topGroup": "Eniten kulutettu",
-    "loadError": "Tämän kuukauden lataaminen epäonnistui.",
+    "changeVsPrevious_down": "{{pct}} % vähemmän kuin viime kuussa",
+    "changeVsPrevious_up": "{{pct}} % enemmän kuin viime kuussa",
     "empty": {
       "title": "Ei mitään tässä kuussa",
       "body": "Tässä kuussa ei lisätty kuluja."
     },
+    "excluded": "{{count}} kohdetta ei voitu sisällyttää.",
+    "excluded_one": "1 kohdetta ei voitu sisällyttää.",
+    "excluded_other": "{{count}} kohdetta ei voitu sisällyttää.",
+    "expenses": "Kulut",
+    "groups": "Ryhmät",
+    "highlights": "KOHOKOHDAT",
+    "loadError": "Tämän kuukauden lataaminen epäonnistui.",
+    "net": "Netto",
+    "nextMonth": "Seuraava kuukausi",
     "noAccount": {
       "title": "Tiliä ei löytynyt",
       "body": "Et ole enää kirjautuneena palvelimelle, jolle tämä yhteenveto kuuluu."
-    }
+    },
+    "previousMonth": "Edellinen kuukausi",
+    "title": "Kuukausiyhteenveto",
+    "topGroup": "Eniten kulutettu",
+    "youPaid": "Maksoit",
+    "yourShare": "OMA OSUUTESI"
   },
   "notifications": {
     "title": "Ilmoitukset",

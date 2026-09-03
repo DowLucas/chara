@@ -8,7 +8,14 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, Switch, ActivityIndicator } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Switch,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -32,14 +39,20 @@ export default function NotificationsScreen() {
 
   const [optOut, setOptOut] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
+  // Distinct from `optOut === null`. Folding "failed" back into the loading
+  // sentinel left the screen spinning forever on an offline open, with no
+  // error, no retry, and no way to reach the toggle.
+  const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading');
 
   const load = useCallback(async () => {
     if (!serverUrl) return;
+    setStatus('loading');
     try {
       const me = await apiFor(serverUrl).getMe();
       setOptOut(me.monthly_summary_opt_out ?? false);
+      setStatus('ok');
     } catch {
-      setOptOut(null);
+      setStatus('error');
     }
   }, [serverUrl]);
 
@@ -85,9 +98,21 @@ export default function NotificationsScreen() {
               body={t('notifications.none.body')}
               icon="bell-off"
             />
-          ) : optOut === null ? (
+          ) : status === 'loading' ? (
             <View style={styles.center}>
               <ActivityIndicator color={colors.lead} />
+            </View>
+          ) : status === 'error' || optOut === null ? (
+            <View style={styles.center}>
+              <Text style={styles.errorNote}>{t('common.requestFailed')}</Text>
+              <TouchableOpacity
+                onPress={() => void load()}
+                style={styles.retryBtn}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+              >
+                <Text style={styles.retryLabel}>{t('common.retry')}</Text>
+              </TouchableOpacity>
             </View>
           ) : (
             <>
@@ -119,7 +144,21 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { paddingBottom: spacing.s8 },
-  center: { paddingVertical: spacing.s8, alignItems: 'center' },
+  center: { paddingVertical: spacing.s8, alignItems: 'center', gap: spacing.s4 },
+  errorNote: {
+    fontFamily: fontBody,
+    fontSize: fontSize.bodyS,
+    color: colors.brick,
+    textAlign: 'center',
+    paddingHorizontal: spacing.s5,
+  },
+  retryBtn: {
+    paddingHorizontal: spacing.s5,
+    paddingVertical: spacing.s3,
+    borderRadius: 10,
+    backgroundColor: colors.bone,
+  },
+  retryLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite },
   eyebrow: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,

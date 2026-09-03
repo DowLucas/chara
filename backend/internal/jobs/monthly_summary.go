@@ -16,9 +16,9 @@ import (
 	"github.com/DowLucas/chara/internal/pushsend"
 )
 
-// summaryFireHour is the local hour the monthly fan-out starts on the 1st.
-// 09:00 is late enough not to arrive overnight and early enough that the
-// notification is still the morning's news.
+// summaryFireHour is the earliest local hour the monthly fan-out starts on
+// the 1st. 09:00 is late enough not to arrive overnight and early enough
+// that the notification is still the morning's news.
 const summaryFireHour = 9
 
 // summaryPageSize caps how many recipients one page of the fan-out loads.
@@ -104,9 +104,21 @@ func (w *MonthlySummaryTickWorker) Work(ctx context.Context, _ *river.Job[Monthl
 }
 
 // shouldFire reports whether an hourly tick landing at now should start the
-// fan-out, and for which period. True on the 1st of the month during the
-// summaryFireHour hour, judged in loc — the tick itself is scheduled in
+// fan-out, and for which period. True on the 1st of the month from
+// summaryFireHour onwards, judged in loc — the tick itself is scheduled in
 // whatever zone the process runs in, so the conversion has to happen here.
+//
+// A window, not an exact hour. River anchors an hourly periodic job's phase
+// to process start, so a restart at 09:05 ticks at 10:05, 11:05, … and never
+// samples hour 9 again that day; the next hour-9 tick falls on the 2nd,
+// which fails the day check. With an equality test a deploy inside the fire
+// hour therefore skipped the entire month's push, silently, for every user.
+//
+// Re-firing through the rest of the day is harmless and is what makes the
+// window safe: the enqueue is unique-by-args, and the (user, period) ledger
+// makes the fan-out itself at-most-once, so every later tick that day
+// enqueues a job which finds nobody left to notify and exits. That costs one
+// indexed query returning no rows — cheap insurance against losing a month.
 //
 // The period returned is the month that just *ended*, which is what the
 // summary is about. Derived by stepping back one day rather than
@@ -115,7 +127,7 @@ func (w *MonthlySummaryTickWorker) Work(ctx context.Context, _ *river.Job[Monthl
 // day-step is correct by construction rather than by luck.
 func shouldFire(now time.Time, loc *time.Location) (string, bool) {
 	local := now.In(loc)
-	if local.Day() != 1 || local.Hour() != summaryFireHour {
+	if local.Day() != 1 || local.Hour() < summaryFireHour {
 		return "", false
 	}
 	return local.AddDate(0, 0, -1).Format("2006-01"), true

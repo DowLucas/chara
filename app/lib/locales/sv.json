@@ -910,34 +910,35 @@
     "you": "du"
   },
   "monthlySummary": {
-    "title": "Månadssammanfattning",
-    "previousMonth": "Föregående månad",
-    "nextMonth": "Nästa månad",
-    "yourShare": "DIN ANDEL",
-    "changeVsPrevious_up": "{{pct}} % mer än förra månaden",
-    "changeVsPrevious_down": "{{pct}} % mindre än förra månaden",
-    "approximate_one": "Ett belopp räknades om till en ungefärlig kurs.",
-    "approximate_other": "{{count}} belopp räknades om till ungefärliga kurser.",
-    "expenses": "Utgifter",
-    "groups": "Grupper",
     "activeDays": "Aktiva dagar",
     "balanceSection": "SALDO",
-    "youPaid": "Du betalade",
-    "net": "Netto",
+    "biggestExpense": "Största utgift · {{group}}",
     "byCurrency": "PER VALUTA",
     "categories": "KATEGORIER",
-    "highlights": "HÖJDPUNKTER",
-    "biggestExpense": "Största utgift · {{group}}",
-    "topGroup": "Mest spenderat i",
-    "loadError": "Kunde inte ladda den här månaden.",
+    "changeVsPrevious_down": "{{pct}} % mindre än förra månaden",
+    "changeVsPrevious_up": "{{pct}} % mer än förra månaden",
     "empty": {
       "title": "Inget den här månaden",
       "body": "Inga utgifter lades till den här månaden."
     },
+    "excluded": "{{count}} post(er) kunde inte räknas med.",
+    "excluded_one": "1 post kunde inte räknas med.",
+    "excluded_other": "{{count}} poster kunde inte räknas med.",
+    "expenses": "Utgifter",
+    "groups": "Grupper",
+    "highlights": "HÖJDPUNKTER",
+    "loadError": "Kunde inte ladda den här månaden.",
+    "net": "Netto",
+    "nextMonth": "Nästa månad",
     "noAccount": {
       "title": "Kontot hittades inte",
       "body": "Du är inte längre inloggad på servern som den här sammanfattningen tillhör."
-    }
+    },
+    "previousMonth": "Föregående månad",
+    "title": "Månadssammanfattning",
+    "topGroup": "Mest spenderat i",
+    "youPaid": "Du betalade",
+    "yourShare": "DIN ANDEL"
   },
   "notifications": {
     "title": "Aviseringar",

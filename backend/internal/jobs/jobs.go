@@ -76,10 +76,12 @@ func New(pool *pgxpool.Pool, workers *river.Workers, opts ...MonthlySummaryOptio
 			nil,
 		),
 	}
-	// RunOnStart deliberately off: a deploy inside the fire hour would
-	// otherwise re-enqueue the fan-out on every restart. The hourly tick
-	// still catches the window, and unique-by-args plus the ledger make a
-	// second enqueue harmless — but not asking for it is cheaper.
+	// RunOnStart deliberately off. shouldFire matches the whole of the 1st
+	// from 09:00 local onwards rather than that hour alone, so a restart
+	// inside the fire hour is caught by the next tick instead of losing the
+	// month — which is what an exact-hour match did, since River anchors an
+	// hourly job's phase to process start. Enqueueing on every boot as well
+	// would be harmless (unique-by-args, plus the ledger) but pointless.
 	if firstSummaryOpts(opts).Enabled {
 		periodic = append(periodic, river.NewPeriodicJob(
 			river.PeriodicInterval(SummaryTickInterval),

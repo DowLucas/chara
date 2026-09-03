@@ -910,34 +910,35 @@
     "you": "du"
   },
   "monthlySummary": {
-    "title": "Månedsoppsummering",
-    "previousMonth": "Forrige måned",
-    "nextMonth": "Neste måned",
-    "yourShare": "DIN ANDEL",
-    "changeVsPrevious_up": "{{pct}} % mer enn forrige måned",
-    "changeVsPrevious_down": "{{pct}} % mindre enn forrige måned",
-    "approximate_one": "Ett beløp ble omregnet til en omtrentlig kurs.",
-    "approximate_other": "{{count}} beløp ble omregnet til omtrentlige kurser.",
-    "expenses": "Utgifter",
-    "groups": "Grupper",
     "activeDays": "Aktive dager",
     "balanceSection": "SALDO",
-    "youPaid": "Du betalte",
-    "net": "Netto",
+    "biggestExpense": "Største utgift · {{group}}",
     "byCurrency": "PER VALUTA",
     "categories": "KATEGORIER",
-    "highlights": "HØYDEPUNKTER",
-    "biggestExpense": "Største utgift · {{group}}",
-    "topGroup": "Mest brukt i",
-    "loadError": "Kunne ikke laste denne måneden.",
+    "changeVsPrevious_down": "{{pct}} % mindre enn forrige måned",
+    "changeVsPrevious_up": "{{pct}} % mer enn forrige måned",
     "empty": {
       "title": "Ingenting denne måneden",
       "body": "Ingen utgifter ble lagt til denne måneden."
     },
+    "excluded": "{{count}} element kunne ikke tas med.",
+    "excluded_one": "1 element kunne ikke inkluderes.",
+    "excluded_other": "{{count}} elementer kunne ikke inkluderes.",
+    "expenses": "Utgifter",
+    "groups": "Grupper",
+    "highlights": "HØYDEPUNKTER",
+    "loadError": "Kunne ikke laste denne måneden.",
+    "net": "Netto",
+    "nextMonth": "Neste måned",
     "noAccount": {
       "title": "Fant ikke kontoen",
       "body": "Du er ikke lenger logget inn på serveren denne oppsummeringen hører til."
-    }
+    },
+    "previousMonth": "Forrige måned",
+    "title": "Månedsoppsummering",
+    "topGroup": "Mest brukt i",
+    "youPaid": "Du betalte",
+    "yourShare": "DIN ANDEL"
   },
   "notifications": {
     "title": "Varsler",

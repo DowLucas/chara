@@ -193,18 +193,27 @@ func Build(in Input) Summary {
 	out.Categories = foldCategories(catTotals)
 
 	if in.Previous != nil {
+		// Withheld entirely if any leg fails to convert. A partial total is
+		// not a smaller month, it is an unknown one, and the screen turns
+		// Previous into a percentage — so silently dropping a leg prints
+		// "80% less than last month" when all that happened is that last
+		// month had a currency with no rate.
 		var prev PreviousTotals
+		complete := true
 		for _, tot := range in.Previous {
 			paid, okPaid := in.Convert(tot.PaidMinor, tot.Currency, time.Time{})
 			share, okShare := in.Convert(tot.ShareMinor, tot.Currency, time.Time{})
 			if !okPaid || !okShare {
-				continue
+				complete = false
+				break
 			}
 			prev.PaidMinor += paid
 			prev.ShareMinor += share
 		}
-		prev.NetMinor = prev.PaidMinor - prev.ShareMinor
-		out.Previous = &prev
+		if complete {
+			prev.NetMinor = prev.PaidMinor - prev.ShareMinor
+			out.Previous = &prev
+		}
 	}
 
 	return out
@@ -253,6 +262,13 @@ func foldCategories(totals map[string]int64) []Category {
 	}
 	if other > 0 {
 		out = append(out, Category{Slug: OtherCategorySlug, ShareMinor: other})
+		// Rank it rather than leaving it last. Because the catalog's own
+		// "other" is seeded into this bucket it can be larger than rows
+		// above it, and the screen renders the slice in order — appending
+		// gave percentages that descended and then jumped back up.
+		sort.SliceStable(out, func(i, j int) bool {
+			return out[i].ShareMinor > out[j].ShareMinor
+		})
 	}
 	apportionPct(out, grand)
 	return out

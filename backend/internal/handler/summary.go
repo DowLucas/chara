@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"regexp"
 	"time"
@@ -132,12 +133,20 @@ func (h *SummaryHandler) Summary(w http.ResponseWriter, r *http.Request) {
 	end := start.AddDate(0, 1, 0)
 	prevStart := start.AddDate(0, -1, 0)
 
-	in, err := h.loadInput(r.Context(), claims.UserID, home, start, end, prevStart)
+	in, hardFX, err := h.loadInput(r.Context(), claims.UserID, home, start, end, prevStart)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
 	built := summary.Build(in)
+	// Checked after Build, because the conversions run inside it. A genuine
+	// FX failure (not a missing rate) would otherwise ship an understated
+	// total dressed up as an estimate.
+	if err := hardFX(); err != nil {
+		slog.Error("summary: fx conversion failed", "error", err, "user_id", claims.UserID)
+		writeError(w, http.StatusInternalServerError, "fx conversion failed")
+		return
+	}
 
 	resp := SummaryResponse{
 		Period: period,
@@ -192,9 +201,17 @@ func (h *SummaryHandler) Summary(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// A failure here is not worth failing the page over — first_period only
+	// bounds the screen's "previous month" arrow — but it must not pass
+	// silently: an empty value reads as "no earlier month" and hides the
+	// arrow, which looks like correct behaviour rather than a fault.
 	first, err := h.queries.FirstExpenseMonthForUser(r.Context(),
 		pgtype.Text{String: claims.UserID, Valid: true})
-	if err == nil && first.Valid {
+	switch {
+	case err != nil:
+		slog.Warn("summary: first expense month lookup failed",
+			"error", err, "user_id", claims.UserID)
+	case first.Valid:
 		resp.FirstPeriod = first.Time.Format("2006-01")
 	}
 
@@ -205,9 +222,16 @@ func (h *SummaryHandler) Summary(w http.ResponseWriter, r *http.Request) {
 // the ConvertFunc shape. A missing rate becomes ok=false (an estimated leg)
 // rather than failing the page — the same posture MyNet takes: degrade one
 // leg, not the whole request.
+//
+// Any OTHER fx error is a real failure (a database problem reading the rate
+// table, say) and must not masquerade as a missing rate: doing so renders a
+// silently understated total, which is worse than an error the user can
+// retry. ConvertFunc has no error channel, so the first hard failure is
+// captured in hardErr and the caller turns it into a 500 — matching MyNet,
+// which 500s on a non-ErrRateUnavailable error.
 func (h *SummaryHandler) loadInput(
 	ctx context.Context, userID, home string, start, end, prevStart time.Time,
-) (summary.Input, error) {
+) (summary.Input, func() error, error) {
 	uid := pgtype.Text{String: userID, Valid: true}
 	startPg := pgtype.Date{Time: start, Valid: true}
 	endPg := pgtype.Date{Time: end, Valid: true}
@@ -217,26 +241,30 @@ func (h *SummaryHandler) loadInput(
 		UserID: uid, PeriodStart: startPg, PeriodEnd: endPg,
 	})
 	if err != nil {
-		return summary.Input{}, err
+		return summary.Input{}, nil, err
 	}
 	counts, err := h.queries.SummaryCounts(ctx, db.SummaryCountsParams{
 		UserID: uid, PeriodStart: startPg, PeriodEnd: endPg,
 	})
 	if err != nil {
-		return summary.Input{}, err
+		return summary.Input{}, nil, err
 	}
 	rows, err := h.queries.SummaryRowsForRanking(ctx, db.SummaryRowsForRankingParams{
 		UserID: uid, PeriodStart: startPg, PeriodEnd: endPg,
 	})
 	if err != nil {
-		return summary.Input{}, err
+		return summary.Input{}, nil, err
 	}
 	prevTotals, err := h.queries.SummaryTotalsByCurrency(ctx, db.SummaryTotalsByCurrencyParams{
 		UserID: uid, PeriodStart: prevStartPg, PeriodEnd: startPg,
 	})
 	if err != nil {
-		return summary.Input{}, err
+		return summary.Input{}, nil, err
 	}
+
+	// Captured by the ConvertFunc below and checked by the caller. Not a
+	// data race: Build calls Convert synchronously on this goroutine.
+	var hardErr error
 
 	in := summary.Input{
 		Home: home,
@@ -254,8 +282,8 @@ func (h *SummaryHandler) loadInput(
 			}
 			conv, err := fx.Convert(ctx, h.queries, minor, from, home, on)
 			if err != nil {
-				if errors.Is(err, fx.ErrRateUnavailable) {
-					return 0, false
+				if !errors.Is(err, fx.ErrRateUnavailable) && hardErr == nil {
+					hardErr = err
 				}
 				return 0, false
 			}
@@ -281,5 +309,5 @@ func (h *SummaryHandler) loadInput(
 			Date: r.ExpenseDate.Time, ShareMinor: r.ShareMinor,
 		})
 	}
-	return in, nil
+	return in, func() error { return hardErr }, nil
 }

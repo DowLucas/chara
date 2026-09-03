@@ -910,34 +910,35 @@
     "you": "you"
   },
   "monthlySummary": {
-    "title": "Monthly summary",
-    "previousMonth": "Previous month",
-    "nextMonth": "Next month",
-    "yourShare": "YOUR SHARE",
-    "changeVsPrevious_up": "{{pct}}% more than last month",
-    "changeVsPrevious_down": "{{pct}}% less than last month",
-    "approximate_one": "One amount was converted at an approximate rate.",
-    "approximate_other": "{{count}} amounts were converted at approximate rates.",
-    "expenses": "Expenses",
-    "groups": "Groups",
     "activeDays": "Active days",
     "balanceSection": "BALANCE",
-    "youPaid": "You paid",
-    "net": "Net",
+    "biggestExpense": "Biggest expense · {{group}}",
     "byCurrency": "BY CURRENCY",
     "categories": "CATEGORIES",
-    "highlights": "HIGHLIGHTS",
-    "biggestExpense": "Biggest expense · {{group}}",
-    "topGroup": "Most spent in",
-    "loadError": "Couldn't load this month.",
+    "changeVsPrevious_down": "{{pct}}% less than last month",
+    "changeVsPrevious_up": "{{pct}}% more than last month",
     "empty": {
       "title": "Nothing this month",
       "body": "No expenses were added in this month."
     },
+    "excluded": "{{count}} item(s) couldn't be included.",
+    "excluded_one": "1 item couldn't be included.",
+    "excluded_other": "{{count}} items couldn't be included.",
+    "expenses": "Expenses",
+    "groups": "Groups",
+    "highlights": "HIGHLIGHTS",
+    "loadError": "Couldn't load this month.",
+    "net": "Net",
+    "nextMonth": "Next month",
     "noAccount": {
       "title": "Account not found",
       "body": "You're no longer signed in to the server this summary belongs to."
-    }
+    },
+    "previousMonth": "Previous month",
+    "title": "Monthly summary",
+    "topGroup": "Most spent in",
+    "youPaid": "You paid",
+    "yourShare": "YOUR SHARE"
   },
   "notifications": {
     "title": "Notifications",
