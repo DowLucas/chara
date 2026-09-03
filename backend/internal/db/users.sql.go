@@ -254,6 +254,26 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 	return i, err
 }
 
+const updateUserLocale = `-- name: UpdateUserLocale :exec
+UPDATE users
+SET locale = $2, updated_at = NOW()
+WHERE id = $1 AND locale IS DISTINCT FROM $2
+`
+
+type UpdateUserLocaleParams struct {
+	ID     string `db:"id" json:"id"`
+	Locale string `db:"locale" json:"locale"`
+}
+
+// Records the device's UI language, reported on push-token registration.
+// Guarded by IS DISTINCT FROM: the app registers on every launch, and an
+// unconditional UPDATE would churn a row and bump updated_at every time for
+// a value that almost never changes.
+func (q *Queries) UpdateUserLocale(ctx context.Context, arg UpdateUserLocaleParams) error {
+	_, err := q.db.Exec(ctx, updateUserLocale, arg.ID, arg.Locale)
+	return err
+}
+
 const upsertUser = `-- name: UpsertUser :one
 INSERT INTO users (id, email, display_name, avatar_url, locale)
 VALUES ($1, $2, $3, $4, $5)

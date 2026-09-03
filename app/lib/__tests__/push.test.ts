@@ -99,7 +99,7 @@ function makeAccount(serverUrl: string): Account {
 }
 
 interface FakeApi {
-  registerPushToken: jest.Mock<Promise<void>, [string, 'ios' | 'android' | 'web']>;
+  registerPushToken: jest.Mock<Promise<void>, [string, 'ios' | 'android' | 'web', string]>;
   deletePushToken: jest.Mock<Promise<void>, [string]>;
 }
 
@@ -121,7 +121,7 @@ function makeFakeApi(opts: { registerFails?: Set<string> } = {}): {
       if (existing) return existing;
       const c: FakeApi = {
         registerPushToken: jest.fn(
-          async (token: string, _platform: 'ios' | 'android' | 'web') => {
+          async (token: string, _platform: 'ios' | 'android' | 'web', _locale: string) => {
             if (opts.registerFails?.has(serverUrl)) {
               throw new Error(`register failed for ${serverUrl}`);
             }
@@ -146,6 +146,7 @@ function makeDeps(
   return {
     getOrAcquireToken: overrides.getOrAcquireToken ?? (async () => 'ExpoPushToken[abc]'),
     platform: overrides.platform ?? 'ios',
+    locale: overrides.locale ?? (() => 'en'),
     apiFor: overrides.apiFor ?? fakeApi.apiFor,
     onTokenRotation:
       overrides.onTokenRotation ??
@@ -248,9 +249,48 @@ describe('push driver', () => {
 
     expect(__getInternalsForTests().registered).toContain('https://c.example');
     expect(__getInternalsForTests().failed).not.toContain('https://c.example');
-    // The api was called with token + platform.
+    // The api was called with token + platform + locale.
     const client = fakeApi.clients.get('https://c.example');
-    expect(client?.registerPushToken).toHaveBeenCalledWith('ExpoPushToken[abc]', 'ios');
+    expect(client?.registerPushToken).toHaveBeenCalledWith('ExpoPushToken[abc]', 'ios', 'en');
+  });
+
+  // The device's UI language rides along with the token so the backend can
+  // localize the monthly summary push. Registration happens on every launch,
+  // so a user who changes their phone's language is picked up next time.
+  it('registerForAccount reports the current UI language', async () => {
+    const fakeApi = makeFakeApi();
+    const deps = makeDeps({ apiFor: fakeApi.apiFor, locale: () => 'sv' });
+    await bootstrapPush(deps);
+    await addAccount(makeAccount('https://sv.example'));
+
+    await registerForAccount('https://sv.example');
+
+    expect(fakeApi.clients.get('https://sv.example')?.registerPushToken).toHaveBeenCalledWith(
+      'ExpoPushToken[abc]',
+      'ios',
+      'sv',
+    );
+  });
+
+  // Language is read per registration, not captured once at bootstrap — the
+  // user can change it mid-session from the You tab.
+  it('registerForAccount re-reads the language on each call', async () => {
+    const fakeApi = makeFakeApi();
+    let lang = 'de';
+    const deps = makeDeps({ apiFor: fakeApi.apiFor, locale: () => lang });
+    await bootstrapPush(deps);
+    await addAccount(makeAccount('https://lang.example'));
+
+    await registerForAccount('https://lang.example');
+    lang = 'fr';
+    await registerForAccount('https://lang.example');
+
+    // (adding the account also registers once, so there are three calls.)
+    const langs = fakeApi.clients
+      .get('https://lang.example')!
+      .registerPushToken.mock.calls.map((c) => c[2]);
+    expect(langs[0]).toBe('de');
+    expect(langs[langs.length - 1]).toBe('fr');
   });
 
   it('registerForAccount adds the serverUrl to `failed` on API error', async () => {

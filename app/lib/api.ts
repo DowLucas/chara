@@ -1732,10 +1732,17 @@ export function apiFor(serverUrl: string) {
       ),
 
     // Push tokens (Wave 5)
-    registerPushToken: (token: string, platform: 'ios' | 'android' | 'web') =>
+    // `locale` is the device's UI language. Optional on the wire — an older
+    // backend ignores the field — and it is what lets the server localize
+    // push copy it writes itself, like the monthly summary.
+    registerPushToken: (
+      token: string,
+      platform: 'ios' | 'android' | 'web',
+      locale?: string,
+    ) =>
       requestOn<void>(serverUrl, '/api/me/push-token', {
         method: 'POST',
-        body: JSON.stringify({ token, platform }),
+        body: JSON.stringify({ token, platform, ...(locale ? { locale } : {}) }),
       }),
     deletePushToken: (token: string) =>
       requestOn<void>(serverUrl, '/api/me/push-token', {

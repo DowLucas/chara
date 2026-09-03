@@ -63,6 +63,15 @@ SET display_name = COALESCE(sqlc.narg(display_name), display_name),
 WHERE id = $1
 RETURNING *;
 
+-- name: UpdateUserLocale :exec
+-- Records the device's UI language, reported on push-token registration.
+-- Guarded by IS DISTINCT FROM: the app registers on every launch, and an
+-- unconditional UPDATE would churn a row and bump updated_at every time for
+-- a value that almost never changes.
+UPDATE users
+SET locale = $2, updated_at = NOW()
+WHERE id = $1 AND locale IS DISTINCT FROM $2;
+
 -- name: SetUserAvatar :one
 UPDATE users
 SET avatar_object_key = $2,
