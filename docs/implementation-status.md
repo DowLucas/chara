@@ -598,6 +598,16 @@ idempotency, opt-out, locale, send failure); `internal/language` 3;
 reporting; `internal/config` 4 for `SUMMARY_TZ`; app-side `summary-view`
 24 and `summary-deep-link` 8.
 
+### Group screen: expense search ✅
+
+- Client-side only (the group screen already loads every expense). A
+  magnifier in the expenses list header reveals a search field; results
+  combine with the payer filter and sort.
+- `app/lib/expense-search.ts` — `matchesExpenseQuery`: case- and
+  diacritic-insensitive substring match on title, notes, and payer name;
+  whitespace-separated tokens are ANDed. 7 unit tests in
+  `lib/__tests__/expense-search.test.ts`.
+
 ---
 
 ## Integration test coverage
