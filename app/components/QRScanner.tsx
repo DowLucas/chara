@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     gap: spacing.s3,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
   },

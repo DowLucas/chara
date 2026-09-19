@@ -803,7 +803,7 @@ const styles = StyleSheet.create({
   },
 
   // Camera phase
-  overlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  overlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   window: { width: VIEWFINDER, height: VIEWFINDER * 1.3 },
   corner: { position: 'absolute', width: 28, height: 28, borderColor: colors.paper },
   cornerTL: { top: 0, left: 0, borderTopWidth: 3, borderLeftWidth: 3 },
@@ -889,7 +889,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   scanTint: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(45,31,26,0.06)',
   },
   analyzingMeta: {
@@ -947,7 +947,7 @@ const styles = StyleSheet.create({
   },
 
   // Error phase
-  fullPhoto: { ...StyleSheet.absoluteFillObject, backgroundColor: '#000' },
+  fullPhoto: { ...StyleSheet.absoluteFill, backgroundColor: '#000' },
   errorOverlay: {
     position: 'absolute',
     left: 0,

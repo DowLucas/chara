@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     padding: spacing.s5,
   },
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   card: {

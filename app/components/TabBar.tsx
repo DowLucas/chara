@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, typography } from '@/lib/theme';
