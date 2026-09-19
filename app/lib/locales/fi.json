@@ -839,13 +839,13 @@
     "errorTitle": "Kutsu ei käytettävissä",
     "errorUnreachable": "Palvelimeen {{host}} ei saatu yhteyttä. Tarkista verkkoyhteytesi ja yritä uudelleen.",
     "eyebrow": "kutsu",
-    "incompatibleNote": "Päivitä Chara liittyäksesi — tämä palvelin käyttää uudempaa protokollaa kuin sovellus tukee.",
+    "incompatibleNote": "Päivitä Chara liittyäksesi. Tämä palvelin käyttää uudempaa protokollaa kuin sovellus tukee.",
     "invitedBy": "{{name}} kutsui sinut ryhmään",
     "invitedByUnknown": "sinut on kutsuttu ryhmään",
     "join": "Liity ryhmään",
     "joining": "Liitytään…",
     "loading": "Ladataan kutsua…",
-    "lockedNote": "Tämä ryhmä on lukittu — liittyessä saat vain lukuoikeuden, kunnes omistaja avaa sen.",
+    "lockedNote": "Tämä ryhmä on lukittu. Liittyessä saat vain lukuoikeuden, kunnes omistaja avaa sen.",
     "memberCount_one": "1 jäsen",
     "memberCount_other": "{{count}} jäsentä",
     "onServer": "palvelimella {{host}}",
@@ -966,7 +966,7 @@
     "createEyebrow": "aloita alusta",
     "createTitle": "Perusta ryhmä",
     "greetingNamed": "Moi {{name}}.",
-    "scanBody": "Osoita kaverin näyttöä — pääset heti mukaan.",
+    "scanBody": "Osoita kaverin näyttöä, niin pääset heti mukaan.",
     "scanEyebrow": "kutsu valmiina",
     "scanTitle": "Liity skannaamalla QR-koodi"
   },
@@ -1258,7 +1258,7 @@
     "dict": {
       "def1": ": tasan; kaverien kesken selvät",
       "def2": ": pienen velan pyyhkiminen pois",
-      "def3": ": ”sanotaan sitä charaksi” — sanotaan tasoihin",
+      "def3": ": ”sanotaan sitä charaksi”, sanotaan tasoihin",
       "headword": "cha·ra",
       "partOfSpeech": "substantiivi, japanin sanasta チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1270,7 +1270,6 @@
       "errorTitle": "Kirjautuminen epäonnistui",
       "noToken": "Google ei palauttanut identiteettitokenia. Yritä uudelleen."
     },
-    "headline": "Jaa.\nTasaa.\nAsia selvä.",
     "hostedBy": "isäntä chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",
@@ -1372,9 +1371,9 @@
     "nameHeadline": "Miksi ystäväsi kutsuvat sinua?",
     "next": "Seuraava",
     "skip": "Ohita",
-    "slide2Body": "Skannaa, sano tai kirjoita – missä tahansa valuutassa.",
+    "slide2Body": "Skannaa, sano tai kirjoita, missä tahansa valuutassa.",
     "slide2Title": "Kuvaa kuitti.\nMe jaamme sen.",
-    "slide3Body": "MobilePay, Swish tai käteinen. Kaikki näkevät aina, kuka on velkaa mitäkin. Avointa lähdekoodia – ylläpidä itse, jos haluat.",
+    "slide3Body": "MobilePay, Swish tai käteinen. Kaikki näkevät aina, kuka on velkaa mitäkin. Avointa lähdekoodia, joten voit ylläpitää sitä itse, jos haluat.",
     "slide3Title": "Selvitä velat yhdellä napautuksella.",
     "step": "vaihe {{current}}/{{total}}"
   },

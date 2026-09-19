@@ -89,7 +89,6 @@ export default function WelcomeIntroScreen() {
                   <Text style={styles.dictSenseText}>{def}</Text>
                 </View>
               ))}
-              <Text style={[styles.title, { marginTop: spacing.s6 }]}>{t('signIn.headline')}</Text>
             </Slide>
             <Slide width={width}>
               <Feather name="camera" size={40} color={colors.vermillion} style={styles.icon} />
@@ -167,7 +166,9 @@ const styles = StyleSheet.create({
   },
   pagerWrap: { flex: 1 },
   slide: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: spacing.s5 },
-  logo: { width: 160, height: 80, marginBottom: spacing.s5 },
+  // Square box matching the square mark, so `contain` adds no side padding
+  // and the logo sits flush with the text's left edge.
+  logo: { width: 88, height: 88, marginBottom: spacing.s6 },
   illustration: { width: '100%', height: 220, marginBottom: spacing.s5 },
   icon: { marginBottom: spacing.s4 },
   title: {

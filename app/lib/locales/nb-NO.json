@@ -839,13 +839,13 @@
     "errorTitle": "Invitasjon utilgjengelig",
     "errorUnreachable": "Kunne ikke nå {{host}}. Sjekk tilkoblingen og prøv igjen.",
     "eyebrow": "invitasjon",
-    "incompatibleNote": "Oppdater Chara for å bli med — denne serveren er på en nyere protokoll enn denne appen støtter.",
+    "incompatibleNote": "Oppdater Chara for å bli med. Denne serveren er på en nyere protokoll enn denne appen støtter.",
     "invitedBy": "{{name}} inviterte deg til",
     "invitedByUnknown": "du er invitert til",
     "join": "Bli med i gruppe",
     "joining": "Blir med …",
     "loading": "Laster invitasjon …",
-    "lockedNote": "Denne gruppen er låst — å bli med gir skrivebeskyttet tilgang til eieren låser den opp.",
+    "lockedNote": "Denne gruppen er låst. Å bli med gir skrivebeskyttet tilgang til eieren låser den opp.",
     "memberCount_one": "1 medlem",
     "memberCount_other": "{{count}} medlemmer",
     "onServer": "på {{host}}",
@@ -966,7 +966,7 @@
     "createEyebrow": "start fra null",
     "createTitle": "Lag en gruppe",
     "greetingNamed": "Hei {{name}}.",
-    "scanBody": "Sikt mot en venns skjerm — du er inne med en gang.",
+    "scanBody": "Sikt mot en venns skjerm, så er du inne med en gang.",
     "scanEyebrow": "allerede invitert",
     "scanTitle": "Skann en QR for å bli med"
   },
@@ -1258,7 +1258,7 @@
     "dict": {
       "def1": ": kvitt; gjort opp mellom venner",
       "def2": ": ettergivelse av en liten gjeld",
-      "def3": ": «la oss kalle det chara» — la oss kalle det kvitt",
+      "def3": ": «la oss kalle det chara», la oss kalle det kvitt",
       "headword": "cha·ra",
       "partOfSpeech": "substantiv, fra japansk チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1270,7 +1270,6 @@
       "errorTitle": "Innlogging feilet",
       "noToken": "Google returnerte ikke en identitetstoken. Prøv igjen."
     },
-    "headline": "Del det.\nGjør opp.\nFerdig snakka.",
     "hostedBy": "driftes av chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",
@@ -1372,9 +1371,9 @@
     "nameHeadline": "Hva skal vennene dine kalle deg?",
     "next": "Neste",
     "skip": "Hopp over",
-    "slide2Body": "Skann, si eller skriv det – i hvilken som helst valuta.",
+    "slide2Body": "Skann, si eller skriv det, i hvilken som helst valuta.",
     "slide2Title": "Ta bilde av kvitteringen.\nVi deler den opp.",
-    "slide3Body": "Vipps, Swish eller kontanter. Alle ser alltid hvem som skylder hva. Åpen kildekode – drift den selv om du vil.",
+    "slide3Body": "Vipps, Swish eller kontanter. Alle ser alltid hvem som skylder hva. Åpen kildekode, så du kan drifte den selv om du vil.",
     "slide3Title": "Gjør opp med ett trykk.",
     "step": "steg {{current}} av {{total}}"
   },

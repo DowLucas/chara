@@ -991,7 +991,7 @@
     "createEyebrow": "empezar desde cero",
     "createTitle": "Crear un grupo",
     "greetingNamed": "Hola {{name}}.",
-    "scanBody": "Apunta a la pantalla de un amigo — entrarás al instante.",
+    "scanBody": "Apunta a la pantalla de un amigo y entrarás al instante.",
     "scanEyebrow": "ya invitado",
     "scanTitle": "Escanea un QR para unirte"
   },
@@ -1299,7 +1299,7 @@
     "dict": {
       "def1": ": en paz; cuentas saldadas entre amigos",
       "def2": ": la cancelación de una pequeña deuda",
-      "def3": ": \"dejémoslo en chara\" — quedemos en paz",
+      "def3": ": \"dejémoslo en chara\", quedemos en paz",
       "headword": "cha·ra",
       "partOfSpeech": "sustantivo, del japonés チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1311,7 +1311,6 @@
       "errorTitle": "Inicio de sesión fallido",
       "noToken": "Google no devolvió un token de identidad. Inténtalo de nuevo."
     },
-    "headline": "Divídelo.\nSáldalo.\nAsunto cerrado.",
     "hostedBy": "alojado por chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",

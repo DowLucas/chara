@@ -861,13 +861,13 @@
     "errorTitle": "Convite indisponível",
     "errorUnreachable": "Não foi possível acessar {{host}}. Verifique sua conexão e tente de novo.",
     "eyebrow": "convite",
-    "incompatibleNote": "Atualize o Chara para entrar — este servidor usa um protocolo mais novo do que este app suporta.",
+    "incompatibleNote": "Atualize o Chara para entrar. Este servidor usa um protocolo mais novo do que este app suporta.",
     "invitedBy": "{{name}} convidou você para",
     "invitedByUnknown": "você foi convidado para",
     "join": "Entrar no grupo",
     "joining": "Entrando…",
     "loading": "Carregando convite…",
-    "lockedNote": "Este grupo está bloqueado — ao entrar você terá acesso somente leitura até o dono desbloquear.",
+    "lockedNote": "Este grupo está bloqueado. Ao entrar você terá acesso somente leitura até o dono desbloquear.",
     "memberCount_many": "{{count}} membros",
     "memberCount_one": "1 membro",
     "memberCount_other": "{{count}} membros",
@@ -991,7 +991,7 @@
     "createEyebrow": "começar do zero",
     "createTitle": "Criar um grupo",
     "greetingNamed": "Olá, {{name}}.",
-    "scanBody": "Aponte para a tela de um amigo — você entra na hora.",
+    "scanBody": "Aponte para a tela de um amigo e você entra na hora.",
     "scanEyebrow": "já convidado",
     "scanTitle": "Escanear um QR para entrar"
   },
@@ -1299,7 +1299,7 @@
     "dict": {
       "def1": ": quites; acertado entre amigos",
       "def2": ": o perdão de uma pequena dívida",
-      "def3": ": \"vamos chamar de chara\" — vamos dizer que ficou quites",
+      "def3": ": \"vamos chamar de chara\", vamos dizer que ficou quites",
       "headword": "cha·ra",
       "partOfSpeech": "substantivo, do japonês チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1311,7 +1311,6 @@
       "errorTitle": "Falha ao entrar",
       "noToken": "O Google não retornou um token de identidade. Tente novamente."
     },
-    "headline": "Divida.\nAcerte.\nTá quitado.",
     "hostedBy": "hospedado por chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",
@@ -1413,9 +1412,9 @@
     "nameHeadline": "Como seus amigos devem te chamar?",
     "next": "Próximo",
     "skip": "Pular",
-    "slide2Body": "Escaneie, fale ou digite – em qualquer moeda.",
+    "slide2Body": "Escaneie, fale ou digite, em qualquer moeda.",
     "slide2Title": "Fotografe o recibo.\nNós dividimos.",
-    "slide3Body": "Pix, Swish ou dinheiro. Todos sempre veem quem deve o quê. Código aberto – hospede você mesmo, se quiser.",
+    "slide3Body": "Pix, Swish ou dinheiro. Todos sempre veem quem deve o quê. Código aberto, então hospede você mesmo, se quiser.",
     "slide3Title": "Acerte as contas com um toque.",
     "step": "passo {{current}} de {{total}}"
   },

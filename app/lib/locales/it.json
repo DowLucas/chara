@@ -861,13 +861,13 @@
     "errorTitle": "Invito non disponibile",
     "errorUnreachable": "Non riesco a raggiungere {{host}}. Controlla la connessione e riprova.",
     "eyebrow": "invito",
-    "incompatibleNote": "Aggiorna Chara per entrare — questo server usa un protocollo più recente di quello supportato dall'app.",
+    "incompatibleNote": "Aggiorna Chara per entrare. Questo server usa un protocollo più recente di quello supportato dall'app.",
     "invitedBy": "{{name}} ti ha invitato in",
     "invitedByUnknown": "ti hanno invitato in",
     "join": "Entra nel gruppo",
     "joining": "Entrata in corso…",
     "loading": "Caricamento invito…",
-    "lockedNote": "Questo gruppo è bloccato — entrando avrai accesso in sola lettura finché il proprietario non lo sblocca.",
+    "lockedNote": "Questo gruppo è bloccato. Entrando avrai accesso in sola lettura finché il proprietario non lo sblocca.",
     "memberCount_many": "{{count}} membri",
     "memberCount_one": "1 membro",
     "memberCount_other": "{{count}} membri",
@@ -991,7 +991,7 @@
     "createEyebrow": "parti da zero",
     "createTitle": "Crea un gruppo",
     "greetingNamed": "Ciao {{name}}.",
-    "scanBody": "Punta lo schermo di un amico — entri subito.",
+    "scanBody": "Punta lo schermo di un amico ed entri subito.",
     "scanEyebrow": "già invitato",
     "scanTitle": "Scansiona un QR per entrare"
   },
@@ -1299,7 +1299,7 @@
     "dict": {
       "def1": ": pari; in pari tra amici",
       "def2": ": il condono di un piccolo debito",
-      "def3": ": \"facciamo chara\" — facciamo pari",
+      "def3": ": \"facciamo chara\", facciamo pari",
       "headword": "cha·ra",
       "partOfSpeech": "sostantivo, dal giapponese チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1311,7 +1311,6 @@
       "errorTitle": "Accesso non riuscito",
       "noToken": "Google non ha restituito un token di identità. Riprova."
     },
-    "headline": "Dividi.\nSalda.\nFinita lì.",
     "hostedBy": "ospitato da chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",

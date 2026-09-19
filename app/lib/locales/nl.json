@@ -839,13 +839,13 @@
     "errorTitle": "Uitnodiging niet beschikbaar",
     "errorUnreachable": "Kon {{host}} niet bereiken. Controleer je verbinding en probeer het opnieuw.",
     "eyebrow": "uitnodiging",
-    "incompatibleNote": "Werk Chara bij om mee te doen — deze server gebruikt een nieuwer protocol dan deze app ondersteunt.",
+    "incompatibleNote": "Werk Chara bij om mee te doen. Deze server gebruikt een nieuwer protocol dan deze app ondersteunt.",
     "invitedBy": "{{name}} nodigde je uit voor",
     "invitedByUnknown": "je bent uitgenodigd voor",
     "join": "Lid worden",
     "joining": "Lid worden…",
     "loading": "Uitnodiging laden…",
-    "lockedNote": "Deze groep is vergrendeld — bij deelname krijg je alleen-lezen toegang tot de eigenaar ontgrendelt.",
+    "lockedNote": "Deze groep is vergrendeld. Bij deelname krijg je alleen-lezen toegang tot de eigenaar ontgrendelt.",
     "memberCount_one": "1 lid",
     "memberCount_other": "{{count}} leden",
     "onServer": "op {{host}}",
@@ -966,7 +966,7 @@
     "createEyebrow": "vers beginnen",
     "createTitle": "Maak een groep",
     "greetingNamed": "Hoi {{name}}.",
-    "scanBody": "Richt op het scherm van een vriend — je zit er meteen in.",
+    "scanBody": "Richt op het scherm van een vriend en je zit er meteen in.",
     "scanEyebrow": "al uitgenodigd",
     "scanTitle": "Scan een QR om lid te worden"
   },
@@ -1258,7 +1258,7 @@
     "dict": {
       "def1": ": quitte; afgerekend tussen vrienden",
       "def2": ": het kwijtschelden van een kleine schuld",
-      "def3": ": \"let's call it chara\" — laten we het quitte noemen",
+      "def3": ": \"let's call it chara\", laten we het quitte noemen",
       "headword": "cha·ra",
       "partOfSpeech": "zelfstandig naamwoord, uit het Japans チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1270,7 +1270,6 @@
       "errorTitle": "Inloggen mislukt",
       "noToken": "Google gaf geen identity-token terug. Probeer het opnieuw."
     },
-    "headline": "Splits het.\nReken af.\nKlaar is Kees.",
     "hostedBy": "gehost door chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",
@@ -1372,9 +1371,9 @@
     "nameHeadline": "Hoe mogen vrienden je noemen?",
     "next": "Volgende",
     "skip": "Overslaan",
-    "slide2Body": "Scan het, zeg het of typ het – in elke valuta.",
+    "slide2Body": "Scan het, zeg het of typ het, in elke valuta.",
     "slide2Title": "Maak een foto van het bonnetje.\nWij verdelen het.",
-    "slide3Body": "Tikkie, Swish of contant. Iedereen ziet altijd wie wat verschuldigd is. Open source – host het zelf als je wilt.",
+    "slide3Body": "Tikkie, Swish of contant. Iedereen ziet altijd wie wat verschuldigd is. Open source, dus host het zelf als je wilt.",
     "slide3Title": "Afrekenen met één tik.",
     "step": "stap {{current}} van {{total}}"
   },

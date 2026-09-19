@@ -839,13 +839,13 @@
     "errorTitle": "Invitation utilgængelig",
     "errorUnreachable": "Kunne ikke nå {{host}}. Tjek din forbindelse, og prøv igen.",
     "eyebrow": "invitation",
-    "incompatibleNote": "Opdater Chara for at komme med — denne server bruger en nyere protokol, end appen understøtter.",
+    "incompatibleNote": "Opdater Chara for at komme med. Denne server bruger en nyere protokol, end appen understøtter.",
     "invitedBy": "{{name}} har inviteret dig til",
     "invitedByUnknown": "du er inviteret til",
     "join": "Kom med i gruppen",
     "joining": "Kommer med…",
     "loading": "Henter invitation…",
-    "lockedNote": "Gruppen er låst — du får skrivebeskyttet adgang, indtil ejeren låser op.",
+    "lockedNote": "Gruppen er låst. Du får skrivebeskyttet adgang, indtil ejeren låser op.",
     "memberCount_one": "1 medlem",
     "memberCount_other": "{{count}} medlemmer",
     "onServer": "på {{host}}",
@@ -966,7 +966,7 @@
     "createEyebrow": "start forfra",
     "createTitle": "Lav en gruppe",
     "greetingNamed": "Hej {{name}}.",
-    "scanBody": "Peg på en vens skærm — så er du med på et øjeblik.",
+    "scanBody": "Peg på en vens skærm, så er du med på et øjeblik.",
     "scanEyebrow": "allerede inviteret",
     "scanTitle": "Scan en QR-kode for at komme med"
   },
@@ -1258,7 +1258,7 @@
     "dict": {
       "def1": ": kvit; gjort op mellem venner",
       "def2": ": eftergivelsen af en lille gæld",
-      "def3": ": \"lad os kalde det chara\" — lad os kalde det kvit",
+      "def3": ": \"lad os kalde det chara\", lad os kalde det kvit",
       "headword": "cha·ra",
       "partOfSpeech": "navneord, fra japansk チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1270,7 +1270,6 @@
       "errorTitle": "Login mislykkedes",
       "noToken": "Google returnerede ikke et identitets-token. Prøv igen."
     },
-    "headline": "Del.\nGør op.\nBliv kvit.",
     "hostedBy": "hostet af chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",
@@ -1372,9 +1371,9 @@
     "nameHeadline": "Hvad skal dine venner kalde dig?",
     "next": "Næste",
     "skip": "Spring over",
-    "slide2Body": "Scan, sig eller skriv det – i enhver valuta.",
+    "slide2Body": "Scan, sig eller skriv det, i enhver valuta.",
     "slide2Title": "Tag et billede af kvitteringen.\nVi deler den op.",
-    "slide3Body": "MobilePay, Swish eller kontanter. Alle kan altid se, hvem der skylder hvad. Open source – host den selv, hvis du vil.",
+    "slide3Body": "MobilePay, Swish eller kontanter. Alle kan altid se, hvem der skylder hvad. Open source, så du kan hoste den selv, hvis du vil.",
     "slide3Title": "Gør op med ét tryk.",
     "step": "trin {{current}} af {{total}}"
   },

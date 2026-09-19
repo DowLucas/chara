@@ -887,13 +887,13 @@
     "errorTitle": "Zaproszenie niedostępne",
     "errorUnreachable": "Nie udało się połączyć z {{host}}. Sprawdź połączenie i spróbuj ponownie.",
     "eyebrow": "zaproszenie",
-    "incompatibleNote": "Zaktualizuj Chara, aby dołączyć — ten serwer używa nowszego protokołu niż wspiera ta aplikacja.",
+    "incompatibleNote": "Zaktualizuj Chara, aby dołączyć. Ten serwer używa nowszego protokołu niż wspiera ta aplikacja.",
     "invitedBy": "{{name}} zaprosił(a) cię do",
     "invitedByUnknown": "masz zaproszenie do",
     "join": "Dołącz do grupy",
     "joining": "Dołączanie…",
     "loading": "Ładowanie zaproszenia…",
-    "lockedNote": "Ta grupa jest zablokowana — dołączenie zapewni dostęp tylko do odczytu, dopóki właściciel jej nie odblokuje.",
+    "lockedNote": "Ta grupa jest zablokowana. Dołączenie zapewni dostęp tylko do odczytu, dopóki właściciel jej nie odblokuje.",
     "memberCount_few": "{{count}} członków",
     "memberCount_many": "{{count}} członków",
     "memberCount_one": "1 członek",
@@ -1020,7 +1020,7 @@
     "createEyebrow": "zacznij od nowa",
     "createTitle": "Utwórz grupę",
     "greetingNamed": "Cześć {{name}}.",
-    "scanBody": "Skieruj na ekran znajomego — od razu będziesz w środku.",
+    "scanBody": "Skieruj na ekran znajomego i od razu będziesz w środku.",
     "scanEyebrow": "już zaproszony",
     "scanTitle": "Zeskanuj QR, aby dołączyć"
   },
@@ -1344,7 +1344,7 @@
     "dict": {
       "def1": ": na zero; rozliczeni między znajomymi",
       "def2": ": umorzenie drobnego długu",
-      "def3": ": „let's call it chara” — uznajmy to za rozliczone",
+      "def3": ": „let's call it chara”, uznajmy to za rozliczone",
       "headword": "cha·ra",
       "partOfSpeech": "rzeczownik, z japońskiego チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1356,7 +1356,6 @@
       "errorTitle": "Logowanie nie powiodło się",
       "noToken": "Google nie zwróciło tokenu tożsamości. Spróbuj ponownie."
     },
-    "headline": "Podziel.\nRozlicz.\nZakończ sprawę.",
     "hostedBy": "hostowane przez chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",
@@ -1464,9 +1463,9 @@
     "nameHeadline": "Jak mają cię nazywać znajomi?",
     "next": "Dalej",
     "skip": "Pomiń",
-    "slide2Body": "Zeskanuj, powiedz lub wpisz – w dowolnej walucie.",
+    "slide2Body": "Zeskanuj, powiedz lub wpisz, w dowolnej walucie.",
     "slide2Title": "Zrób zdjęcie paragonu.\nMy go podzielimy.",
-    "slide3Body": "BLIK, Swish lub gotówka. Każdy zawsze widzi, kto ile jest winien. Open source – możesz hostować samodzielnie.",
+    "slide3Body": "BLIK, Swish lub gotówka. Każdy zawsze widzi, kto ile jest winien. Open source, więc możesz hostować samodzielnie.",
     "slide3Title": "Rozlicz się jednym dotknięciem.",
     "step": "krok {{current}} z {{total}}"
   },
