@@ -493,7 +493,7 @@
     "searchClear": "مسح البحث",
     "searchEmpty": "لا توجد مصاريف تطابق \"{{query}}\".",
     "filterMine": "لي فقط",
-    "filterTitle": "التصفية حسب من دفع",
+    "filterTitle": "تصفية المصاريف",
     "infoCreatedLabel": "أُنشئت في",
     "infoCurrencyLabel": "العملة",
     "infoMembersLabel": "الأعضاء",

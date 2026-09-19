@@ -461,7 +461,7 @@
     "searchClear": "Zoekopdracht wissen",
     "searchEmpty": "Geen uitgaven gevonden voor ‘{{query}}’.",
     "filterMine": "Alleen van mij",
-    "filterTitle": "Filteren op wie betaalde",
+    "filterTitle": "Uitgaven filteren",
     "infoCreatedLabel": "Aangemaakt op",
     "infoCurrencyLabel": "Valuta",
     "infoMembersLabel": "Leden",

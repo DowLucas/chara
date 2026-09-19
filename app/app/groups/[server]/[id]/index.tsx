@@ -46,7 +46,7 @@ import { isPopupJustClosed, markPopupClosed } from '@/lib/popup-guard';
 import { setLastActiveGroup } from '@/lib/preferences';
 import { subscribeGroupChanged, notifyGroupChanged } from '@/lib/group-refresh';
 import { computeStandings, expensesInvolvingMember } from '@/lib/standings';
-import { matchesExpenseQuery } from '@/lib/expense-search';
+import { filterMenuEntries, matchesExpenseQuery } from '@/lib/expense-search';
 import { categoryIcon } from '@/lib/categories';
 import { displayHostFor, isMainHostedServer } from '@/lib/server-url';
 import { colors, fontDisplay, fontBody, fontBodyMedium, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
@@ -253,13 +253,21 @@ export default function GroupDetailScreen() {
     setSearchQuery('');
     setSearchOpen(false);
   }
-  const filterOptions = [
-    { label: t('groupDetail.filterAll'), onPress: () => setFilterPayerId(null) },
-    ...(me ? [{ label: t('groupDetail.filterMine'), onPress: () => setFilterPayerId(me.id) }] : []),
-    ...members
-      .filter((m) => m.id !== me?.id)
-      .map((m) => ({ label: m.name, onPress: () => setFilterPayerId(m.id) })),
-  ];
+  const filterOptions = filterMenuEntries(members, me?.id).map((entry) => {
+    switch (entry.kind) {
+      case 'search':
+        return { label: t('groupDetail.searchTitle'), onPress: () => setSearchOpen(true) };
+      case 'all':
+        return { label: t('groupDetail.filterAll'), onPress: () => setFilterPayerId(null) };
+      case 'payer':
+        return {
+          label: entry.mine
+            ? t('groupDetail.filterMine')
+            : (members.find((m) => m.id === entry.memberId)?.name ?? ''),
+          onPress: () => setFilterPayerId(entry.memberId),
+        };
+    }
+  });
   function openFilterMenu() {
     if (isPopupJustClosed()) return;
     if (openNativeActionSheet(t('groupDetail.filterTitle'), filterOptions)) return;
@@ -705,18 +713,6 @@ export default function GroupDetailScreen() {
           <View style={styles.listHeaderActions}>
             {expenses.length > 0 && (
               <TouchableOpacity
-                onPress={() => (searchOpen ? closeSearch() : setSearchOpen(true))}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel={t('groupDetail.searchTitle')}
-                hitSlop={8}
-                style={styles.searchBtn}
-              >
-                <Feather name="search" size={13} color={searchQuery ? colors.graphite : colors.lead} />
-              </TouchableOpacity>
-            )}
-            {members.length > 1 && expenses.length > 0 && (
-              <TouchableOpacity
                 onPress={openFilterMenu}
                 activeOpacity={0.7}
                 accessibilityRole="button"
@@ -724,7 +720,7 @@ export default function GroupDetailScreen() {
                 hitSlop={8}
                 style={styles.filterBtn}
               >
-                <Feather name="filter" size={13} color={filterPayerId ? colors.graphite : colors.lead} />
+                <Feather name="filter" size={13} color={filterPayerId || searchQuery ? colors.graphite : colors.lead} />
                 <Text
                   style={[styles.listHeaderRight, styles.filterLabel, filterPayerId && { color: colors.graphite }]}
                   numberOfLines={1}
@@ -1343,13 +1339,6 @@ const styles = StyleSheet.create({
   },
   filterLabel: {
     flexShrink: 1,
-  },
-  searchBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: colors.bone,
-    flexShrink: 0,
   },
   searchWrap: {
     flexDirection: 'row',

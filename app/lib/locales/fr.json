@@ -469,7 +469,7 @@
     "searchClear": "Effacer la recherche",
     "searchEmpty": "Aucune dépense ne correspond à « {{query}} ».",
     "filterMine": "Seulement les miennes",
-    "filterTitle": "Filtrer par qui a payé",
+    "filterTitle": "Filtrer les dépenses",
     "infoCreatedLabel": "Créé le",
     "infoCurrencyLabel": "Devise",
     "infoMembersLabel": "Membres",

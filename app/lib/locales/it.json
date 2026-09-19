@@ -469,7 +469,7 @@
     "searchClear": "Cancella ricerca",
     "searchEmpty": "Nessuna spesa corrisponde a «{{query}}».",
     "filterMine": "Solo le mie",
-    "filterTitle": "Filtra per chi ha pagato",
+    "filterTitle": "Filtra spese",
     "infoCreatedLabel": "Creato",
     "infoCurrencyLabel": "Valuta",
     "infoMembersLabel": "Membri",

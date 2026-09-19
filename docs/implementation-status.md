@@ -600,12 +600,14 @@ reporting; `internal/config` 4 for `SUMMARY_TZ`; app-side `summary-view`
 
 ### Group screen: expense search ✅
 
-- Client-side only (the group screen already loads every expense). A
-  magnifier in the expenses list header reveals a search field; results
-  combine with the payer filter and sort.
+- Client-side only (the group screen already loads every expense).
+  "Search expenses" is the first option in the Filter sheet and reveals a
+  search field above the list; results combine with the payer filter and
+  sort. One-member groups get the Filter chip too, with search only.
 - `app/lib/expense-search.ts` — `matchesExpenseQuery`: case- and
   diacritic-insensitive substring match on title, notes, and payer name;
-  whitespace-separated tokens are ANDed. 7 unit tests in
+  whitespace-separated tokens are ANDed. `filterMenuEntries` builds the
+  Filter sheet's options. 10 unit tests in
   `lib/__tests__/expense-search.test.ts`.
 
 ### Expo SDK 57 upgrade (React Native 0.86) ✅

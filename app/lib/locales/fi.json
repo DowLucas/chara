@@ -461,7 +461,7 @@
     "searchClear": "Tyhjennä haku",
     "searchEmpty": "Yksikään kulu ei vastaa hakua ”{{query}}”.",
     "filterMine": "Vain omat",
-    "filterTitle": "Suodata maksajan mukaan",
+    "filterTitle": "Suodata kuluja",
     "infoCreatedLabel": "Luotu",
     "infoCurrencyLabel": "Valuutta",
     "infoMembersLabel": "Jäsenet",

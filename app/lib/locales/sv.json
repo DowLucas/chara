@@ -461,7 +461,7 @@
     "searchClear": "Rensa sökning",
     "searchEmpty": "Inga utgifter matchar ”{{query}}”.",
     "filterMine": "Bara mina",
-    "filterTitle": "Filtrera efter vem som betalade",
+    "filterTitle": "Filtrera utgifter",
     "infoCreatedLabel": "Skapad",
     "infoCurrencyLabel": "Valuta",
     "infoMembersLabel": "Medlemmar",

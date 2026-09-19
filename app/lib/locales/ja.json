@@ -461,7 +461,7 @@
     "searchClear": "検索をクリア",
     "searchEmpty": "「{{query}}」に一致する支出はありません。",
     "filterMine": "自分のみ",
-    "filterTitle": "支払者で絞り込み",
+    "filterTitle": "支出を絞り込み",
     "infoCreatedLabel": "作成日",
     "infoCurrencyLabel": "通貨",
     "infoMembersLabel": "メンバー",

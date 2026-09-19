@@ -477,7 +477,7 @@
     "searchClear": "Wyczyść wyszukiwanie",
     "searchEmpty": "Brak wydatków pasujących do „{{query}}”.",
     "filterMine": "Tylko moje",
-    "filterTitle": "Filtruj według płacącego",
+    "filterTitle": "Filtruj wydatki",
     "infoCreatedLabel": "Utworzono",
     "infoCurrencyLabel": "Waluta",
     "infoMembersLabel": "Członkowie",

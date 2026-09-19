@@ -461,7 +461,7 @@
     "searchClear": "Clear search",
     "searchEmpty": "No expenses match “{{query}}”.",
     "filterMine": "Only mine",
-    "filterTitle": "Filter by who paid",
+    "filterTitle": "Filter expenses",
     "infoCreatedLabel": "Created",
     "infoCurrencyLabel": "Currency",
     "infoMembersLabel": "Members",

@@ -461,7 +461,7 @@
     "searchClear": "Tøm søk",
     "searchEmpty": "Ingen utgifter samsvarer med «{{query}}».",
     "filterMine": "Bare mine",
-    "filterTitle": "Filtrer etter hvem som betalte",
+    "filterTitle": "Filtrer utgifter",
     "infoCreatedLabel": "Opprettet",
     "infoCurrencyLabel": "Valuta",
     "infoMembersLabel": "Medlemmer",

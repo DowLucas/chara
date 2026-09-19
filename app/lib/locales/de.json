@@ -461,7 +461,7 @@
     "searchClear": "Suche löschen",
     "searchEmpty": "Keine Ausgaben passen zu „{{query}}“.",
     "filterMine": "Nur meine",
-    "filterTitle": "Nach Zahler filtern",
+    "filterTitle": "Ausgaben filtern",
     "infoCreatedLabel": "Angelegt",
     "infoCurrencyLabel": "Währung",
     "infoMembersLabel": "Mitglieder",

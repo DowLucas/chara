@@ -461,7 +461,7 @@
     "searchClear": "Ryd søgning",
     "searchEmpty": "Ingen udgifter matcher “{{query}}”.",
     "filterMine": "Kun mine",
-    "filterTitle": "Filtrér efter hvem der betalte",
+    "filterTitle": "Filtrér udgifter",
     "infoCreatedLabel": "Oprettet",
     "infoCurrencyLabel": "Valuta",
     "infoMembersLabel": "Medlemmer",

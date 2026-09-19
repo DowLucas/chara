@@ -461,7 +461,7 @@
     "searchClear": "清除搜索",
     "searchEmpty": "没有与“{{query}}”匹配的支出。",
     "filterMine": "只看我的",
-    "filterTitle": "按付款人筛选",
+    "filterTitle": "筛选支出",
     "infoCreatedLabel": "创建于",
     "infoCurrencyLabel": "币种",
     "infoMembersLabel": "成员",
