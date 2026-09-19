@@ -176,6 +176,10 @@ const config: ExpoConfig = {
   },
   plugins: [
     'expo-router',
+    // Registered with no options: both its share targets default to off, so
+    // it adds nothing next to expo-share-intent's extension below. Listed only
+    // because `expo install` requires every plugin-bearing package to be.
+    'expo-sharing',
     [
       'expo-audio',
       {
