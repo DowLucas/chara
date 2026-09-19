@@ -29,4 +29,4 @@ export async function clearFlag(key: string): Promise<void> {
   return SecureStore.deleteItemAsync(key);
 }
 
-export const FLAG_ONBOARDING_SKIPPED = 'onboarding_skipped';
+export const FLAG_ONBOARDING_COMPLETE = 'onboarding_complete';

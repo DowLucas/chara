@@ -59,13 +59,12 @@ export async function runSetup(
     } else if (d.groupId) {
       groupId = d.groupId;
     } else if (d.group) {
-      const g = await deps.createGroup(d.group.name, d.group.currency);
+      const { name, currency, color } = d.group;
+      const g = await deps.createGroup(name, currency);
       groupId = g.id;
       d = { ...d, groupId };
       await deps.save(d);
-      if (d.group.color) {
-        await deps.setGroupColor(g.id, d.group.color).catch(() => {});
-      }
+      if (color) await deps.setGroupColor(g.id, color).catch(() => {});
     } else {
       groupId = null;
     }

@@ -4,9 +4,8 @@ import { View } from 'react-native';
 import { useAuth } from '@/lib/auth';
 import { useDefaultAccount } from '@/lib/accounts';
 import { TabBar } from '@/components/TabBar';
-import { useAggregatedGroups } from '@/lib/aggregated-reads';
-import { decideGroupsGate, needsNameStep } from '@/lib/onboarding-gate';
-import { getFlag, FLAG_ONBOARDING_SKIPPED } from '@/lib/storage';
+import { decideSignedOutEntry, needsNameStep } from '@/lib/onboarding-gate';
+import { getFlag, setFlag, FLAG_ONBOARDING_COMPLETE } from '@/lib/storage';
 import { colors } from '@/lib/theme';
 
 export default function TabsLayout() {
@@ -14,29 +13,32 @@ export default function TabsLayout() {
   const defaultAccount = useDefaultAccount();
   // A freshly-migrated account starts with an empty-id placeholder user
   // until the AccountsProvider's `/api/me` fill completes (spec §11).
-  // Treat that window as still-loading so we don't redirect to onboarding.
   const isPlaceholder = !!user && !user.id;
-  // Aggregated groups across every linked account. `decideGroupsGate`
-  // distinguishes "definitively zero groups everywhere" (→ onboarding) from
-  // "fetch failed / unknown" (→ tabs) — an offline cold launch must never
-  // dump a signed-in user into onboarding.
-  const groupReads = useAggregatedGroups();
-  const groupsGate = decideGroupsGate(groupReads);
-  const [skipped, setSkipped] = useState<boolean | null>(null);
+  // Whether this device has finished first-run onboarding: decides where a
+  // signed-out launch goes (welcome flow vs. plain sign-in).
+  const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (!user || isPlaceholder) {
-      setSkipped(null);
-      return;
-    }
     let cancelled = false;
-    getFlag(FLAG_ONBOARDING_SKIPPED)
-      .then((v) => { if (!cancelled) setSkipped(v === '1'); })
-      .catch(() => { if (!cancelled) setSkipped(false); });
+    getFlag(FLAG_ONBOARDING_COMPLETE)
+      .then((v) => { if (!cancelled) setOnboardingComplete(v === '1'); })
+      .catch(() => { if (!cancelled) setOnboardingComplete(false); });
     return () => { cancelled = true; };
-  }, [user?.id, isPlaceholder]);
+  }, [user?.id]);
 
-  if (!loading && !user) return <Redirect href="/(auth)/sign-in" />;
+  // Users who signed in before the welcome flow existed never set the flag;
+  // mark them so signing out later lands on sign-in, not the intro.
+  useEffect(() => {
+    if (user && !isPlaceholder && onboardingComplete === false) {
+      void setFlag(FLAG_ONBOARDING_COMPLETE, '1').catch(() => {});
+    }
+  }, [user, isPlaceholder, onboardingComplete]);
+
+  if (!loading && !user) {
+    const entry = decideSignedOutEntry(onboardingComplete);
+    if (entry === 'pending') return <View style={{ flex: 1, backgroundColor: colors.paper }} />;
+    return <Redirect href={entry === 'welcome' ? '/welcome' : '/(auth)/sign-in'} />;
+  }
   // The legacy token may have been invalidated server-side (e.g., a backend
   // restart rotated JWT_SECRET). The account stays in the blob but is
   // flagged `reauth_required` per spec §12. Route to the reauth flow so
@@ -60,16 +62,6 @@ export default function TabsLayout() {
   if (user && needsNameStep(user)) {
     return <Redirect href="/onboarding/name" />;
   }
-  if (user && (groupsGate === 'pending' || skipped === null)) {
-    // Still resolving — render an empty paper-coloured screen to avoid a flash.
-    return <View style={{ flex: 1, backgroundColor: colors.paper }} />;
-  }
-  // First-time users always enter onboarding at the name step (prefilled
-  // if a name is already set, see /onboarding/name).
-  if (user && groupsGate === 'onboarding' && !skipped) {
-    return <Redirect href="/onboarding/name" />;
-  }
-
   return (
     <Tabs
       screenOptions={{ headerShown: false }}
