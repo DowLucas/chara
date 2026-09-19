@@ -26,6 +26,26 @@ export type SetupResult =
   | { kind: 'done'; intent: 'create' | 'join'; groupId: string | null }
   | { kind: 'failed'; step: SetupStep; error: unknown; draft: OnboardingDraft };
 
+/**
+ * Where to go once setup succeeds, as a navigation sequence: `replace` the
+ * first entry, then `push` the rest. The first entry is always the tabs, so
+ * the pre-signup welcome screens (each `push`ed) drop off the stack — without
+ * it, Back from the new group returns into the welcome flow.
+ */
+export function postSetupNavigation(
+  result: Extract<SetupResult, { kind: 'done' }>,
+  serverUrl: string,
+): string[] {
+  if (!result.groupId) return ['/(tabs)'];
+  const enc = encodeURIComponent(serverUrl);
+  return [
+    '/(tabs)',
+    result.intent === 'create'
+      ? `/onboarding/created?server=${enc}&groupId=${result.groupId}`
+      : `/groups/${enc}/${result.groupId}`,
+  ];
+}
+
 export function setupSteps(d: OnboardingDraft): SetupStep[] {
   return d.name ? ['name', 'group'] : ['group'];
 }

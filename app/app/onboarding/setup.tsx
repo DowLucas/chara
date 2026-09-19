@@ -13,7 +13,13 @@ import { useAccounts } from '@/lib/accounts';
 import { ApiError, apiFor } from '@/lib/api';
 import { setOverride as setGroupColorOverride } from '@/lib/group-color';
 import { OnboardingDraft, clearDraft, loadDraft, saveDraft } from '@/lib/onboarding-draft';
-import { SetupDeps, SetupStep, runSetup, setupSteps } from '@/lib/onboarding-setup';
+import {
+  SetupDeps,
+  SetupStep,
+  postSetupNavigation,
+  runSetup,
+  setupSteps,
+} from '@/lib/onboarding-setup';
 import { userErrorMessage } from '@/lib/user-error';
 import { hapticSuccess } from '@/lib/haptics';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
@@ -66,15 +72,12 @@ export default function OnboardingSetupScreen() {
       }
       await clearDraft();
       hapticSuccess();
-      const enc = encodeURIComponent(serverUrl);
-      if (result.intent === 'create' && result.groupId) {
-        router.replace(`/onboarding/created?server=${enc}&groupId=${result.groupId}`);
-      } else if (result.groupId) {
+      if (result.intent === 'join' && result.groupId) {
         analytics.track('onboarding_finished', { path: 'join' });
-        router.replace(`/groups/${enc}/${result.groupId}`);
-      } else {
-        router.replace('/(tabs)');
       }
+      const [reset, ...rest] = postSetupNavigation(result, serverUrl);
+      router.replace(reset as never);
+      rest.forEach((href) => router.push(href as never));
     },
     [deps, serverUrl, t],
   );

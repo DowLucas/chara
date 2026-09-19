@@ -1,5 +1,5 @@
 import type { OnboardingDraft } from '../onboarding-draft';
-import { SetupDeps, runSetup, setupSteps } from '../onboarding-setup';
+import { SetupDeps, postSetupNavigation, runSetup, setupSteps } from '../onboarding-setup';
 
 const createDraft = (extra: Partial<OnboardingDraft> = {}): OnboardingDraft => ({
   createdAt: 1,
@@ -104,5 +104,30 @@ describe('runSetup', () => {
     const events: string[] = [];
     await runSetup(createDraft(), deps, (s, state) => events.push(`${s}:${state}`));
     expect(events).toEqual(['name:running', 'name:done', 'group:running', 'group:done']);
+  });
+});
+
+describe('postSetupNavigation', () => {
+  const S = 'https://api.example.com';
+  const enc = encodeURIComponent(S);
+
+  it('create path resets to the tabs before the invite screen', () => {
+    expect(postSetupNavigation({ kind: 'done', intent: 'create', groupId: 'g1' }, S)).toEqual([
+      '/(tabs)',
+      `/onboarding/created?server=${enc}&groupId=g1`,
+    ]);
+  });
+
+  it('join path resets to the tabs before the group', () => {
+    expect(postSetupNavigation({ kind: 'done', intent: 'join', groupId: 'g2' }, S)).toEqual([
+      '/(tabs)',
+      `/groups/${enc}/g2`,
+    ]);
+  });
+
+  it('without a group it just goes to the tabs', () => {
+    expect(postSetupNavigation({ kind: 'done', intent: 'join', groupId: null }, S)).toEqual([
+      '/(tabs)',
+    ]);
   });
 });
