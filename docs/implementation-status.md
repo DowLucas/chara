@@ -598,6 +598,21 @@ idempotency, opt-out, locale, send failure); `internal/language` 3;
 reporting; `internal/config` 4 for `SUMMARY_TZ`; app-side `summary-view`
 24 and `summary-deep-link` 8.
 
+### Expo SDK 57 upgrade (React Native 0.86) ✅
+
+- Stepped 54 → 55 → 56 → 57 (one commit per SDK, Expo's recommended
+  path); `expo-doctor` 21/21.
+- Minimum iOS rises to 16.4 (SDK 56 floor). Native change: ships only
+  through `./release`.
+- Code changes: `TabBar` imports `BottomTabBarProps` from
+  `expo-router/js-tabs` (SDK 56 router dropped React Navigation);
+  `StyleSheet.absoluteFillObject` → `absoluteFill` (removed in RN 0.85);
+  `tsconfig.json` sets `rootDir` and `types: ["jest", "node"]` for
+  TypeScript 6. `expo-share-intent` 5 → 8.
+- Follow-up: SDK 57 builds on Xcode 26.x. Building with Xcode 27 (iOS 27
+  SDK) requires the scene lifecycle — opt in via
+  `expo-build-properties` `ios.enableSceneSupport`, or move to SDK 58.
+
 ---
 
 ## Integration test coverage
