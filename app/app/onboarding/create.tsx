@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
@@ -15,20 +14,10 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useEnglishT } from '@/lib/i18n';
-import { createGroup } from '@/lib/api';
-import { CurrencyPicker } from '@/components/CurrencyPicker';
-import { SUGGESTED_CURRENCY_CODES } from '@/lib/currencies';
-import {
-  colors,
-  fontBody,
-  fontDisplay,
-  fontMono,
-  fontSize,
-  groupAccentSwatches,
-  spacing,
-} from '@/lib/theme';
+import { apiFor } from '@/lib/api';
+import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 import { setOverride as setGroupColorOverride } from '@/lib/group-color';
-import { GroupColorPicker } from '@/components/GroupColorPicker';
+import { GroupSetupForm, GroupSetupValue, defaultGroupCurrency } from '@/components/GroupSetupForm';
 import { useDefaultAccount } from '@/lib/accounts';
 import * as analytics from '@/lib/analytics';
 import { ContentContainer } from '@/components/ContentContainer';
@@ -37,37 +26,35 @@ export default function CreateGroupScreen() {
   const insets = useSafeAreaInsets();
   const t = useEnglishT();
   const defaultAccount = useDefaultAccount();
-  const [name, setName] = useState('');
-  const [currency, setCurrency] = useState<string>('SEK');
-  const [color, setColor] = useState<string | null>(null);
+  const [form, setForm] = useState<GroupSetupValue>(() => ({
+    name: '',
+    currency: defaultGroupCurrency(),
+    color: null,
+  }));
   const [submitting, setSubmitting] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [colorPickerOpen, setColorPickerOpen] = useState(false);
-  const customSelected = color !== null
-    && !groupAccentSwatches.some((s) => s.toLowerCase() === color.toLowerCase());
-  // If the user picks a currency outside the suggested strip, keep it visible
-  // as an extra chip so they can re-select without reopening the modal.
-  const suggested = SUGGESTED_CURRENCY_CODES.includes(currency as typeof SUGGESTED_CURRENCY_CODES[number])
-    ? SUGGESTED_CURRENCY_CODES
-    : [...SUGGESTED_CURRENCY_CODES, currency];
+  const { name, currency, color } = form;
 
   const canSubmit = name.trim().length > 0 && !submitting;
 
   async function handleCreate() {
     if (!canSubmit) return;
+    if (!defaultAccount) return;
+    const serverUrl = defaultAccount.serverUrl;
     setSubmitting(true);
     try {
-      const group = await createGroup(name.trim(), currency);
-      if (color && defaultAccount?.serverUrl) {
+      const group = await apiFor(serverUrl).createGroup(name.trim(), currency);
+      if (color) {
         try {
-          await setGroupColorOverride(defaultAccount.serverUrl, group.id, color);
+          await setGroupColorOverride(serverUrl, group.id, color);
         } catch {
           // Color override is per-device cosmetic; never block group creation.
         }
       }
       analytics.track('group_created');
       hapticSuccess();
-      router.replace(`/onboarding/created?groupId=${group.id}`);
+      router.replace(
+        `/onboarding/created?server=${encodeURIComponent(serverUrl)}&groupId=${group.id}`,
+      );
     } catch (e: any) {
       const status = typeof e?.status === 'number' ? e.status : undefined;
       let code: string = 'unknown';
@@ -100,110 +87,7 @@ export default function CreateGroupScreen() {
         <Text style={styles.body}>{t('createGroup.body')}</Text>
       </View>
 
-      <View style={styles.field}>
-        <Text style={styles.fieldLabel}>{t('createGroup.nameLabel')}</Text>
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          placeholder={t('createGroup.namePlaceholder')}
-          placeholderTextColor={colors.lead}
-          autoFocus
-          maxLength={80}
-          returnKeyType="done"
-          blurOnSubmit
-          style={styles.input}
-        />
-      </View>
-
-      <View style={styles.field}>
-        <Text style={styles.fieldLabel}>{t('createGroup.currencyLabel')}</Text>
-        <View style={styles.chipRow}>
-          {suggested.map((c) => {
-            const active = c === currency;
-            return (
-              <TouchableOpacity
-                key={c}
-                style={[styles.chip, active && styles.chipActive]}
-                onPress={() => setCurrency(c)}
-                activeOpacity={0.85}
-              >
-                <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{c}</Text>
-              </TouchableOpacity>
-            );
-          })}
-          <TouchableOpacity
-            style={styles.chip}
-            onPress={() => setPickerOpen(true)}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.chipLabel}>{t('currencyPicker.more')}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View style={styles.field}>
-        <Text style={styles.fieldLabel}>{t('createGroup.colorLabel')}</Text>
-        <View style={styles.swatchRow}>
-          {groupAccentSwatches.map((hex) => {
-            const active = color?.toLowerCase() === hex.toLowerCase();
-            return (
-              <TouchableOpacity
-                key={hex}
-                onPress={() => setColor(active ? null : hex)}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                style={styles.swatchHit}
-              >
-                <View
-                  style={[
-                    styles.swatch,
-                    { backgroundColor: hex },
-                    active && styles.swatchActive,
-                  ]}
-                >
-                  {active && <Feather name="check" size={16} color={colors.fgOnAccent} />}
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-          <TouchableOpacity
-            onPress={() => setColorPickerOpen(true)}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            style={styles.swatchHit}
-          >
-            <View
-              style={[
-                styles.swatch,
-                styles.customSwatch,
-                customSelected && { backgroundColor: color! },
-                customSelected && styles.swatchActive,
-              ]}
-            >
-              {customSelected ? (
-                <Feather name="check" size={16} color={colors.fgOnAccent} />
-              ) : (
-                <Feather name="plus" size={18} color={colors.lead} />
-              )}
-            </View>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <GroupColorPicker
-        visible={colorPickerOpen}
-        onClose={() => setColorPickerOpen(false)}
-        value={color}
-        onChange={setColor}
-        autoSeed={name}
-      />
-
-      <CurrencyPicker
-        visible={pickerOpen}
-        selected={currency}
-        onClose={() => setPickerOpen(false)}
-        onSelect={setCurrency}
-      />
+      <GroupSetupForm value={form} onChange={setForm} />
       </ContentContainer>
       </ScrollView>
 
@@ -243,52 +127,6 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
   },
   body: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.lead, lineHeight: 22 },
-  field: { gap: spacing.s2, marginBottom: spacing.s4 },
-  fieldLabel: {
-    fontFamily: fontMono,
-    fontSize: fontSize.bodyS,
-    color: colors.lead,
-    letterSpacing: 0.3,
-  },
-  input: {
-    fontFamily: fontBody,
-    fontSize: fontSize.body,
-    color: colors.graphite,
-    borderWidth: 0.5,
-    borderColor: colors.graphite,
-    borderRadius: 6,
-    paddingHorizontal: spacing.s4,
-    paddingVertical: spacing.s3,
-  },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.s2 },
-  chip: {
-    paddingHorizontal: spacing.s4,
-    paddingVertical: spacing.s2,
-    borderRadius: 999,
-    borderWidth: 0.5,
-    borderColor: colors.graphite,
-    backgroundColor: 'transparent',
-  },
-  chipActive: { backgroundColor: colors.graphite },
-  chipLabel: { fontFamily: fontMono, fontSize: fontSize.bodyS, color: colors.graphite },
-  swatchRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.s3 },
-  swatchHit: { padding: 2 },
-  swatch: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.ruleSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  swatchActive: { borderWidth: 2, borderColor: colors.graphite },
-  customSwatch: {
-    borderStyle: 'dashed',
-    borderColor: colors.graphite,
-    backgroundColor: 'transparent',
-  },
-  chipLabelActive: { color: colors.paper },
   footer: { paddingTop: spacing.s3 },
   cta: {
     flexDirection: 'row',
