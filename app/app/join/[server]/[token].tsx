@@ -22,11 +22,13 @@ import {
   type InvitePreviewDetails,
 } from '@/lib/api';
 import { ContentContainer } from '@/components/ContentContainer';
-import { useAccount } from '@/lib/accounts';
+import { useAccount, useAccounts } from '@/lib/accounts';
 import * as analytics from '@/lib/analytics';
 import { showAlert } from '@/lib/app-alert';
 import { runDiscoveryHandshake } from '@/lib/discovery';
 import { checkProtocolCompat } from '@/lib/protocol';
+import { signUpHref, updateDraft } from '@/lib/onboarding-draft';
+import { legacyHostedUrl } from '@/lib/legacy-hosted-url';
 import { normalizeServerUrl } from '@/lib/server-url';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 
@@ -64,6 +66,10 @@ export default function JoinConfirmScreen() {
   }, [params.server]);
   const token = typeof params.token === 'string' ? params.token : '';
   const account = useAccount(serverUrl);
+  // No account on this device at all → this invite is a first run: continue
+  // into the welcome flow (name → sign up), which joins after sign-up.
+  const { accounts } = useAccounts();
+  const firstRun = accounts.length === 0;
 
   const [state, setState] = useState<State>({ kind: 'loading' });
   const [joining, setJoining] = useState(false);
@@ -163,12 +169,20 @@ export default function JoinConfirmScreen() {
       void showAlert({ title: t('scanJoin.unreachable', { host }) });
       return;
     }
+    if (firstRun) {
+      const draft = await updateDraft({
+        intent: 'join',
+        invite: { serverUrl, token, groupName: state.preview.groupName },
+      });
+      router.push((draft.name ? signUpHref(draft, legacyHostedUrl()) : '/welcome/name') as never);
+      return;
+    }
     const qs = new URLSearchParams();
     qs.set('prefillUrl', serverUrl);
     qs.set('mode', 'invite');
     qs.set('pendingInvite', `${serverUrl}/api/groups/join/${encodeURIComponent(token)}`);
     router.push(`/(auth)/add-server?${qs.toString()}`);
-  }, [account, host, serverUrl, state, t, token]);
+  }, [account, firstRun, host, serverUrl, state, t, token]);
 
   const onCancel = useCallback(() => {
     router.replace('/(tabs)');
@@ -235,7 +249,9 @@ export default function JoinConfirmScreen() {
                   <Text style={styles.primaryLabel}>
                     {account?.status === 'reauth_required'
                       ? t('joinConfirm.reauthToJoin')
-                      : t('joinConfirm.signInToJoin')}
+                      : firstRun
+                        ? t('joinConfirm.joinAndSignUp')
+                        : t('joinConfirm.signInToJoin')}
                   </Text>
                 </TouchableOpacity>
               )}
