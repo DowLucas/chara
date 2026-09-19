@@ -1,8 +1,15 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { setLang } from "@/i18n/config";
+import { detectPreferredLang, setLang } from "@/i18n/config";
 
 export function LanguageToggle() {
   const { i18n, t } = useTranslation();
+  // Here rather than in the root: route components hydrate after the root, so
+  // switching from the root's effect re-renders the page body in the new
+  // language before it has hydrated. This lives inside every page's header.
+  useEffect(() => {
+    i18n.changeLanguage(detectPreferredLang());
+  }, [i18n]);
   const current = (i18n.resolvedLanguage ?? i18n.language ?? "en").startsWith("sv") ? "sv" : "en";
 
   return (
