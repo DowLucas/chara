@@ -874,7 +874,8 @@
     "onServer": "su {{host}}",
     "reauthToJoin": "Accedi di nuovo per entrare",
     "retry": "Riprova",
-    "signInToJoin": "Accedi per entrare"
+    "signInToJoin": "Accedi per entrare",
+    "joinAndSignUp": "Unisciti e registrati"
   },
   "keypad": {
     "backspace": "cancella (tieni premuto per svuotare)",
@@ -989,16 +990,10 @@
     "createBody": "Scegli un nome, condividi il QR con gli amici.",
     "createEyebrow": "parti da zero",
     "createTitle": "Crea un gruppo",
-    "eyebrow": "configurazione",
-    "footerHint": "Puoi sempre farlo dopo dalla sezione Gruppi.",
-    "greetingAnon": "Benvenuto.",
     "greetingNamed": "Ciao {{name}}.",
-    "intro": "Un gruppo riunisce le persone che dividono le spese insieme — un viaggio, una casa, un progetto. Creane uno adesso o entra in uno che ti ha già passato un amico.",
     "scanBody": "Punta lo schermo di un amico — entri subito.",
     "scanEyebrow": "già invitato",
-    "scanTitle": "Scansiona un QR per entrare",
-    "skip": "Salta per ora",
-    "subhead": "Creiamo un gruppo."
+    "scanTitle": "Scansiona un QR per entrare"
   },
   "onboardingName": {
     "body": "Il tuo nome compare su ogni spesa e pagamento. Il numero serve agli amici per pagarti con Swish, Vipps o simili.",
@@ -1281,6 +1276,15 @@
     "vipps": "Vipps",
     "vippsUnlinked": "Non collegato"
   },
+  "setup": {
+    "accountCreated": "Account creato",
+    "continueWithout": "Continua senza gruppo",
+    "failedHeadline": "Quasi fatto",
+    "headline": "Stiamo preparando tutto",
+    "stepCreate": "Creazione di {{group}}",
+    "stepJoin": "Ingresso in {{group}}",
+    "stepName": "Salvataggio del nome"
+  },
   "signIn": {
     "apple": {
       "errorBody": "Non siamo riusciti a completare l'accesso con Apple. Riprova o usa l'email.",
@@ -1330,7 +1334,13 @@
       "body": "Questo link aggiungerà un nuovo server a Chara. Continua solo se l'hai richiesto tu.",
       "continue": "Continua",
       "title": "Accedere a {{host}}?"
-    }
+    },
+    "welcomeBack": "Bentornato.",
+    "draftEyebrow": "ultimo passo",
+    "draftCreateHeadline": "Salva {{group}}.",
+    "draftCreateBody": "Crea il tuo account per invitare gli amici.",
+    "draftJoinHeadline": "Unisciti a {{group}}.",
+    "draftJoinBody": "Crea il tuo account e sei dentro."
   },
   "tabs": {
     "activity": "Attività",
@@ -1390,6 +1400,24 @@
     "submit": "Avvisami",
     "success": "Grazie — ti faremo sapere.",
     "title": "Hai usato le tue {{cap}} scansioni gratuite di questo mese"
+  },
+  "welcome": {
+    "chooseHeadline": "Come vuoi iniziare?",
+    "continue": "Continua",
+    "createBody": "Inviterai gli amici subito dopo la registrazione.",
+    "createHeadline": "Dai un nome al tuo primo gruppo.",
+    "getStarted": "Inizia",
+    "haveAccount": "Ho già un account",
+    "letsGo": "Andiamo",
+    "nameBody": "Il tuo nome appare su ogni spesa e saldo.",
+    "nameHeadline": "Come ti chiamano i tuoi amici?",
+    "next": "Avanti",
+    "skip": "Salta",
+    "slide2Body": "Scansionalo, dillo o scrivilo, in qualsiasi valuta.",
+    "slide2Title": "Fotografa lo scontrino.\nLo dividiamo noi.",
+    "slide3Body": "Satispay, Swish o contanti. Tutti vedono sempre chi deve cosa. Open source: ospitalo tu se vuoi.",
+    "slide3Title": "Salda i conti con un tocco.",
+    "step": "passo {{current}} di {{total}}"
   },
   "widget": {
     "addExpense": "Aggiungi spesa",

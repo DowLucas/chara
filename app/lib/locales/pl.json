@@ -901,7 +901,8 @@
     "onServer": "na {{host}}",
     "reauthToJoin": "Zaloguj się ponownie, aby dołączyć",
     "retry": "Ponów",
-    "signInToJoin": "Zaloguj się, aby dołączyć"
+    "signInToJoin": "Zaloguj się, aby dołączyć",
+    "joinAndSignUp": "Dołącz i zarejestruj się"
   },
   "keypad": {
     "backspace": "backspace (przytrzymaj, aby wyczyścić)",
@@ -1018,16 +1019,10 @@
     "createBody": "Wybierz nazwę, udostępnij kod QR znajomym.",
     "createEyebrow": "zacznij od nowa",
     "createTitle": "Utwórz grupę",
-    "eyebrow": "konfiguracja",
-    "footerHint": "Zawsze możesz to zrobić później z zakładki Grupy.",
-    "greetingAnon": "Witaj.",
     "greetingNamed": "Cześć {{name}}.",
-    "intro": "Grupa to zestaw osób, które dzielą wydatki razem — wyjazd, mieszkanie, projekt poboczny. Możesz stworzyć grupę teraz lub dołączyć do tej, którą stworzył znajomy.",
     "scanBody": "Skieruj na ekran znajomego — od razu będziesz w środku.",
     "scanEyebrow": "już zaproszony",
-    "scanTitle": "Zeskanuj QR, aby dołączyć",
-    "skip": "Pomiń teraz",
-    "subhead": "Zacznijmy grupę."
+    "scanTitle": "Zeskanuj QR, aby dołączyć"
   },
   "onboardingName": {
     "body": "Twoje imię pojawia się na każdym wydatku i rozliczeniu. Twój telefon pozwala znajomym rozliczyć się z tobą przez Swish, Vipps lub podobne.",
@@ -1326,6 +1321,15 @@
     "vipps": "Vipps",
     "vippsUnlinked": "Niepołączone"
   },
+  "setup": {
+    "accountCreated": "Konto utworzone",
+    "continueWithout": "Kontynuuj bez grupy",
+    "failedHeadline": "Prawie gotowe",
+    "headline": "Przygotowujemy wszystko",
+    "stepCreate": "Tworzenie grupy {{group}}",
+    "stepJoin": "Dołączanie do {{group}}",
+    "stepName": "Zapisywanie imienia"
+  },
   "signIn": {
     "apple": {
       "errorBody": "Nie udało się ukończyć logowania przez Apple. Spróbuj ponownie lub użyj e-maila.",
@@ -1375,7 +1379,13 @@
       "body": "Ten link doda nowy serwer do Chary. Kontynuuj tylko, jeśli sam o to prosiłeś.",
       "continue": "Kontynuuj",
       "title": "Zalogować się do {{host}}?"
-    }
+    },
+    "welcomeBack": "Witaj ponownie.",
+    "draftEyebrow": "ostatni krok",
+    "draftCreateHeadline": "Zapisz {{group}}.",
+    "draftCreateBody": "Załóż konto, aby zaprosić znajomych.",
+    "draftJoinHeadline": "Dołącz do {{group}}.",
+    "draftJoinBody": "Załóż konto i gotowe."
   },
   "tabs": {
     "activity": "Aktywność",
@@ -1441,6 +1451,24 @@
     "submit": "Powiadom mnie",
     "success": "Dzięki — odezwiemy się.",
     "title": "Wykorzystałeś {{cap}} darmowych skanów paragonów w tym miesiącu"
+  },
+  "welcome": {
+    "chooseHeadline": "Jak chcesz zacząć?",
+    "continue": "Dalej",
+    "createBody": "Zaprosisz znajomych zaraz po rejestracji.",
+    "createHeadline": "Nazwij swoją pierwszą grupę.",
+    "getStarted": "Zaczynamy",
+    "haveAccount": "Mam już konto",
+    "letsGo": "Do dzieła",
+    "nameBody": "Twoje imię widać przy każdym wydatku i rozliczeniu.",
+    "nameHeadline": "Jak mają cię nazywać znajomi?",
+    "next": "Dalej",
+    "skip": "Pomiń",
+    "slide2Body": "Zeskanuj, powiedz lub wpisz – w dowolnej walucie.",
+    "slide2Title": "Zrób zdjęcie paragonu.\nMy go podzielimy.",
+    "slide3Body": "BLIK, Swish lub gotówka. Każdy zawsze widzi, kto ile jest winien. Open source – możesz hostować samodzielnie.",
+    "slide3Title": "Rozlicz się jednym dotknięciem.",
+    "step": "krok {{current}} z {{total}}"
   },
   "widget": {
     "addExpense": "Dodaj wydatek",

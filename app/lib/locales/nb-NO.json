@@ -851,7 +851,8 @@
     "onServer": "på {{host}}",
     "reauthToJoin": "Logg inn igjen for å bli med",
     "retry": "Prøv igjen",
-    "signInToJoin": "Logg inn for å bli med"
+    "signInToJoin": "Logg inn for å bli med",
+    "joinAndSignUp": "Bli med og registrer deg"
   },
   "keypad": {
     "backspace": "tilbake (hold inne for å tømme)",
@@ -964,16 +965,10 @@
     "createBody": "Velg et navn, del QR-koden med venner.",
     "createEyebrow": "start fra null",
     "createTitle": "Lag en gruppe",
-    "eyebrow": "sett opp",
-    "footerHint": "Du kan alltid gjøre dette senere fra Grupper-fanen.",
-    "greetingAnon": "Velkommen.",
     "greetingNamed": "Hei {{name}}.",
-    "intro": "En gruppe er en gjeng som deler kostnader sammen — en tur, en leilighet, et sideprosjekt. Du kan lage en nå eller bli med i en som en venn allerede har laget.",
     "scanBody": "Sikt mot en venns skjerm — du er inne med en gang.",
     "scanEyebrow": "allerede invitert",
-    "scanTitle": "Skann en QR for å bli med",
-    "skip": "Hopp over",
-    "subhead": "La oss starte en gruppe."
+    "scanTitle": "Skann en QR for å bli med"
   },
   "onboardingName": {
     "body": "Navnet ditt vises på hver utgift og hvert oppgjør. Telefonnummeret lar venner gjøre opp med deg via Swish, Vipps eller liknende.",
@@ -1240,6 +1235,15 @@
     "vipps": "Vipps",
     "vippsUnlinked": "Ikke koblet"
   },
+  "setup": {
+    "accountCreated": "Konto opprettet",
+    "continueWithout": "Fortsett uten gruppe",
+    "failedHeadline": "Nesten ferdig",
+    "headline": "Gjør alt klart",
+    "stepCreate": "Oppretter {{group}}",
+    "stepJoin": "Blir med i {{group}}",
+    "stepName": "Lagrer navnet ditt"
+  },
   "signIn": {
     "apple": {
       "errorBody": "Vi kunne ikke fullføre Logg inn med Apple. Prøv igjen eller bruk e-post.",
@@ -1289,7 +1293,13 @@
       "body": "Denne lenken legger til en ny server i Chara. Fortsett bare hvis du ba om det selv.",
       "continue": "Fortsett",
       "title": "Logge inn på {{host}}?"
-    }
+    },
+    "welcomeBack": "Velkommen tilbake.",
+    "draftEyebrow": "siste steg",
+    "draftCreateHeadline": "Lagre {{group}}.",
+    "draftCreateBody": "Opprett kontoen din for å invitere venner.",
+    "draftJoinHeadline": "Bli med i {{group}}.",
+    "draftJoinBody": "Opprett kontoen din, så er du med."
   },
   "tabs": {
     "activity": "Aktivitet",
@@ -1349,6 +1359,24 @@
     "submit": "Varsle meg",
     "success": "Takk — vi tar kontakt.",
     "title": "Du har brukt opp {{cap}} gratis kvitteringsskann denne måneden"
+  },
+  "welcome": {
+    "chooseHeadline": "Hvordan vil du begynne?",
+    "continue": "Fortsett",
+    "createBody": "Du inviterer venner rett etter at du har registrert deg.",
+    "createHeadline": "Gi den første gruppen din et navn.",
+    "getStarted": "Kom i gang",
+    "haveAccount": "Jeg har allerede en konto",
+    "letsGo": "Sett i gang",
+    "nameBody": "Navnet ditt vises på hver utgift og hvert oppgjør.",
+    "nameHeadline": "Hva skal vennene dine kalle deg?",
+    "next": "Neste",
+    "skip": "Hopp over",
+    "slide2Body": "Skann, si eller skriv det – i hvilken som helst valuta.",
+    "slide2Title": "Ta bilde av kvitteringen.\nVi deler den opp.",
+    "slide3Body": "Vipps, Swish eller kontanter. Alle ser alltid hvem som skylder hva. Åpen kildekode – drift den selv om du vil.",
+    "slide3Title": "Gjør opp med ett trykk.",
+    "step": "steg {{current}} av {{total}}"
   },
   "widget": {
     "addExpense": "Legg til utgift",

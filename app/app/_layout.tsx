@@ -376,6 +376,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="welcome" />
           <Stack.Screen name="onboarding" />
           <Stack.Screen name="groups/[server]/[id]/index" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="groups/[server]/[id]/add-expense" options={{ presentation: 'modal' }} />

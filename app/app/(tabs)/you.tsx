@@ -615,7 +615,7 @@ export default function YouScreen() {
             <View style={styles.list}>
               <NavRow
                 label={t('you.replayOnboarding')}
-                onPress={() => router.push('/onboarding')}
+                onPress={() => router.push('/welcome')}
               />
               {/* Remove Account refuses when a server's balance check fails,
                   so an account pointing at a local backend that no longer

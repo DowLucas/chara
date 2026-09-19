@@ -851,7 +851,8 @@
     "onServer": "op {{host}}",
     "reauthToJoin": "Log opnieuw in om mee te doen",
     "retry": "Opnieuw proberen",
-    "signInToJoin": "Log in om mee te doen"
+    "signInToJoin": "Log in om mee te doen",
+    "joinAndSignUp": "Lid worden & aanmelden"
   },
   "keypad": {
     "backspace": "backspace (lang indrukken om te wissen)",
@@ -964,16 +965,10 @@
     "createBody": "Kies een naam en deel de QR-code met je vrienden.",
     "createEyebrow": "vers beginnen",
     "createTitle": "Maak een groep",
-    "eyebrow": "instellen",
-    "footerHint": "Je kunt dit later altijd nog doen via het Groepen-tabblad.",
-    "greetingAnon": "Welkom.",
     "greetingNamed": "Hoi {{name}}.",
-    "intro": "Een groep is een clubje mensen dat samen kosten deelt — een reis, een huis, een zijproject. Je kunt er nu een aanmaken, of je aansluiten bij een groep die een vriend al heeft gemaakt.",
     "scanBody": "Richt op het scherm van een vriend — je zit er meteen in.",
     "scanEyebrow": "al uitgenodigd",
-    "scanTitle": "Scan een QR om lid te worden",
-    "skip": "Nu overslaan",
-    "subhead": "Laten we een groep starten."
+    "scanTitle": "Scan een QR om lid te worden"
   },
   "onboardingName": {
     "body": "Je naam staat bij elke uitgave en afrekening. Met je telefoonnummer kunnen vrienden je betalen via Swish, Vipps of vergelijkbare apps.",
@@ -1240,6 +1235,15 @@
     "vipps": "Vipps",
     "vippsUnlinked": "Niet gekoppeld"
   },
+  "setup": {
+    "accountCreated": "Account aangemaakt",
+    "continueWithout": "Doorgaan zonder groep",
+    "failedHeadline": "Bijna klaar",
+    "headline": "Alles wordt ingesteld",
+    "stepCreate": "{{group}} wordt aangemaakt",
+    "stepJoin": "Lid worden van {{group}}",
+    "stepName": "Je naam wordt opgeslagen"
+  },
   "signIn": {
     "apple": {
       "errorBody": "We konden Inloggen met Apple niet voltooien. Probeer het opnieuw of gebruik e-mail.",
@@ -1289,7 +1293,13 @@
       "body": "Deze link voegt een nieuwe server toe aan Chara. Ga alleen verder als je hierom hebt gevraagd.",
       "continue": "Doorgaan",
       "title": "Inloggen bij {{host}}?"
-    }
+    },
+    "welcomeBack": "Welkom terug.",
+    "draftEyebrow": "laatste stap",
+    "draftCreateHeadline": "{{group}} opslaan.",
+    "draftCreateBody": "Maak je account aan om vrienden uit te nodigen.",
+    "draftJoinHeadline": "Word lid van {{group}}.",
+    "draftJoinBody": "Maak je account aan en je doet mee."
   },
   "tabs": {
     "activity": "Activiteit",
@@ -1349,6 +1359,24 @@
     "submit": "Houd me op de hoogte",
     "success": "Bedankt — we nemen contact op.",
     "title": "Je hebt je {{cap}} gratis bonscans deze maand gebruikt"
+  },
+  "welcome": {
+    "chooseHeadline": "Hoe wil je beginnen?",
+    "continue": "Doorgaan",
+    "createBody": "Je nodigt vrienden uit direct nadat je je hebt aangemeld.",
+    "createHeadline": "Geef je eerste groep een naam.",
+    "getStarted": "Aan de slag",
+    "haveAccount": "Ik heb al een account",
+    "letsGo": "Daar gaan we",
+    "nameBody": "Je naam staat bij elke uitgave en verrekening.",
+    "nameHeadline": "Hoe mogen vrienden je noemen?",
+    "next": "Volgende",
+    "skip": "Overslaan",
+    "slide2Body": "Scan het, zeg het of typ het – in elke valuta.",
+    "slide2Title": "Maak een foto van het bonnetje.\nWij verdelen het.",
+    "slide3Body": "Tikkie, Swish of contant. Iedereen ziet altijd wie wat verschuldigd is. Open source – host het zelf als je wilt.",
+    "slide3Title": "Afrekenen met één tik.",
+    "step": "stap {{current}} van {{total}}"
   },
   "widget": {
     "addExpense": "Uitgave toevoegen",

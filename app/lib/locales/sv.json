@@ -851,7 +851,8 @@
     "onServer": "på {{host}}",
     "reauthToJoin": "Logga in igen för att gå med",
     "retry": "Försök igen",
-    "signInToJoin": "Logga in för att gå med"
+    "signInToJoin": "Logga in för att gå med",
+    "joinAndSignUp": "Gå med och registrera dig"
   },
   "keypad": {
     "backspace": "backsteg (håll inne för att rensa)",
@@ -964,16 +965,10 @@
     "createBody": "Välj ett namn och dela QR-koden med vänner.",
     "createEyebrow": "börja från noll",
     "createTitle": "Skapa en grupp",
-    "eyebrow": "kom igång",
-    "footerHint": "Du kan göra det här senare från fliken Grupper.",
-    "greetingAnon": "Välkommen.",
     "greetingNamed": "Hej {{name}}.",
-    "intro": "En grupp är en samling personer som delar utgifter – en resa, en lägenhet, ett sidoprojekt. Skapa en nu eller gå med i en som en vän redan har skapat.",
     "scanBody": "Rikta mot en väns skärm – du är med direkt.",
     "scanEyebrow": "redan inbjuden",
-    "scanTitle": "Skanna en QR-kod för att gå med",
-    "skip": "Hoppa över",
-    "subhead": "Nu sätter vi igång en grupp."
+    "scanTitle": "Skanna en QR-kod för att gå med"
   },
   "onboardingName": {
     "body": "Ditt namn syns på varje utgift och betalning. Med ditt telefonnummer kan vänner Swisha dig direkt.",
@@ -1240,6 +1235,15 @@
     "vipps": "Vipps",
     "vippsUnlinked": "Inte kopplat"
   },
+  "setup": {
+    "accountCreated": "Konto skapat",
+    "continueWithout": "Fortsätt utan grupp",
+    "failedHeadline": "Nästan klart",
+    "headline": "Gör i ordning allt",
+    "stepCreate": "Skapar {{group}}",
+    "stepJoin": "Går med i {{group}}",
+    "stepName": "Sparar ditt namn"
+  },
   "signIn": {
     "apple": {
       "errorBody": "Vi kunde inte slutföra Logga in med Apple. Försök igen eller använd e-post.",
@@ -1289,7 +1293,13 @@
       "body": "Den här länken lägger till en ny server i Chara. Fortsätt bara om du bad om det själv.",
       "continue": "Fortsätt",
       "title": "Logga in på {{host}}?"
-    }
+    },
+    "welcomeBack": "Välkommen tillbaka.",
+    "draftEyebrow": "sista steget",
+    "draftCreateHeadline": "Spara {{group}}.",
+    "draftCreateBody": "Skapa ditt konto för att bjuda in vänner.",
+    "draftJoinHeadline": "Gå med i {{group}}.",
+    "draftJoinBody": "Skapa ditt konto så är du med."
   },
   "tabs": {
     "activity": "Aktivitet",
@@ -1349,6 +1359,24 @@
     "submit": "Meddela mig",
     "success": "Tack — vi hör av oss.",
     "title": "Du har använt dina {{cap}} fria kvittoskanningar den här månaden"
+  },
+  "welcome": {
+    "chooseHeadline": "Hur vill du börja?",
+    "continue": "Fortsätt",
+    "createBody": "Du bjuder in vänner direkt efter att du registrerat dig.",
+    "createHeadline": "Namnge din första grupp.",
+    "getStarted": "Kom igång",
+    "haveAccount": "Jag har redan ett konto",
+    "letsGo": "Nu kör vi",
+    "nameBody": "Ditt namn syns på varje utgift och uppgörelse.",
+    "nameHeadline": "Vad ska vännerna kalla dig?",
+    "next": "Nästa",
+    "skip": "Hoppa över",
+    "slide2Body": "Skanna, säg eller skriv – i valfri valuta.",
+    "slide2Title": "Fota kvittot.\nVi delar upp det.",
+    "slide3Body": "Swish, Vipps eller kontanter. Alla ser alltid vem som är skyldig vad. Öppen källkod – drifta själv om du vill.",
+    "slide3Title": "Gör upp med ett tryck.",
+    "step": "steg {{current}} av {{total}}"
   },
   "widget": {
     "addExpense": "Lägg till utgift",

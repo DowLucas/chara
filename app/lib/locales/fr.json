@@ -874,7 +874,8 @@
     "onServer": "sur {{host}}",
     "reauthToJoin": "Reconnecte-toi pour rejoindre",
     "retry": "Réessayer",
-    "signInToJoin": "Connecte-toi pour rejoindre"
+    "signInToJoin": "Connecte-toi pour rejoindre",
+    "joinAndSignUp": "Rejoindre et s'inscrire"
   },
   "keypad": {
     "backspace": "effacer (appui long pour tout effacer)",
@@ -989,16 +990,10 @@
     "createBody": "Choisis un nom, partage le QR code à tes amis.",
     "createEyebrow": "partir de zéro",
     "createTitle": "Créer un groupe",
-    "eyebrow": "configuration",
-    "footerHint": "Tu pourras le faire plus tard depuis l'onglet Groupes.",
-    "greetingAnon": "Bienvenue.",
     "greetingNamed": "Salut {{name}}.",
-    "intro": "Un groupe, c'est une bande de personnes qui partagent des dépenses — un voyage, une coloc, un projet perso. Crée le tien ou rejoins celui d'un ami.",
     "scanBody": "Scanne l'écran d'un ami — c'est immédiat.",
     "scanEyebrow": "déjà invité",
-    "scanTitle": "Scanner un QR pour rejoindre",
-    "skip": "Passer pour l'instant",
-    "subhead": "On commence par créer un groupe."
+    "scanTitle": "Scanner un QR pour rejoindre"
   },
   "onboardingName": {
     "body": "Ton nom apparaît sur chaque dépense et chaque règlement. Ton numéro permet à tes amis de te rembourser via Swish, Vipps ou équivalent.",
@@ -1281,6 +1276,15 @@
     "vipps": "Vipps",
     "vippsUnlinked": "Non lié"
   },
+  "setup": {
+    "accountCreated": "Compte créé",
+    "continueWithout": "Continuer sans groupe",
+    "failedHeadline": "Presque terminé",
+    "headline": "Préparation en cours",
+    "stepCreate": "Création de {{group}}",
+    "stepJoin": "Adhésion à {{group}}",
+    "stepName": "Enregistrement de votre nom"
+  },
   "signIn": {
     "apple": {
       "errorBody": "Impossible de terminer la connexion avec Apple. Réessaie ou utilise l'e-mail.",
@@ -1330,7 +1334,13 @@
       "body": "Ce lien ajoutera un nouveau serveur à Chara. Continuez uniquement si vous en êtes à l'origine.",
       "continue": "Continuer",
       "title": "Se connecter à {{host}} ?"
-    }
+    },
+    "welcomeBack": "Bon retour.",
+    "draftEyebrow": "dernière étape",
+    "draftCreateHeadline": "Enregistrer {{group}}.",
+    "draftCreateBody": "Créez votre compte pour inviter vos amis.",
+    "draftJoinHeadline": "Rejoindre {{group}}.",
+    "draftJoinBody": "Créez votre compte et c'est bon."
   },
   "tabs": {
     "activity": "Activité",
@@ -1390,6 +1400,24 @@
     "submit": "Préviens-moi",
     "success": "Merci — on revient vers toi bientôt.",
     "title": "Tu as utilisé tes {{cap}} scans de reçus gratuits ce mois-ci"
+  },
+  "welcome": {
+    "chooseHeadline": "Comment voulez-vous commencer ?",
+    "continue": "Continuer",
+    "createBody": "Vous inviterez vos amis juste après votre inscription.",
+    "createHeadline": "Nommez votre premier groupe.",
+    "getStarted": "Commencer",
+    "haveAccount": "J'ai déjà un compte",
+    "letsGo": "C'est parti",
+    "nameBody": "Votre nom apparaît sur chaque dépense et chaque règlement.",
+    "nameHeadline": "Comment vos amis doivent-ils vous appeler ?",
+    "next": "Suivant",
+    "skip": "Passer",
+    "slide2Body": "Scannez, dictez ou saisissez – dans n'importe quelle devise.",
+    "slide2Title": "Photographiez le ticket.\nOn s'occupe du partage.",
+    "slide3Body": "Swish, Vipps ou espèces. Chacun voit toujours qui doit quoi. Open source – hébergez-le vous-même si vous le souhaitez.",
+    "slide3Title": "Réglez en un geste.",
+    "step": "étape {{current}} sur {{total}}"
   },
   "widget": {
     "addExpense": "Ajouter une dépense",

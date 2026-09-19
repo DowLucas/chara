@@ -37,6 +37,7 @@ export type AnalyticsEvent =
   | 'magic_link_requested'
   | 'auth_completed'
   | 'onboarding_seen'
+  | 'onboarding_intro_skipped'
   | 'onboarding_create_chosen'
   | 'onboarding_scan_chosen'
   | 'user_name_entered'
@@ -44,6 +45,7 @@ export type AnalyticsEvent =
   | 'qr_scanned'
   | 'group_joined'
   | 'onboarding_finished'
+  | 'onboarding_setup_failed'
   // voice expenses
   | 'voice_capture_started'
   | 'voice_capture_cancelled'
