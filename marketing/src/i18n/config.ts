@@ -6,8 +6,10 @@ import { mergePageResources } from "./pages";
 
 const STORAGE_KEY = "chara.lang";
 
-function detectInitialLang(): "en" | "sv" {
-  if (typeof window === "undefined") return "en";
+// Called after the page hydrates, never at module load: the server always renders
+// English, so starting the client in any other language breaks hydration
+// (React #418) and throws away the server-rendered HTML.
+export function detectPreferredLang(): "en" | "sv" {
   const stored = window.localStorage.getItem(STORAGE_KEY);
   if (stored === "en" || stored === "sv") return stored;
   const nav = window.navigator.language?.toLowerCase() ?? "";
@@ -24,7 +26,7 @@ if (!i18n.isInitialized) {
         en: { translation: mergePageResources("en", en) },
         sv: { translation: mergePageResources("sv", sv) },
       },
-      lng: detectInitialLang(),
+      lng: "en",
       fallbackLng: "en",
       interpolation: { escapeValue: false },
       returnNull: false,
