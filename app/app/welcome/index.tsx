@@ -128,7 +128,9 @@ export default function WelcomeIntroScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.haveAccount}
-            onPress={() => router.push('/(auth)/sign-in')}
+            onPress={() => {
+              void clearDraft().then(() => router.push('/(auth)/sign-in'));
+            }}
             accessibilityRole="button"
           >
             <Text style={styles.haveAccountLabel}>{t('welcome.haveAccount')}</Text>
