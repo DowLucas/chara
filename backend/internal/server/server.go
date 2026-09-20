@@ -256,9 +256,11 @@ func newRouter(cfg *config.Config, pool *pgxpool.Pool, queries *db.Queries, jwtS
 		// HostedOnly applies to this route alone while the surrounding
 		// auth middleware still applies to it.
 		summaryH := handler.NewSummaryHandler(queries)
+		feedbackH := handler.NewFeedbackHandler(queries)
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.HostedOnly(cfg))
 			r.Get("/api/me/summary", summaryH.Summary)
+			r.Post("/api/feedback", feedbackH.Submit)
 		})
 
 		r.Get("/api/fx/rates", fxH.Rates)

@@ -387,6 +387,27 @@
     "continue": "完成",
     "headline": "已记入。"
   },
+  "feedback": {
+    "bodyLabel": "你的留言",
+    "intro": "发现问题，或者想要某个功能？在这里告诉我们，内容会直接送到 Chara 的开发者手中。",
+    "kind": {
+      "bug": "问题",
+      "idea": "功能建议"
+    },
+    "kindEyebrow": "类型",
+    "meta": "以 {{email}} 发送 · Chara {{version}}",
+    "placeholder": {
+      "bug": "发生了什么？你原本期待的结果是什么？",
+      "idea": "你希望 Chara 能做什么？"
+    },
+    "send": "发送",
+    "sending": "正在发送…",
+    "sent": {
+      "body": "我们已收到你的反馈，每一条都会看。",
+      "title": "谢谢"
+    },
+    "title": "发送反馈"
+  },
   "fx": {
     "convertedLabel": "换算金额",
     "error": "暂无 {{from}} → {{to}} 汇率",
@@ -1432,6 +1453,7 @@
     "rateUnavailableBody": "Chara 还未上架应用商店。",
     "rateUnavailableTitle": "暂不可用",
     "replayOnboarding": "重看新手引导",
+    "sendFeedback": "发送反馈",
     "settingsEyebrow": "设置",
     "shareMessage": "我在用 Chara 跟朋友分账，挺好用：https://getchara.dowtech.dev",
     "signOut": "退出登录",

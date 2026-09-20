@@ -411,6 +411,27 @@
     "continue": "متابعة",
     "headline": "تمت إضافة المصروف."
   },
+  "feedback": {
+    "bodyLabel": "رسالتك",
+    "intro": "وجدت خللاً أو تريد ميزة جديدة؟ أخبرنا هنا. تصل ملاحظتك مباشرة إلى فريق تطوير Chara.",
+    "kind": {
+      "bug": "خلل",
+      "idea": "فكرة ميزة"
+    },
+    "kindEyebrow": "النوع",
+    "meta": "أُرسلت باسم {{email}} · Chara {{version}}",
+    "placeholder": {
+      "bug": "ماذا حدث، وما الذي كنت تتوقعه بدلاً من ذلك؟",
+      "idea": "ما الذي تريد أن يفعله Chara؟"
+    },
+    "send": "إرسال",
+    "sending": "جارٍ الإرسال…",
+    "sent": {
+      "body": "وصلتنا ملاحظتك. نقرأ كل رسالة.",
+      "title": "شكراً لك"
+    },
+    "title": "إرسال ملاحظات"
+  },
   "fx": {
     "convertedLabel": "الإجمالي المحوّل",
     "error": "لا يوجد سعر صرف لـ {{from}} → {{to}}",
@@ -1627,6 +1648,7 @@
     "rateUnavailableBody": "لم يُنشر Chara في أي متجر بعد.",
     "rateUnavailableTitle": "غير متوفر بعد",
     "replayOnboarding": "إعادة التهيئة",
+    "sendFeedback": "إرسال ملاحظات",
     "settingsEyebrow": "الإعدادات",
     "shareMessage": "أنا أقسّم الفواتير مع Chara — جرّبه: https://getchara.dowtech.dev",
     "signOut": "تسجيل الخروج",

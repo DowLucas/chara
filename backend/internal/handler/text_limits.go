@@ -20,6 +20,9 @@ const (
 	maxTitleLen     = 200
 	maxNotesLen     = 2000
 	maxGroupNameLen = 100
+	// Feedback bodies are prose, not a title — a good bug report can run
+	// several paragraphs, so this ceiling is looser than notes.
+	maxFeedbackBodyLen = 4000
 )
 
 // validateText rejects a string longer than max characters. Length is counted

@@ -59,7 +59,7 @@ import {
 import { storeReviewUrl, type StorePlatform } from '@/lib/store-url';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 import { currentPeriod } from '@/lib/summary-view';
-import { useSummaryServerUrl } from '@/lib/use-summary-server';
+import { useFeatureServerUrl, useSummaryServerUrl } from '@/lib/use-feature-server';
 
 // TODO: real App Store ID once the app is published
 // App Store numeric ID (ascAppId in eas.json). Powers the "Rate us" deep link.
@@ -92,6 +92,9 @@ export default function YouScreen() {
   // written at sign-in, so an already-signed-in user would never see these
   // rows. Same pattern as the ocr / voice / settle-reminder gates.
   const summaryServer = useSummaryServerUrl();
+  // Hosted-only: a self-hosted instance has no one to route a Chara bug
+  // report to, so the row is absent rather than a dead end.
+  const feedbackServer = useFeatureServerUrl('feedback');
   const { homeCurrency, isExplicit: homeCurrencyExplicit } = useHomeCurrency();
   const accountCount = accounts.length;
   const hasMultipleAccounts = accountCount >= 2;
@@ -584,6 +587,12 @@ export default function YouScreen() {
             />
           )}
           <NavRow label={t('privacy.title')} onPress={() => router.push('/settings/privacy')} />
+          {feedbackServer && (
+            <NavRow
+              label={t('you.sendFeedback')}
+              onPress={() => router.push('/settings/feedback')}
+            />
+          )}
           <NavRow label={t('you.about')} onPress={() => router.push('/settings/about')} />
           <NavRow label={t('you.tellFriend')} onPress={handleTellFriend} />
           <NavRow label={rateLabel} onPress={handleRate} />

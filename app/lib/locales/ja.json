@@ -387,6 +387,27 @@
     "continue": "次へ",
     "headline": "支出を追加しました。"
   },
+  "feedback": {
+    "bodyLabel": "メッセージ",
+    "intro": "不具合を見つけた、または欲しい機能がありますか。ここから教えてください。Chara を作っているメンバーに直接届きます。",
+    "kind": {
+      "bug": "不具合",
+      "idea": "機能のアイデア"
+    },
+    "kindEyebrow": "種類",
+    "meta": "送信元 {{email}} · Chara {{version}}",
+    "placeholder": {
+      "bug": "何が起きましたか。どうなると思っていましたか。",
+      "idea": "Chara にどんなことをしてほしいですか。"
+    },
+    "send": "送信",
+    "sending": "送信中…",
+    "sent": {
+      "body": "フィードバックを受け取りました。すべて目を通しています。",
+      "title": "ありがとうございます"
+    },
+    "title": "フィードバックを送る"
+  },
   "fx": {
     "convertedLabel": "換算後の合計",
     "error": "{{from}}→{{to}}のレートがありません",
@@ -1432,6 +1453,7 @@
     "rateUnavailableBody": "Charaはまだストアで公開されていません。",
     "rateUnavailableTitle": "まだ利用できません",
     "replayOnboarding": "オンボーディングを再生",
+    "sendFeedback": "フィードバックを送る",
     "settingsEyebrow": "設定",
     "shareMessage": "Charaで割り勘してみたよ。チェックしてみて: https://getchara.dowtech.dev",
     "signOut": "サインアウト",

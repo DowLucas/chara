@@ -393,6 +393,27 @@
     "continue": "Continuar",
     "headline": "Despesa adicionada."
   },
+  "feedback": {
+    "bodyLabel": "A sua mensagem",
+    "intro": "Encontrou um erro ou sente falta de algo? Conte aqui. Vai direto para quem desenvolve o Chara.",
+    "kind": {
+      "bug": "Erro",
+      "idea": "Ideia de funcionalidade"
+    },
+    "kindEyebrow": "tipo",
+    "meta": "Enviado como {{email}} · Chara {{version}}",
+    "placeholder": {
+      "bug": "O que aconteceu e o que esperava em vez disso?",
+      "idea": "O que gostaria que o Chara fizesse?"
+    },
+    "send": "Enviar",
+    "sending": "A enviar…",
+    "sent": {
+      "body": "Recebemos os seus comentários. Lemos todos.",
+      "title": "Obrigado"
+    },
+    "title": "Enviar comentários"
+  },
   "fx": {
     "convertedLabel": "Total convertido",
     "error": "Sem taxa para {{from}} → {{to}}",
@@ -1478,6 +1499,7 @@
     "rateUnavailableBody": "O Chara ainda não foi publicado em uma loja.",
     "rateUnavailableTitle": "Ainda não disponível",
     "replayOnboarding": "Repetir tutorial",
+    "sendFeedback": "Enviar comentários",
     "settingsEyebrow": "configurações",
     "shareMessage": "Estou dividindo contas com o Chara — dá uma olhada: https://getchara.dowtech.dev",
     "signOut": "Sair",

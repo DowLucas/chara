@@ -399,6 +399,27 @@
     "continue": "Dalej",
     "headline": "Wydatek dodany."
   },
+  "feedback": {
+    "bodyLabel": "Twoja wiadomość",
+    "intro": "Znalazłeś błąd albo czegoś brakuje? Napisz tutaj. Trafi prosto do osób tworzących Charę.",
+    "kind": {
+      "bug": "Błąd",
+      "idea": "Pomysł na funkcję"
+    },
+    "kindEyebrow": "rodzaj",
+    "meta": "Wysłane jako {{email}} · Chara {{version}}",
+    "placeholder": {
+      "bug": "Co się stało i czego się spodziewałeś?",
+      "idea": "Co chcesz, żeby Chara potrafiła?"
+    },
+    "send": "Wyślij",
+    "sending": "Wysyłanie…",
+    "sent": {
+      "body": "Mamy Twoją opinię. Czytamy każdą wiadomość.",
+      "title": "Dziękujemy"
+    },
+    "title": "Wyślij opinię"
+  },
   "fx": {
     "convertedLabel": "Łączna kwota przeliczona",
     "error": "Brak kursu dla {{from}} → {{to}}",
@@ -1531,6 +1552,7 @@
     "rateUnavailableBody": "Chara nie jest jeszcze opublikowana w sklepie.",
     "rateUnavailableTitle": "Jeszcze niedostępne",
     "replayOnboarding": "Powtórz wprowadzenie",
+    "sendFeedback": "Wyślij opinię",
     "settingsEyebrow": "ustawienia",
     "shareMessage": "Dzielę rachunki z Chara — sprawdź: https://getchara.dowtech.dev",
     "signOut": "Wyloguj się",

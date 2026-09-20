@@ -387,6 +387,27 @@
     "continue": "Fortsæt",
     "headline": "Udgift tilføjet."
   },
+  "feedback": {
+    "bodyLabel": "Din besked",
+    "intro": "Fandt du en fejl, eller mangler du noget? Fortæl os det her. Det går direkte til os, der bygger Chara.",
+    "kind": {
+      "bug": "Fejl",
+      "idea": "Funktionsidé"
+    },
+    "kindEyebrow": "type",
+    "meta": "Sendt som {{email}} · Chara {{version}}",
+    "placeholder": {
+      "bug": "Hvad skete der, og hvad forventede du i stedet?",
+      "idea": "Hvad vil du gerne have, at Chara kan?"
+    },
+    "send": "Send",
+    "sending": "Sender…",
+    "sent": {
+      "body": "Vi har din feedback. Vi læser alt, hvad der kommer ind.",
+      "title": "Tak"
+    },
+    "title": "Send feedback"
+  },
   "fx": {
     "convertedLabel": "Omregnet i alt",
     "error": "Ingen kurs for {{from}} → {{to}}",
@@ -1435,6 +1456,7 @@
     "rateUnavailableBody": "Chara er ikke udgivet i en butik endnu.",
     "rateUnavailableTitle": "Ikke tilgængelig endnu",
     "replayOnboarding": "Tag introen igen",
+    "sendFeedback": "Send feedback",
     "settingsEyebrow": "indstillinger",
     "shareMessage": "Jeg deler regninger med Chara — prøv det: https://getchara.dowtech.dev",
     "signOut": "Log ud",

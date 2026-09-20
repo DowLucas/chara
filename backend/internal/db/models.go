@@ -140,6 +140,17 @@ type ExpenseSplit struct {
 	Share     int64  `db:"share" json:"share"`
 }
 
+type FeedbackReport struct {
+	ID         string             `db:"id" json:"id"`
+	UserID     string             `db:"user_id" json:"user_id"`
+	Kind       string             `db:"kind" json:"kind"`
+	Body       string             `db:"body" json:"body"`
+	AppVersion pgtype.Text        `db:"app_version" json:"app_version"`
+	Platform   pgtype.Text        `db:"platform" json:"platform"`
+	Locale     pgtype.Text        `db:"locale" json:"locale"`
+	CreatedAt  pgtype.Timestamptz `db:"created_at" json:"created_at"`
+}
+
 type FxRate struct {
 	Base      string             `db:"base" json:"base"`
 	Quote     string             `db:"quote" json:"quote"`
