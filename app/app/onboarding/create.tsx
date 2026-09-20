@@ -56,14 +56,7 @@ export default function CreateGroupScreen() {
         `/onboarding/created?server=${encodeURIComponent(serverUrl)}&groupId=${group.id}`,
       );
     } catch (e: any) {
-      const status = typeof e?.status === 'number' ? e.status : undefined;
-      let code: string = 'unknown';
-      if (status) {
-        code = `http_${status}`;
-      } else if (e?.message && /network|fetch|timeout/i.test(String(e.message))) {
-        code = 'network';
-      }
-      analytics.track('group_create_failed', { code });
+      analytics.track('group_create_failed', { code: analytics.errorCode(e) });
       showAlert({ title: t('createGroup.errorTitle'), message: e?.message || String(e) });
     } finally {
       setSubmitting(false);

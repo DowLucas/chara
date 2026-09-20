@@ -134,9 +134,7 @@ export default function JoinConfirmScreen() {
         router.replace('/(tabs)');
         return;
       }
-      analytics.track('group_join_failed', {
-        code: e instanceof ApiError ? `http_${e.status}` : 'unknown',
-      });
+      analytics.track('group_join_failed', { code: analytics.errorCode(e) });
       void showAlert({
         title: t('scanJoin.couldNotJoin'),
         message: e?.message || String(e),

@@ -89,8 +89,13 @@ export default function OnboardingSetupScreen() {
       }
       // Fires for both paths at the same point, so create and join stay
       // comparable — and so abandoning the invite screen still counts as a
-      // finished onboarding.
-      analytics.track('onboarding_finished', { path: result.intent });
+      // finished onboarding. `none` is not a finish: `choose.tsx` writes
+      // `intent` the instant a card is tapped, and `isDraftActive` needs only
+      // that, so an abandoned draft still routes here after a later sign-in.
+      // Counting it would inflate the funnel with users who never got a group.
+      if (result.outcome !== 'none') {
+        analytics.track('onboarding_finished', { path: result.intent });
+      }
       const [reset, ...rest] = postSetupNavigation(result, serverUrl);
       router.replace(reset as never);
       rest.forEach((href) => router.push(href as never));
