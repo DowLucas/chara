@@ -87,7 +87,7 @@ export default function OnboardingNameScreen() {
       await updateAccount(account.serverUrl, { user: updated });
       analytics.track('user_name_entered');
       if (router.canGoBack()) router.back();
-      else router.replace('/onboarding');
+      else router.replace('/(tabs)');
     } catch (e) {
       showAlert({
         title: t('onboardingName.errorTitle'),

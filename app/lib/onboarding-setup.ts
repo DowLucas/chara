@@ -1,0 +1,114 @@
+/**
+ * Replays a first-run `OnboardingDraft` against the server the user just
+ * signed up on: save their name, then create or join their first group.
+ *
+ * Dependency-injected so the screen supplies `apiFor(serverUrl)` calls and the
+ * logic stays testable. Each completed step is persisted into the draft before
+ * moving on, so a retry (or an app kill mid-way) resumes instead of creating
+ * a duplicate group.
+ */
+import type { OnboardingDraft } from './onboarding-draft';
+
+export type SetupStep = 'name' | 'group';
+
+export interface SetupDeps {
+  getMyName(): Promise<string>;
+  updateName(name: string): Promise<void>;
+  createGroup(name: string, currency: string): Promise<{ id: string }>;
+  /** Cosmetic, per-device; failures are ignored. */
+  setGroupColor(groupId: string, color: string): Promise<void>;
+  /** Resolves null when the user is already a member. */
+  joinGroup(token: string): Promise<{ id: string } | null>;
+  save(d: OnboardingDraft): Promise<void>;
+}
+
+/**
+ * What the group step actually did, so the screen can fire the right
+ * conversion event exactly once. `resumed` means a previous attempt already
+ * created the group (and already counted it); `already_member` is the 409 the
+ * join path treats as success.
+ */
+export type SetupOutcome = 'created' | 'resumed' | 'joined' | 'already_member' | 'none';
+
+export type SetupResult =
+  | {
+      kind: 'done';
+      intent: 'create' | 'join';
+      groupId: string | null;
+      outcome: SetupOutcome;
+    }
+  | { kind: 'failed'; step: SetupStep; error: unknown; draft: OnboardingDraft };
+
+/**
+ * Where to go once setup succeeds, as a navigation sequence: `replace` the
+ * first entry, then `push` the rest. The first entry is always the tabs, so
+ * the pre-signup welcome screens (each `push`ed) drop off the stack — without
+ * it, Back from the new group returns into the welcome flow.
+ */
+export function postSetupNavigation(
+  result: Extract<SetupResult, { kind: 'done' }>,
+  serverUrl: string,
+): string[] {
+  if (!result.groupId) return ['/(tabs)'];
+  const enc = encodeURIComponent(serverUrl);
+  return [
+    '/(tabs)',
+    result.intent === 'create'
+      ? `/onboarding/created?server=${enc}&groupId=${result.groupId}`
+      : `/groups/${enc}/${result.groupId}`,
+  ];
+}
+
+export function setupSteps(d: OnboardingDraft): SetupStep[] {
+  return d.name ? ['name', 'group'] : ['group'];
+}
+
+export async function runSetup(
+  draft: OnboardingDraft,
+  deps: SetupDeps,
+  onStep?: (step: SetupStep, state: 'running' | 'done') => void,
+): Promise<SetupResult> {
+  let d = { ...draft };
+  let step: SetupStep = 'name';
+  try {
+    if (d.name) {
+      onStep?.('name', 'running');
+      // An existing account keeps the name it already has.
+      if (!d.nameDone && !(await deps.getMyName()).trim()) {
+        await deps.updateName(d.name);
+      }
+      if (!d.nameDone) {
+        d = { ...d, nameDone: true };
+        await deps.save(d);
+      }
+      onStep?.('name', 'done');
+    }
+
+    step = 'group';
+    onStep?.('group', 'running');
+    let groupId: string | null;
+    let outcome: SetupOutcome;
+    if (d.intent === 'join' && d.invite) {
+      groupId = (await deps.joinGroup(d.invite.token))?.id ?? null;
+      outcome = groupId ? 'joined' : 'already_member';
+    } else if (d.groupId) {
+      groupId = d.groupId;
+      outcome = 'resumed';
+    } else if (d.group) {
+      const { name, currency, color } = d.group;
+      const g = await deps.createGroup(name, currency);
+      groupId = g.id;
+      outcome = 'created';
+      d = { ...d, groupId };
+      await deps.save(d);
+      if (color) await deps.setGroupColor(g.id, color).catch(() => {});
+    } else {
+      groupId = null;
+      outcome = 'none';
+    }
+    onStep?.('group', 'done');
+    return { kind: 'done', intent: d.intent === 'join' ? 'join' : 'create', groupId, outcome };
+  } catch (error) {
+    return { kind: 'failed', step, error, draft: d };
+  }
+}

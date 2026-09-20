@@ -387,6 +387,31 @@
     "continue": "Continue",
     "headline": "Expense added."
   },
+  "feedback": {
+    "bodyLabel": "Your message",
+    "intro": "Found a bug, or want something added? Tell us here. It goes straight to the people building Chara.",
+    "kind": {
+      "bug": "Bug",
+      "idea": "Feature idea"
+    },
+    "kindEyebrow": "type",
+    "meta": "Sent as {{email}} · Chara {{version}}",
+    "placeholder": {
+      "bug": "What happened, and what did you expect instead?",
+      "idea": "What would you like Chara to do?"
+    },
+    "send": "Send",
+    "sending": "Sending…",
+    "sent": {
+      "body": "Your feedback is with us. We read every one.",
+      "title": "Thank you"
+    },
+    "title": "Send feedback",
+    "unavailable": {
+      "body": "None of your servers take feedback. The in-app form is a Chara Cloud feature.",
+      "title": "Feedback isn't available"
+    }
+  },
   "fx": {
     "convertedLabel": "Converted total",
     "error": "No rate for {{from}} → {{to}}",
@@ -456,8 +481,12 @@
     "eyebrow": "group",
     "filterAll": "Everyone",
     "filterEmpty": "No expenses match this filter.",
+    "searchTitle": "Search expenses",
+    "searchPlaceholder": "Search title, notes, or who paid…",
+    "searchClear": "Clear search",
+    "searchEmpty": "No expenses match “{{query}}”.",
     "filterMine": "Only mine",
-    "filterTitle": "Filter by who paid",
+    "filterTitle": "Filter expenses",
     "infoCreatedLabel": "Created",
     "infoCurrencyLabel": "Currency",
     "infoMembersLabel": "Members",
@@ -835,19 +864,20 @@
     "errorTitle": "Invite unavailable",
     "errorUnreachable": "Couldn't reach {{host}}. Check your connection and try again.",
     "eyebrow": "invite",
-    "incompatibleNote": "Update Chara to join — this server is on a newer protocol than this app supports.",
+    "incompatibleNote": "Update Chara to join. This server is on a newer protocol than this app supports.",
     "invitedBy": "{{name}} invited you to",
     "invitedByUnknown": "you've been invited to",
     "join": "Join group",
     "joining": "Joining…",
     "loading": "Loading invite…",
-    "lockedNote": "This group is locked — joining will share read-only access until the owner unlocks it.",
+    "lockedNote": "This group is locked. Joining will share read-only access until the owner unlocks it.",
     "memberCount_one": "1 member",
     "memberCount_other": "{{count}} members",
     "onServer": "on {{host}}",
     "reauthToJoin": "Sign in again to join",
     "retry": "Retry",
-    "signInToJoin": "Sign in to join"
+    "signInToJoin": "Sign in to join",
+    "joinAndSignUp": "Join & sign up"
   },
   "keypad": {
     "backspace": "backspace (long-press to clear)",
@@ -960,19 +990,17 @@
     "createBody": "Pick a name, share the QR code with friends.",
     "createEyebrow": "start fresh",
     "createTitle": "Create a group",
-    "eyebrow": "set up",
-    "footerHint": "You can always do this later from the Groups tab.",
-    "greetingAnon": "Welcome.",
     "greetingNamed": "Hi {{name}}.",
-    "intro": "A group is a set of people who split costs together — a trip, a flat, a side project. You can create one now or join one a friend already made.",
-    "scanBody": "Point at a friend's screen — you'll be in instantly.",
+    "scanBody": "Point at a friend's screen and you're in instantly.",
     "scanEyebrow": "already invited",
     "scanTitle": "Scan a QR to join",
-    "skip": "Skip for now",
-    "subhead": "Let's start a group."
+    "serverBody": "Run Chara yourself? Point the app at your own server.",
+    "serverEyebrow": "self-hosted",
+    "serverTitle": "Connect my server",
+    "serverUseCloud": "Use Chara Cloud instead"
   },
   "onboardingName": {
-    "body": "Your name appears on every expense and settlement. Your phone is optional — it lets friends settle up with you via Swish, Vipps, or similar.",
+    "body": "Your name appears on every expense and settlement. Your phone is optional. It lets friends settle up with you via Swish, Vipps, or similar.",
     "errorEmpty": "Please enter your full name.",
     "errorTitle": "Could not save profile",
     "eyebrow": "your profile",
@@ -1236,6 +1264,15 @@
     "vipps": "Vipps",
     "vippsUnlinked": "Not linked"
   },
+  "setup": {
+    "accountCreated": "Account created",
+    "continueWithout": "Continue without a group",
+    "failedHeadline": "Almost there",
+    "headline": "Setting things up",
+    "stepCreate": "Creating {{group}}",
+    "stepJoin": "Joining {{group}}",
+    "stepName": "Saving your name"
+  },
   "signIn": {
     "apple": {
       "errorBody": "We couldn't complete Sign in with Apple. Please try again or use email.",
@@ -1250,7 +1287,7 @@
     "dict": {
       "def1": ": even; squared up between friends",
       "def2": ": the wiping of a small debt",
-      "def3": ": \"let's call it chara\" — let's call it even",
+      "def3": ": \"let's call it chara\", let's call it even",
       "headword": "cha·ra",
       "partOfSpeech": "noun, from Japanese チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1262,7 +1299,6 @@
       "errorTitle": "Sign in failed",
       "noToken": "Google didn't return an identity token. Please try again."
     },
-    "headline": "Split it.\nSettle it.\nCall it quits.",
     "hostedBy": "hosted by chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",
@@ -1285,7 +1321,13 @@
       "body": "This link will add a new server to Chara. Only continue if you asked for it.",
       "continue": "Continue",
       "title": "Sign in to {{host}}?"
-    }
+    },
+    "welcomeBack": "Welcome back.",
+    "draftEyebrow": "last step",
+    "draftCreateHeadline": "Save {{group}}.",
+    "draftCreateBody": "Create your account to invite friends.",
+    "draftJoinHeadline": "Join {{group}}.",
+    "draftJoinBody": "Create your account and you're in."
   },
   "tabs": {
     "activity": "Activity",
@@ -1346,6 +1388,25 @@
     "success": "Thanks — we'll be in touch.",
     "title": "You've reached this month's receipt scan limit"
   },
+  "welcome": {
+    "chooseHeadline": "How are you starting?",
+    "continue": "Continue",
+    "createBody": "You'll invite friends right after you sign up.",
+    "createHeadline": "Name your first group.",
+    "getStarted": "Get started",
+    "haveAccount": "I already have an account",
+    "language": "Language",
+    "letsGo": "Let's go",
+    "nameBody": "Your name shows on every expense and settlement.",
+    "nameHeadline": "What's your name?",
+    "next": "Next",
+    "skip": "Skip",
+    "slide2Body": "Take a picture of your receipt and get a line-by-line breakdown.",
+    "slide2Title": "Snap the receipt.\nWe'll split it.",
+    "slide3Body": "Swish, Vipps, or cash. Everyone always sees who owes what. Open source, so you can self-host it if you like.",
+    "slide3Title": "Settle up in one tap.",
+    "step": "step {{current}} of {{total}}"
+  },
   "widget": {
     "addExpense": "Add expense",
     "allSettled": "All settled up",
@@ -1399,6 +1460,7 @@
     "rateUnavailableBody": "Chara isn't published to a store yet.",
     "rateUnavailableTitle": "Not available yet",
     "replayOnboarding": "Replay onboarding",
+    "sendFeedback": "Send feedback",
     "settingsEyebrow": "settings",
     "shareMessage": "I've been splitting bills with Chara — check it out: https://getchara.dowtech.dev",
     "signOut": "Sign out",

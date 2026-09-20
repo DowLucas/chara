@@ -8,6 +8,7 @@ import {
   Modal,
   Pressable,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { hapticLongPress, hapticSelect, hapticWarning } from '@/lib/haptics';
 import { showAlert } from '@/lib/app-alert';
@@ -45,6 +46,7 @@ import { isPopupJustClosed, markPopupClosed } from '@/lib/popup-guard';
 import { setLastActiveGroup } from '@/lib/preferences';
 import { subscribeGroupChanged, notifyGroupChanged } from '@/lib/group-refresh';
 import { computeStandings, expensesInvolvingMember } from '@/lib/standings';
+import { filterMenuEntries, matchesExpenseQuery } from '@/lib/expense-search';
 import { categoryIcon } from '@/lib/categories';
 import { displayHostFor, isMainHostedServer } from '@/lib/server-url';
 import { colors, fontDisplay, fontBody, fontBodyMedium, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
@@ -245,13 +247,27 @@ export default function GroupDetailScreen() {
   // current user's member id.
   const [filterPayerId, setFilterPayerId] = useState<string | null>(null);
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
-  const filterOptions = [
-    { label: t('groupDetail.filterAll'), onPress: () => setFilterPayerId(null) },
-    ...(me ? [{ label: t('groupDetail.filterMine'), onPress: () => setFilterPayerId(me.id) }] : []),
-    ...members
-      .filter((m) => m.id !== me?.id)
-      .map((m) => ({ label: m.name, onPress: () => setFilterPayerId(m.id) })),
-  ];
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  function closeSearch() {
+    setSearchQuery('');
+    setSearchOpen(false);
+  }
+  const filterOptions = filterMenuEntries(members, me?.id).map((entry) => {
+    switch (entry.kind) {
+      case 'search':
+        return { label: t('groupDetail.searchTitle'), onPress: () => setSearchOpen(true) };
+      case 'all':
+        return { label: t('groupDetail.filterAll'), onPress: () => setFilterPayerId(null) };
+      case 'payer':
+        return {
+          label: entry.mine
+            ? t('groupDetail.filterMine')
+            : (members.find((m) => m.id === entry.memberId)?.name ?? ''),
+          onPress: () => setFilterPayerId(entry.memberId),
+        };
+    }
+  });
   function openFilterMenu() {
     if (isPopupJustClosed()) return;
     if (openNativeActionSheet(t('groupDetail.filterTitle'), filterOptions)) return;
@@ -284,9 +300,11 @@ export default function GroupDetailScreen() {
     return bd.localeCompare(ad);
   });
 
-  const visibleExpenses = filterPayerId
-    ? sortedExpenses.filter((e) => e.paid_by_id === filterPayerId)
-    : sortedExpenses;
+  const visibleExpenses = sortedExpenses
+    .filter((e) => !filterPayerId || e.paid_by_id === filterPayerId)
+    .filter((e) =>
+      matchesExpenseQuery(e, members.find((m) => m.id === e.paid_by_id)?.name, searchQuery),
+    );
 
   const myBalance = balances.find((b) => b.user_id === user?.id);
   const myNet = myBalance ? decimalToMinor(myBalance.net_balance) : 0;
@@ -693,7 +711,7 @@ export default function GroupDetailScreen() {
             {t('groupDetail.expensesTotal', { count: visibleExpenses.length })}
           </Text>
           <View style={styles.listHeaderActions}>
-            {members.length > 1 && expenses.length > 0 && (
+            {expenses.length > 0 && (
               <TouchableOpacity
                 onPress={openFilterMenu}
                 activeOpacity={0.7}
@@ -702,7 +720,7 @@ export default function GroupDetailScreen() {
                 hitSlop={8}
                 style={styles.filterBtn}
               >
-                <Feather name="filter" size={13} color={filterPayerId ? colors.graphite : colors.lead} />
+                <Feather name="filter" size={13} color={filterPayerId || searchQuery ? colors.graphite : colors.lead} />
                 <Text
                   style={[styles.listHeaderRight, styles.filterLabel, filterPayerId && { color: colors.graphite }]}
                   numberOfLines={1}
@@ -725,6 +743,31 @@ export default function GroupDetailScreen() {
             </TouchableOpacity>
           </View>
         </View>
+        {searchOpen && (
+          <View style={styles.searchWrap}>
+            <Feather name="search" size={14} color={colors.lead} />
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder={t('groupDetail.searchPlaceholder')}
+              placeholderTextColor={colors.lead}
+              autoFocus
+              autoCorrect={false}
+              autoCapitalize="none"
+              returnKeyType="search"
+              maxFontSizeMultiplier={2}
+              style={styles.searchInput}
+            />
+            <TouchableOpacity
+              onPress={closeSearch}
+              accessibilityRole="button"
+              accessibilityLabel={t('groupDetail.searchClear')}
+              hitSlop={8}
+            >
+              <Feather name="x" size={16} color={colors.lead} />
+            </TouchableOpacity>
+          </View>
+        )}
         <View style={styles.listRule} />
 
         {expenses.length === 0 && !loaded ? (
@@ -737,7 +780,11 @@ export default function GroupDetailScreen() {
             onImport={() => router.push(importHref(serverUrl, id))}
           />
         ) : visibleExpenses.length === 0 ? (
-          <Text style={styles.filterEmpty}>{t('groupDetail.filterEmpty')}</Text>
+          <Text style={styles.filterEmpty}>
+            {searchQuery.trim()
+              ? t('groupDetail.searchEmpty', { query: searchQuery.trim() })
+              : t('groupDetail.filterEmpty')}
+          </Text>
         ) : (
           visibleExpenses.map((e) => {
             const payerMember = members.find((m) => m.id === e.paid_by_id);
@@ -1292,6 +1339,23 @@ const styles = StyleSheet.create({
   },
   filterLabel: {
     flexShrink: 1,
+  },
+  searchWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.s2,
+    marginHorizontal: spacing.s4,
+    marginBottom: spacing.s2,
+    paddingHorizontal: spacing.s3,
+    borderRadius: 10,
+    backgroundColor: colors.bone,
+  },
+  searchInput: {
+    flex: 1,
+    fontFamily: fontBody,
+    fontSize: fontSize.body,
+    color: colors.graphite,
+    paddingVertical: spacing.s3,
   },
   listRule: {
     height: 1,

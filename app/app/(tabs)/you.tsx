@@ -33,15 +33,15 @@ import i18n, {
   type SupportedLanguage,
 } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
-import { useAccounts } from '@/lib/accounts';
+import { useAccounts, useDefaultAccount } from '@/lib/accounts';
 import { resetAllAccounts } from '@/lib/accounts-store';
+import { FLAG_ONBOARDING_COMPLETE, clearFlag } from '@/lib/storage';
 import { initialsOf } from '@/lib/name';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import {
   apiFor,
   aggregateBulkDeleteResults,
-  authToken,
-  avatarImageSource,
+  avatarImageSourceOn,
   AvatarMimeType,
   ApiError,
   deleteAvatar as apiDeleteAvatar,
@@ -59,7 +59,7 @@ import {
 import { storeReviewUrl, type StorePlatform } from '@/lib/store-url';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 import { currentPeriod } from '@/lib/summary-view';
-import { useSummaryServerUrl } from '@/lib/use-summary-server';
+import { useFeatureServerUrl, useSummaryServerUrl } from '@/lib/use-feature-server';
 
 // TODO: real App Store ID once the app is published
 // App Store numeric ID (ascAppId in eas.json). Powers the "Rate us" deep link.
@@ -83,10 +83,18 @@ export default function YouScreen() {
   const { t } = useTranslation();
   const { user, signOut, refreshUser } = useAuth();
   const { accounts, removeAccount, setHomeCurrency } = useAccounts();
+  // The profile avatar lives on the default account's own server, and its
+  // bearer token must be read synchronously: an async token meant the first
+  // render fired an unauthenticated <Image> that 401'd before the token
+  // landed. See Avatar.helpers for why that failure used to be permanent.
+  const defaultAccount = useDefaultAccount();
   // Live feature read, not the cached account.instance blob — that is only
   // written at sign-in, so an already-signed-in user would never see these
   // rows. Same pattern as the ocr / voice / settle-reminder gates.
   const summaryServer = useSummaryServerUrl();
+  // Hosted-only: a self-hosted instance has no one to route a Chara bug
+  // report to, so the row is absent rather than a dead end.
+  const feedbackServer = useFeatureServerUrl('feedback');
   const { homeCurrency, isExplicit: homeCurrencyExplicit } = useHomeCurrency();
   const accountCount = accounts.length;
   const hasMultipleAccounts = accountCount >= 2;
@@ -94,19 +102,8 @@ export default function YouScreen() {
   const [languageSheetVisible, setLanguageSheetVisible] = useState(false);
   const [currencySheetVisible, setCurrencySheetVisible] = useState(false);
   const [storedLanguage, setStoredLanguage] = useState<string | null>(null);
-  const [avatarToken, setAvatarToken] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    authToken().then((t) => {
-      if (!cancelled) setAvatarToken(t);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id]);
 
   const refresh = useCallback(async () => {
     const lang = await getPreferredLanguage();
@@ -124,7 +121,9 @@ export default function YouScreen() {
   }, [refresh]);
 
   const initials = initialsOf(user?.name);
-  const avatarSource = avatarImageSource(user, avatarToken);
+  const avatarSource = defaultAccount
+    ? avatarImageSourceOn(defaultAccount.serverUrl, user)
+    : null;
   const hasServerAvatar = !!user?.avatar_object_url;
 
   function inferAvatarMime(asset: ImagePicker.ImagePickerAsset): AvatarMimeType {
@@ -284,7 +283,7 @@ export default function YouScreen() {
     const result = await showAlert({
       title: 'Reset all accounts?',
       message:
-        'Removes every signed-in account on this device and returns to sign-in. Server data is untouched. Development builds only.',
+        'Removes every signed-in account on this device and returns to the first-run onboarding flow. Server data is untouched. Development builds only.',
       buttons: [
         { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
         { key: 'reset', label: 'Reset', style: 'destructive' },
@@ -292,7 +291,11 @@ export default function YouScreen() {
     });
     if (result !== 'reset') return;
     await resetAllAccounts();
-    router.replace('/(auth)/sign-in');
+    // Also clear the first-run state, so this reproduces a fresh install
+    // rather than dropping onto sign-in: the gate routes signed-out users to
+    // /welcome only while `onboarding_complete` is unset.
+    await clearFlag(FLAG_ONBOARDING_COMPLETE).catch(() => {});
+    router.replace('/welcome');
   }
 
   async function handleSignOutPress() {
@@ -584,6 +587,18 @@ export default function YouScreen() {
             />
           )}
           <NavRow label={t('privacy.title')} onPress={() => router.push('/settings/privacy')} />
+          {feedbackServer && (
+            <NavRow
+              label={t('you.sendFeedback')}
+              // Hand over the server this row already resolved, so the
+              // screen doesn't probe (and risk failing) a second time.
+              onPress={() =>
+                router.push(
+                  `/settings/feedback?server=${encodeURIComponent(feedbackServer)}`,
+                )
+              }
+            />
+          )}
           <NavRow label={t('you.about')} onPress={() => router.push('/settings/about')} />
           <NavRow label={t('you.tellFriend')} onPress={handleTellFriend} />
           <NavRow label={rateLabel} onPress={handleRate} />
@@ -615,7 +630,7 @@ export default function YouScreen() {
             <View style={styles.list}>
               <NavRow
                 label={t('you.replayOnboarding')}
-                onPress={() => router.push('/onboarding')}
+                onPress={() => router.push('/welcome')}
               />
               {/* Remove Account refuses when a server's balance check fails,
                   so an account pointing at a local backend that no longer

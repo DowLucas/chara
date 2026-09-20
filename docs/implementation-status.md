@@ -598,6 +598,58 @@ idempotency, opt-out, locale, send failure); `internal/language` 3;
 reporting; `internal/config` 4 for `SUMMARY_TZ`; app-side `summary-view`
 24 and `summary-deep-link` 8.
 
+### Group screen: expense search ✅
+
+- Client-side only (the group screen already loads every expense).
+  "Search expenses" is the first option in the Filter sheet and reveals a
+  search field above the list; results combine with the payer filter and
+  sort. One-member groups get the Filter chip too, with search only.
+- `app/lib/expense-search.ts` — `matchesExpenseQuery`: case- and
+  diacritic-insensitive substring match on title, notes, and payer name;
+  whitespace-separated tokens are ANDed. `filterMenuEntries` builds the
+  Filter sheet's options. 10 unit tests in
+  `lib/__tests__/expense-search.test.ts`.
+
+### Expo SDK 57 upgrade (React Native 0.86) ✅
+
+- Stepped 54 → 55 → 56 → 57 (one commit per SDK, Expo's recommended
+  path); `expo-doctor` 21/21.
+- Minimum iOS rises to 16.4 (SDK 56 floor). Native change: ships only
+  through `./release`.
+- Code changes: `TabBar` imports `BottomTabBarProps` from
+  `expo-router/js-tabs` (SDK 56 router dropped React Navigation);
+  `StyleSheet.absoluteFillObject` → `absoluteFill` (removed in RN 0.85);
+  `tsconfig.json` sets `rootDir` and `types: ["jest", "node"]` for
+  TypeScript 6. `expo-share-intent` 5 → 8.
+- Follow-up: SDK 57 builds on Xcode 26.x. Building with Xcode 27 (iOS 27
+  SDK) requires the scene lifecycle — opt in via
+  `expo-build-properties` `ios.enableSceneSupport`, or move to SDK 58.
+
+### In-app feedback ✅
+
+Hosted-only. A bug report / feature idea form under the You tab, written to
+a table and read with SQL — no email fan-out, no issue-tracker sync.
+
+- [x] Migration 000060 — `feedback_reports(user_id, kind, body, app_version,
+      platform, locale)`; no dedup, since the same report twice means the
+      user hit the bug twice
+- [x] `POST /api/feedback` behind `HostedOnly`; kind allowlisted to
+      `bug`/`idea`, body capped at `maxFeedbackBodyLen`
+- [x] `features.feedback` in `/.well-known/chara-instance`, tracking
+      `IsHosted()` — a self-hosted instance has no one to route a Chara bug
+      report to, so the app hides the row entirely
+- [x] App: `/settings/feedback` screen and a You-tab row gated on the
+      advertised feature; client metadata (version, platform, locale) sent
+      so a terse report is still actionable
+- [x] `feedback` namespace in all 15 locale files
+- [x] `summary-server` generalized to `feature-server`
+      (`useFeatureServerUrl(feature)`), so both gated rows share one live
+      well-known probe instead of two copies
+
+**Tests**: `internal/handler` 9 integration (happy path per kind, metadata
+persisted and nullable, both 400 branches, over-length body, 401, and 404
+on selfhost); `internal/wellknown` 1 (both modes); app-side `feature-server` 9.
+
 ---
 
 ## Integration test coverage

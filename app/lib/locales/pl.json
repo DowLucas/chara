@@ -399,6 +399,31 @@
     "continue": "Dalej",
     "headline": "Wydatek dodany."
   },
+  "feedback": {
+    "bodyLabel": "Twoja wiadomość",
+    "intro": "Znalazłeś błąd albo czegoś brakuje? Napisz tutaj. Trafi prosto do osób tworzących Charę.",
+    "kind": {
+      "bug": "Błąd",
+      "idea": "Pomysł na funkcję"
+    },
+    "kindEyebrow": "rodzaj",
+    "meta": "Wysłane jako {{email}} · Chara {{version}}",
+    "placeholder": {
+      "bug": "Co się stało i czego się spodziewałeś?",
+      "idea": "Co chcesz, żeby Chara potrafiła?"
+    },
+    "send": "Wyślij",
+    "sending": "Wysyłanie…",
+    "sent": {
+      "body": "Mamy Twoją opinię. Czytamy każdą wiadomość.",
+      "title": "Dziękujemy"
+    },
+    "title": "Wyślij opinię",
+    "unavailable": {
+      "body": "Żaden z Twoich serwerów nie przyjmuje opinii. Formularz w aplikacji to funkcja Chara Cloud.",
+      "title": "Opinie są niedostępne"
+    }
+  },
   "fx": {
     "convertedLabel": "Łączna kwota przeliczona",
     "error": "Brak kursu dla {{from}} → {{to}}",
@@ -472,8 +497,12 @@
     "eyebrow": "grupa",
     "filterAll": "Wszyscy",
     "filterEmpty": "Żaden wydatek nie pasuje do tego filtra.",
+    "searchTitle": "Szukaj wydatków",
+    "searchPlaceholder": "Szukaj w tytule, notatkach lub po płacącym…",
+    "searchClear": "Wyczyść wyszukiwanie",
+    "searchEmpty": "Brak wydatków pasujących do „{{query}}”.",
     "filterMine": "Tylko moje",
-    "filterTitle": "Filtruj według płacącego",
+    "filterTitle": "Filtruj wydatki",
     "infoCreatedLabel": "Utworzono",
     "infoCurrencyLabel": "Waluta",
     "infoMembersLabel": "Członkowie",
@@ -883,13 +912,13 @@
     "errorTitle": "Zaproszenie niedostępne",
     "errorUnreachable": "Nie udało się połączyć z {{host}}. Sprawdź połączenie i spróbuj ponownie.",
     "eyebrow": "zaproszenie",
-    "incompatibleNote": "Zaktualizuj Chara, aby dołączyć — ten serwer używa nowszego protokołu niż wspiera ta aplikacja.",
+    "incompatibleNote": "Zaktualizuj Chara, aby dołączyć. Ten serwer używa nowszego protokołu niż wspiera ta aplikacja.",
     "invitedBy": "{{name}} zaprosił(a) cię do",
     "invitedByUnknown": "masz zaproszenie do",
     "join": "Dołącz do grupy",
     "joining": "Dołączanie…",
     "loading": "Ładowanie zaproszenia…",
-    "lockedNote": "Ta grupa jest zablokowana — dołączenie zapewni dostęp tylko do odczytu, dopóki właściciel jej nie odblokuje.",
+    "lockedNote": "Ta grupa jest zablokowana. Dołączenie zapewni dostęp tylko do odczytu, dopóki właściciel jej nie odblokuje.",
     "memberCount_few": "{{count}} członków",
     "memberCount_many": "{{count}} członków",
     "memberCount_one": "1 członek",
@@ -897,7 +926,8 @@
     "onServer": "na {{host}}",
     "reauthToJoin": "Zaloguj się ponownie, aby dołączyć",
     "retry": "Ponów",
-    "signInToJoin": "Zaloguj się, aby dołączyć"
+    "signInToJoin": "Zaloguj się, aby dołączyć",
+    "joinAndSignUp": "Dołącz i zarejestruj się"
   },
   "keypad": {
     "backspace": "backspace (przytrzymaj, aby wyczyścić)",
@@ -1014,16 +1044,14 @@
     "createBody": "Wybierz nazwę, udostępnij kod QR znajomym.",
     "createEyebrow": "zacznij od nowa",
     "createTitle": "Utwórz grupę",
-    "eyebrow": "konfiguracja",
-    "footerHint": "Zawsze możesz to zrobić później z zakładki Grupy.",
-    "greetingAnon": "Witaj.",
     "greetingNamed": "Cześć {{name}}.",
-    "intro": "Grupa to zestaw osób, które dzielą wydatki razem — wyjazd, mieszkanie, projekt poboczny. Możesz stworzyć grupę teraz lub dołączyć do tej, którą stworzył znajomy.",
-    "scanBody": "Skieruj na ekran znajomego — od razu będziesz w środku.",
+    "scanBody": "Skieruj na ekran znajomego i od razu będziesz w środku.",
     "scanEyebrow": "już zaproszony",
     "scanTitle": "Zeskanuj QR, aby dołączyć",
-    "skip": "Pomiń teraz",
-    "subhead": "Zacznijmy grupę."
+    "serverBody": "Hostujesz Charę samodzielnie? Wskaż aplikacji własny serwer.",
+    "serverEyebrow": "własny serwer",
+    "serverTitle": "Połącz mój serwer",
+    "serverUseCloud": "Użyj zamiast tego Chara Cloud"
   },
   "onboardingName": {
     "body": "Twoje imię pojawia się na każdym wydatku i rozliczeniu. Twój telefon pozwala znajomym rozliczyć się z tobą przez Swish, Vipps lub podobne.",
@@ -1322,6 +1350,15 @@
     "vipps": "Vipps",
     "vippsUnlinked": "Niepołączone"
   },
+  "setup": {
+    "accountCreated": "Konto utworzone",
+    "continueWithout": "Kontynuuj bez grupy",
+    "failedHeadline": "Prawie gotowe",
+    "headline": "Przygotowujemy wszystko",
+    "stepCreate": "Tworzenie grupy {{group}}",
+    "stepJoin": "Dołączanie do {{group}}",
+    "stepName": "Zapisywanie imienia"
+  },
   "signIn": {
     "apple": {
       "errorBody": "Nie udało się ukończyć logowania przez Apple. Spróbuj ponownie lub użyj e-maila.",
@@ -1336,7 +1373,7 @@
     "dict": {
       "def1": ": na zero; rozliczeni między znajomymi",
       "def2": ": umorzenie drobnego długu",
-      "def3": ": „let's call it chara” — uznajmy to za rozliczone",
+      "def3": ": „let's call it chara”, uznajmy to za rozliczone",
       "headword": "cha·ra",
       "partOfSpeech": "rzeczownik, z japońskiego チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1348,7 +1385,6 @@
       "errorTitle": "Logowanie nie powiodło się",
       "noToken": "Google nie zwróciło tokenu tożsamości. Spróbuj ponownie."
     },
-    "headline": "Podziel.\nRozlicz.\nZakończ sprawę.",
     "hostedBy": "hostowane przez chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",
@@ -1371,7 +1407,13 @@
       "body": "Ten link doda nowy serwer do Chary. Kontynuuj tylko, jeśli sam o to prosiłeś.",
       "continue": "Kontynuuj",
       "title": "Zalogować się do {{host}}?"
-    }
+    },
+    "welcomeBack": "Witaj ponownie.",
+    "draftEyebrow": "ostatni krok",
+    "draftCreateHeadline": "Zapisz {{group}}.",
+    "draftCreateBody": "Załóż konto, aby zaprosić znajomych.",
+    "draftJoinHeadline": "Dołącz do {{group}}.",
+    "draftJoinBody": "Załóż konto i gotowe."
   },
   "tabs": {
     "activity": "Aktywność",
@@ -1438,6 +1480,25 @@
     "success": "Dzięki — odezwiemy się.",
     "title": "Wykorzystałeś {{cap}} darmowych skanów paragonów w tym miesiącu"
   },
+  "welcome": {
+    "chooseHeadline": "Jak chcesz zacząć?",
+    "continue": "Dalej",
+    "createBody": "Zaprosisz znajomych zaraz po rejestracji.",
+    "createHeadline": "Nazwij swoją pierwszą grupę.",
+    "getStarted": "Zaczynamy",
+    "haveAccount": "Mam już konto",
+    "language": "Język",
+    "letsGo": "Do dzieła",
+    "nameBody": "Twoje imię widać przy każdym wydatku i rozliczeniu.",
+    "nameHeadline": "Jak masz na imię?",
+    "next": "Dalej",
+    "skip": "Pomiń",
+    "slide2Body": "Zrób zdjęcie paragonu i otrzymaj podział linijka po linijce.",
+    "slide2Title": "Zrób zdjęcie paragonu.\nMy go podzielimy.",
+    "slide3Body": "BLIK, Swish lub gotówka. Każdy zawsze widzi, kto ile jest winien. Open source, więc możesz hostować samodzielnie.",
+    "slide3Title": "Rozlicz się jednym dotknięciem.",
+    "step": "krok {{current}} z {{total}}"
+  },
   "widget": {
     "addExpense": "Dodaj wydatek",
     "allSettled": "Wszystko rozliczone",
@@ -1495,6 +1556,7 @@
     "rateUnavailableBody": "Chara nie jest jeszcze opublikowana w sklepie.",
     "rateUnavailableTitle": "Jeszcze niedostępne",
     "replayOnboarding": "Powtórz wprowadzenie",
+    "sendFeedback": "Wyślij opinię",
     "settingsEyebrow": "ustawienia",
     "shareMessage": "Dzielę rachunki z Chara — sprawdź: https://getchara.dowtech.dev",
     "signOut": "Wyloguj się",

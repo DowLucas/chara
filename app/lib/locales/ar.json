@@ -411,6 +411,31 @@
     "continue": "متابعة",
     "headline": "تمت إضافة المصروف."
   },
+  "feedback": {
+    "bodyLabel": "رسالتك",
+    "intro": "وجدت خللاً أو تريد ميزة جديدة؟ أخبرنا هنا. تصل ملاحظتك مباشرة إلى فريق تطوير Chara.",
+    "kind": {
+      "bug": "خلل",
+      "idea": "فكرة ميزة"
+    },
+    "kindEyebrow": "النوع",
+    "meta": "أُرسلت باسم {{email}} · Chara {{version}}",
+    "placeholder": {
+      "bug": "ماذا حدث، وما الذي كنت تتوقعه بدلاً من ذلك؟",
+      "idea": "ما الذي تريد أن يفعله Chara؟"
+    },
+    "send": "إرسال",
+    "sending": "جارٍ الإرسال…",
+    "sent": {
+      "body": "وصلتنا ملاحظتك. نقرأ كل رسالة.",
+      "title": "شكراً لك"
+    },
+    "title": "إرسال ملاحظات",
+    "unavailable": {
+      "body": "لا يستقبل أي من خوادمك الملاحظات. النموذج داخل التطبيق ميزة من Chara Cloud.",
+      "title": "الملاحظات غير متاحة"
+    }
+  },
   "fx": {
     "convertedLabel": "الإجمالي المحوّل",
     "error": "لا يوجد سعر صرف لـ {{from}} → {{to}}",
@@ -488,8 +513,12 @@
     "eyebrow": "مجموعة",
     "filterAll": "الجميع",
     "filterEmpty": "لا توجد مصروفات تطابق هذا الفلتر.",
+    "searchTitle": "البحث في المصاريف",
+    "searchPlaceholder": "ابحث في العنوان أو الملاحظات أو من دفع…",
+    "searchClear": "مسح البحث",
+    "searchEmpty": "لا توجد مصاريف تطابق \"{{query}}\".",
     "filterMine": "لي فقط",
-    "filterTitle": "التصفية حسب من دفع",
+    "filterTitle": "تصفية المصاريف",
     "infoCreatedLabel": "أُنشئت في",
     "infoCurrencyLabel": "العملة",
     "infoMembersLabel": "الأعضاء",
@@ -931,13 +960,13 @@
     "errorTitle": "الدعوة غير متاحة",
     "errorUnreachable": "تعذر الوصول إلى {{host}}. تحقق من اتصالك وحاول مرة أخرى.",
     "eyebrow": "دعوة",
-    "incompatibleNote": "حدّث Chara للانضمام — هذا الخادم يستخدم بروتوكولاً أحدث مما يدعمه هذا التطبيق.",
+    "incompatibleNote": "حدّث Chara للانضمام. هذا الخادم يستخدم بروتوكولاً أحدث مما يدعمه هذا التطبيق.",
     "invitedBy": "دعاك {{name}} إلى",
     "invitedByUnknown": "تمت دعوتك إلى",
     "join": "الانضمام إلى المجموعة",
     "joining": "جاري الانضمام…",
     "loading": "جاري تحميل الدعوة…",
-    "lockedNote": "هذه المجموعة مقفلة — يمنح الانضمام وصولاً للقراءة فقط حتى يلغي المالك القفل.",
+    "lockedNote": "هذه المجموعة مقفلة. يمنح الانضمام وصولاً للقراءة فقط حتى يلغي المالك القفل.",
     "memberCount_few": "{{count}} أعضاء",
     "memberCount_many": "{{count}} عضوًا",
     "memberCount_one": "عضو واحد",
@@ -947,7 +976,8 @@
     "onServer": "على {{host}}",
     "reauthToJoin": "سجّل الدخول مجددًا للانضمام",
     "retry": "إعادة المحاولة",
-    "signInToJoin": "سجّل الدخول للانضمام"
+    "signInToJoin": "سجّل الدخول للانضمام",
+    "joinAndSignUp": "انضم وسجّل"
   },
   "keypad": {
     "backspace": "مسح للخلف (اضغط مطولاً للمسح الكامل)",
@@ -1068,16 +1098,14 @@
     "createBody": "اختر اسمًا، وشارك رمز QR مع الأصدقاء.",
     "createEyebrow": "ابدأ من جديد",
     "createTitle": "إنشاء مجموعة",
-    "eyebrow": "الإعداد",
-    "footerHint": "يمكنك فعل هذا لاحقًا من علامة تبويب المجموعات.",
-    "greetingAnon": "أهلاً بك.",
     "greetingNamed": "أهلاً {{name}}.",
-    "intro": "المجموعة تجمع أشخاصًا يتقاسمون التكاليف — رحلة أو شقة أو مشروع جانبي. أنشئ واحدة الآن، أو انضم إلى مجموعة أنشأها صديقك.",
-    "scanBody": "صوّب نحو شاشة صديقك — تنضم على الفور.",
+    "scanBody": "صوّب نحو شاشة صديقك وستنضم على الفور.",
     "scanEyebrow": "تمت دعوتك بالفعل",
     "scanTitle": "امسح رمز QR للانضمام",
-    "skip": "تخطّي الآن",
-    "subhead": "لنبدأ مجموعة."
+    "serverBody": "هل تشغّل Chara بنفسك؟ وجّه التطبيق إلى خادمك الخاص.",
+    "serverEyebrow": "استضافة ذاتية",
+    "serverTitle": "اتصل بخادمي",
+    "serverUseCloud": "استخدم Chara Cloud بدلاً من ذلك"
   },
   "onboardingName": {
     "body": "يظهر اسمك على كل مصروف وتسوية. يتيح هاتفك لأصدقائك تسوية الحسابات معك عبر Swish أو Vipps أو ما شابه.",
@@ -1408,6 +1436,15 @@
     "vipps": "Vipps",
     "vippsUnlinked": "غير مرتبط"
   },
+  "setup": {
+    "accountCreated": "تم إنشاء الحساب",
+    "continueWithout": "المتابعة بدون مجموعة",
+    "failedHeadline": "أوشكنا على الانتهاء",
+    "headline": "جارٍ تجهيز كل شيء",
+    "stepCreate": "جارٍ إنشاء {{group}}",
+    "stepJoin": "جارٍ الانضمام إلى {{group}}",
+    "stepName": "جارٍ حفظ اسمك"
+  },
   "signIn": {
     "apple": {
       "errorBody": "تعذر إكمال تسجيل الدخول عبر Apple. حاول مرة أخرى أو استخدم البريد الإلكتروني.",
@@ -1422,7 +1459,7 @@
     "dict": {
       "def1": ": متعادل؛ مسوّى بين الأصدقاء",
       "def2": ": مسح دين صغير",
-      "def3": ": \"let's call it chara\" — لنعتبرها متعادلة",
+      "def3": ": \"let's call it chara\"، لنعتبرها متعادلة",
       "headword": "cha·ra",
       "partOfSpeech": "اسم، من اليابانية チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1434,7 +1471,6 @@
       "errorTitle": "فشل تسجيل الدخول",
       "noToken": "لم تُرجع Google رمز الهوية. حاول مرة أخرى."
     },
-    "headline": "قسّمها.\nسوِّها.\nوانتهى الأمر.",
     "hostedBy": "مُستضاف على chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",
@@ -1457,7 +1493,13 @@
       "body": "سيضيف هذا الرابط خادمًا جديدًا إلى Chara. تابع فقط إذا كنت قد طلبت ذلك.",
       "continue": "متابعة",
       "title": "تسجيل الدخول إلى {{host}}؟"
-    }
+    },
+    "welcomeBack": "مرحبًا بعودتك.",
+    "draftEyebrow": "الخطوة الأخيرة",
+    "draftCreateHeadline": "احفظ {{group}}.",
+    "draftCreateBody": "أنشئ حسابك لدعوة أصدقائك.",
+    "draftJoinHeadline": "انضم إلى {{group}}.",
+    "draftJoinBody": "أنشئ حسابك وستكون معنا."
   },
   "tabs": {
     "activity": "النشاط",
@@ -1530,6 +1572,25 @@
     "success": "شكرًا — سنتواصل معك قريبًا.",
     "title": "استخدمت {{cap}} عمليات مسح إيصال مجانية هذا الشهر"
   },
+  "welcome": {
+    "chooseHeadline": "كيف تريد أن تبدأ؟",
+    "continue": "متابعة",
+    "createBody": "ستدعو أصدقاءك مباشرة بعد التسجيل.",
+    "createHeadline": "سمِّ مجموعتك الأولى.",
+    "getStarted": "ابدأ",
+    "haveAccount": "لدي حساب بالفعل",
+    "language": "اللغة",
+    "letsGo": "هيا بنا",
+    "nameBody": "يظهر اسمك في كل مصروف وكل تسوية.",
+    "nameHeadline": "ما اسمك؟",
+    "next": "التالي",
+    "skip": "تخطٍّ",
+    "slide2Body": "صوّر الإيصال واحصل على تفصيل سطرًا بسطر.",
+    "slide2Title": "صوّر الإيصال.\nونحن نقسّمه.",
+    "slide3Body": "Swish أو Vipps أو نقدًا. يرى الجميع دائمًا من يدين بماذا. مفتوح المصدر، فاستضفه بنفسك إن أردت.",
+    "slide3Title": "سدّد الحساب بلمسة واحدة.",
+    "step": "الخطوة {{current}} من {{total}}"
+  },
   "widget": {
     "addExpense": "إضافة مصروف",
     "allSettled": "تمت التسوية بالكامل",
@@ -1591,6 +1652,7 @@
     "rateUnavailableBody": "لم يُنشر Chara في أي متجر بعد.",
     "rateUnavailableTitle": "غير متوفر بعد",
     "replayOnboarding": "إعادة التهيئة",
+    "sendFeedback": "إرسال ملاحظات",
     "settingsEyebrow": "الإعدادات",
     "shareMessage": "أنا أقسّم الفواتير مع Chara — جرّبه: https://getchara.dowtech.dev",
     "signOut": "تسجيل الخروج",

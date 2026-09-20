@@ -37,13 +37,16 @@ export type AnalyticsEvent =
   | 'magic_link_requested'
   | 'auth_completed'
   | 'onboarding_seen'
+  | 'onboarding_intro_skipped'
   | 'onboarding_create_chosen'
   | 'onboarding_scan_chosen'
+  | 'onboarding_server_chosen'
   | 'user_name_entered'
   | 'group_created'
   | 'qr_scanned'
   | 'group_joined'
   | 'onboarding_finished'
+  | 'onboarding_setup_failed'
   // voice expenses
   | 'voice_capture_started'
   | 'voice_capture_cancelled'
@@ -87,13 +90,22 @@ let queue: QueuedEvent[] = [];
 
 // ---------- helpers ----------
 
+/**
+ * Reads the baked config. The key is validated as a non-empty string rather
+ * than just checked for truthiness: Expo's config serializer rewrites a `null`
+ * in `extra` to `{}` when it bakes app.config into the binary, so a build
+ * without POSTHOG_API_KEY (every fork and self-build) arrives here holding an
+ * empty object. A bare `?? null` lets that through and hands the SDK a
+ * non-string key, which is how the no-op contract silently fails open.
+ */
 function readExtra(): { apiKey: string | null; host: string } {
   const extra = (Constants.expoConfig?.extra ?? {}) as {
-    posthogApiKey?: string | null;
+    posthogApiKey?: unknown;
     posthogHost?: string;
   };
+  const apiKey = extra.posthogApiKey;
   return {
-    apiKey: extra.posthogApiKey ?? null,
+    apiKey: typeof apiKey === 'string' && apiKey.length > 0 ? apiKey : null,
     host: extra.posthogHost ?? 'https://eu.i.posthog.com',
   };
 }
@@ -144,6 +156,19 @@ function flushQueue(): void {
   for (const { event, properties } of pending) {
     safeCapture(event, properties);
   }
+}
+
+/**
+ * Short, stable `code` for the `*_failed` events. Reads `status` structurally
+ * rather than importing `ApiError`, so this module keeps its app-layer-free
+ * import graph (see the lazy accessors in accounts-store.ts / discovery.ts).
+ */
+export function errorCode(e: unknown): string {
+  const status = (e as { status?: unknown } | null | undefined)?.status;
+  if (typeof status === 'number') return `http_${status}`;
+  const message = e instanceof Error ? e.message : typeof e === 'string' ? e : '';
+  if (/network|fetch|timeout|timed out|offline/i.test(message)) return 'network';
+  return 'unknown';
 }
 
 // ---------- public API ----------

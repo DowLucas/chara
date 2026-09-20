@@ -387,6 +387,31 @@
     "continue": "完成",
     "headline": "已记入。"
   },
+  "feedback": {
+    "bodyLabel": "你的留言",
+    "intro": "发现问题，或者想要某个功能？在这里告诉我们，内容会直接送到 Chara 的开发者手中。",
+    "kind": {
+      "bug": "问题",
+      "idea": "功能建议"
+    },
+    "kindEyebrow": "类型",
+    "meta": "以 {{email}} 发送 · Chara {{version}}",
+    "placeholder": {
+      "bug": "发生了什么？你原本期待的结果是什么？",
+      "idea": "你希望 Chara 能做什么？"
+    },
+    "send": "发送",
+    "sending": "正在发送…",
+    "sent": {
+      "body": "我们已收到你的反馈，每一条都会看。",
+      "title": "谢谢"
+    },
+    "title": "发送反馈",
+    "unavailable": {
+      "body": "你的服务器都不接收反馈。应用内的表单是 Chara Cloud 的功能。",
+      "title": "反馈功能不可用"
+    }
+  },
   "fx": {
     "convertedLabel": "换算金额",
     "error": "暂无 {{from}} → {{to}} 汇率",
@@ -456,8 +481,12 @@
     "eyebrow": "群组",
     "filterAll": "所有人",
     "filterEmpty": "没有符合条件的支出。",
+    "searchTitle": "搜索支出",
+    "searchPlaceholder": "按标题、备注或付款人搜索…",
+    "searchClear": "清除搜索",
+    "searchEmpty": "没有与“{{query}}”匹配的支出。",
     "filterMine": "只看我的",
-    "filterTitle": "按付款人筛选",
+    "filterTitle": "筛选支出",
     "infoCreatedLabel": "创建于",
     "infoCurrencyLabel": "币种",
     "infoMembersLabel": "成员",
@@ -835,19 +864,20 @@
     "errorTitle": "邀请不可用",
     "errorUnreachable": "无法连接 {{host}}，请检查网络后重试。",
     "eyebrow": "邀请",
-    "incompatibleNote": "请更新 Chara 后加入——此服务器使用的协议比本应用支持的更新。",
+    "incompatibleNote": "请更新 Chara 后加入。此服务器使用的协议比本应用支持的更新。",
     "invitedBy": "{{name}} 邀请你加入",
     "invitedByUnknown": "你受邀加入",
     "join": "加入群组",
     "joining": "加入中……",
     "loading": "正在加载邀请……",
-    "lockedNote": "此群组已锁定——加入后将获得只读访问权限，直至群主解锁。",
+    "lockedNote": "此群组已锁定。加入后将获得只读访问权限，直至群主解锁。",
     "memberCount_one": "1 位成员",
     "memberCount_other": "{{count}} 位成员",
     "onServer": "于 {{host}}",
     "reauthToJoin": "重新登录以加入",
     "retry": "重试",
-    "signInToJoin": "登录以加入"
+    "signInToJoin": "登录以加入",
+    "joinAndSignUp": "加入并注册"
   },
   "keypad": {
     "backspace": "退格（长按清空）",
@@ -960,16 +990,14 @@
     "createBody": "起个名字，把二维码分享给朋友。",
     "createEyebrow": "从头开始",
     "createTitle": "新建群组",
-    "eyebrow": "新手引导",
-    "footerHint": "随时可在“群组”标签页继续操作。",
-    "greetingAnon": "欢迎。",
     "greetingNamed": "你好，{{name}}。",
-    "intro": "群组就是一起分账的一群人 · 一次旅行、一处合租、一个副业都行。可以现在创建，也可以加入朋友已建好的群组。",
     "scanBody": "对准朋友的屏幕一扫，立刻加入。",
     "scanEyebrow": "收到邀请",
     "scanTitle": "扫码加入",
-    "skip": "暂时跳过",
-    "subhead": "先建一个群组吧。"
+    "serverBody": "自己运行 Chara？把应用指向你自己的服务器。",
+    "serverEyebrow": "自托管",
+    "serverTitle": "连接我的服务器",
+    "serverUseCloud": "改用 Chara Cloud"
   },
   "onboardingName": {
     "body": "你的名字会出现在每一笔支出和结算上。手机号用于让朋友通过 Swish、Vipps 等方式向你结算。",
@@ -1236,6 +1264,15 @@
     "vipps": "Vipps",
     "vippsUnlinked": "未绑定"
   },
+  "setup": {
+    "accountCreated": "账户已创建",
+    "continueWithout": "不加入群组，继续",
+    "failedHeadline": "快好了",
+    "headline": "正在准备",
+    "stepCreate": "正在创建 {{group}}",
+    "stepJoin": "正在加入 {{group}}",
+    "stepName": "正在保存你的名字"
+  },
   "signIn": {
     "apple": {
       "errorBody": "Apple 登录未能完成，请重试或使用邮箱登录。",
@@ -1250,7 +1287,7 @@
     "dict": {
       "def1": "：两清；朋友之间扯平",
       "def2": "：抹平一笔小额债务",
-      "def3": "：“就当 chara 吧”——就算两清吧",
+      "def3": "：“就当 chara 吧”，就算两清吧",
       "headword": "cha·ra",
       "partOfSpeech": "名词，源自日语 チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1262,7 +1299,6 @@
       "errorTitle": "登录失败",
       "noToken": "Google 未返回身份令牌，请重试。"
     },
-    "headline": "分账。\n结算。\n两清。",
     "hostedBy": "由 chara.app 托管",
     "hosting": {
       "charaCloud": "Chara Cloud",
@@ -1285,7 +1321,13 @@
       "body": "此链接会向 Chara 添加一个新服务器。请仅在你主动请求时继续。",
       "continue": "继续",
       "title": "登录到 {{host}}？"
-    }
+    },
+    "welcomeBack": "欢迎回来。",
+    "draftEyebrow": "最后一步",
+    "draftCreateHeadline": "保存 {{group}}。",
+    "draftCreateBody": "创建账户以邀请朋友。",
+    "draftJoinHeadline": "加入 {{group}}。",
+    "draftJoinBody": "创建账户即可加入。"
   },
   "tabs": {
     "activity": "动态",
@@ -1343,6 +1385,25 @@
     "success": "感谢 · 我们会与您联系。",
     "title": "本月 {{cap}} 次免费小票扫描已用完"
   },
+  "welcome": {
+    "chooseHeadline": "你想怎么开始？",
+    "continue": "继续",
+    "createBody": "注册后即可马上邀请朋友。",
+    "createHeadline": "给你的第一个群组起个名字。",
+    "getStarted": "开始使用",
+    "haveAccount": "我已有账户",
+    "language": "语言",
+    "letsGo": "出发吧",
+    "nameBody": "你的名字会显示在每笔支出和结算中。",
+    "nameHeadline": "你叫什么名字？",
+    "next": "下一步",
+    "skip": "跳过",
+    "slide2Body": "拍一张小票，就能得到逐条明细。",
+    "slide2Title": "拍下小票。\n我们来分账。",
+    "slide3Body": "支付宝、Swish 或现金。谁欠谁多少，大家一目了然。开源软件，愿意的话可以自行托管。",
+    "slide3Title": "一键结清。",
+    "step": "第 {{current}} 步，共 {{total}} 步"
+  },
   "widget": {
     "addExpense": "添加支出",
     "allSettled": "已全部结清",
@@ -1396,6 +1457,7 @@
     "rateUnavailableBody": "Chara 还未上架应用商店。",
     "rateUnavailableTitle": "暂不可用",
     "replayOnboarding": "重看新手引导",
+    "sendFeedback": "发送反馈",
     "settingsEyebrow": "设置",
     "shareMessage": "我在用 Chara 跟朋友分账，挺好用：https://getchara.dowtech.dev",
     "signOut": "退出登录",

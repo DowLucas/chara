@@ -34,6 +34,8 @@ import { parseInviteUrl } from '@/lib/invite-url';
 import { parseInstanceInfo } from '@/lib/discovery';
 import { refreshAccountInstance } from '@/lib/refresh-instance';
 import { registerForAccount } from '@/lib/push';
+import { OnboardingDraft, isDraftActive, loadDraft } from '@/lib/onboarding-draft';
+import { setFlag, FLAG_ONBOARDING_COMPLETE } from '@/lib/storage';
 import * as analytics from '@/lib/analytics';
 import {
   colors,
@@ -150,6 +152,19 @@ export default function SignInScreen() {
   const [features, setFeatures] = useState<Record<string, boolean> | null>(
     account?.instance?.features ?? null,
   );
+  // First-run draft (welcome flow): turns this screen into the final
+  // "sign up" step, headed by the group being created or joined.
+  const [draft, setDraft] = useState<OnboardingDraft | null>(null);
+  useEffect(() => {
+    if (mode !== 'first-launch') return;
+    let cancelled = false;
+    void loadDraft().then((d) => {
+      if (!cancelled) setDraft(isDraftActive(d, Date.now()) ? d : null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [mode]);
 
   // Fire `auth_screen_seen` once per mount. Modes other than first-launch
   // (settings/invite/reauth) all originate from inside the app, so they map
@@ -507,6 +522,15 @@ export default function SignInScreen() {
       console.warn('[chara] addAccount failed', e);
     }
 
+    await setFlag(FLAG_ONBOARDING_COMPLETE, '1').catch(() => {});
+    // Read storage, not state: a magic link can cold-start the app straight
+    // into this handler before the mount effect has loaded the draft.
+    const pendingDraft = await loadDraft();
+    if (isDraftActive(pendingDraft, Date.now())) {
+      router.replace(`/onboarding/setup?server=${encodeURIComponent(serverUrl)}`);
+      return;
+    }
+
     // Optional invite handoff: bounce to the join-confirmation screen so
     // the user sees what they're joining before the request fires. The
     // screen handles the actual join via apiFor(server).joinGroupByToken.
@@ -556,24 +580,20 @@ export default function SignInScreen() {
         />
       </View>
 
-      {/* Tagline — dictionary entry hero */}
       <View style={styles.tagline}>
-        <Text style={styles.eyebrow}>{eyebrow}</Text>
-        <Text style={styles.dictHeadword}>{t('signIn.dict.headword')}</Text>
-        <Text style={styles.dictPron}>{t('signIn.dict.pronunciation')}</Text>
-        <Text style={styles.dictPos}>{t('signIn.dict.partOfSpeech')}</Text>
-        <View style={styles.dictSense}>
-          <Text style={styles.dictSenseNum}>1</Text>
-          <Text style={styles.dictSenseText}>{t('signIn.dict.def1')}</Text>
-        </View>
-        <View style={styles.dictSense}>
-          <Text style={styles.dictSenseNum}>2</Text>
-          <Text style={styles.dictSenseText}>{t('signIn.dict.def2')}</Text>
-        </View>
-        <View style={styles.dictSense}>
-          <Text style={styles.dictSenseNum}>3</Text>
-          <Text style={styles.dictSenseText}>{t('signIn.dict.def3')}</Text>
-        </View>
+        <Text style={styles.eyebrow}>{draft ? t('signIn.draftEyebrow') : eyebrow}</Text>
+        <Text style={styles.headline}>
+          {draft
+            ? t(draft.intent === 'join' ? 'signIn.draftJoinHeadline' : 'signIn.draftCreateHeadline', {
+                group: draft.invite?.groupName ?? draft.group?.name ?? '',
+              })
+            : t('signIn.welcomeBack')}
+        </Text>
+        {draft && (
+          <Text style={styles.subhead}>
+            {t(draft.intent === 'join' ? 'signIn.draftJoinBody' : 'signIn.draftCreateBody')}
+          </Text>
+        )}
       </View>
 
       {/* Server host (visible whenever a non-default server is in play). */}
@@ -682,7 +702,7 @@ export default function SignInScreen() {
           this small secondary link lets people who run their own server
           connect to it instead. Additional servers are otherwise added after
           login from Settings → Accounts → Add. */}
-      {mode === 'first-launch' && !params.server && (
+      {mode === 'first-launch' && !params.server && draft?.intent !== 'join' && (
         <TouchableOpacity
           style={styles.useServerLink}
           activeOpacity={0.7}
@@ -751,47 +771,19 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     marginBottom: 12,
   },
-  dictHeadword: {
+  headline: {
     fontFamily: fontDisplay,
     fontSize: fontSize.displayL,
     letterSpacing: -1,
     lineHeight: 44,
     color: colors.graphite,
   },
-  dictPron: {
-    fontFamily: fontMono,
-    fontSize: fontSize.bodyS,
-    color: colors.lead,
-    letterSpacing: 0.3,
-    marginTop: 6,
-  },
-  dictPos: {
-    fontFamily: fontMono,
-    fontSize: fontSize.bodyS,
-    color: colors.lead,
-    letterSpacing: 0.3,
-    fontStyle: 'italic',
-    marginTop: 2,
-    marginBottom: spacing.s2,
-  },
-  dictSense: {
-    flexDirection: 'row',
-    gap: spacing.s2,
-    marginTop: spacing.s2,
-  },
-  dictSenseNum: {
-    fontFamily: fontMono,
-    fontSize: fontSize.body,
-    color: colors.lead,
-    lineHeight: 22,
-    width: 12,
-  },
-  dictSenseText: {
-    flex: 1,
+  subhead: {
     fontFamily: fontBody,
     fontSize: fontSize.body,
-    color: colors.graphite,
+    color: colors.lead,
     lineHeight: 22,
+    marginTop: spacing.s2,
   },
   serverRow: {
     flexDirection: 'row',

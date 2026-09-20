@@ -387,6 +387,31 @@
     "continue": "次へ",
     "headline": "支出を追加しました。"
   },
+  "feedback": {
+    "bodyLabel": "メッセージ",
+    "intro": "不具合を見つけた、または欲しい機能がありますか。ここから教えてください。Chara を作っているメンバーに直接届きます。",
+    "kind": {
+      "bug": "不具合",
+      "idea": "機能のアイデア"
+    },
+    "kindEyebrow": "種類",
+    "meta": "送信元 {{email}} · Chara {{version}}",
+    "placeholder": {
+      "bug": "何が起きましたか。どうなると思っていましたか。",
+      "idea": "Chara にどんなことをしてほしいですか。"
+    },
+    "send": "送信",
+    "sending": "送信中…",
+    "sent": {
+      "body": "フィードバックを受け取りました。すべて目を通しています。",
+      "title": "ありがとうございます"
+    },
+    "title": "フィードバックを送る",
+    "unavailable": {
+      "body": "どのサーバーもフィードバックを受け付けていません。アプリ内のフォームは Chara Cloud の機能です。",
+      "title": "フィードバックは利用できません"
+    }
+  },
   "fx": {
     "convertedLabel": "換算後の合計",
     "error": "{{from}}→{{to}}のレートがありません",
@@ -456,8 +481,12 @@
     "eyebrow": "グループ",
     "filterAll": "全員",
     "filterEmpty": "この条件に一致する支出はありません。",
+    "searchTitle": "支出を検索",
+    "searchPlaceholder": "タイトル、メモ、支払った人で検索…",
+    "searchClear": "検索をクリア",
+    "searchEmpty": "「{{query}}」に一致する支出はありません。",
     "filterMine": "自分のみ",
-    "filterTitle": "支払者で絞り込み",
+    "filterTitle": "支出を絞り込み",
     "infoCreatedLabel": "作成日",
     "infoCurrencyLabel": "通貨",
     "infoMembersLabel": "メンバー",
@@ -847,7 +876,8 @@
     "onServer": "{{host}}",
     "reauthToJoin": "参加するには再度サインイン",
     "retry": "再試行",
-    "signInToJoin": "参加するにはサインイン"
+    "signInToJoin": "参加するにはサインイン",
+    "joinAndSignUp": "参加して登録"
   },
   "keypad": {
     "backspace": "バックスペース（長押しでクリア）",
@@ -960,16 +990,14 @@
     "createBody": "名前を決めて、QRコードを共有しましょう。",
     "createEyebrow": "新しく始める",
     "createTitle": "グループを作成",
-    "eyebrow": "セットアップ",
-    "footerHint": "後からグループタブでも操作できます。",
-    "greetingAnon": "ようこそ。",
     "greetingNamed": "こんにちは、{{name}}さん。",
-    "intro": "グループとは、旅行・シェアハウス・サイドプロジェクトなど、一緒に費用を分け合う人たちの集まりです。今すぐ作るか、既存のグループに参加できます。",
     "scanBody": "招待画面に向けると、すぐに参加できます。",
     "scanEyebrow": "招待されている",
     "scanTitle": "QRコードで参加",
-    "skip": "あとで",
-    "subhead": "グループを始めましょう。"
+    "serverBody": "Chara を自分で運用していますか。アプリを自分のサーバーに向けられます。",
+    "serverEyebrow": "セルフホスト",
+    "serverTitle": "自分のサーバーに接続",
+    "serverUseCloud": "代わりに Chara Cloud を使う"
   },
   "onboardingName": {
     "body": "ここで設定した名前は、すべての支出と精算に表示されます。電話番号を登録しておくと、SwishやVippsなどでの精算がスムーズになります。",
@@ -1236,6 +1264,15 @@
     "vipps": "Vipps",
     "vippsUnlinked": "未連携"
   },
+  "setup": {
+    "accountCreated": "アカウントを作成しました",
+    "continueWithout": "グループなしで続ける",
+    "failedHeadline": "あと少し",
+    "headline": "準備しています",
+    "stepCreate": "{{group}} を作成しています",
+    "stepJoin": "{{group}} に参加しています",
+    "stepName": "名前を保存しています"
+  },
   "signIn": {
     "apple": {
       "errorBody": "Appleでのサインインを完了できませんでした。もう一度お試しいただくか、メールをご利用ください。",
@@ -1250,7 +1287,7 @@
     "dict": {
       "def1": "：おあいこ。友だち同士で貸し借りなし",
       "def2": "：少額の借りをチャラにすること",
-      "def3": "：「チャラにしよう」 — おあいこにしよう",
+      "def3": "：「チャラにしよう」、おあいこにしよう",
       "headword": "cha·ra",
       "partOfSpeech": "名詞、日本語のチャラから",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1262,7 +1299,6 @@
       "errorTitle": "サインインに失敗しました",
       "noToken": "Googleからアイデンティティトークンが返されませんでした。もう一度お試しください。"
     },
-    "headline": "分け合おう。\n精算しよう。\nチャラにしよう。",
     "hostedBy": "chara.appがホスト",
     "hosting": {
       "charaCloud": "Chara Cloud",
@@ -1285,7 +1321,13 @@
       "body": "このリンクは Chara に新しいサーバーを追加します。自分で要求した場合のみ続けてください。",
       "continue": "続ける",
       "title": "{{host}} にサインインしますか？"
-    }
+    },
+    "welcomeBack": "おかえりなさい。",
+    "draftEyebrow": "最後のステップ",
+    "draftCreateHeadline": "{{group}} を保存。",
+    "draftCreateBody": "アカウントを作成して友だちを招待しましょう。",
+    "draftJoinHeadline": "{{group}} に参加。",
+    "draftJoinBody": "アカウントを作成すれば参加完了です。"
   },
   "tabs": {
     "activity": "アクティビティ",
@@ -1343,6 +1385,25 @@
     "success": "ありがとうございます — ご連絡いたします。",
     "title": "今月の無料レシートスキャン{{cap}}回をすべて使い切りました"
   },
+  "welcome": {
+    "chooseHeadline": "どちらから始めますか？",
+    "continue": "続ける",
+    "createBody": "登録が終わったらすぐに友だちを招待できます。",
+    "createHeadline": "最初のグループに名前をつけましょう。",
+    "getStarted": "はじめる",
+    "haveAccount": "すでにアカウントをお持ちの方",
+    "language": "言語",
+    "letsGo": "さあ、はじめよう",
+    "nameBody": "名前はすべての支出と精算に表示されます。",
+    "nameHeadline": "お名前は？",
+    "next": "次へ",
+    "skip": "スキップ",
+    "slide2Body": "レシートを撮るだけで、明細ごとの内訳が出ます。",
+    "slide2Title": "レシートを撮るだけ。\n割り勘はおまかせ。",
+    "slide3Body": "PayPay、Swish、現金でも。誰がいくら払うべきか、いつでも全員に見えます。オープンソースなので、セルフホストも可能です。",
+    "slide3Title": "ワンタップで精算。",
+    "step": "ステップ {{current}}/{{total}}"
+  },
   "widget": {
     "addExpense": "支出を追加",
     "allSettled": "すべて精算済み",
@@ -1396,6 +1457,7 @@
     "rateUnavailableBody": "Charaはまだストアで公開されていません。",
     "rateUnavailableTitle": "まだ利用できません",
     "replayOnboarding": "オンボーディングを再生",
+    "sendFeedback": "フィードバックを送る",
     "settingsEyebrow": "設定",
     "shareMessage": "Charaで割り勘してみたよ。チェックしてみて: https://getchara.dowtech.dev",
     "signOut": "サインアウト",

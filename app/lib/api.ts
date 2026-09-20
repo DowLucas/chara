@@ -59,21 +59,6 @@ if (__DEV__ && typeof console !== 'undefined') {
   console.log('[chara] API base URL:', BASE_URL);
 }
 
-// Exposed for callers (e.g. Image source headers) that need to make their
-// own authenticated requests outside the typed `request` helper.
-//
-// Resolves to the default account's token from the multi-server accounts
-// store. The legacy SecureStore key is only consulted as a fallback for
-// the brief boot window before the accounts blob is loaded (and for the
-// backward-compat sign-in path that still writes it). Without this, any
-// user who signed in via the new add-server flow had a null token here,
-// which broke things like the authenticated avatar <Image> source.
-export async function authToken(): Promise<string | null> {
-  const def = defaultAccount();
-  if (def?.token) return def.token;
-  return getToken();
-}
-
 async function getToken(): Promise<string | null> {
   if (Platform.OS === 'web') {
     return localStorage.getItem(TOKEN_KEY);
@@ -990,6 +975,10 @@ export interface InstanceFeatures {
    *  Optional — absent on backends predating the feature, and false on every
    *  self-hosted instance, which the app treats as unsupported. */
   monthly_summary?: boolean;
+  /** POST /api/feedback is available. Optional — absent on backends
+   *  predating the feature, and false on every self-hosted instance, which
+   *  the app treats as unsupported so the row never appears. */
+  feedback?: boolean;
 }
 
 export interface InstanceInfo {
@@ -1148,6 +1137,17 @@ export function submitWaitlist(input: WaitlistSubmission) {
     method: 'POST',
     body: JSON.stringify(input),
   });
+}
+
+export interface FeedbackSubmission {
+  kind: 'bug' | 'idea';
+  /** The user's own words. Capped at 4000 characters by the backend. */
+  body: string;
+  /** Client metadata, all optional server-side. Sent so a terse report is
+   *  still actionable: which build, which OS, which language. */
+  app_version?: string;
+  platform?: string;
+  locale?: string;
 }
 
 /**
@@ -1367,14 +1367,11 @@ function buildAvatarSource(
   return null;
 }
 
-export function avatarImageSource(input: AvatarInput, token: string | null) {
-  return buildAvatarSource(BASE_URL, input, token);
-}
-
-/** Per-server variant: builds the avatar source against `serverUrl` (not the
- *  default `BASE_URL`) and pulls that account's token. Use this on any
- *  multi-server surface — e.g. the home groups list, whose member avatars can
- *  live on any linked server. Relative `avatar_object_url`s would otherwise
+/** Builds the avatar source against `serverUrl` and pulls that account's
+ *  token. This is the only entry point: an avatar always belongs to a
+ *  specific server, including your own on the You tab — resolving it against
+ *  the fixed `BASE_URL` sent a self-hoster's request to Chara Cloud with a
+ *  foreign token. Relative `avatar_object_url`s would otherwise
  *  resolve against the wrong host. */
 export function avatarImageSourceOn(serverUrl: string, input: AvatarInput) {
   return buildAvatarSource(serverUrl, input, accountFor(serverUrl)?.token ?? null);
@@ -1793,6 +1790,14 @@ export function apiFor(serverUrl: string) {
     // v1.0/v1.1 free beta.
     submitWaitlist: (input: WaitlistSubmission) =>
       requestOn<{ ok: boolean }>(serverUrl, '/api/waitlist', {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+
+    // Bug report / feature idea from the in-app feedback screen.
+    // Hosted-only — gate the entry point on features.feedback.
+    submitFeedback: (input: FeedbackSubmission) =>
+      requestOn<{ ok: boolean }>(serverUrl, '/api/feedback', {
         method: 'POST',
         body: JSON.stringify(input),
       }),

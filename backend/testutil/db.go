@@ -127,6 +127,7 @@ func TruncateAll(t *testing.T, pool *pgxpool.Pool) {
 		"groups",
 		"usage_counters",
 		"waitlist_signups",
+		"feedback_reports",
 		"users",
 		"fx_rates",
 		// River tables — emptied between tests so leftover jobs don't

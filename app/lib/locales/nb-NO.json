@@ -387,6 +387,31 @@
     "continue": "Fortsett",
     "headline": "Utgift lagt til."
   },
+  "feedback": {
+    "bodyLabel": "Meldingen din",
+    "intro": "Fant du en feil, eller savner du noe? Si ifra her. Det går rett til oss som lager Chara.",
+    "kind": {
+      "bug": "Feil",
+      "idea": "Funksjonsidé"
+    },
+    "kindEyebrow": "type",
+    "meta": "Sendt som {{email}} · Chara {{version}}",
+    "placeholder": {
+      "bug": "Hva skjedde, og hva forventet du i stedet?",
+      "idea": "Hva vil du at Chara skal kunne?"
+    },
+    "send": "Send",
+    "sending": "Sender…",
+    "sent": {
+      "body": "Vi har fått tilbakemeldingen din. Vi leser alt som kommer inn.",
+      "title": "Takk"
+    },
+    "title": "Send tilbakemelding",
+    "unavailable": {
+      "body": "Ingen av serverne dine tar imot tilbakemeldinger. Skjemaet i appen er en Chara Cloud-funksjon.",
+      "title": "Tilbakemelding er ikke tilgjengelig"
+    }
+  },
   "fx": {
     "convertedLabel": "Konvertert sum",
     "error": "Ingen kurs for {{from}} → {{to}}",
@@ -456,8 +481,12 @@
     "eyebrow": "gruppe",
     "filterAll": "Alle",
     "filterEmpty": "Ingen utgifter passer med dette filteret.",
+    "searchTitle": "Søk i utgifter",
+    "searchPlaceholder": "Søk i tittel, notater eller hvem som betalte…",
+    "searchClear": "Tøm søk",
+    "searchEmpty": "Ingen utgifter samsvarer med «{{query}}».",
     "filterMine": "Bare mine",
-    "filterTitle": "Filtrer etter hvem som betalte",
+    "filterTitle": "Filtrer utgifter",
     "infoCreatedLabel": "Opprettet",
     "infoCurrencyLabel": "Valuta",
     "infoMembersLabel": "Medlemmer",
@@ -835,19 +864,20 @@
     "errorTitle": "Invitasjon utilgjengelig",
     "errorUnreachable": "Kunne ikke nå {{host}}. Sjekk tilkoblingen og prøv igjen.",
     "eyebrow": "invitasjon",
-    "incompatibleNote": "Oppdater Chara for å bli med — denne serveren er på en nyere protokoll enn denne appen støtter.",
+    "incompatibleNote": "Oppdater Chara for å bli med. Denne serveren er på en nyere protokoll enn denne appen støtter.",
     "invitedBy": "{{name}} inviterte deg til",
     "invitedByUnknown": "du er invitert til",
     "join": "Bli med i gruppe",
     "joining": "Blir med …",
     "loading": "Laster invitasjon …",
-    "lockedNote": "Denne gruppen er låst — å bli med gir skrivebeskyttet tilgang til eieren låser den opp.",
+    "lockedNote": "Denne gruppen er låst. Å bli med gir skrivebeskyttet tilgang til eieren låser den opp.",
     "memberCount_one": "1 medlem",
     "memberCount_other": "{{count}} medlemmer",
     "onServer": "på {{host}}",
     "reauthToJoin": "Logg inn igjen for å bli med",
     "retry": "Prøv igjen",
-    "signInToJoin": "Logg inn for å bli med"
+    "signInToJoin": "Logg inn for å bli med",
+    "joinAndSignUp": "Bli med og registrer deg"
   },
   "keypad": {
     "backspace": "tilbake (hold inne for å tømme)",
@@ -960,16 +990,14 @@
     "createBody": "Velg et navn, del QR-koden med venner.",
     "createEyebrow": "start fra null",
     "createTitle": "Lag en gruppe",
-    "eyebrow": "sett opp",
-    "footerHint": "Du kan alltid gjøre dette senere fra Grupper-fanen.",
-    "greetingAnon": "Velkommen.",
     "greetingNamed": "Hei {{name}}.",
-    "intro": "En gruppe er en gjeng som deler kostnader sammen — en tur, en leilighet, et sideprosjekt. Du kan lage en nå eller bli med i en som en venn allerede har laget.",
-    "scanBody": "Sikt mot en venns skjerm — du er inne med en gang.",
+    "scanBody": "Sikt mot en venns skjerm, så er du inne med en gang.",
     "scanEyebrow": "allerede invitert",
     "scanTitle": "Skann en QR for å bli med",
-    "skip": "Hopp over",
-    "subhead": "La oss starte en gruppe."
+    "serverBody": "Kjører du Chara selv? Pek appen mot din egen server.",
+    "serverEyebrow": "egen server",
+    "serverTitle": "Koble til min server",
+    "serverUseCloud": "Bruk Chara Cloud i stedet"
   },
   "onboardingName": {
     "body": "Navnet ditt vises på hver utgift og hvert oppgjør. Telefonnummeret lar venner gjøre opp med deg via Swish, Vipps eller liknende.",
@@ -1236,6 +1264,15 @@
     "vipps": "Vipps",
     "vippsUnlinked": "Ikke koblet"
   },
+  "setup": {
+    "accountCreated": "Konto opprettet",
+    "continueWithout": "Fortsett uten gruppe",
+    "failedHeadline": "Nesten ferdig",
+    "headline": "Gjør alt klart",
+    "stepCreate": "Oppretter {{group}}",
+    "stepJoin": "Blir med i {{group}}",
+    "stepName": "Lagrer navnet ditt"
+  },
   "signIn": {
     "apple": {
       "errorBody": "Vi kunne ikke fullføre Logg inn med Apple. Prøv igjen eller bruk e-post.",
@@ -1250,7 +1287,7 @@
     "dict": {
       "def1": ": kvitt; gjort opp mellom venner",
       "def2": ": ettergivelse av en liten gjeld",
-      "def3": ": «la oss kalle det chara» — la oss kalle det kvitt",
+      "def3": ": «la oss kalle det chara», la oss kalle det kvitt",
       "headword": "cha·ra",
       "partOfSpeech": "substantiv, fra japansk チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1262,7 +1299,6 @@
       "errorTitle": "Innlogging feilet",
       "noToken": "Google returnerte ikke en identitetstoken. Prøv igjen."
     },
-    "headline": "Del det.\nGjør opp.\nFerdig snakka.",
     "hostedBy": "driftes av chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",
@@ -1285,7 +1321,13 @@
       "body": "Denne lenken legger til en ny server i Chara. Fortsett bare hvis du ba om det selv.",
       "continue": "Fortsett",
       "title": "Logge inn på {{host}}?"
-    }
+    },
+    "welcomeBack": "Velkommen tilbake.",
+    "draftEyebrow": "siste steg",
+    "draftCreateHeadline": "Lagre {{group}}.",
+    "draftCreateBody": "Opprett kontoen din for å invitere venner.",
+    "draftJoinHeadline": "Bli med i {{group}}.",
+    "draftJoinBody": "Opprett kontoen din, så er du med."
   },
   "tabs": {
     "activity": "Aktivitet",
@@ -1346,6 +1388,25 @@
     "success": "Takk — vi tar kontakt.",
     "title": "Du har brukt opp {{cap}} gratis kvitteringsskann denne måneden"
   },
+  "welcome": {
+    "chooseHeadline": "Hvordan vil du begynne?",
+    "continue": "Fortsett",
+    "createBody": "Du inviterer venner rett etter at du har registrert deg.",
+    "createHeadline": "Gi den første gruppen din et navn.",
+    "getStarted": "Kom i gang",
+    "haveAccount": "Jeg har allerede en konto",
+    "language": "Språk",
+    "letsGo": "Sett i gang",
+    "nameBody": "Navnet ditt vises på hver utgift og hvert oppgjør.",
+    "nameHeadline": "Hva heter du?",
+    "next": "Neste",
+    "skip": "Hopp over",
+    "slide2Body": "Ta et bilde av kvitteringen og få en oversikt linje for linje.",
+    "slide2Title": "Ta bilde av kvitteringen.\nVi deler den opp.",
+    "slide3Body": "Vipps, Swish eller kontanter. Alle ser alltid hvem som skylder hva. Åpen kildekode, så du kan drifte den selv om du vil.",
+    "slide3Title": "Gjør opp med ett trykk.",
+    "step": "steg {{current}} av {{total}}"
+  },
   "widget": {
     "addExpense": "Legg til utgift",
     "allSettled": "Alt er gjort opp",
@@ -1399,6 +1460,7 @@
     "rateUnavailableBody": "Chara er ikke publisert i en butikk ennå.",
     "rateUnavailableTitle": "Ikke tilgjengelig ennå",
     "replayOnboarding": "Spill av onboarding igjen",
+    "sendFeedback": "Send tilbakemelding",
     "settingsEyebrow": "innstillinger",
     "shareMessage": "Jeg har delt regninger med Chara — sjekk det ut: https://getchara.dowtech.dev",
     "signOut": "Logg ut",
