@@ -179,3 +179,23 @@ func TestFeatures_MonthlySummaryHostedAndQueueOnly(t *testing.T) {
 		})
 	}
 }
+
+// Feedback is hosted-only and has no other dependency: the form writes
+// straight to a table, so nothing else has to be configured for it to work.
+func TestFeatures_FeedbackHostedOnly(t *testing.T) {
+	cases := []struct {
+		mode string
+		want bool
+	}{
+		{"hosted", true},
+		{"selfhost", false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.mode, func(t *testing.T) {
+			info := buildInfo(&config.Config{InstanceMode: tc.mode}, "test")
+			if info.Features.Feedback != tc.want {
+				t.Errorf("Feedback = %v, want %v", info.Features.Feedback, tc.want)
+			}
+		})
+	}
+}

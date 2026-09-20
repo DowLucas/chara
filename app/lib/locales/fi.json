@@ -387,6 +387,31 @@
     "continue": "Jatka",
     "headline": "Kulu lisätty."
   },
+  "feedback": {
+    "bodyLabel": "Viestisi",
+    "intro": "Löysitkö virheen tai kaipaatko jotain? Kerro tässä. Viesti menee suoraan Charan tekijöille.",
+    "kind": {
+      "bug": "Virhe",
+      "idea": "Ominaisuusidea"
+    },
+    "kindEyebrow": "tyyppi",
+    "meta": "Lähettäjä {{email}} · Chara {{version}}",
+    "placeholder": {
+      "bug": "Mitä tapahtui ja mitä odotit sen sijaan?",
+      "idea": "Mitä haluaisit Charan tekevän?"
+    },
+    "send": "Lähetä",
+    "sending": "Lähetetään…",
+    "sent": {
+      "body": "Palautteesi on perillä. Luemme jokaisen viestin.",
+      "title": "Kiitos"
+    },
+    "title": "Lähetä palautetta",
+    "unavailable": {
+      "body": "Yksikään palvelimistasi ei ota vastaan palautetta. Sovelluksen lomake on Chara Cloud -ominaisuus.",
+      "title": "Palaute ei ole käytettävissä"
+    }
+  },
   "fx": {
     "convertedLabel": "Muunnettu yhteensä",
     "error": "Ei kurssia: {{from}} → {{to}}",
@@ -1435,6 +1460,7 @@
     "rateUnavailableBody": "Charaa ei ole vielä julkaistu kauppaan.",
     "rateUnavailableTitle": "Ei vielä saatavilla",
     "replayOnboarding": "Käy perehdytys uudelleen",
+    "sendFeedback": "Lähetä palautetta",
     "settingsEyebrow": "asetukset",
     "shareMessage": "Olen jakanut laskuja Charalla — kokeile sinäkin: https://getchara.dowtech.dev",
     "signOut": "Kirjaudu ulos",

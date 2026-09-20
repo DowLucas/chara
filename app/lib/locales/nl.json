@@ -387,6 +387,31 @@
     "continue": "Verder",
     "headline": "Uitgave toegevoegd."
   },
+  "feedback": {
+    "bodyLabel": "Je bericht",
+    "intro": "Een bug gevonden of mis je iets? Laat het hier weten. Het gaat rechtstreeks naar de makers van Chara.",
+    "kind": {
+      "bug": "Bug",
+      "idea": "Functie-idee"
+    },
+    "kindEyebrow": "soort",
+    "meta": "Verzonden als {{email}} · Chara {{version}}",
+    "placeholder": {
+      "bug": "Wat gebeurde er, en wat had je verwacht?",
+      "idea": "Wat wil je dat Chara kan?"
+    },
+    "send": "Versturen",
+    "sending": "Versturen…",
+    "sent": {
+      "body": "We hebben je feedback ontvangen. We lezen alles.",
+      "title": "Bedankt"
+    },
+    "title": "Feedback sturen",
+    "unavailable": {
+      "body": "Geen van je servers neemt feedback aan. Het formulier in de app is een functie van Chara Cloud.",
+      "title": "Feedback is niet beschikbaar"
+    }
+  },
   "fx": {
     "convertedLabel": "Omgerekend totaal",
     "error": "Geen koers voor {{from}} → {{to}}",
@@ -1435,6 +1460,7 @@
     "rateUnavailableBody": "Chara staat nog niet in een winkel.",
     "rateUnavailableTitle": "Nog niet beschikbaar",
     "replayOnboarding": "Onboarding opnieuw afspelen",
+    "sendFeedback": "Feedback sturen",
     "settingsEyebrow": "instellingen",
     "shareMessage": "Ik splits rekeningen met Chara — check het even: https://getchara.dowtech.dev",
     "signOut": "Uitloggen",

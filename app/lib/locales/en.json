@@ -387,6 +387,31 @@
     "continue": "Continue",
     "headline": "Expense added."
   },
+  "feedback": {
+    "bodyLabel": "Your message",
+    "intro": "Found a bug, or want something added? Tell us here. It goes straight to the people building Chara.",
+    "kind": {
+      "bug": "Bug",
+      "idea": "Feature idea"
+    },
+    "kindEyebrow": "type",
+    "meta": "Sent as {{email}} · Chara {{version}}",
+    "placeholder": {
+      "bug": "What happened, and what did you expect instead?",
+      "idea": "What would you like Chara to do?"
+    },
+    "send": "Send",
+    "sending": "Sending…",
+    "sent": {
+      "body": "Your feedback is with us. We read every one.",
+      "title": "Thank you"
+    },
+    "title": "Send feedback",
+    "unavailable": {
+      "body": "None of your servers take feedback. The in-app form is a Chara Cloud feature.",
+      "title": "Feedback isn't available"
+    }
+  },
   "fx": {
     "convertedLabel": "Converted total",
     "error": "No rate for {{from}} → {{to}}",
@@ -1435,6 +1460,7 @@
     "rateUnavailableBody": "Chara isn't published to a store yet.",
     "rateUnavailableTitle": "Not available yet",
     "replayOnboarding": "Replay onboarding",
+    "sendFeedback": "Send feedback",
     "settingsEyebrow": "settings",
     "shareMessage": "I've been splitting bills with Chara — check it out: https://getchara.dowtech.dev",
     "signOut": "Sign out",

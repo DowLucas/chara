@@ -44,6 +44,12 @@ type Features struct {
 	// ever notifies, so the app would surface a page nobody is told about.
 	// Absent on older builds → the app hides the row (version-skew safe).
 	MonthlySummary bool `json:"monthly_summary"`
+	// Feedback advertises POST /api/feedback, the in-app bug report and
+	// feature idea form. Hosted-only: a self-hosted instance has no one to
+	// route a Chara bug report to, so the app hides the row entirely rather
+	// than offering a dead end. Absent on older builds → the app hides the
+	// row (version-skew safe).
+	Feedback bool `json:"feedback"`
 }
 
 func Handler(cfg *config.Config, version string) http.HandlerFunc {
@@ -89,6 +95,7 @@ func buildInfo(cfg *config.Config, version string) InstanceInfo {
 			SettleReminders: cfg.RecurringEnabled,
 			VoiceExpense:    cfg.HasGemini(),
 			MonthlySummary:  cfg.IsHosted() && cfg.RecurringEnabled,
+			Feedback:        cfg.IsHosted(),
 		},
 	}
 }

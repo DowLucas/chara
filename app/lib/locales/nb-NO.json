@@ -387,6 +387,31 @@
     "continue": "Fortsett",
     "headline": "Utgift lagt til."
   },
+  "feedback": {
+    "bodyLabel": "Meldingen din",
+    "intro": "Fant du en feil, eller savner du noe? Si ifra her. Det går rett til oss som lager Chara.",
+    "kind": {
+      "bug": "Feil",
+      "idea": "Funksjonsidé"
+    },
+    "kindEyebrow": "type",
+    "meta": "Sendt som {{email}} · Chara {{version}}",
+    "placeholder": {
+      "bug": "Hva skjedde, og hva forventet du i stedet?",
+      "idea": "Hva vil du at Chara skal kunne?"
+    },
+    "send": "Send",
+    "sending": "Sender…",
+    "sent": {
+      "body": "Vi har fått tilbakemeldingen din. Vi leser alt som kommer inn.",
+      "title": "Takk"
+    },
+    "title": "Send tilbakemelding",
+    "unavailable": {
+      "body": "Ingen av serverne dine tar imot tilbakemeldinger. Skjemaet i appen er en Chara Cloud-funksjon.",
+      "title": "Tilbakemelding er ikke tilgjengelig"
+    }
+  },
   "fx": {
     "convertedLabel": "Konvertert sum",
     "error": "Ingen kurs for {{from}} → {{to}}",
@@ -1435,6 +1460,7 @@
     "rateUnavailableBody": "Chara er ikke publisert i en butikk ennå.",
     "rateUnavailableTitle": "Ikke tilgjengelig ennå",
     "replayOnboarding": "Spill av onboarding igjen",
+    "sendFeedback": "Send tilbakemelding",
     "settingsEyebrow": "innstillinger",
     "shareMessage": "Jeg har delt regninger med Chara — sjekk det ut: https://getchara.dowtech.dev",
     "signOut": "Logg ut",

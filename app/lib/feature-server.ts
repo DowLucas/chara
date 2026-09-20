@@ -1,37 +1,39 @@
 /**
- * Which linked server, if any, has a monthly summary to show.
+ * Which linked server, if any, offers a given optional feature.
  *
  * Pure: no React, no api client, no accounts store — the hook that binds it
- * to both lives in `use-summary-server.ts`, mirroring the
+ * to both lives in `use-feature-server.ts`, mirroring the
  * resolve-home-currency / use-home-currency split. Keeping the decision here
  * is what makes it testable, since this project does no render testing.
  *
- * The feature is hosted-only, so at most one account normally qualifies.
+ * These features are hosted-only, so at most one account normally qualifies.
  * Availability comes from the server's advertised `features` rather than
- * from "is this the hosted URL", so a self-hoster who later enables it is
+ * from "is this the hosted URL", so a self-hoster who later enables one is
  * picked up for free and a backend predating the feature reads as
  * unsupported instead of being offered a screen that 404s.
  */
 
-import { summaryServerUrl } from './summary-view';
+/** The optional features a screen can be gated on. */
+export type GatedFeature = 'monthly_summary' | 'feedback';
 
 /** The slice of the instance payload this decision needs. */
 export interface InstanceFeatureProbe {
-  features?: { monthly_summary?: boolean } | null;
+  features?: Partial<Record<GatedFeature, boolean>> | null;
 }
 
 export type FetchInstance = (serverUrl: string) => Promise<InstanceFeatureProbe>;
 
 /**
  * Probe every linked server and return the first (in account order) that
- * advertises the monthly summary, or null.
+ * advertises `feature`, or null.
  *
  * `Promise.allSettled`, never `Promise.all`: one unreachable server must not
- * hide a summary another server does have.
+ * hide a feature another server does have.
  */
-export async function resolveSummaryServer(
+export async function resolveFeatureServer(
   accounts: { serverUrl: string }[],
   fetchInstance: FetchInstance,
+  feature: GatedFeature,
 ): Promise<string | null> {
   if (accounts.length === 0) return null;
 
@@ -39,13 +41,13 @@ export async function resolveSummaryServer(
     accounts.map((a) => fetchInstance(a.serverUrl)),
   );
 
-  // Rebuild the shape summaryServerUrl already understands, preserving
-  // account order so the answer is stable rather than whichever server
-  // happened to answer first.
-  const probed = accounts.map((a, i) => {
+  // Account order, not answer order, so the result is stable rather than
+  // whichever server happened to answer first. A flag that is absent (an
+  // older backend) reads as unsupported, never as truthy.
+  for (let i = 0; i < accounts.length; i++) {
     const r = settled[i];
-    const features = r.status === 'fulfilled' ? (r.value?.features ?? null) : null;
-    return { serverUrl: a.serverUrl, instance: features ? { features } : null };
-  });
-  return summaryServerUrl(probed);
+    if (r.status !== 'fulfilled') continue;
+    if (r.value?.features?.[feature] === true) return accounts[i].serverUrl;
+  }
+  return null;
 }

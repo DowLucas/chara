@@ -975,6 +975,10 @@ export interface InstanceFeatures {
    *  Optional — absent on backends predating the feature, and false on every
    *  self-hosted instance, which the app treats as unsupported. */
   monthly_summary?: boolean;
+  /** POST /api/feedback is available. Optional — absent on backends
+   *  predating the feature, and false on every self-hosted instance, which
+   *  the app treats as unsupported so the row never appears. */
+  feedback?: boolean;
 }
 
 export interface InstanceInfo {
@@ -1133,6 +1137,17 @@ export function submitWaitlist(input: WaitlistSubmission) {
     method: 'POST',
     body: JSON.stringify(input),
   });
+}
+
+export interface FeedbackSubmission {
+  kind: 'bug' | 'idea';
+  /** The user's own words. Capped at 4000 characters by the backend. */
+  body: string;
+  /** Client metadata, all optional server-side. Sent so a terse report is
+   *  still actionable: which build, which OS, which language. */
+  app_version?: string;
+  platform?: string;
+  locale?: string;
 }
 
 /**
@@ -1775,6 +1790,14 @@ export function apiFor(serverUrl: string) {
     // v1.0/v1.1 free beta.
     submitWaitlist: (input: WaitlistSubmission) =>
       requestOn<{ ok: boolean }>(serverUrl, '/api/waitlist', {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+
+    // Bug report / feature idea from the in-app feedback screen.
+    // Hosted-only — gate the entry point on features.feedback.
+    submitFeedback: (input: FeedbackSubmission) =>
+      requestOn<{ ok: boolean }>(serverUrl, '/api/feedback', {
         method: 'POST',
         body: JSON.stringify(input),
       }),
