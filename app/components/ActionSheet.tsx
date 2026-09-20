@@ -74,57 +74,64 @@ export function ActionSheet({ visible, onClose, title, options }: Props) {
       onDismiss={handleDismissed}
       statusBarTranslucent
     >
-      <TouchableWithoutFeedback onPress={closeWithGuard}>
-        <View style={styles.backdrop} />
-      </TouchableWithoutFeedback>
-      <View
-        style={[
-          styles.sheet,
-          { paddingBottom: insets.bottom + spacing.s3 },
-          sheetMaxWidth != null && { maxWidth: sheetMaxWidth, marginHorizontal: 'auto' },
-        ]}
-      >
-        {title && (
-          <View style={styles.titleRow}>
-            <Text style={styles.title}>{title}</Text>
-          </View>
-        )}
-        <ScrollView
-          style={{ maxHeight: optionsMaxHeight }}
-          bounces={false}
-          showsVerticalScrollIndicator
+      {/* The dim layer and the sheet are both absolutely positioned, so they
+          need a laid-out box to resolve against: without this flex:1 root,
+          `absoluteFillObject` has no height to fill and the backdrop never
+          paints (the sheet still shows, because `bottom: 0` pins it anyway).
+          Mirrors AppAlert's structure, which dims correctly. */}
+      <View style={styles.root}>
+        <TouchableWithoutFeedback onPress={closeWithGuard}>
+          <View style={styles.backdrop} />
+        </TouchableWithoutFeedback>
+        <View
+          style={[
+            styles.sheet,
+            { paddingBottom: insets.bottom + spacing.s3 },
+            sheetMaxWidth != null && { maxWidth: sheetMaxWidth, marginHorizontal: 'auto' },
+          ]}
         >
-          {options.map((opt, i) => (
-            <TouchableOpacity
-              key={`${opt.label}-${i}`}
-              style={[styles.row, i === 0 && !title && styles.rowFirst]}
-              onPress={() => {
-                // Queue the action and dismiss. On iOS the Modal fires
-                // onDismiss after its presentation animation completes, which
-                // is the only safe moment to launch another view controller
-                // (camera, image picker, share sheet). onDismiss does not
-                // fire on Android, so we fall back to a setTimeout there.
-                pendingActionRef.current = opt.onPress;
-                closeWithGuard();
-                if (Platform.OS !== 'ios') {
-                  setTimeout(() => {
-                    const action = pendingActionRef.current;
-                    pendingActionRef.current = null;
-                    if (action) action();
-                  }, 80);
-                }
-              }}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.rowLabel, opt.destructive && styles.rowLabelDestructive]}>
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-        <TouchableOpacity style={[styles.row, styles.cancelRow]} onPress={closeWithGuard} activeOpacity={0.7}>
-          <Text style={[styles.rowLabel, styles.cancelLabel]}>{cancelLabel}</Text>
-        </TouchableOpacity>
+          {title && (
+            <View style={styles.titleRow}>
+              <Text style={styles.title}>{title}</Text>
+            </View>
+          )}
+          <ScrollView
+            style={{ maxHeight: optionsMaxHeight }}
+            bounces={false}
+            showsVerticalScrollIndicator
+          >
+            {options.map((opt, i) => (
+              <TouchableOpacity
+                key={`${opt.label}-${i}`}
+                style={[styles.row, i === 0 && !title && styles.rowFirst]}
+                onPress={() => {
+                  // Queue the action and dismiss. On iOS the Modal fires
+                  // onDismiss after its presentation animation completes, which
+                  // is the only safe moment to launch another view controller
+                  // (camera, image picker, share sheet). onDismiss does not
+                  // fire on Android, so we fall back to a setTimeout there.
+                  pendingActionRef.current = opt.onPress;
+                  closeWithGuard();
+                  if (Platform.OS !== 'ios') {
+                    setTimeout(() => {
+                      const action = pendingActionRef.current;
+                      pendingActionRef.current = null;
+                      if (action) action();
+                    }, 80);
+                  }
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.rowLabel, opt.destructive && styles.rowLabelDestructive]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <TouchableOpacity style={[styles.row, styles.cancelRow]} onPress={closeWithGuard} activeOpacity={0.7}>
+            <Text style={[styles.rowLabel, styles.cancelLabel]}>{cancelLabel}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </Modal>
   );
@@ -146,6 +153,9 @@ export function openNativeActionSheet(
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
   backdrop: {
     ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.4)',
