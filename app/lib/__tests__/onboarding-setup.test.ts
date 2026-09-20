@@ -49,7 +49,7 @@ describe('runSetup', () => {
     expect(deps.createGroup).toHaveBeenCalledWith('Ski trip', 'SEK');
     expect(deps.setGroupColor).toHaveBeenCalledWith('g1', '#ff0000');
     expect(saved[saved.length - 1]).toMatchObject({ nameDone: true, groupId: 'g1' });
-    expect(r).toEqual({ kind: 'done', intent: 'create', groupId: 'g1' });
+    expect(r).toEqual({ kind: 'done', intent: 'create', groupId: 'g1', outcome: 'created' });
   });
 
   it('keeps an existing server-side name', async () => {
@@ -63,7 +63,7 @@ describe('runSetup', () => {
     const r = await runSetup(createDraft({ nameDone: true, groupId: 'g9' }), deps);
     expect(deps.getMyName).not.toHaveBeenCalled();
     expect(deps.createGroup).not.toHaveBeenCalled();
-    expect(r).toEqual({ kind: 'done', intent: 'create', groupId: 'g9' });
+    expect(r).toEqual({ kind: 'done', intent: 'create', groupId: 'g9', outcome: 'resumed' });
   });
 
   it('a color failure never blocks setup', async () => {
@@ -79,12 +79,26 @@ describe('runSetup', () => {
     const { deps } = fakeDeps();
     const r = await runSetup(joinDraft, deps);
     expect(deps.joinGroup).toHaveBeenCalledWith('tok');
-    expect(r).toEqual({ kind: 'done', intent: 'join', groupId: 'g2' });
+    expect(r).toEqual({ kind: 'done', intent: 'join', groupId: 'g2', outcome: 'joined' });
   });
 
   it('join path: already a member is done without a group id', async () => {
     const { deps } = fakeDeps({ joinGroup: jest.fn(async () => null) });
-    expect(await runSetup(joinDraft, deps)).toEqual({ kind: 'done', intent: 'join', groupId: null });
+    expect(await runSetup(joinDraft, deps)).toEqual({
+      kind: 'done',
+      intent: 'join',
+      groupId: null,
+      outcome: 'already_member',
+    });
+  });
+
+  // `outcome` is what the setup screen turns into `group_created` /
+  // `group_joined`. It has to distinguish a group made on this attempt from one
+  // a previous attempt already made, or a retry double-counts the conversion.
+  it('a draft with no group at all reports no outcome', async () => {
+    const { deps } = fakeDeps();
+    const r = await runSetup(createDraft({ group: undefined }), deps);
+    expect(r).toEqual({ kind: 'done', intent: 'create', groupId: null, outcome: 'none' });
   });
 
   it('reports the failing step with the progress made so far', async () => {
@@ -112,21 +126,21 @@ describe('postSetupNavigation', () => {
   const enc = encodeURIComponent(S);
 
   it('create path resets to the tabs before the invite screen', () => {
-    expect(postSetupNavigation({ kind: 'done', intent: 'create', groupId: 'g1' }, S)).toEqual([
+    expect(postSetupNavigation({ kind: 'done', intent: 'create', groupId: 'g1', outcome: 'created' }, S)).toEqual([
       '/(tabs)',
       `/onboarding/created?server=${enc}&groupId=g1`,
     ]);
   });
 
   it('join path resets to the tabs before the group', () => {
-    expect(postSetupNavigation({ kind: 'done', intent: 'join', groupId: 'g2' }, S)).toEqual([
+    expect(postSetupNavigation({ kind: 'done', intent: 'join', groupId: 'g2', outcome: 'joined' }, S)).toEqual([
       '/(tabs)',
       `/groups/${enc}/g2`,
     ]);
   });
 
   it('without a group it just goes to the tabs', () => {
-    expect(postSetupNavigation({ kind: 'done', intent: 'join', groupId: null }, S)).toEqual([
+    expect(postSetupNavigation({ kind: 'done', intent: 'join', groupId: null, outcome: 'already_member' }, S)).toEqual([
       '/(tabs)',
     ]);
   });

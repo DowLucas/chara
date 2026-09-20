@@ -22,8 +22,21 @@ export interface SetupDeps {
   save(d: OnboardingDraft): Promise<void>;
 }
 
+/**
+ * What the group step actually did, so the screen can fire the right
+ * conversion event exactly once. `resumed` means a previous attempt already
+ * created the group (and already counted it); `already_member` is the 409 the
+ * join path treats as success.
+ */
+export type SetupOutcome = 'created' | 'resumed' | 'joined' | 'already_member' | 'none';
+
 export type SetupResult =
-  | { kind: 'done'; intent: 'create' | 'join'; groupId: string | null }
+  | {
+      kind: 'done';
+      intent: 'create' | 'join';
+      groupId: string | null;
+      outcome: SetupOutcome;
+    }
   | { kind: 'failed'; step: SetupStep; error: unknown; draft: OnboardingDraft };
 
 /**
@@ -74,22 +87,27 @@ export async function runSetup(
     step = 'group';
     onStep?.('group', 'running');
     let groupId: string | null;
+    let outcome: SetupOutcome;
     if (d.intent === 'join' && d.invite) {
       groupId = (await deps.joinGroup(d.invite.token))?.id ?? null;
+      outcome = groupId ? 'joined' : 'already_member';
     } else if (d.groupId) {
       groupId = d.groupId;
+      outcome = 'resumed';
     } else if (d.group) {
       const { name, currency, color } = d.group;
       const g = await deps.createGroup(name, currency);
       groupId = g.id;
+      outcome = 'created';
       d = { ...d, groupId };
       await deps.save(d);
       if (color) await deps.setGroupColor(g.id, color).catch(() => {});
     } else {
       groupId = null;
+      outcome = 'none';
     }
     onStep?.('group', 'done');
-    return { kind: 'done', intent: d.intent === 'join' ? 'join' : 'create', groupId };
+    return { kind: 'done', intent: d.intent === 'join' ? 'join' : 'create', groupId, outcome };
   } catch (error) {
     return { kind: 'failed', step, error, draft: d };
   }

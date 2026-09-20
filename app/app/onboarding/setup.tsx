@@ -67,14 +67,30 @@ export default function OnboardingSetupScreen() {
         setDraft(result.draft);
         setStates((s) => ({ ...s, [result.step]: 'failed' }));
         setError(userErrorMessage(result.error, t('common.requestFailed')));
-        analytics.track('onboarding_setup_failed', { step: result.step });
+        const code = analytics.errorCode(result.error);
+        analytics.track('onboarding_setup_failed', { step: result.step, code });
+        if (result.step === 'group') {
+          analytics.track(
+            result.draft.intent === 'join' ? 'group_join_failed' : 'group_create_failed',
+            { code },
+          );
+        }
         return;
       }
       await clearDraft();
       hapticSuccess();
-      if (result.intent === 'join' && result.groupId) {
-        analytics.track('onboarding_finished', { path: 'join' });
+      // First-run conversion. `resumed` means a previous attempt already
+      // created the group and already counted it, so a retry must not fire
+      // again; `already_member` (409) counts as a join, matching the
+      // deep-link join route.
+      if (result.outcome === 'created') analytics.track('group_created');
+      if (result.outcome === 'joined' || result.outcome === 'already_member') {
+        analytics.track('group_joined');
       }
+      // Fires for both paths at the same point, so create and join stay
+      // comparable — and so abandoning the invite screen still counts as a
+      // finished onboarding.
+      analytics.track('onboarding_finished', { path: result.intent });
       const [reset, ...rest] = postSetupNavigation(result, serverUrl);
       router.replace(reset as never);
       rest.forEach((href) => router.push(href as never));

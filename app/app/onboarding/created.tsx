@@ -13,7 +13,6 @@ import { userErrorMessage } from '@/lib/user-error';
 import { hapticSuccess } from '@/lib/haptics';
 import { useDefaultAccount } from '@/lib/accounts';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
-import * as analytics from '@/lib/analytics';
 
 export default function GroupCreatedScreen() {
   const insets = useSafeAreaInsets();
@@ -142,7 +141,6 @@ export default function GroupCreatedScreen() {
           <TouchableOpacity
             style={styles.secondary}
             onPress={() => {
-              analytics.track('onboarding_finished', { path: 'create' });
               if (!serverUrl) {
                 router.replace('/(tabs)');
                 return;
