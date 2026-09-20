@@ -27,7 +27,8 @@ export default function WelcomeChooseScreen() {
   );
 
   function chooseServer() {
-    analytics.track('onboarding_server_chosen');
+    // The event fires on confirm in add-server, not here: opening the
+    // picker and cancelling is not choosing a server.
     router.push({
       pathname: '/(auth)/add-server',
       params: { mode: 'welcome', ...(serverUrl ? { prefillUrl: serverUrl } : {}) },

@@ -22,6 +22,7 @@ import { checkProtocolCompat } from '@/lib/protocol';
 import { HTTP_NOT_PRIVATE_REASON, normalizeServerUrl } from '@/lib/server-url';
 import { runDiscoveryHandshake } from '@/lib/discovery';
 import { updateDraft } from '@/lib/onboarding-draft';
+import * as analytics from '@/lib/analytics';
 import type { AccountInstanceInfo } from '@/lib/accounts-store';
 import {
   colors,
@@ -144,8 +145,12 @@ export default function AddServerScreen() {
     // the choice screen. Sign-up is the last step there, so unlike the other
     // modes this one must not jump straight to sign-in.
     if (mode === 'welcome') {
+      analytics.track('onboarding_server_chosen');
       void updateDraft({ serverUrl: confirm.serverUrl }).then(() => {
-        router.replace('/welcome/choose');
+        // back(), not replace(): /welcome/choose pushed this screen, so
+        // replacing would leave two copies of it on the stack. The choose
+        // screen re-reads the draft on focus, so it picks the server up.
+        router.back();
       });
       return;
     }
