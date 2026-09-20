@@ -108,9 +108,41 @@ beforeEach(() => {
   resetAll();
 });
 
+describe('errorCode', () => {
+  it('maps an api error to its status', () => {
+    expect(analytics.errorCode(Object.assign(new Error('nope'), { status: 409 }))).toBe('http_409');
+  });
+  it('maps fetch offline shapes to network', () => {
+    expect(analytics.errorCode(new TypeError('Network request failed'))).toBe('network');
+    expect(analytics.errorCode(new Error('request timed out'))).toBe('network');
+  });
+  it('falls back to unknown', () => {
+    expect(analytics.errorCode(new Error('something odd'))).toBe('unknown');
+    expect(analytics.errorCode(null)).toBe('unknown');
+  });
+});
+
 describe('analytics wrapper', () => {
   test('init() is a no-op when POSTHOG_API_KEY is missing', async () => {
     expoExtra = { posthogApiKey: null, posthogHost: 'https://eu.i.posthog.com' };
+    await analytics.init();
+
+    analytics.track('app_opened', { is_first_launch: true });
+
+    expect(ctorCalls).toHaveLength(0);
+    expect(mockCapture).not.toHaveBeenCalled();
+  });
+
+  // Expo's config serializer turns a `null` in `extra` into `{}` when it bakes
+  // app.config into the binary, so a build without POSTHOG_API_KEY arrives here
+  // as an empty object, not null. Anything that is not a usable key string must
+  // still degrade to the permanent no-op.
+  test.each([
+    ['an empty object (what a keyless production build actually ships)', {}],
+    ['an empty string', ''],
+    ['undefined', undefined],
+  ])('init() is a no-op when the key is %s', async (_label, value) => {
+    expoExtra = { posthogApiKey: value, posthogHost: 'https://eu.i.posthog.com' };
     await analytics.init();
 
     analytics.track('app_opened', { is_first_launch: true });
