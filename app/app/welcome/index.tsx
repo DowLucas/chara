@@ -13,7 +13,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { Text } from '@/components/Text';
 import { ContentContainer } from '@/components/ContentContainer';
-import { useEnglishT } from '@/lib/i18n';
+import { LanguagePicker } from '@/components/LanguagePicker';
+import i18n, {
+  LANGUAGE_NATIVE_NAMES,
+  useEnglishT,
+  type SupportedLanguage,
+} from '@/lib/i18n';
+import {
+  clearPreferredLanguage,
+  getPreferredLanguage,
+  setPreferredLanguage,
+} from '@/lib/preferences';
 import { clearDraft } from '@/lib/onboarding-draft';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 import * as analytics from '@/lib/analytics';
@@ -26,6 +36,25 @@ export default function WelcomeIntroScreen() {
   const pager = useRef<ScrollView>(null);
   const [width, setWidth] = useState(0);
   const [index, setIndex] = useState(0);
+  const [languageSheetVisible, setLanguageSheetVisible] = useState(false);
+  const [storedLanguage, setStoredLanguage] = useState<string | null>(null);
+
+  useEffect(() => {
+    void getPreferredLanguage().then(setStoredLanguage);
+  }, []);
+
+  async function pickLanguage(code: SupportedLanguage) {
+    await setPreferredLanguage(code);
+    setStoredLanguage(code);
+    i18n.changeLanguage(code);
+    setLanguageSheetVisible(false);
+  }
+
+  async function useAutomaticLanguage() {
+    await clearPreferredLanguage();
+    setStoredLanguage(null);
+    setLanguageSheetVisible(false);
+  }
 
   useEffect(() => {
     // A new run starts from scratch; never replay an abandoned draft.
@@ -51,11 +80,26 @@ export default function WelcomeIntroScreen() {
     router.push('/welcome/name');
   }
 
+  // Onboarding renders English until the user explicitly picks (see
+  // useEnglishT), so the chip reflects the stored pick, not the device locale.
+  const activeLanguage = (storedLanguage ?? 'en') as SupportedLanguage;
+  const languageLabel = activeLanguage.split('-')[0].toUpperCase();
+
   const ctaLabel = [t('welcome.getStarted'), t('welcome.next'), t('welcome.letsGo')][index];
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.topBar}>
+        <TouchableOpacity
+          onPress={() => setLanguageSheetVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel={`${t('welcome.language')}: ${LANGUAGE_NATIVE_NAMES[activeLanguage]}`}
+          style={styles.langBtn}
+        >
+          <Feather name="globe" size={14} color={colors.lead} />
+          <Text style={styles.skipLabel}>{languageLabel}</Text>
+        </TouchableOpacity>
+        <View style={styles.topBarSpacer} />
         {index < SLIDES - 1 && (
           <TouchableOpacity onPress={skip} accessibilityRole="button" style={styles.skipBtn}>
             <Text style={styles.skipLabel}>{t('welcome.skip')}</Text>
@@ -91,13 +135,18 @@ export default function WelcomeIntroScreen() {
               ))}
             </Slide>
             <Slide width={width}>
-              <Feather name="camera" size={40} color={colors.vermillion} style={styles.icon} />
+              <Image
+                source={require('@/assets/illustrations/onboarding-receipt.png')}
+                style={styles.illustration}
+                resizeMode="contain"
+                accessible={false}
+              />
               <Text style={styles.title}>{t('welcome.slide2Title')}</Text>
               <Text style={styles.body}>{t('welcome.slide2Body')}</Text>
             </Slide>
             <Slide width={width}>
               <Image
-                source={require('@/assets/illustrations/onboarding-welcome.png')}
+                source={require('@/assets/illustrations/onboarding-settle.png')}
                 style={styles.illustration}
                 resizeMode="contain"
                 accessible={false}
@@ -136,6 +185,13 @@ export default function WelcomeIntroScreen() {
           </TouchableOpacity>
         </View>
       </ContentContainer>
+      <LanguagePicker
+        visible={languageSheetVisible}
+        selected={(storedLanguage as SupportedLanguage | null) ?? null}
+        onClose={() => setLanguageSheetVisible(false)}
+        onSelectAutomatic={useAutomaticLanguage}
+        onSelect={pickLanguage}
+      />
     </View>
   );
 }
@@ -154,8 +210,16 @@ const styles = StyleSheet.create({
   topBar: {
     height: 44,
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    alignItems: 'center',
     paddingHorizontal: spacing.s5,
+  },
+  topBarSpacer: { flex: 1 },
+  langBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.s1,
+    paddingHorizontal: spacing.s2,
+    paddingVertical: spacing.s2,
   },
   skipBtn: { justifyContent: 'center', paddingHorizontal: spacing.s2 },
   skipLabel: {
@@ -170,7 +234,6 @@ const styles = StyleSheet.create({
   // and the logo sits flush with the text's left edge.
   logo: { width: 88, height: 88, marginBottom: spacing.s6 },
   illustration: { width: '100%', height: 220, marginBottom: spacing.s5 },
-  icon: { marginBottom: spacing.s4 },
   title: {
     fontFamily: fontDisplay,
     fontSize: fontSize.displayL,

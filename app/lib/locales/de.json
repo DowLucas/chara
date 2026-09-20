@@ -968,7 +968,11 @@
     "greetingNamed": "Hi {{name}}.",
     "scanBody": "Auf den Bildschirm eines Freundes halten, schon bist du drin.",
     "scanEyebrow": "schon eingeladen",
-    "scanTitle": "QR scannen"
+    "scanTitle": "QR scannen",
+    "serverBody": "Betreibst du Chara selbst? Richte die App auf deinen eigenen Server.",
+    "serverEyebrow": "selbst gehostet",
+    "serverTitle": "Eigenen Server verbinden",
+    "serverUseCloud": "Stattdessen Chara Cloud verwenden"
   },
   "onboardingName": {
     "body": "Dein Name steht auf jeder Ausgabe und jedem Ausgleich. Mit deiner Nummer können Freunde dich über Swish, Vipps & Co. bezahlen.",
@@ -1366,12 +1370,13 @@
     "createHeadline": "Benenne deine erste Gruppe.",
     "getStarted": "Los geht's",
     "haveAccount": "Ich habe bereits ein Konto",
+    "language": "Sprache",
     "letsGo": "Auf geht's",
     "nameBody": "Dein Name erscheint bei jeder Ausgabe und Abrechnung.",
-    "nameHeadline": "Wie sollen dich deine Freunde nennen?",
+    "nameHeadline": "Wie heißt du?",
     "next": "Weiter",
     "skip": "Überspringen",
-    "slide2Body": "Scannen, sagen oder tippen, in jeder Währung.",
+    "slide2Body": "Fotografiere den Beleg und erhalte eine Aufschlüsselung Zeile für Zeile.",
     "slide2Title": "Beleg fotografieren.\nWir teilen ihn auf.",
     "slide3Body": "Swish, Vipps oder bar. Alle sehen jederzeit, wer wem was schuldet. Open Source, also auf Wunsch selbst hosten.",
     "slide3Title": "Mit einem Tipp abrechnen.",

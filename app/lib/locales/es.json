@@ -993,7 +993,11 @@
     "greetingNamed": "Hola {{name}}.",
     "scanBody": "Apunta a la pantalla de un amigo y entrarás al instante.",
     "scanEyebrow": "ya invitado",
-    "scanTitle": "Escanea un QR para unirte"
+    "scanTitle": "Escanea un QR para unirte",
+    "serverBody": "¿Alojas Chara tú mismo? Apunta la app a tu propio servidor.",
+    "serverEyebrow": "autoalojado",
+    "serverTitle": "Conectar mi servidor",
+    "serverUseCloud": "Usar Chara Cloud en su lugar"
   },
   "onboardingName": {
     "body": "Tu nombre aparece en cada gasto y liquidación. Tu teléfono permite que los amigos te paguen por Swish, Vipps o similares.",
@@ -1407,12 +1411,13 @@
     "createHeadline": "Ponle nombre a tu primer grupo.",
     "getStarted": "Empezar",
     "haveAccount": "Ya tengo una cuenta",
+    "language": "Idioma",
     "letsGo": "Vamos",
     "nameBody": "Tu nombre aparece en cada gasto y cada liquidación.",
-    "nameHeadline": "¿Cómo deben llamarte tus amigos?",
+    "nameHeadline": "¿Cómo te llamas?",
     "next": "Siguiente",
     "skip": "Omitir",
-    "slide2Body": "Escanéalo, dilo o escríbelo, en cualquier moneda.",
+    "slide2Body": "Haz una foto del recibo y obtén un desglose línea por línea.",
     "slide2Title": "Fotografía el recibo.\nNosotros lo dividimos.",
     "slide3Body": "Bizum, Swish o efectivo. Todos ven siempre quién debe qué. Código abierto: alójalo tú mismo si quieres.",
     "slide3Title": "Salda cuentas con un toque.",

@@ -173,6 +173,10 @@ export default function JoinConfirmScreen() {
       const draft = await updateDraft({
         intent: 'join',
         invite: { serverUrl, token, groupName: state.preview.groupName },
+        // The invite's server is where the group lives, so it supersedes any
+        // server picked earlier on the choice screen. Drop the stale one so
+        // that screen stops advertising it.
+        serverUrl: undefined,
       });
       router.push((draft.name ? signUpHref(draft, legacyHostedUrl()) : '/welcome/name') as never);
       return;

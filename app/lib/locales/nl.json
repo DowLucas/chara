@@ -968,7 +968,11 @@
     "greetingNamed": "Hoi {{name}}.",
     "scanBody": "Richt op het scherm van een vriend en je zit er meteen in.",
     "scanEyebrow": "al uitgenodigd",
-    "scanTitle": "Scan een QR om lid te worden"
+    "scanTitle": "Scan een QR om lid te worden",
+    "serverBody": "Draai je Chara zelf? Richt de app op je eigen server.",
+    "serverEyebrow": "eigen server",
+    "serverTitle": "Mijn server verbinden",
+    "serverUseCloud": "Gebruik in plaats daarvan Chara Cloud"
   },
   "onboardingName": {
     "body": "Je naam staat bij elke uitgave en afrekening. Met je telefoonnummer kunnen vrienden je betalen via Swish, Vipps of vergelijkbare apps.",
@@ -1366,12 +1370,13 @@
     "createHeadline": "Geef je eerste groep een naam.",
     "getStarted": "Aan de slag",
     "haveAccount": "Ik heb al een account",
+    "language": "Taal",
     "letsGo": "Daar gaan we",
     "nameBody": "Je naam staat bij elke uitgave en verrekening.",
-    "nameHeadline": "Hoe mogen vrienden je noemen?",
+    "nameHeadline": "Hoe heet je?",
     "next": "Volgende",
     "skip": "Overslaan",
-    "slide2Body": "Scan het, zeg het of typ het, in elke valuta.",
+    "slide2Body": "Maak een foto van de bon en krijg een overzicht regel voor regel.",
     "slide2Title": "Maak een foto van het bonnetje.\nWij verdelen het.",
     "slide3Body": "Tikkie, Swish of contant. Iedereen ziet altijd wie wat verschuldigd is. Open source, dus host het zelf als je wilt.",
     "slide3Title": "Afrekenen met één tik.",

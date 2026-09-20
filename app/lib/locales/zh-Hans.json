@@ -968,7 +968,11 @@
     "greetingNamed": "你好，{{name}}。",
     "scanBody": "对准朋友的屏幕一扫，立刻加入。",
     "scanEyebrow": "收到邀请",
-    "scanTitle": "扫码加入"
+    "scanTitle": "扫码加入",
+    "serverBody": "自己运行 Chara？把应用指向你自己的服务器。",
+    "serverEyebrow": "自托管",
+    "serverTitle": "连接我的服务器",
+    "serverUseCloud": "改用 Chara Cloud"
   },
   "onboardingName": {
     "body": "你的名字会出现在每一笔支出和结算上。手机号用于让朋友通过 Swish、Vipps 等方式向你结算。",
@@ -1363,12 +1367,13 @@
     "createHeadline": "给你的第一个群组起个名字。",
     "getStarted": "开始使用",
     "haveAccount": "我已有账户",
+    "language": "语言",
     "letsGo": "出发吧",
     "nameBody": "你的名字会显示在每笔支出和结算中。",
-    "nameHeadline": "朋友们该怎么称呼你？",
+    "nameHeadline": "你叫什么名字？",
     "next": "下一步",
     "skip": "跳过",
-    "slide2Body": "扫描、说出或输入，任何货币都行。",
+    "slide2Body": "拍一张小票，就能得到逐条明细。",
     "slide2Title": "拍下小票。\n我们来分账。",
     "slide3Body": "支付宝、Swish 或现金。谁欠谁多少，大家一目了然。开源软件，愿意的话可以自行托管。",
     "slide3Title": "一键结清。",

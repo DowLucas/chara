@@ -993,7 +993,11 @@
     "greetingNamed": "Ciao {{name}}.",
     "scanBody": "Punta lo schermo di un amico ed entri subito.",
     "scanEyebrow": "già invitato",
-    "scanTitle": "Scansiona un QR per entrare"
+    "scanTitle": "Scansiona un QR per entrare",
+    "serverBody": "Ospiti Chara da solo? Punta l'app al tuo server.",
+    "serverEyebrow": "self-hosted",
+    "serverTitle": "Collega il mio server",
+    "serverUseCloud": "Usa invece Chara Cloud"
   },
   "onboardingName": {
     "body": "Il tuo nome compare su ogni spesa e pagamento. Il numero serve agli amici per pagarti con Swish, Vipps o simili.",
@@ -1407,12 +1411,13 @@
     "createHeadline": "Dai un nome al tuo primo gruppo.",
     "getStarted": "Inizia",
     "haveAccount": "Ho già un account",
+    "language": "Lingua",
     "letsGo": "Andiamo",
     "nameBody": "Il tuo nome appare su ogni spesa e saldo.",
-    "nameHeadline": "Come ti chiamano i tuoi amici?",
+    "nameHeadline": "Come ti chiami?",
     "next": "Avanti",
     "skip": "Salta",
-    "slide2Body": "Scansionalo, dillo o scrivilo, in qualsiasi valuta.",
+    "slide2Body": "Fotografa lo scontrino e ottieni un dettaglio riga per riga.",
     "slide2Title": "Fotografa lo scontrino.\nLo dividiamo noi.",
     "slide3Body": "Satispay, Swish o contanti. Tutti vedono sempre chi deve cosa. Open source: ospitalo tu se vuoi.",
     "slide3Title": "Salda i conti con un tocco.",

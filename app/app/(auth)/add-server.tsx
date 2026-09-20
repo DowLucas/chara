@@ -21,6 +21,7 @@ import { publicApi } from '@/lib/api';
 import { checkProtocolCompat } from '@/lib/protocol';
 import { HTTP_NOT_PRIVATE_REASON, normalizeServerUrl } from '@/lib/server-url';
 import { runDiscoveryHandshake } from '@/lib/discovery';
+import { updateDraft } from '@/lib/onboarding-draft';
 import type { AccountInstanceInfo } from '@/lib/accounts-store';
 import {
   colors,
@@ -31,7 +32,7 @@ import {
   spacing,
 } from '@/lib/theme';
 
-type Mode = 'first-launch' | 'settings' | 'invite';
+type Mode = 'first-launch' | 'settings' | 'invite' | 'welcome';
 type Stage = 'url' | 'validating' | 'confirm';
 
 interface ConfirmState {
@@ -139,6 +140,15 @@ export default function AddServerScreen() {
 
   function handleConfirmContinue() {
     if (!confirm) return;
+    // Pre-signup welcome flow: record the server on the draft and go back to
+    // the choice screen. Sign-up is the last step there, so unlike the other
+    // modes this one must not jump straight to sign-in.
+    if (mode === 'welcome') {
+      void updateDraft({ serverUrl: confirm.serverUrl }).then(() => {
+        router.replace('/welcome/choose');
+      });
+      return;
+    }
     const qs = new URLSearchParams();
     qs.set('server', encodeURIComponent(confirm.serverUrl));
     qs.set('mode', mode);

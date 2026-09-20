@@ -993,7 +993,11 @@
     "greetingNamed": "Salut {{name}}.",
     "scanBody": "Scanne l'écran d'un ami, c'est immédiat.",
     "scanEyebrow": "déjà invité",
-    "scanTitle": "Scanner un QR pour rejoindre"
+    "scanTitle": "Scanner un QR pour rejoindre",
+    "serverBody": "Vous hébergez Chara vous-même ? Pointez l'application vers votre propre serveur.",
+    "serverEyebrow": "auto-hébergé",
+    "serverTitle": "Connecter mon serveur",
+    "serverUseCloud": "Utiliser Chara Cloud à la place"
   },
   "onboardingName": {
     "body": "Ton nom apparaît sur chaque dépense et chaque règlement. Ton numéro permet à tes amis de te rembourser via Swish, Vipps ou équivalent.",
@@ -1407,12 +1411,13 @@
     "createHeadline": "Nommez votre premier groupe.",
     "getStarted": "Commencer",
     "haveAccount": "J'ai déjà un compte",
+    "language": "Langue",
     "letsGo": "C'est parti",
     "nameBody": "Votre nom apparaît sur chaque dépense et chaque règlement.",
-    "nameHeadline": "Comment vos amis doivent-ils vous appeler ?",
+    "nameHeadline": "Comment vous appelez-vous ?",
     "next": "Suivant",
     "skip": "Passer",
-    "slide2Body": "Scannez, dictez ou saisissez, dans n'importe quelle devise.",
+    "slide2Body": "Prenez une photo du ticket et obtenez un détail ligne par ligne.",
     "slide2Title": "Photographiez le ticket.\nOn s'occupe du partage.",
     "slide3Body": "Swish, Vipps ou espèces. Chacun voit toujours qui doit quoi. Open source : hébergez-le vous-même si vous le souhaitez.",
     "slide3Title": "Réglez en un geste.",

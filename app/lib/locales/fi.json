@@ -968,7 +968,11 @@
     "greetingNamed": "Moi {{name}}.",
     "scanBody": "Osoita kaverin näyttöä, niin pääset heti mukaan.",
     "scanEyebrow": "kutsu valmiina",
-    "scanTitle": "Liity skannaamalla QR-koodi"
+    "scanTitle": "Liity skannaamalla QR-koodi",
+    "serverBody": "Ylläpidätkö Charaa itse? Osoita sovellus omaan palvelimeesi.",
+    "serverEyebrow": "oma palvelin",
+    "serverTitle": "Yhdistä oma palvelin",
+    "serverUseCloud": "Käytä sen sijaan Chara Cloudia"
   },
   "onboardingName": {
     "body": "Nimi näkyy jokaisessa kulussa ja tasauksessa. Puhelinnumeron avulla kaverit voivat tasata sinulle vaikka Swishillä tai Vippsillä.",
@@ -1366,12 +1370,13 @@
     "createHeadline": "Nimeä ensimmäinen ryhmäsi.",
     "getStarted": "Aloita",
     "haveAccount": "Minulla on jo tili",
+    "language": "Kieli",
     "letsGo": "Mennään",
     "nameBody": "Nimesi näkyy jokaisessa kulussa ja selvityksessä.",
-    "nameHeadline": "Miksi ystäväsi kutsuvat sinua?",
+    "nameHeadline": "Mikä on nimesi?",
     "next": "Seuraava",
     "skip": "Ohita",
-    "slide2Body": "Skannaa, sano tai kirjoita, missä tahansa valuutassa.",
+    "slide2Body": "Ota kuva kuitista ja saat rivikohtaisen erittelyn.",
     "slide2Title": "Kuvaa kuitti.\nMe jaamme sen.",
     "slide3Body": "MobilePay, Swish tai käteinen. Kaikki näkevät aina, kuka on velkaa mitäkin. Avointa lähdekoodia, joten voit ylläpitää sitä itse, jos haluat.",
     "slide3Title": "Selvitä velat yhdellä napautuksella.",

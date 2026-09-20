@@ -968,7 +968,11 @@
     "greetingNamed": "こんにちは、{{name}}さん。",
     "scanBody": "招待画面に向けると、すぐに参加できます。",
     "scanEyebrow": "招待されている",
-    "scanTitle": "QRコードで参加"
+    "scanTitle": "QRコードで参加",
+    "serverBody": "Chara を自分で運用していますか。アプリを自分のサーバーに向けられます。",
+    "serverEyebrow": "セルフホスト",
+    "serverTitle": "自分のサーバーに接続",
+    "serverUseCloud": "代わりに Chara Cloud を使う"
   },
   "onboardingName": {
     "body": "ここで設定した名前は、すべての支出と精算に表示されます。電話番号を登録しておくと、SwishやVippsなどでの精算がスムーズになります。",
@@ -1363,12 +1367,13 @@
     "createHeadline": "最初のグループに名前をつけましょう。",
     "getStarted": "はじめる",
     "haveAccount": "すでにアカウントをお持ちの方",
+    "language": "言語",
     "letsGo": "さあ、はじめよう",
     "nameBody": "名前はすべての支出と精算に表示されます。",
-    "nameHeadline": "友だちから何と呼ばれたいですか？",
+    "nameHeadline": "お名前は？",
     "next": "次へ",
     "skip": "スキップ",
-    "slide2Body": "スキャン、音声、手入力。どの通貨でも。",
+    "slide2Body": "レシートを撮るだけで、明細ごとの内訳が出ます。",
     "slide2Title": "レシートを撮るだけ。\n割り勘はおまかせ。",
     "slide3Body": "PayPay、Swish、現金でも。誰がいくら払うべきか、いつでも全員に見えます。オープンソースなので、セルフホストも可能です。",
     "slide3Title": "ワンタップで精算。",

@@ -4,6 +4,15 @@
  * turns that convention into a failing test instead of a review catch.
  */
 
+jest.mock('expo-localization', () => ({
+  getLocales: () => [{ languageTag: 'en-US', languageCode: 'en' }],
+}));
+jest.mock('expo-secure-store', () => ({
+  getItemAsync: async () => null,
+  setItemAsync: async () => {},
+  deleteItemAsync: async () => {},
+}));
+
 import en from '../locales/en.json';
 import ar from '../locales/ar.json';
 import da from '../locales/da.json';
@@ -20,6 +29,7 @@ import pl from '../locales/pl.json';
 import pt from '../locales/pt.json';
 import sv from '../locales/sv.json';
 import zhHans from '../locales/zh-Hans.json';
+import { LANGUAGE_NATIVE_NAMES, SUPPORTED_LANGUAGES, resources } from '../i18n';
 
 /** i18next plural suffixes. Languages have different plural categories
  *  (Arabic has six, English two), so parity is on the base key. */
@@ -47,5 +57,26 @@ describe('locale key parity', () => {
     const actual = keySet(LOCALES[lang]);
     expect(actual.filter((k) => !expected.includes(k))).toEqual([]); // extra
     expect(expected.filter((k) => !actual.includes(k))).toEqual([]); // missing
+  });
+});
+
+/**
+ * A translated locale file is dead weight unless i18n.ts also registers it:
+ * it must be selectable (SUPPORTED_LANGUAGES), loadable (resources) and
+ * nameable in the picker (LANGUAGE_NATIVE_NAMES). es/nb-NO/pl/pt were fully
+ * translated but unreachable until this test went in.
+ */
+describe('locale registration', () => {
+  const registered = SUPPORTED_LANGUAGES as readonly string[];
+
+  it.each(['en', ...Object.keys(LOCALES)])('%s is registered in i18n.ts', (lang) => {
+    expect(registered).toContain(lang);
+    expect(Object.keys(resources)).toContain(lang);
+    expect(Object.keys(LANGUAGE_NATIVE_NAMES)).toContain(lang);
+  });
+
+  it('registers nothing that has no locale file', () => {
+    const files = ['en', ...Object.keys(LOCALES)];
+    expect(registered.filter((l) => !files.includes(l))).toEqual([]);
   });
 });

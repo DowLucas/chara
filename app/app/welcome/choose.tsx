@@ -1,21 +1,43 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { Text } from '@/components/Text';
 import { OnboardingScaffold } from '@/components/OnboardingScaffold';
 import { useEnglishT } from '@/lib/i18n';
 import { loadDraft, updateDraft } from '@/lib/onboarding-draft';
+import { displayHostFor } from '@/lib/server-url';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 import * as analytics from '@/lib/analytics';
 
 export default function WelcomeChooseScreen() {
   const t = useEnglishT();
   const [name, setName] = useState('');
+  const [serverUrl, setServerUrl] = useState<string | undefined>(undefined);
 
-  useEffect(() => {
-    void loadDraft().then((d) => setName(d?.name ?? ''));
-  }, []);
+  // Focus, not mount: add-server writes the chosen server onto the draft and
+  // sends the user back here, and cancelling out of it returns here too.
+  useFocusEffect(
+    useCallback(() => {
+      void loadDraft().then((d) => {
+        setName(d?.name ?? '');
+        setServerUrl(d?.serverUrl);
+      });
+    }, []),
+  );
+
+  function chooseServer() {
+    analytics.track('onboarding_server_chosen');
+    router.push({
+      pathname: '/(auth)/add-server',
+      params: { mode: 'welcome', ...(serverUrl ? { prefillUrl: serverUrl } : {}) },
+    });
+  }
+
+  async function useCloud() {
+    await updateDraft({ serverUrl: undefined });
+    setServerUrl(undefined);
+  }
 
   async function choose(intent: 'create' | 'join') {
     await updateDraft({ intent });
@@ -45,6 +67,19 @@ export default function WelcomeChooseScreen() {
           body={t('onboarding.scanBody')}
           onPress={() => choose('join')}
         />
+        <ChoiceCard
+          accent={colors.citrine}
+          icon="server"
+          eyebrow={t('onboarding.serverEyebrow')}
+          title={t('onboarding.serverTitle')}
+          body={serverUrl ? displayHostFor(serverUrl, t('common.mainServerLabel')) : t('onboarding.serverBody')}
+          onPress={chooseServer}
+        />
+        {!!serverUrl && (
+          <TouchableOpacity onPress={useCloud} activeOpacity={0.7}>
+            <Text style={styles.useCloud}>{t('onboarding.serverUseCloud')}</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </OnboardingScaffold>
   );
@@ -112,6 +147,14 @@ const styles = StyleSheet.create({
     fontSize: fontSize.displayS,
     color: colors.graphite,
     letterSpacing: -0.4,
+  },
+  useCloud: {
+    fontFamily: fontBody,
+    fontSize: fontSize.bodyS,
+    color: colors.lead,
+    textAlign: 'center',
+    textDecorationLine: 'underline',
+    paddingVertical: spacing.s2,
   },
   cardBody: {
     fontFamily: fontBody,

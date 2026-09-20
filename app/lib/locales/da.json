@@ -968,7 +968,11 @@
     "greetingNamed": "Hej {{name}}.",
     "scanBody": "Peg på en vens skærm, så er du med på et øjeblik.",
     "scanEyebrow": "allerede inviteret",
-    "scanTitle": "Scan en QR-kode for at komme med"
+    "scanTitle": "Scan en QR-kode for at komme med",
+    "serverBody": "Kører du selv Chara? Peg appen mod din egen server.",
+    "serverEyebrow": "egen server",
+    "serverTitle": "Forbind min server",
+    "serverUseCloud": "Brug Chara Cloud i stedet"
   },
   "onboardingName": {
     "body": "Dit navn vises på hver udgift og afregning. Med dit telefonnummer kan vennerne afregne med dig via MobilePay, Swish eller Vipps.",
@@ -1366,12 +1370,13 @@
     "createHeadline": "Navngiv din første gruppe.",
     "getStarted": "Kom i gang",
     "haveAccount": "Jeg har allerede en konto",
+    "language": "Sprog",
     "letsGo": "Så kører vi",
     "nameBody": "Dit navn vises på hver udgift og afregning.",
-    "nameHeadline": "Hvad skal dine venner kalde dig?",
+    "nameHeadline": "Hvad hedder du?",
     "next": "Næste",
     "skip": "Spring over",
-    "slide2Body": "Scan, sig eller skriv det, i enhver valuta.",
+    "slide2Body": "Tag et billede af kvitteringen og få en opdeling linje for linje.",
     "slide2Title": "Tag et billede af kvitteringen.\nVi deler den op.",
     "slide3Body": "MobilePay, Swish eller kontanter. Alle kan altid se, hvem der skylder hvad. Open source, så du kan hoste den selv, hvis du vil.",
     "slide3Title": "Gør op med ét tryk.",

@@ -15,6 +15,9 @@ export type OnboardingDraft = {
   intent?: 'create' | 'join';
   group?: { name: string; currency: string; color: string | null };
   invite?: { serverUrl: string; token: string; groupName: string };
+  // A self-host server picked on the choice screen. Orthogonal to `intent`:
+  // it says where to sign up, not what to do there.
+  serverUrl?: string;
   // Progress written by the post-signup setup runner, so a retry resumes.
   nameDone?: boolean;
   groupId?: string;
@@ -67,9 +70,13 @@ export async function clearDraft(): Promise<void> {
   await clearFlag(KEY);
 }
 
-/** Sign-up route for this draft: the invite's server on the join path. */
+/**
+ * Sign-up route for this draft. The invite's server wins on the join path —
+ * a token is minted by, and only valid on, the server that issued it — so a
+ * self-host choice made earlier only applies when creating.
+ */
 export function signUpHref(d: OnboardingDraft, hostedUrl: string): string {
-  const server = d.intent === 'join' ? d.invite?.serverUrl : undefined;
+  const server = d.intent === 'join' ? d.invite?.serverUrl : d.serverUrl;
   if (!server || server === hostedUrl) return '/(auth)/sign-in';
   return `/(auth)/sign-in?server=${encodeURIComponent(server)}`;
 }

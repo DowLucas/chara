@@ -62,6 +62,18 @@ describe('draft persistence', () => {
     expect(await loadDraft(NOW + 5)).toEqual(d);
   });
 
+  it('round-trips a chosen self-host server', async () => {
+    await saveDraft({ createdAt: NOW, serverUrl: 'https://chara.example.org' });
+    expect((await loadDraft(NOW))?.serverUrl).toBe('https://chara.example.org');
+  });
+
+  it('updateDraft with an undefined server clears the choice', async () => {
+    await saveDraft({ createdAt: NOW, name: 'Lucas', serverUrl: 'https://chara.example.org' });
+    const d = await updateDraft({ serverUrl: undefined }, NOW);
+    expect(d.serverUrl).toBeUndefined();
+    expect(await loadDraft(NOW)).toEqual({ createdAt: NOW, name: 'Lucas' });
+  });
+
   it('clearDraft removes it', async () => {
     await saveDraft({ createdAt: NOW });
     await clearDraft();
@@ -95,6 +107,28 @@ describe('routing helpers', () => {
     expect(signUpHref(joinDraft('https://chara.example.org'), HOSTED)).toBe(
       `/(auth)/sign-in?server=${encodeURIComponent('https://chara.example.org')}`,
     );
+  });
+  it('a chosen self-host server targets that server on the create path', () => {
+    expect(
+      signUpHref(
+        { createdAt: NOW, intent: 'create', serverUrl: 'https://chara.example.org' },
+        HOSTED,
+      ),
+    ).toBe(`/(auth)/sign-in?server=${encodeURIComponent('https://chara.example.org')}`);
+  });
+  it('a chosen server equal to the hosted one needs no server param', () => {
+    expect(signUpHref({ createdAt: NOW, intent: 'create', serverUrl: HOSTED }, HOSTED)).toBe(
+      '/(auth)/sign-in',
+    );
+  });
+  it("the invite's server wins over a chosen server on the join path", () => {
+    // An invite token is minted by, and only valid on, its own server.
+    expect(
+      signUpHref(
+        { ...joinDraft('https://invite.example.org'), serverUrl: 'https://chosen.example.org' },
+        HOSTED,
+      ),
+    ).toBe(`/(auth)/sign-in?server=${encodeURIComponent('https://invite.example.org')}`);
   });
   it('after the name step, the create path goes to the choice screen', () => {
     expect(nextAfterName({ createdAt: NOW, name: 'L' }, HOSTED)).toBe('/welcome/choose');

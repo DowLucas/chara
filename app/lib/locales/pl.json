@@ -1022,7 +1022,11 @@
     "greetingNamed": "Cześć {{name}}.",
     "scanBody": "Skieruj na ekran znajomego i od razu będziesz w środku.",
     "scanEyebrow": "już zaproszony",
-    "scanTitle": "Zeskanuj QR, aby dołączyć"
+    "scanTitle": "Zeskanuj QR, aby dołączyć",
+    "serverBody": "Hostujesz Charę samodzielnie? Wskaż aplikacji własny serwer.",
+    "serverEyebrow": "własny serwer",
+    "serverTitle": "Połącz mój serwer",
+    "serverUseCloud": "Użyj zamiast tego Chara Cloud"
   },
   "onboardingName": {
     "body": "Twoje imię pojawia się na każdym wydatku i rozliczeniu. Twój telefon pozwala znajomym rozliczyć się z tobą przez Swish, Vipps lub podobne.",
@@ -1458,12 +1462,13 @@
     "createHeadline": "Nazwij swoją pierwszą grupę.",
     "getStarted": "Zaczynamy",
     "haveAccount": "Mam już konto",
+    "language": "Język",
     "letsGo": "Do dzieła",
     "nameBody": "Twoje imię widać przy każdym wydatku i rozliczeniu.",
-    "nameHeadline": "Jak mają cię nazywać znajomi?",
+    "nameHeadline": "Jak masz na imię?",
     "next": "Dalej",
     "skip": "Pomiń",
-    "slide2Body": "Zeskanuj, powiedz lub wpisz, w dowolnej walucie.",
+    "slide2Body": "Zrób zdjęcie paragonu i otrzymaj podział linijka po linijce.",
     "slide2Title": "Zrób zdjęcie paragonu.\nMy go podzielimy.",
     "slide3Body": "BLIK, Swish lub gotówka. Każdy zawsze widzi, kto ile jest winien. Open source, więc możesz hostować samodzielnie.",
     "slide3Title": "Rozlicz się jednym dotknięciem.",

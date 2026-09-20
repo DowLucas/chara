@@ -40,6 +40,7 @@ export type AnalyticsEvent =
   | 'onboarding_intro_skipped'
   | 'onboarding_create_chosen'
   | 'onboarding_scan_chosen'
+  | 'onboarding_server_chosen'
   | 'user_name_entered'
   | 'group_created'
   | 'qr_scanned'
