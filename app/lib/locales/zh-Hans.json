@@ -1383,7 +1383,7 @@
     "selfHostHint": "或自托管 Chara，享受无限制使用",
     "submit": "通知我",
     "success": "感谢 · 我们会与您联系。",
-    "title": "本月 {{cap}} 次免费小票扫描已用完"
+    "title": "本月小票扫描次数已达上限"
   },
   "welcome": {
     "chooseHeadline": "你想怎么开始？",

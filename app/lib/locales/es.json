@@ -510,10 +510,12 @@
     "merge": {
       "action": "Combinar",
       "actionCount": "Combinar {{count}}",
+      "actionCount_many": "Combinar {{count}}",
       "actionCount_one": "Combinar {{count}}",
       "actionCount_other": "Combinar {{count}}",
       "cantTitle": "No se puede combinar",
       "confirmBody": "Combina {{count}} gastos en uno. Los originales se eliminarán.",
+      "confirmBody_many": "Combina {{count}} gastos en uno. Los originales se eliminarán.",
       "confirmBody_one": "Combina {{count}} gasto en uno. El original se eliminará.",
       "confirmBody_other": "Combina {{count}} gastos en uno. Los originales se eliminarán.",
       "confirmTitle": "¿Combinar gastos?",
@@ -1381,6 +1383,7 @@
     "capBody": "La entrada por voz está limitada cada mes para mantener los costes sostenibles. Déjanos tu correo y te avisamos cuando suba el límite.",
     "discardRest": "Descartar el resto",
     "draftsLabel": "{{count}} gastos encontrados",
+    "draftsLabel_many": "{{count}} gastos encontrados",
     "draftsLabel_one": "{{count}} gasto encontrado",
     "draftsLabel_other": "{{count}} gastos encontrados",
     "err_network": "Algo salió mal. Inténtalo de nuevo.",
@@ -1398,11 +1401,13 @@
     "micDenied": "Chara necesita acceso al micrófono para añadir un gasto por voz. Puedes activarlo en Ajustes.",
     "micDeniedTitle": "Micrófono desactivado",
     "moreFromRecording": "{{count}} más de tu grabación",
+    "moreFromRecording_many": "{{count}} más de tu grabación",
     "moreFromRecording_one": "{{count}} más de tu grabación",
     "moreFromRecording_other": "{{count}} más de tu grabación",
     "regenerate": "Reintentar",
     "regenerateDisabled": "Edita el texto y reinténtalo",
     "secondsLeft": "quedan {{count}} segundos",
+    "secondsLeft_many": "quedan {{count}} segundos",
     "secondsLeft_one": "queda {{count}} segundo",
     "secondsLeft_other": "quedan {{count}} segundos",
     "startRecording": "Empezar a grabar",
@@ -1427,7 +1432,7 @@
     "selfHostHint": "O autoaloja Chara para uso ilimitado",
     "submit": "Avísame",
     "success": "Gracias — te contactaremos.",
-    "title": "Has usado tus {{cap}} escaneos gratis de este mes"
+    "title": "Has alcanzado el límite de escaneos de recibos de este mes"
   },
   "welcome": {
     "chooseHeadline": "¿Cómo quieres empezar?",

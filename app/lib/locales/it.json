@@ -510,10 +510,12 @@
     "merge": {
       "action": "Unisci",
       "actionCount": "Unisci {{count}}",
+      "actionCount_many": "Unisci {{count}}",
       "actionCount_one": "Unisci {{count}}",
       "actionCount_other": "Unisci {{count}}",
       "cantTitle": "Non puoi unirle",
       "confirmBody": "Unisci {{count}} spese in una sola. Le originali verranno rimosse.",
+      "confirmBody_many": "Unisci {{count}} spese in una sola. Le originali verranno rimosse.",
       "confirmBody_one": "Unisci {{count}} spesa in una sola. L'originale verrà rimossa.",
       "confirmBody_other": "Unisci {{count}} spese in una sola. Le originali verranno rimosse.",
       "confirmTitle": "Unire le spese?",
@@ -542,7 +544,7 @@
     "paymentsHistoryHeading_one": "cronologia · {{count}}",
     "paymentsHistoryHeading_other": "cronologia · {{count}}",
     "paymentsToBePaidHeading": "da saldare · {{count}}",
-    "paymentsToBePaidHeading_many": "{{count}} da saldare",
+    "paymentsToBePaidHeading_many": "da saldare · {{count}}",
     "paymentsToBePaidHeading_one": "da saldare · {{count}}",
     "paymentsToBePaidHeading_other": "da saldare · {{count}}",
     "settle": "Salda",
@@ -724,7 +726,7 @@
       "more": "+{{count}} altro",
       "more_many": "+{{count}} altri",
       "more_one": "+{{count}} altro",
-      "more_other": "+{{count}} altro"
+      "more_other": "+{{count}} altri"
     },
     "cancel": "Annulla",
     "delete": "Elimina spesa",
@@ -1195,7 +1197,7 @@
     "unassignedWarning": "{{count}} articolo non è assegnato — verrà diviso in parti uguali.",
     "unassignedWarning_many": "{{count}} articoli non sono assegnati — verranno divisi in parti uguali.",
     "unassignedWarning_one": "{{count}} articolo non è assegnato — verrà diviso in parti uguali.",
-    "unassignedWarning_other": "{{count}} articolo non è assegnato — verrà diviso in parti uguali.",
+    "unassignedWarning_other": "{{count}} articoli non sono assegnati — verranno divisi in parti uguali.",
     "unassignedWarning_plural": "{{count}} articoli non sono assegnati — verranno divisi in parti uguali."
   },
   "scanJoin": {
@@ -1381,6 +1383,7 @@
     "capBody": "L'inserimento vocale è limitato ogni mese per tenere sotto controllo i costi. Lasciaci la tua email e ti diremo quando il limite aumenta.",
     "discardRest": "Scarta il resto",
     "draftsLabel": "{{count}} spese trovate",
+    "draftsLabel_many": "{{count}} spese trovate",
     "draftsLabel_one": "{{count}} spesa trovata",
     "draftsLabel_other": "{{count}} spese trovate",
     "err_network": "Qualcosa è andato storto. Riprova.",
@@ -1398,11 +1401,13 @@
     "micDenied": "Chara ha bisogno del microfono per aggiungere una spesa a voce. Puoi attivarlo nelle Impostazioni.",
     "micDeniedTitle": "Microfono disattivato",
     "moreFromRecording": "{{count}} altre dalla registrazione",
+    "moreFromRecording_many": "{{count}} altre dalla registrazione",
     "moreFromRecording_one": "{{count}} altra dalla registrazione",
     "moreFromRecording_other": "{{count}} altre dalla registrazione",
     "regenerate": "Riprova",
     "regenerateDisabled": "Modifica il testo e riprova",
     "secondsLeft": "{{count}} secondi rimasti",
+    "secondsLeft_many": "{{count}} secondi rimasti",
     "secondsLeft_one": "{{count}} secondo rimasto",
     "secondsLeft_other": "{{count}} secondi rimasti",
     "startRecording": "Avvia registrazione",
@@ -1427,7 +1432,7 @@
     "selfHostHint": "Oppure auto-ospita Chara per avere tutto senza limiti",
     "submit": "Avvisami",
     "success": "Grazie — ti faremo sapere.",
-    "title": "Hai usato le tue {{cap}} scansioni gratuite di questo mese"
+    "title": "Hai raggiunto il limite di scansioni di ricevute di questo mese"
   },
   "welcome": {
     "chooseHeadline": "Come vuoi iniziare?",

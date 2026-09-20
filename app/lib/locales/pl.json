@@ -1478,7 +1478,7 @@
     "selfHostHint": "Albo postaw Chara na własnym serwerze, by mieć wszystko bez ograniczeń",
     "submit": "Powiadom mnie",
     "success": "Dzięki — odezwiemy się.",
-    "title": "Wykorzystałeś {{cap}} darmowych skanów paragonów w tym miesiącu"
+    "title": "Osiągnięto limit skanów paragonów w tym miesiącu"
   },
   "welcome": {
     "chooseHeadline": "Jak chcesz zacząć?",

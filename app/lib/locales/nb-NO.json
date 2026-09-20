@@ -1386,7 +1386,7 @@
     "selfHostHint": "Eller selvdrift Chara for ubegrenset av alt",
     "submit": "Varsle meg",
     "success": "Takk — vi tar kontakt.",
-    "title": "Du har brukt opp {{cap}} gratis kvitteringsskann denne måneden"
+    "title": "Du har nådd denne månedens grense for kvitteringsskanning"
   },
   "welcome": {
     "chooseHeadline": "Hvordan vil du begynne?",

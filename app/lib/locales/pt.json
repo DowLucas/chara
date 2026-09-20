@@ -510,10 +510,12 @@
     "merge": {
       "action": "Mesclar",
       "actionCount": "Mesclar {{count}}",
+      "actionCount_many": "Mesclar {{count}}",
       "actionCount_one": "Mesclar {{count}}",
       "actionCount_other": "Mesclar {{count}}",
       "cantTitle": "Não é possível mesclar",
       "confirmBody": "Combine {{count}} despesas em uma só. As originais serão removidas.",
+      "confirmBody_many": "Combine {{count}} despesas em uma só. As originais serão removidas.",
       "confirmBody_one": "Combine {{count}} despesa em uma só. A original será removida.",
       "confirmBody_other": "Combine {{count}} despesas em uma só. As originais serão removidas.",
       "confirmTitle": "Mesclar despesas?",
@@ -1381,6 +1383,7 @@
     "capBody": "A entrada por voz tem um limite mensal para manter os custos sustentáveis. Deixa o teu email e avisamos quando o limite subir.",
     "discardRest": "Descartar o resto",
     "draftsLabel": "{{count}} despesas encontradas",
+    "draftsLabel_many": "{{count}} despesas encontradas",
     "draftsLabel_one": "{{count}} despesa encontrada",
     "draftsLabel_other": "{{count}} despesas encontradas",
     "err_network": "Algo correu mal. Tenta de novo.",
@@ -1398,11 +1401,13 @@
     "micDenied": "A Chara precisa de acesso ao microfone para adicionar uma despesa por voz. Podes ativar nas Definições.",
     "micDeniedTitle": "Microfone desligado",
     "moreFromRecording": "mais {{count}} da tua gravação",
+    "moreFromRecording_many": "mais {{count}} da tua gravação",
     "moreFromRecording_one": "mais {{count}} da tua gravação",
     "moreFromRecording_other": "mais {{count}} da tua gravação",
     "regenerate": "Tentar de novo",
     "regenerateDisabled": "Edita o texto e tenta de novo",
     "secondsLeft": "faltam {{count}} segundos",
+    "secondsLeft_many": "faltam {{count}} segundos",
     "secondsLeft_one": "falta {{count}} segundo",
     "secondsLeft_other": "faltam {{count}} segundos",
     "startRecording": "Começar a gravar",
@@ -1427,7 +1432,7 @@
     "selfHostHint": "Ou auto-hospede o Chara para tudo ilimitado",
     "submit": "Me avise",
     "success": "Obrigado — entraremos em contato.",
-    "title": "Você usou seus {{cap}} escaneamentos de recibo grátis deste mês"
+    "title": "Você atingiu o limite de escaneamentos de recibo deste mês"
   },
   "welcome": {
     "chooseHeadline": "Como você quer começar?",
