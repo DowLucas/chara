@@ -406,7 +406,11 @@
       "body": "Vi har din feedback. Vi læser alt, hvad der kommer ind.",
       "title": "Tak"
     },
-    "title": "Send feedback"
+    "title": "Send feedback",
+    "unavailable": {
+      "body": "Ingen af dine servere modtager feedback. Formularen i appen er en Chara Cloud-funktion.",
+      "title": "Feedback er ikke tilgængelig"
+    }
   },
   "fx": {
     "convertedLabel": "Omregnet i alt",

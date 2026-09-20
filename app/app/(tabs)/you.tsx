@@ -590,7 +590,13 @@ export default function YouScreen() {
           {feedbackServer && (
             <NavRow
               label={t('you.sendFeedback')}
-              onPress={() => router.push('/settings/feedback')}
+              // Hand over the server this row already resolved, so the
+              // screen doesn't probe (and risk failing) a second time.
+              onPress={() =>
+                router.push(
+                  `/settings/feedback?server=${encodeURIComponent(feedbackServer)}`,
+                )
+              }
             />
           )}
           <NavRow label={t('you.about')} onPress={() => router.push('/settings/about')} />

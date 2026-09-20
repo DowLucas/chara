@@ -412,7 +412,11 @@
       "body": "Abbiamo ricevuto il tuo feedback. Leggiamo tutto.",
       "title": "Grazie"
     },
-    "title": "Invia un feedback"
+    "title": "Invia un feedback",
+    "unavailable": {
+      "body": "Nessuno dei tuoi server accetta feedback. Il modulo nell'app è una funzione di Chara Cloud.",
+      "title": "Il feedback non è disponibile"
+    }
   },
   "fx": {
     "convertedLabel": "Totale convertito",

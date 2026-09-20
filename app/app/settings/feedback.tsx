@@ -5,6 +5,12 @@
  * advertises `features.feedback` rather than being a per-account list; the
  * You-tab row that leads here is hidden when no account qualifies.
  *
+ * That row has already resolved the server, so it passes it as `?server=`
+ * rather than making this screen ask again. A second probe would be a second
+ * chance to fail: one blip and the form would render with no server, a dead
+ * Send button and nothing to explain it. The probe below is only the
+ * fallback for arriving without the param.
+ *
  * Errors show inline rather than in a dialog: the user has just typed a
  * paragraph, and an alert that covers the field they need to retry from is
  * the wrong shape for "try again in a second".
@@ -18,9 +24,10 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
+  ActivityIndicator,
   Platform,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Feather } from '@expo/vector-icons';
@@ -31,10 +38,11 @@ import { Text } from '@/components/Text';
 import { TopBar } from '@/components/TopBar';
 import { ContentContainer } from '@/components/ContentContainer';
 import { IconButton } from '@/components/IconButton';
+import { EmptyState } from '@/components/EmptyState';
 import { showAlert } from '@/lib/app-alert';
 import { apiFor, type FeedbackSubmission } from '@/lib/api';
 import { useAccount } from '@/lib/accounts';
-import { useFeatureServerUrl } from '@/lib/use-feature-server';
+import { useFeatureServer } from '@/lib/use-feature-server';
 import { userErrorMessage } from '@/lib/user-error';
 import { currentLocale } from '@/lib/i18n';
 import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
@@ -56,10 +64,16 @@ const VERSION_LABEL = APP_VERSION
 export default function FeedbackScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
-  // Live feature read rather than the cached account.instance blob, which is
-  // only written at sign-in — see use-feature-server.ts.
-  const serverUrl = useFeatureServerUrl('feedback');
+  // The row that opened this screen resolved the server already. Probe only
+  // when it didn't — a deep link, or a future entry point.
+  const { server } = useLocalSearchParams<{ server?: string }>();
+  const paramUrl = server ? decodeURIComponent(server) : null;
+  const probed = useFeatureServer('feedback');
+  const serverUrl = paramUrl ?? probed.serverUrl;
+  // A param means nothing is in flight; otherwise the probe decides.
+  const status = paramUrl ? 'ok' : probed.status;
   const account = useAccount(serverUrl);
+  const email = account?.user?.email ?? '';
 
   const [kind, setKind] = useState<FeedbackSubmission['kind']>('bug');
   const [body, setBody] = useState('');
@@ -77,7 +91,9 @@ export default function FeedbackScreen() {
         kind,
         body: body.trim(),
         app_version: VERSION_LABEL || undefined,
-        platform: `${Platform.OS} ${Platform.Version}`,
+        // react-native-web has no Platform.Version; "web undefined" in the
+        // column would be worse than just "web".
+        platform: Platform.Version ? `${Platform.OS} ${Platform.Version}` : Platform.OS,
         locale: currentLocale(),
       });
       await showAlert({
@@ -104,6 +120,23 @@ export default function FeedbackScreen() {
           <IconButton icon="chevron-left" onPress={() => router.back()} label={t('common.back')} />
         }
       />
+      {status !== 'ok' ? (
+        // Never render the form without a server: the Send button would be
+        // permanently disabled with nothing to explain why.
+        <ContentContainer>
+          {status === 'probing' ? (
+            <View style={styles.center}>
+              <ActivityIndicator color={colors.lead} />
+            </View>
+          ) : (
+            <EmptyState
+              title={t('feedback.unavailable.title')}
+              body={t('feedback.unavailable.body')}
+              icon="message-square"
+            />
+          )}
+        </ContentContainer>
+      ) : (
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <ContentContainer>
           <Text style={styles.intro}>{t('feedback.intro')}</Text>
@@ -136,6 +169,7 @@ export default function FeedbackScreen() {
               multiline
               textAlignVertical="top"
               maxLength={MAX_BODY}
+              maxFontSizeMultiplier={2}
               autoFocus
               style={styles.input}
               accessibilityLabel={t('feedback.bodyLabel')}
@@ -149,16 +183,18 @@ export default function FeedbackScreen() {
           ) : null}
 
           {/* What rides along with the report, said plainly rather than
-              collected silently. */}
-          <Text style={styles.meta}>
-            {t('feedback.meta', {
-              email: account?.user?.email ?? '',
-              version: VERSION_LABEL,
-            })}
-          </Text>
+              collected silently. Held back until the account is known, so
+              the line never renders with a dangling separator. */}
+          {email ? (
+            <Text style={styles.meta}>
+              {t('feedback.meta', { email, version: VERSION_LABEL })}
+            </Text>
+          ) : null}
         </ContentContainer>
       </ScrollView>
+      )}
 
+      {status === 'ok' ? (
       <ContentContainer>
         <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.s4 }]}>
           <TouchableOpacity
@@ -175,12 +211,14 @@ export default function FeedbackScreen() {
           </TouchableOpacity>
         </View>
       </ContentContainer>
+      ) : null}
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.paper },
+  center: { paddingVertical: spacing.s8, alignItems: 'center' },
   scroll: { paddingBottom: spacing.s6, paddingHorizontal: spacing.s5 },
   intro: {
     fontFamily: fontBody,

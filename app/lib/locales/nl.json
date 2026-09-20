@@ -406,7 +406,11 @@
       "body": "We hebben je feedback ontvangen. We lezen alles.",
       "title": "Bedankt"
     },
-    "title": "Feedback sturen"
+    "title": "Feedback sturen",
+    "unavailable": {
+      "body": "Geen van je servers neemt feedback aan. Het formulier in de app is een functie van Chara Cloud.",
+      "title": "Feedback is niet beschikbaar"
+    }
   },
   "fx": {
     "convertedLabel": "Omgerekend totaal",

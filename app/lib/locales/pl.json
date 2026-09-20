@@ -418,7 +418,11 @@
       "body": "Mamy Twoją opinię. Czytamy każdą wiadomość.",
       "title": "Dziękujemy"
     },
-    "title": "Wyślij opinię"
+    "title": "Wyślij opinię",
+    "unavailable": {
+      "body": "Żaden z Twoich serwerów nie przyjmuje opinii. Formularz w aplikacji to funkcja Chara Cloud.",
+      "title": "Opinie są niedostępne"
+    }
   },
   "fx": {
     "convertedLabel": "Łączna kwota przeliczona",

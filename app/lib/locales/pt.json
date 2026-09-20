@@ -412,7 +412,11 @@
       "body": "Recebemos os seus comentários. Lemos todos.",
       "title": "Obrigado"
     },
-    "title": "Enviar comentários"
+    "title": "Enviar comentários",
+    "unavailable": {
+      "body": "Nenhum dos seus servidores aceita comentários. O formulário na app é uma funcionalidade do Chara Cloud.",
+      "title": "Os comentários não estão disponíveis"
+    }
   },
   "fx": {
     "convertedLabel": "Total convertido",

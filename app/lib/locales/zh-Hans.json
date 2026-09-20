@@ -406,7 +406,11 @@
       "body": "我们已收到你的反馈，每一条都会看。",
       "title": "谢谢"
     },
-    "title": "发送反馈"
+    "title": "发送反馈",
+    "unavailable": {
+      "body": "你的服务器都不接收反馈。应用内的表单是 Chara Cloud 的功能。",
+      "title": "反馈功能不可用"
+    }
   },
   "fx": {
     "convertedLabel": "换算金额",

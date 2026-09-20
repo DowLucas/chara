@@ -406,7 +406,11 @@
       "body": "Dein Feedback ist bei uns. Wir lesen jede Nachricht.",
       "title": "Danke"
     },
-    "title": "Feedback senden"
+    "title": "Feedback senden",
+    "unavailable": {
+      "body": "Keiner deiner Server nimmt Feedback entgegen. Das Formular in der App ist eine Chara-Cloud-Funktion.",
+      "title": "Feedback ist nicht verfügbar"
+    }
   },
   "fx": {
     "convertedLabel": "Umgerechneter Betrag",

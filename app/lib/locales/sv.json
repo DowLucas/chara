@@ -406,7 +406,11 @@
       "body": "Vi har fått din feedback. Vi läser allt som kommer in.",
       "title": "Tack"
     },
-    "title": "Skicka feedback"
+    "title": "Skicka feedback",
+    "unavailable": {
+      "body": "Ingen av dina servrar tar emot feedback. Formuläret i appen är en funktion i Chara Cloud.",
+      "title": "Feedback är inte tillgängligt"
+    }
   },
   "fx": {
     "convertedLabel": "Omräknad summa",

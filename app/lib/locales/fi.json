@@ -406,7 +406,11 @@
       "body": "Palautteesi on perillä. Luemme jokaisen viestin.",
       "title": "Kiitos"
     },
-    "title": "Lähetä palautetta"
+    "title": "Lähetä palautetta",
+    "unavailable": {
+      "body": "Yksikään palvelimistasi ei ota vastaan palautetta. Sovelluksen lomake on Chara Cloud -ominaisuus.",
+      "title": "Palaute ei ole käytettävissä"
+    }
   },
   "fx": {
     "convertedLabel": "Muunnettu yhteensä",

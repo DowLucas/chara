@@ -8,8 +8,12 @@
  * in when a feature shipped would carry a snapshot with no flag for it and
  * would never see the entry point. On iOS the accounts blob lives in the
  * Keychain and survives reinstall, so it would stay hidden indefinitely.
- * `api.ts` caches the well-known per session, so this costs one request per
- * launch.
+ *
+ * `apiFor(url).instanceInfo()` is NOT cached — the session cache in `api.ts`
+ * belongs to the legacy flat `getInstanceInfo()`. Every mount of a screen
+ * using this costs one request per linked account, so a screen that already
+ * knows its server (because the row that opened it resolved one) should take
+ * it as a route param rather than probe again.
  */
 
 import { useEffect, useState } from 'react';
@@ -19,25 +23,39 @@ import { useAccounts } from './accounts';
 import { resolveFeatureServer, type GatedFeature } from './feature-server';
 
 /**
- * The server offering `feature`, or null while the probe is in flight or
- * when no server offers it. Null-until-known on purpose: rendering nothing
- * beats flashing a row that then disappears.
+ * `probing` until every server has answered; then `ok` with a server, `none`
+ * when nobody offers the feature, or `error` when no server could be reached
+ * at all. An entry point distinguishes only "show the row or not", but a
+ * screen must be able to tell "still asking" from "there is nobody to ask" —
+ * folding those together leaves a form that can never submit and never says
+ * why.
  */
-export function useFeatureServerUrl(feature: GatedFeature): string | null {
+export type FeatureServerStatus = 'probing' | 'ok' | 'none' | 'error';
+
+export interface FeatureServer {
+  serverUrl: string | null;
+  status: FeatureServerStatus;
+}
+
+export function useFeatureServer(feature: GatedFeature): FeatureServer {
   const { accounts } = useAccounts();
-  const [serverUrl, setServerUrl] = useState<string | null>(null);
+  const [state, setState] = useState<FeatureServer>({ serverUrl: null, status: 'probing' });
   // Re-probe when the set of linked servers changes, not on every render
   // that hands back a new accounts array.
   const key = accounts.map((a) => a.serverUrl).join('|');
 
   useEffect(() => {
     let cancelled = false;
+    setState({ serverUrl: null, status: 'probing' });
     resolveFeatureServer(accounts, (url) => apiFor(url).instanceInfo(), feature)
       .then((found) => {
-        if (!cancelled) setServerUrl(found);
+        if (cancelled) return;
+        setState({ serverUrl: found, status: found ? 'ok' : 'none' });
       })
       .catch(() => {
-        if (!cancelled) setServerUrl(null);
+        // resolveFeatureServer swallows per-server failures, so reaching here
+        // means the resolution itself broke, not that a server was down.
+        if (!cancelled) setState({ serverUrl: null, status: 'error' });
       });
     return () => {
       cancelled = true;
@@ -45,7 +63,17 @@ export function useFeatureServerUrl(feature: GatedFeature): string | null {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, feature]);
 
-  return serverUrl;
+  return state;
+}
+
+/**
+ * The server offering `feature`, or null while the probe is in flight or
+ * when no server offers it. Null-until-known on purpose: rendering nothing
+ * beats flashing a row that then disappears. Entry points want this; a
+ * screen that has to explain itself wants `useFeatureServer`.
+ */
+export function useFeatureServerUrl(feature: GatedFeature): string | null {
+  return useFeatureServer(feature).serverUrl;
 }
 
 /** The server whose monthly summary the user can open, or null. */

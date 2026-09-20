@@ -406,7 +406,11 @@
       "body": "Your feedback is with us. We read every one.",
       "title": "Thank you"
     },
-    "title": "Send feedback"
+    "title": "Send feedback",
+    "unavailable": {
+      "body": "None of your servers take feedback. The in-app form is a Chara Cloud feature.",
+      "title": "Feedback isn't available"
+    }
   },
   "fx": {
     "convertedLabel": "Converted total",

@@ -406,7 +406,11 @@
       "body": "Vi har fått tilbakemeldingen din. Vi leser alt som kommer inn.",
       "title": "Takk"
     },
-    "title": "Send tilbakemelding"
+    "title": "Send tilbakemelding",
+    "unavailable": {
+      "body": "Ingen av serverne dine tar imot tilbakemeldinger. Skjemaet i appen er en Chara Cloud-funksjon.",
+      "title": "Tilbakemelding er ikke tilgjengelig"
+    }
   },
   "fx": {
     "convertedLabel": "Konvertert sum",

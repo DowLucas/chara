@@ -412,7 +412,11 @@
       "body": "Votre retour nous est parvenu. Nous lisons tout.",
       "title": "Merci"
     },
-    "title": "Envoyer un retour"
+    "title": "Envoyer un retour",
+    "unavailable": {
+      "body": "Aucun de vos serveurs n'accepte les retours. Le formulaire dans l'app est une fonctionnalité Chara Cloud.",
+      "title": "Les retours ne sont pas disponibles"
+    }
   },
   "fx": {
     "convertedLabel": "Total converti",
