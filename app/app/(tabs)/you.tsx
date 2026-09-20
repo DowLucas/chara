@@ -33,7 +33,7 @@ import i18n, {
   type SupportedLanguage,
 } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
-import { useAccounts } from '@/lib/accounts';
+import { useAccounts, useDefaultAccount } from '@/lib/accounts';
 import { resetAllAccounts } from '@/lib/accounts-store';
 import { FLAG_ONBOARDING_COMPLETE, clearFlag } from '@/lib/storage';
 import { initialsOf } from '@/lib/name';
@@ -41,8 +41,7 @@ import { isPopupJustClosed } from '@/lib/popup-guard';
 import {
   apiFor,
   aggregateBulkDeleteResults,
-  authToken,
-  avatarImageSource,
+  avatarImageSourceOn,
   AvatarMimeType,
   ApiError,
   deleteAvatar as apiDeleteAvatar,
@@ -84,6 +83,11 @@ export default function YouScreen() {
   const { t } = useTranslation();
   const { user, signOut, refreshUser } = useAuth();
   const { accounts, removeAccount, setHomeCurrency } = useAccounts();
+  // The profile avatar lives on the default account's own server, and its
+  // bearer token must be read synchronously: an async token meant the first
+  // render fired an unauthenticated <Image> that 401'd before the token
+  // landed. See Avatar.helpers for why that failure used to be permanent.
+  const defaultAccount = useDefaultAccount();
   // Live feature read, not the cached account.instance blob — that is only
   // written at sign-in, so an already-signed-in user would never see these
   // rows. Same pattern as the ocr / voice / settle-reminder gates.
@@ -95,19 +99,8 @@ export default function YouScreen() {
   const [languageSheetVisible, setLanguageSheetVisible] = useState(false);
   const [currencySheetVisible, setCurrencySheetVisible] = useState(false);
   const [storedLanguage, setStoredLanguage] = useState<string | null>(null);
-  const [avatarToken, setAvatarToken] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    authToken().then((t) => {
-      if (!cancelled) setAvatarToken(t);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id]);
 
   const refresh = useCallback(async () => {
     const lang = await getPreferredLanguage();
@@ -125,7 +118,9 @@ export default function YouScreen() {
   }, [refresh]);
 
   const initials = initialsOf(user?.name);
-  const avatarSource = avatarImageSource(user, avatarToken);
+  const avatarSource = defaultAccount
+    ? avatarImageSourceOn(defaultAccount.serverUrl, user)
+    : null;
   const hasServerAvatar = !!user?.avatar_object_url;
 
   function inferAvatarMime(asset: ImagePicker.ImagePickerAsset): AvatarMimeType {
