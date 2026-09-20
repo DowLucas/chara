@@ -1,8 +1,8 @@
 import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import { initReactI18next, useTranslation } from 'react-i18next';
 import { getLocales } from 'expo-localization';
 import * as SecureStore from 'expo-secure-store';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { currencyLocale } from './currencies';
 
 import en from './locales/en.json';
@@ -15,6 +15,10 @@ import da from './locales/da.json';
 import fi from './locales/fi.json';
 import ar from './locales/ar.json';
 import ja from './locales/ja.json';
+import es from './locales/es.json';
+import pt from './locales/pt.json';
+import pl from './locales/pl.json';
+import nbNO from './locales/nb-NO.json';
 import zhHans from './locales/zh-Hans.json';
 
 const KEY_LANGUAGE = 'chara.language';
@@ -31,6 +35,10 @@ export const SUPPORTED_LANGUAGES = [
   'ar',
   'ja',
   'zh-Hans',
+  'es',
+  'pt',
+  'pl',
+  'nb-NO',
 ] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 export const FALLBACK_LANGUAGE: SupportedLanguage = 'en';
@@ -49,6 +57,10 @@ export const LANGUAGE_NATIVE_NAMES: Record<SupportedLanguage, string> = {
   ar: 'العربية',
   ja: '日本語',
   'zh-Hans': '中文（简体）',
+  es: 'Español',
+  pt: 'Português',
+  pl: 'Polski',
+  'nb-NO': 'Norsk bokmål',
 };
 
 export const resources = {
@@ -63,6 +75,10 @@ export const resources = {
   ar: { translation: ar },
   ja: { translation: ja },
   'zh-Hans': { translation: zhHans },
+  es: { translation: es },
+  pt: { translation: pt },
+  pl: { translation: pl },
+  'nb-NO': { translation: nbNO },
 } as const;
 
 function detectLanguage(): SupportedLanguage {
@@ -224,16 +240,33 @@ export function formatTime(d: Date | string): string {
   return date.toLocaleTimeString(currentLocale(), { hour: '2-digit', minute: '2-digit' });
 }
 
-/** Returns a `t` function that always resolves keys in English, regardless of
- *  the user's selected app language. Used by the login and onboarding screens
- *  where the user hasn't yet confirmed they understand the UI language — the
- *  detected device locale can be wrong (shared/borrowed device, multilingual
- *  users) and getting stuck unable to read the sign-in screen is fatal. */
+/** Returns a `t` function that resolves keys in English *until the user has
+ *  explicitly picked a language*, after which it resolves normally. Used by
+ *  the login and onboarding screens: a detected device locale can be wrong
+ *  (shared/borrowed device, multilingual users) and getting stuck unable to
+ *  read the sign-in screen is fatal, so auto-detection alone never switches
+ *  them. An explicit pick — e.g. from the welcome screen's language control —
+ *  is a deliberate act, so it does. */
 export function useEnglishT(): (key: string, opts?: Record<string, unknown>) => string {
+  // Re-runs on every `languageChanged`, which is how a pick made on the
+  // welcome screen reaches the screens already mounted behind the sheet.
+  const { i18n: instance } = useTranslation();
+  const [explicit, setExplicit] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    SecureStore.getItemAsync(KEY_LANGUAGE)
+      .then((v) => {
+        if (!cancelled) setExplicit(!!v);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [instance.language]);
   return useCallback(
     (key: string, opts?: Record<string, unknown>) =>
-      i18n.t(key, { ...(opts ?? {}), lng: 'en' }) as string,
-    [],
+      i18n.t(key, explicit ? (opts ?? {}) : { ...(opts ?? {}), lng: 'en' }) as string,
+    [explicit, instance.language],
   );
 }
 

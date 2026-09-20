@@ -839,19 +839,20 @@
     "errorTitle": "Uitnodiging niet beschikbaar",
     "errorUnreachable": "Kon {{host}} niet bereiken. Controleer je verbinding en probeer het opnieuw.",
     "eyebrow": "uitnodiging",
-    "incompatibleNote": "Werk Chara bij om mee te doen — deze server gebruikt een nieuwer protocol dan deze app ondersteunt.",
+    "incompatibleNote": "Werk Chara bij om mee te doen. Deze server gebruikt een nieuwer protocol dan deze app ondersteunt.",
     "invitedBy": "{{name}} nodigde je uit voor",
     "invitedByUnknown": "je bent uitgenodigd voor",
     "join": "Lid worden",
     "joining": "Lid worden…",
     "loading": "Uitnodiging laden…",
-    "lockedNote": "Deze groep is vergrendeld — bij deelname krijg je alleen-lezen toegang tot de eigenaar ontgrendelt.",
+    "lockedNote": "Deze groep is vergrendeld. Bij deelname krijg je alleen-lezen toegang tot de eigenaar ontgrendelt.",
     "memberCount_one": "1 lid",
     "memberCount_other": "{{count}} leden",
     "onServer": "op {{host}}",
     "reauthToJoin": "Log opnieuw in om mee te doen",
     "retry": "Opnieuw proberen",
-    "signInToJoin": "Log in om mee te doen"
+    "signInToJoin": "Log in om mee te doen",
+    "joinAndSignUp": "Lid worden & aanmelden"
   },
   "keypad": {
     "backspace": "backspace (lang indrukken om te wissen)",
@@ -964,16 +965,14 @@
     "createBody": "Kies een naam en deel de QR-code met je vrienden.",
     "createEyebrow": "vers beginnen",
     "createTitle": "Maak een groep",
-    "eyebrow": "instellen",
-    "footerHint": "Je kunt dit later altijd nog doen via het Groepen-tabblad.",
-    "greetingAnon": "Welkom.",
     "greetingNamed": "Hoi {{name}}.",
-    "intro": "Een groep is een clubje mensen dat samen kosten deelt — een reis, een huis, een zijproject. Je kunt er nu een aanmaken, of je aansluiten bij een groep die een vriend al heeft gemaakt.",
-    "scanBody": "Richt op het scherm van een vriend — je zit er meteen in.",
+    "scanBody": "Richt op het scherm van een vriend en je zit er meteen in.",
     "scanEyebrow": "al uitgenodigd",
     "scanTitle": "Scan een QR om lid te worden",
-    "skip": "Nu overslaan",
-    "subhead": "Laten we een groep starten."
+    "serverBody": "Draai je Chara zelf? Richt de app op je eigen server.",
+    "serverEyebrow": "eigen server",
+    "serverTitle": "Mijn server verbinden",
+    "serverUseCloud": "Gebruik in plaats daarvan Chara Cloud"
   },
   "onboardingName": {
     "body": "Je naam staat bij elke uitgave en afrekening. Met je telefoonnummer kunnen vrienden je betalen via Swish, Vipps of vergelijkbare apps.",
@@ -1240,6 +1239,15 @@
     "vipps": "Vipps",
     "vippsUnlinked": "Niet gekoppeld"
   },
+  "setup": {
+    "accountCreated": "Account aangemaakt",
+    "continueWithout": "Doorgaan zonder groep",
+    "failedHeadline": "Bijna klaar",
+    "headline": "Alles wordt ingesteld",
+    "stepCreate": "{{group}} wordt aangemaakt",
+    "stepJoin": "Lid worden van {{group}}",
+    "stepName": "Je naam wordt opgeslagen"
+  },
   "signIn": {
     "apple": {
       "errorBody": "We konden Inloggen met Apple niet voltooien. Probeer het opnieuw of gebruik e-mail.",
@@ -1254,7 +1262,7 @@
     "dict": {
       "def1": ": quitte; afgerekend tussen vrienden",
       "def2": ": het kwijtschelden van een kleine schuld",
-      "def3": ": \"let's call it chara\" — laten we het quitte noemen",
+      "def3": ": \"let's call it chara\", laten we het quitte noemen",
       "headword": "cha·ra",
       "partOfSpeech": "zelfstandig naamwoord, uit het Japans チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1266,7 +1274,6 @@
       "errorTitle": "Inloggen mislukt",
       "noToken": "Google gaf geen identity-token terug. Probeer het opnieuw."
     },
-    "headline": "Splits het.\nReken af.\nKlaar is Kees.",
     "hostedBy": "gehost door chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",
@@ -1289,7 +1296,13 @@
       "body": "Deze link voegt een nieuwe server toe aan Chara. Ga alleen verder als je hierom hebt gevraagd.",
       "continue": "Doorgaan",
       "title": "Inloggen bij {{host}}?"
-    }
+    },
+    "welcomeBack": "Welkom terug.",
+    "draftEyebrow": "laatste stap",
+    "draftCreateHeadline": "{{group}} opslaan.",
+    "draftCreateBody": "Maak je account aan om vrienden uit te nodigen.",
+    "draftJoinHeadline": "Word lid van {{group}}.",
+    "draftJoinBody": "Maak je account aan en je doet mee."
   },
   "tabs": {
     "activity": "Activiteit",
@@ -1349,6 +1362,25 @@
     "submit": "Houd me op de hoogte",
     "success": "Bedankt — we nemen contact op.",
     "title": "Je hebt je {{cap}} gratis bonscans deze maand gebruikt"
+  },
+  "welcome": {
+    "chooseHeadline": "Hoe wil je beginnen?",
+    "continue": "Doorgaan",
+    "createBody": "Je nodigt vrienden uit direct nadat je je hebt aangemeld.",
+    "createHeadline": "Geef je eerste groep een naam.",
+    "getStarted": "Aan de slag",
+    "haveAccount": "Ik heb al een account",
+    "language": "Taal",
+    "letsGo": "Daar gaan we",
+    "nameBody": "Je naam staat bij elke uitgave en verrekening.",
+    "nameHeadline": "Hoe heet je?",
+    "next": "Volgende",
+    "skip": "Overslaan",
+    "slide2Body": "Maak een foto van de bon en krijg een overzicht regel voor regel.",
+    "slide2Title": "Maak een foto van het bonnetje.\nWij verdelen het.",
+    "slide3Body": "Tikkie, Swish of contant. Iedereen ziet altijd wie wat verschuldigd is. Open source, dus host het zelf als je wilt.",
+    "slide3Title": "Afrekenen met één tik.",
+    "step": "stap {{current}} van {{total}}"
   },
   "widget": {
     "addExpense": "Uitgave toevoegen",

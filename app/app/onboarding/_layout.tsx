@@ -16,7 +16,9 @@ export default function OnboardingLayout() {
     user &&
     !isPlaceholder &&
     missingName &&
-    pathname !== '/onboarding/name'
+    pathname !== '/onboarding/name' &&
+    // Setup saves the name the user typed before signing up.
+    pathname !== '/onboarding/setup'
   ) {
     return <Redirect href="/onboarding/name" />;
   }

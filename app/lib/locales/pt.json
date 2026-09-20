@@ -861,20 +861,21 @@
     "errorTitle": "Convite indisponível",
     "errorUnreachable": "Não foi possível acessar {{host}}. Verifique sua conexão e tente de novo.",
     "eyebrow": "convite",
-    "incompatibleNote": "Atualize o Chara para entrar — este servidor usa um protocolo mais novo do que este app suporta.",
+    "incompatibleNote": "Atualize o Chara para entrar. Este servidor usa um protocolo mais novo do que este app suporta.",
     "invitedBy": "{{name}} convidou você para",
     "invitedByUnknown": "você foi convidado para",
     "join": "Entrar no grupo",
     "joining": "Entrando…",
     "loading": "Carregando convite…",
-    "lockedNote": "Este grupo está bloqueado — ao entrar você terá acesso somente leitura até o dono desbloquear.",
+    "lockedNote": "Este grupo está bloqueado. Ao entrar você terá acesso somente leitura até o dono desbloquear.",
     "memberCount_many": "{{count}} membros",
     "memberCount_one": "1 membro",
     "memberCount_other": "{{count}} membros",
     "onServer": "em {{host}}",
     "reauthToJoin": "Entre de novo para participar",
     "retry": "Tentar de novo",
-    "signInToJoin": "Entre para participar"
+    "signInToJoin": "Entre para participar",
+    "joinAndSignUp": "Entrar e cadastrar"
   },
   "keypad": {
     "backspace": "backspace (segure para limpar)",
@@ -989,16 +990,14 @@
     "createBody": "Escolha um nome, compartilhe o QR code com os amigos.",
     "createEyebrow": "começar do zero",
     "createTitle": "Criar um grupo",
-    "eyebrow": "configurar",
-    "footerHint": "Você sempre pode fazer isso depois pela aba Grupos.",
-    "greetingAnon": "Bem-vindo.",
     "greetingNamed": "Olá, {{name}}.",
-    "intro": "Um grupo é um conjunto de pessoas que dividem custos juntas — uma viagem, um apê, um projeto paralelo. Você pode criar um agora ou entrar em um que um amigo já fez.",
-    "scanBody": "Aponte para a tela de um amigo — você entra na hora.",
+    "scanBody": "Aponte para a tela de um amigo e você entra na hora.",
     "scanEyebrow": "já convidado",
     "scanTitle": "Escanear um QR para entrar",
-    "skip": "Pular por agora",
-    "subhead": "Vamos começar um grupo."
+    "serverBody": "Alojas o Chara tu mesmo? Aponta a app para o teu servidor.",
+    "serverEyebrow": "auto-hospedado",
+    "serverTitle": "Ligar o meu servidor",
+    "serverUseCloud": "Usar o Chara Cloud"
   },
   "onboardingName": {
     "body": "Seu nome aparece em cada despesa e quitação. Seu telefone permite que amigos quitem com você via Swish, Vipps ou similar.",
@@ -1281,6 +1280,15 @@
     "vipps": "Vipps",
     "vippsUnlinked": "Não vinculado"
   },
+  "setup": {
+    "accountCreated": "Conta criada",
+    "continueWithout": "Continuar sem grupo",
+    "failedHeadline": "Quase lá",
+    "headline": "Preparando tudo",
+    "stepCreate": "Criando {{group}}",
+    "stepJoin": "Entrando em {{group}}",
+    "stepName": "Salvando seu nome"
+  },
   "signIn": {
     "apple": {
       "errorBody": "Não conseguimos completar a entrada com a Apple. Tente novamente ou use o e-mail.",
@@ -1295,7 +1303,7 @@
     "dict": {
       "def1": ": quites; acertado entre amigos",
       "def2": ": o perdão de uma pequena dívida",
-      "def3": ": \"vamos chamar de chara\" — vamos dizer que ficou quites",
+      "def3": ": \"vamos chamar de chara\", vamos dizer que ficou quites",
       "headword": "cha·ra",
       "partOfSpeech": "substantivo, do japonês チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1307,7 +1315,6 @@
       "errorTitle": "Falha ao entrar",
       "noToken": "O Google não retornou um token de identidade. Tente novamente."
     },
-    "headline": "Divida.\nAcerte.\nTá quitado.",
     "hostedBy": "hospedado por chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",
@@ -1330,7 +1337,13 @@
       "body": "Esta ligação vai adicionar um novo servidor ao Chara. Continua apenas se foste tu a pedir.",
       "continue": "Continuar",
       "title": "Iniciar sessão em {{host}}?"
-    }
+    },
+    "welcomeBack": "Bem-vindo de volta.",
+    "draftEyebrow": "último passo",
+    "draftCreateHeadline": "Salvar {{group}}.",
+    "draftCreateBody": "Crie sua conta para convidar amigos.",
+    "draftJoinHeadline": "Entrar em {{group}}.",
+    "draftJoinBody": "Crie sua conta e pronto."
   },
   "tabs": {
     "activity": "Atividade",
@@ -1390,6 +1403,25 @@
     "submit": "Me avise",
     "success": "Obrigado — entraremos em contato.",
     "title": "Você usou seus {{cap}} escaneamentos de recibo grátis deste mês"
+  },
+  "welcome": {
+    "chooseHeadline": "Como você quer começar?",
+    "continue": "Continuar",
+    "createBody": "Você convida os amigos logo depois de se cadastrar.",
+    "createHeadline": "Dê um nome ao seu primeiro grupo.",
+    "getStarted": "Começar",
+    "haveAccount": "Já tenho uma conta",
+    "language": "Idioma",
+    "letsGo": "Vamos lá",
+    "nameBody": "Seu nome aparece em cada despesa e acerto.",
+    "nameHeadline": "Como te chamas?",
+    "next": "Próximo",
+    "skip": "Pular",
+    "slide2Body": "Tira uma foto do recibo e obtém uma divisão linha a linha.",
+    "slide2Title": "Fotografe o recibo.\nNós dividimos.",
+    "slide3Body": "Pix, Swish ou dinheiro. Todos sempre veem quem deve o quê. Código aberto, então hospede você mesmo, se quiser.",
+    "slide3Title": "Acerte as contas com um toque.",
+    "step": "passo {{current}} de {{total}}"
   },
   "widget": {
     "addExpense": "Adicionar despesa",

@@ -874,7 +874,8 @@
     "onServer": "en {{host}}",
     "reauthToJoin": "Vuelve a iniciar sesión para unirte",
     "retry": "Reintentar",
-    "signInToJoin": "Inicia sesión para unirte"
+    "signInToJoin": "Inicia sesión para unirte",
+    "joinAndSignUp": "Unirse y registrarse"
   },
   "keypad": {
     "backspace": "borrar (mantén pulsado para limpiar)",
@@ -989,16 +990,14 @@
     "createBody": "Elige un nombre y comparte el código QR con tus amigos.",
     "createEyebrow": "empezar desde cero",
     "createTitle": "Crear un grupo",
-    "eyebrow": "configurar",
-    "footerHint": "Siempre puedes hacerlo más tarde desde la pestaña Grupos.",
-    "greetingAnon": "Bienvenido.",
     "greetingNamed": "Hola {{name}}.",
-    "intro": "Un grupo es un conjunto de personas que dividen gastos — un viaje, un piso, un proyecto. Puedes crear uno ahora o unirte a uno que ya haya hecho un amigo.",
-    "scanBody": "Apunta a la pantalla de un amigo — entrarás al instante.",
+    "scanBody": "Apunta a la pantalla de un amigo y entrarás al instante.",
     "scanEyebrow": "ya invitado",
     "scanTitle": "Escanea un QR para unirte",
-    "skip": "Omitir por ahora",
-    "subhead": "Vamos a crear un grupo."
+    "serverBody": "¿Alojas Chara tú mismo? Apunta la app a tu propio servidor.",
+    "serverEyebrow": "autoalojado",
+    "serverTitle": "Conectar mi servidor",
+    "serverUseCloud": "Usar Chara Cloud en su lugar"
   },
   "onboardingName": {
     "body": "Tu nombre aparece en cada gasto y liquidación. Tu teléfono permite que los amigos te paguen por Swish, Vipps o similares.",
@@ -1281,6 +1280,15 @@
     "vipps": "Vipps",
     "vippsUnlinked": "No vinculado"
   },
+  "setup": {
+    "accountCreated": "Cuenta creada",
+    "continueWithout": "Continuar sin grupo",
+    "failedHeadline": "Casi listo",
+    "headline": "Preparándolo todo",
+    "stepCreate": "Creando {{group}}",
+    "stepJoin": "Uniéndote a {{group}}",
+    "stepName": "Guardando tu nombre"
+  },
   "signIn": {
     "apple": {
       "errorBody": "No pudimos completar el inicio de sesión con Apple. Inténtalo de nuevo o usa el correo.",
@@ -1295,7 +1303,7 @@
     "dict": {
       "def1": ": en paz; cuentas saldadas entre amigos",
       "def2": ": la cancelación de una pequeña deuda",
-      "def3": ": \"dejémoslo en chara\" — quedemos en paz",
+      "def3": ": \"dejémoslo en chara\", quedemos en paz",
       "headword": "cha·ra",
       "partOfSpeech": "sustantivo, del japonés チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1307,7 +1315,6 @@
       "errorTitle": "Inicio de sesión fallido",
       "noToken": "Google no devolvió un token de identidad. Inténtalo de nuevo."
     },
-    "headline": "Divídelo.\nSáldalo.\nAsunto cerrado.",
     "hostedBy": "alojado por chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",
@@ -1330,7 +1337,13 @@
       "body": "Este enlace añadirá un servidor nuevo a Chara. Continúa solo si lo has solicitado tú.",
       "continue": "Continuar",
       "title": "¿Iniciar sesión en {{host}}?"
-    }
+    },
+    "welcomeBack": "Hola de nuevo.",
+    "draftEyebrow": "último paso",
+    "draftCreateHeadline": "Guardar {{group}}.",
+    "draftCreateBody": "Crea tu cuenta para invitar a tus amigos.",
+    "draftJoinHeadline": "Únete a {{group}}.",
+    "draftJoinBody": "Crea tu cuenta y ya estás dentro."
   },
   "tabs": {
     "activity": "Actividad",
@@ -1390,6 +1403,25 @@
     "submit": "Avísame",
     "success": "Gracias — te contactaremos.",
     "title": "Has usado tus {{cap}} escaneos gratis de este mes"
+  },
+  "welcome": {
+    "chooseHeadline": "¿Cómo quieres empezar?",
+    "continue": "Continuar",
+    "createBody": "Invitarás a tus amigos justo después de registrarte.",
+    "createHeadline": "Ponle nombre a tu primer grupo.",
+    "getStarted": "Empezar",
+    "haveAccount": "Ya tengo una cuenta",
+    "language": "Idioma",
+    "letsGo": "Vamos",
+    "nameBody": "Tu nombre aparece en cada gasto y cada liquidación.",
+    "nameHeadline": "¿Cómo te llamas?",
+    "next": "Siguiente",
+    "skip": "Omitir",
+    "slide2Body": "Haz una foto del recibo y obtén un desglose línea por línea.",
+    "slide2Title": "Fotografía el recibo.\nNosotros lo dividimos.",
+    "slide3Body": "Bizum, Swish o efectivo. Todos ven siempre quién debe qué. Código abierto: alójalo tú mismo si quieres.",
+    "slide3Title": "Salda cuentas con un toque.",
+    "step": "paso {{current}} de {{total}}"
   },
   "widget": {
     "addExpense": "Añadir gasto",

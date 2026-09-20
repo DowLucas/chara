@@ -839,19 +839,20 @@
     "errorTitle": "Kutsu ei käytettävissä",
     "errorUnreachable": "Palvelimeen {{host}} ei saatu yhteyttä. Tarkista verkkoyhteytesi ja yritä uudelleen.",
     "eyebrow": "kutsu",
-    "incompatibleNote": "Päivitä Chara liittyäksesi — tämä palvelin käyttää uudempaa protokollaa kuin sovellus tukee.",
+    "incompatibleNote": "Päivitä Chara liittyäksesi. Tämä palvelin käyttää uudempaa protokollaa kuin sovellus tukee.",
     "invitedBy": "{{name}} kutsui sinut ryhmään",
     "invitedByUnknown": "sinut on kutsuttu ryhmään",
     "join": "Liity ryhmään",
     "joining": "Liitytään…",
     "loading": "Ladataan kutsua…",
-    "lockedNote": "Tämä ryhmä on lukittu — liittyessä saat vain lukuoikeuden, kunnes omistaja avaa sen.",
+    "lockedNote": "Tämä ryhmä on lukittu. Liittyessä saat vain lukuoikeuden, kunnes omistaja avaa sen.",
     "memberCount_one": "1 jäsen",
     "memberCount_other": "{{count}} jäsentä",
     "onServer": "palvelimella {{host}}",
     "reauthToJoin": "Kirjaudu uudelleen liittyäksesi",
     "retry": "Yritä uudelleen",
-    "signInToJoin": "Kirjaudu liittyäksesi"
+    "signInToJoin": "Kirjaudu liittyäksesi",
+    "joinAndSignUp": "Liity ja rekisteröidy"
   },
   "keypad": {
     "backspace": "askelpalautin (tyhjennä pitkällä painalluksella)",
@@ -964,16 +965,14 @@
     "createBody": "Anna ryhmälle nimi ja jaa QR-koodi kavereille.",
     "createEyebrow": "aloita alusta",
     "createTitle": "Perusta ryhmä",
-    "eyebrow": "alkuun",
-    "footerHint": "Tämän voi tehdä myöhemminkin Ryhmät-välilehdellä.",
-    "greetingAnon": "Tervetuloa.",
     "greetingNamed": "Moi {{name}}.",
-    "intro": "Ryhmä on porukka, joka jakaa kuluja yhdessä — reissu, kämppä tai sivuprojekti. Voit perustaa oman tai liittyä kaverin perustamaan.",
-    "scanBody": "Osoita kaverin näyttöä — pääset heti mukaan.",
+    "scanBody": "Osoita kaverin näyttöä, niin pääset heti mukaan.",
     "scanEyebrow": "kutsu valmiina",
     "scanTitle": "Liity skannaamalla QR-koodi",
-    "skip": "Ohita toistaiseksi",
-    "subhead": "Aloitetaan ryhmästä."
+    "serverBody": "Ylläpidätkö Charaa itse? Osoita sovellus omaan palvelimeesi.",
+    "serverEyebrow": "oma palvelin",
+    "serverTitle": "Yhdistä oma palvelin",
+    "serverUseCloud": "Käytä sen sijaan Chara Cloudia"
   },
   "onboardingName": {
     "body": "Nimi näkyy jokaisessa kulussa ja tasauksessa. Puhelinnumeron avulla kaverit voivat tasata sinulle vaikka Swishillä tai Vippsillä.",
@@ -1240,6 +1239,15 @@
     "vipps": "Vipps",
     "vippsUnlinked": "Ei linkitetty"
   },
+  "setup": {
+    "accountCreated": "Tili luotu",
+    "continueWithout": "Jatka ilman ryhmää",
+    "failedHeadline": "Melkein valmista",
+    "headline": "Valmistellaan",
+    "stepCreate": "Luodaan {{group}}",
+    "stepJoin": "Liitytään ryhmään {{group}}",
+    "stepName": "Tallennetaan nimeäsi"
+  },
   "signIn": {
     "apple": {
       "errorBody": "Apple-kirjautumista ei voitu suorittaa. Yritä uudelleen tai käytä sähköpostia.",
@@ -1254,7 +1262,7 @@
     "dict": {
       "def1": ": tasan; kaverien kesken selvät",
       "def2": ": pienen velan pyyhkiminen pois",
-      "def3": ": ”sanotaan sitä charaksi” — sanotaan tasoihin",
+      "def3": ": ”sanotaan sitä charaksi”, sanotaan tasoihin",
       "headword": "cha·ra",
       "partOfSpeech": "substantiivi, japanin sanasta チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1266,7 +1274,6 @@
       "errorTitle": "Kirjautuminen epäonnistui",
       "noToken": "Google ei palauttanut identiteettitokenia. Yritä uudelleen."
     },
-    "headline": "Jaa.\nTasaa.\nAsia selvä.",
     "hostedBy": "isäntä chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",
@@ -1289,7 +1296,13 @@
       "body": "Tämä linkki lisää Charaan uuden palvelimen. Jatka vain, jos pyysit sitä itse.",
       "continue": "Jatka",
       "title": "Kirjaudutaanko palvelimeen {{host}}?"
-    }
+    },
+    "welcomeBack": "Tervetuloa takaisin.",
+    "draftEyebrow": "viimeinen vaihe",
+    "draftCreateHeadline": "Tallenna {{group}}.",
+    "draftCreateBody": "Luo tili kutsuaksesi ystäviä.",
+    "draftJoinHeadline": "Liity ryhmään {{group}}.",
+    "draftJoinBody": "Luo tili, niin olet mukana."
   },
   "tabs": {
     "activity": "Tapahtumat",
@@ -1349,6 +1362,25 @@
     "submit": "Ilmoita minulle",
     "success": "Kiitos — olemme yhteydessä.",
     "title": "Olet käyttänyt {{cap}} ilmaista kuittiskannausta tässä kuussa"
+  },
+  "welcome": {
+    "chooseHeadline": "Miten haluat aloittaa?",
+    "continue": "Jatka",
+    "createBody": "Kutsut ystäviä heti rekisteröitymisen jälkeen.",
+    "createHeadline": "Nimeä ensimmäinen ryhmäsi.",
+    "getStarted": "Aloita",
+    "haveAccount": "Minulla on jo tili",
+    "language": "Kieli",
+    "letsGo": "Mennään",
+    "nameBody": "Nimesi näkyy jokaisessa kulussa ja selvityksessä.",
+    "nameHeadline": "Mikä on nimesi?",
+    "next": "Seuraava",
+    "skip": "Ohita",
+    "slide2Body": "Ota kuva kuitista ja saat rivikohtaisen erittelyn.",
+    "slide2Title": "Kuvaa kuitti.\nMe jaamme sen.",
+    "slide3Body": "MobilePay, Swish tai käteinen. Kaikki näkevät aina, kuka on velkaa mitäkin. Avointa lähdekoodia, joten voit ylläpitää sitä itse, jos haluat.",
+    "slide3Title": "Selvitä velat yhdellä napautuksella.",
+    "step": "vaihe {{current}}/{{total}}"
   },
   "widget": {
     "addExpense": "Lisää kulu",

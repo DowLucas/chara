@@ -35,6 +35,7 @@ import i18n, {
 import { useAuth } from '@/lib/auth';
 import { useAccounts } from '@/lib/accounts';
 import { resetAllAccounts } from '@/lib/accounts-store';
+import { FLAG_ONBOARDING_COMPLETE, clearFlag } from '@/lib/storage';
 import { initialsOf } from '@/lib/name';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import {
@@ -284,7 +285,7 @@ export default function YouScreen() {
     const result = await showAlert({
       title: 'Reset all accounts?',
       message:
-        'Removes every signed-in account on this device and returns to sign-in. Server data is untouched. Development builds only.',
+        'Removes every signed-in account on this device and returns to the first-run onboarding flow. Server data is untouched. Development builds only.',
       buttons: [
         { key: 'cancel', label: t('common.cancel'), style: 'cancel' },
         { key: 'reset', label: 'Reset', style: 'destructive' },
@@ -292,7 +293,11 @@ export default function YouScreen() {
     });
     if (result !== 'reset') return;
     await resetAllAccounts();
-    router.replace('/(auth)/sign-in');
+    // Also clear the first-run state, so this reproduces a fresh install
+    // rather than dropping onto sign-in: the gate routes signed-out users to
+    // /welcome only while `onboarding_complete` is unset.
+    await clearFlag(FLAG_ONBOARDING_COMPLETE).catch(() => {});
+    router.replace('/welcome');
   }
 
   async function handleSignOutPress() {
@@ -615,7 +620,7 @@ export default function YouScreen() {
             <View style={styles.list}>
               <NavRow
                 label={t('you.replayOnboarding')}
-                onPress={() => router.push('/onboarding')}
+                onPress={() => router.push('/welcome')}
               />
               {/* Remove Account refuses when a server's balance check fails,
                   so an account pointing at a local backend that no longer

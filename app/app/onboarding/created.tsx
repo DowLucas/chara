@@ -8,20 +8,20 @@ import QRCode from 'react-native-qrcode-svg';
 import { useEnglishT } from '@/lib/i18n';
 import { Text } from '@/components/Text';
 import { ContentContainer } from '@/components/ContentContainer';
-import { apiFor, getGroup, Group } from '@/lib/api';
+import { apiFor, Group } from '@/lib/api';
 import { userErrorMessage } from '@/lib/user-error';
 import { hapticSuccess } from '@/lib/haptics';
 import { useDefaultAccount } from '@/lib/accounts';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
-import * as analytics from '@/lib/analytics';
 
 export default function GroupCreatedScreen() {
   const insets = useSafeAreaInsets();
   const t = useEnglishT();
-  // Wave 4: the home tab will know the per-row serverUrl. For now,
-  // creation happens against the default account.
-  const defaultServerUrl = useDefaultAccount()?.serverUrl ?? '';
-  const { groupId } = useLocalSearchParams<{ groupId: string }>();
+  // The group's server comes from the route; older callers without it
+  // created against the default account.
+  const defaultAccountUrl = useDefaultAccount()?.serverUrl ?? '';
+  const { groupId, server } = useLocalSearchParams<{ groupId: string; server?: string }>();
+  const serverUrl = server ? decodeURIComponent(server) : defaultAccountUrl;
   const [group, setGroup] = useState<Group | null>(null);
   const [link, setLink] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -31,17 +31,17 @@ export default function GroupCreatedScreen() {
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!groupId) return;
-    getGroup(groupId)
+    if (!groupId || !serverUrl) return;
+    const api = apiFor(serverUrl);
+    api
+      .getGroup(groupId)
       .then(setGroup)
       .catch((e) => setError(userErrorMessage(e, t('groupCreated.errorLoad'))));
-    if (defaultServerUrl) {
-      apiFor(defaultServerUrl)
-        .getInviteLink(groupId)
-        .then((r) => setLink(r.invite_url))
-        .catch((e) => setError(userErrorMessage(e, t('groupCreated.errorLoad'))));
-    }
-  }, [groupId, defaultServerUrl, t, attempt]);
+    api
+      .getInviteLink(groupId)
+      .then((r) => setLink(r.invite_url))
+      .catch((e) => setError(userErrorMessage(e, t('groupCreated.errorLoad'))));
+  }, [groupId, serverUrl, t, attempt]);
 
   useEffect(() => () => {
     if (copiedTimer.current) clearTimeout(copiedTimer.current);
@@ -141,12 +141,11 @@ export default function GroupCreatedScreen() {
           <TouchableOpacity
             style={styles.secondary}
             onPress={() => {
-              analytics.track('onboarding_finished', { path: 'create' });
-              if (!defaultServerUrl) {
+              if (!serverUrl) {
                 router.replace('/(tabs)');
                 return;
               }
-              router.replace(`/groups/${encodeURIComponent(defaultServerUrl)}/${group.id}`);
+              router.replace(`/groups/${encodeURIComponent(serverUrl)}/${group.id}`);
             }}
             activeOpacity={0.85}
           >

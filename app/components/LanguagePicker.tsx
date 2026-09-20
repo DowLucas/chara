@@ -45,6 +45,10 @@ const LANGUAGE_ENGLISH_NAMES: Record<SupportedLanguage, string> = {
   ar: 'Arabic',
   ja: 'Japanese',
   'zh-Hans': 'Chinese (Simplified)',
+  es: 'Spanish',
+  pt: 'Portuguese',
+  pl: 'Polish',
+  'nb-NO': 'Norwegian Bokmål',
 };
 
 type Row =

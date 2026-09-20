@@ -423,7 +423,7 @@
     "title": "Gruppenfarbe"
   },
   "groupCreated": {
-    "body": "Gib dein Handy weiter – Freunde scannen einfach den Code.",
+    "body": "Gib dein Handy weiter. Freunde scannen einfach den Code.",
     "copied": "Kopiert",
     "copyLink": "Link kopieren",
     "errorLoad": "Gruppe nicht geladen",
@@ -839,19 +839,20 @@
     "errorTitle": "Einladung nicht verfügbar",
     "errorUnreachable": "{{host}} nicht erreichbar. Prüf deine Verbindung und versuch es erneut.",
     "eyebrow": "einladung",
-    "incompatibleNote": "Aktualisiere Chara zum Beitreten – dieser Server nutzt ein neueres Protokoll, als diese App unterstützt.",
+    "incompatibleNote": "Aktualisiere Chara zum Beitreten. Dieser Server nutzt ein neueres Protokoll, als diese App unterstützt.",
     "invitedBy": "{{name}} hat dich eingeladen zu",
     "invitedByUnknown": "du wurdest eingeladen zu",
     "join": "Gruppe beitreten",
     "joining": "Tritt bei…",
     "loading": "Einladung lädt…",
-    "lockedNote": "Diese Gruppe ist gesperrt – beim Beitreten erhältst du nur Lesezugriff, bis der Eigentümer sie entsperrt.",
+    "lockedNote": "Diese Gruppe ist gesperrt. Beim Beitreten erhältst du nur Lesezugriff, bis der Eigentümer sie entsperrt.",
     "memberCount_one": "1 Mitglied",
     "memberCount_other": "{{count}} Mitglieder",
     "onServer": "auf {{host}}",
     "reauthToJoin": "Zum Beitreten erneut anmelden",
     "retry": "Erneut versuchen",
-    "signInToJoin": "Zum Beitreten anmelden"
+    "signInToJoin": "Zum Beitreten anmelden",
+    "joinAndSignUp": "Beitreten & registrieren"
   },
   "keypad": {
     "backspace": "Rücktaste (lang drücken: leeren)",
@@ -964,16 +965,14 @@
     "createBody": "Such einen Namen aus und teil den QR-Code mit Freunden.",
     "createEyebrow": "neu anfangen",
     "createTitle": "Gruppe anlegen",
-    "eyebrow": "einrichten",
-    "footerHint": "Geht später auch jederzeit vom Gruppen-Tab aus.",
-    "greetingAnon": "Willkommen.",
     "greetingNamed": "Hi {{name}}.",
-    "intro": "Eine Gruppe ist ein Kreis von Leuten, die sich Kosten teilen – eine Reise, eine WG, ein Nebenprojekt. Jetzt eine anlegen oder einer Einladung folgen.",
-    "scanBody": "Auf den Bildschirm eines Freundes halten – schon bist du drin.",
+    "scanBody": "Auf den Bildschirm eines Freundes halten, schon bist du drin.",
     "scanEyebrow": "schon eingeladen",
     "scanTitle": "QR scannen",
-    "skip": "Später",
-    "subhead": "Leg los mit deiner ersten Gruppe."
+    "serverBody": "Betreibst du Chara selbst? Richte die App auf deinen eigenen Server.",
+    "serverEyebrow": "selbst gehostet",
+    "serverTitle": "Eigenen Server verbinden",
+    "serverUseCloud": "Stattdessen Chara Cloud verwenden"
   },
   "onboardingName": {
     "body": "Dein Name steht auf jeder Ausgabe und jedem Ausgleich. Mit deiner Nummer können Freunde dich über Swish, Vipps & Co. bezahlen.",
@@ -1240,6 +1239,15 @@
     "vipps": "Vipps",
     "vippsUnlinked": "Nicht verknüpft"
   },
+  "setup": {
+    "accountCreated": "Konto erstellt",
+    "continueWithout": "Ohne Gruppe fortfahren",
+    "failedHeadline": "Fast geschafft",
+    "headline": "Alles wird eingerichtet",
+    "stepCreate": "{{group}} wird erstellt",
+    "stepJoin": "{{group}} wird beigetreten",
+    "stepName": "Dein Name wird gespeichert"
+  },
   "signIn": {
     "apple": {
       "errorBody": "Anmeldung mit Apple konnte nicht abgeschlossen werden. Versuch es erneut oder nimm E-Mail.",
@@ -1254,7 +1262,7 @@
     "dict": {
       "def1": ": quitt; unter Freunden ausgeglichen",
       "def2": ": das Streichen einer kleinen Schuld",
-      "def3": ": „nennen wir's chara“ – nennen wir's quitt",
+      "def3": ": „nennen wir's chara“, nennen wir's quitt",
       "headword": "cha·ra",
       "partOfSpeech": "Substantiv, aus dem Japanischen チャラ",
       "pronunciation": "| \\ ˈtʃa-rə \\"
@@ -1266,7 +1274,6 @@
       "errorTitle": "Anmeldung fehlgeschlagen",
       "noToken": "Google hat kein Identitätstoken zurückgegeben. Bitte versuch es erneut."
     },
-    "headline": "Teilen.\nAusgleichen.\nFertig.",
     "hostedBy": "gehostet von chara.app",
     "hosting": {
       "charaCloud": "Chara Cloud",
@@ -1289,7 +1296,13 @@
       "body": "Dieser Link fügt Chara einen neuen Server hinzu. Fahre nur fort, wenn du das angefordert hast.",
       "continue": "Weiter",
       "title": "Bei {{host}} anmelden?"
-    }
+    },
+    "welcomeBack": "Willkommen zurück.",
+    "draftEyebrow": "letzter Schritt",
+    "draftCreateHeadline": "{{group}} speichern.",
+    "draftCreateBody": "Erstelle dein Konto, um Freunde einzuladen.",
+    "draftJoinHeadline": "{{group}} beitreten.",
+    "draftJoinBody": "Erstelle dein Konto und du bist dabei."
   },
   "tabs": {
     "activity": "Aktivität",
@@ -1349,6 +1362,25 @@
     "submit": "Benachrichtige mich",
     "success": "Danke – wir melden uns.",
     "title": "Du hast deine {{cap}} kostenlosen Belegscans diesen Monat aufgebraucht"
+  },
+  "welcome": {
+    "chooseHeadline": "Wie möchtest du starten?",
+    "continue": "Weiter",
+    "createBody": "Du lädst Freunde direkt nach der Registrierung ein.",
+    "createHeadline": "Benenne deine erste Gruppe.",
+    "getStarted": "Los geht's",
+    "haveAccount": "Ich habe bereits ein Konto",
+    "language": "Sprache",
+    "letsGo": "Auf geht's",
+    "nameBody": "Dein Name erscheint bei jeder Ausgabe und Abrechnung.",
+    "nameHeadline": "Wie heißt du?",
+    "next": "Weiter",
+    "skip": "Überspringen",
+    "slide2Body": "Fotografiere den Beleg und erhalte eine Aufschlüsselung Zeile für Zeile.",
+    "slide2Title": "Beleg fotografieren.\nWir teilen ihn auf.",
+    "slide3Body": "Swish, Vipps oder bar. Alle sehen jederzeit, wer wem was schuldet. Open Source, also auf Wunsch selbst hosten.",
+    "slide3Title": "Mit einem Tipp abrechnen.",
+    "step": "Schritt {{current}} von {{total}}"
   },
   "widget": {
     "addExpense": "Ausgabe hinzufügen",
