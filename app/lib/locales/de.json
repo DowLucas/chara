@@ -1386,7 +1386,7 @@
     "selfHostHint": "Oder host Chara selbst – unbegrenzt alles",
     "submit": "Benachrichtige mich",
     "success": "Danke – wir melden uns.",
-    "title": "Du hast deine {{cap}} kostenlosen Belegscans diesen Monat aufgebraucht"
+    "title": "Du hast dein Limit für Belegscans diesen Monat erreicht"
   },
   "welcome": {
     "chooseHeadline": "Wie möchtest du starten?",

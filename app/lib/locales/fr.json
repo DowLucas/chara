@@ -510,10 +510,12 @@
     "merge": {
       "action": "Fusionner",
       "actionCount": "Fusionner {{count}}",
+      "actionCount_many": "Fusionner {{count}}",
       "actionCount_one": "Fusionner {{count}}",
       "actionCount_other": "Fusionner {{count}}",
       "cantTitle": "Fusion impossible",
       "confirmBody": "Combine {{count}} dépenses en une seule. Les dépenses d'origine seront supprimées.",
+      "confirmBody_many": "Combine {{count}} dépenses en une seule. Les dépenses d'origine seront supprimées.",
       "confirmBody_one": "Combine {{count}} dépense en une seule. La dépense d'origine sera supprimée.",
       "confirmBody_other": "Combine {{count}} dépenses en une seule. Les dépenses d'origine seront supprimées.",
       "confirmTitle": "Fusionner ces dépenses ?",
@@ -1381,6 +1383,7 @@
     "capBody": "La saisie vocale est limitée chaque mois pour maîtriser les coûts. Laisse ton e-mail, on te préviendra quand la limite augmentera.",
     "discardRest": "Abandonner le reste",
     "draftsLabel": "{{count}} dépenses trouvées",
+    "draftsLabel_many": "{{count}} dépenses trouvées",
     "draftsLabel_one": "{{count}} dépense trouvée",
     "draftsLabel_other": "{{count}} dépenses trouvées",
     "err_network": "Un problème est survenu. Réessaie.",
@@ -1398,11 +1401,13 @@
     "micDenied": "Chara a besoin du micro pour ajouter une dépense à la voix. Tu peux l’autoriser dans les Réglages.",
     "micDeniedTitle": "Micro désactivé",
     "moreFromRecording": "{{count}} autres dans ton enregistrement",
+    "moreFromRecording_many": "{{count}} autres dans ton enregistrement",
     "moreFromRecording_one": "{{count}} autre dans ton enregistrement",
     "moreFromRecording_other": "{{count}} autres dans ton enregistrement",
     "regenerate": "Réessayer",
     "regenerateDisabled": "Modifie le texte et réessaie",
     "secondsLeft": "{{count}} secondes restantes",
+    "secondsLeft_many": "{{count}} secondes restantes",
     "secondsLeft_one": "{{count}} seconde restante",
     "secondsLeft_other": "{{count}} secondes restantes",
     "startRecording": "Démarrer l’enregistrement",
@@ -1427,7 +1432,7 @@
     "selfHostHint": "Ou auto-héberge Chara pour tout en illimité",
     "submit": "Préviens-moi",
     "success": "Merci — on revient vers toi bientôt.",
-    "title": "Tu as utilisé tes {{cap}} scans de reçus gratuits ce mois-ci"
+    "title": "Tu as atteint ta limite de scans de reçus ce mois-ci"
   },
   "welcome": {
     "chooseHeadline": "Comment voulez-vous commencer ?",

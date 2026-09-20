@@ -1386,7 +1386,7 @@
     "selfHostHint": "Eller selv-host Chara for ubegrænset alt",
     "submit": "Giv mig besked",
     "success": "Tak — vi vender tilbage.",
-    "title": "Du har brugt dine {{cap}} gratis kvitteringsscanninger denne måned"
+    "title": "Du har nået denne måneds grænse for kvitteringsscanning"
   },
   "welcome": {
     "chooseHeadline": "Hvordan vil du starte?",

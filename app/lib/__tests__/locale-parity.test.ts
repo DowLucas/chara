@@ -42,6 +42,14 @@ function flatKeys(obj: unknown, prefix = ''): string[] {
   );
 }
 
+/** Same walk as flatKeys but keeps plural suffixes intact. */
+function flatKeysRaw(obj: unknown, prefix = ''): string[] {
+  if (typeof obj !== 'object' || obj === null) return [prefix];
+  return Object.entries(obj).flatMap(([k, v]) =>
+    flatKeysRaw(v, prefix ? `${prefix}.${k}` : k),
+  );
+}
+
 function keySet(obj: unknown): string[] {
   return [...new Set(flatKeys(obj))].sort();
 }
@@ -78,5 +86,73 @@ describe('locale registration', () => {
   it('registers nothing that has no locale file', () => {
     const files = ['en', ...Object.keys(LOCALES)];
     expect(registered.filter((l) => !files.includes(l))).toEqual([]);
+  });
+});
+
+/**
+ * A translation may only interpolate variables the call site actually passes.
+ * en.json is the contract: the union of placeholders across a key's plural
+ * forms is what the caller supplies. `count` is exempt — i18next always
+ * injects it for a pluralized key. A translation that invents a variable
+ * renders the literal `{{name}}` to the user, which is how every non-English
+ * `waitlist.title` shipped `{{cap}}` after the English copy dropped the number.
+ */
+describe('placeholder parity', () => {
+  const placeholders = (s: unknown): string[] =>
+    typeof s === 'string' ? [...s.matchAll(/\{\{\s*(\w+)/g)].map((m) => m[1]) : [];
+
+  function byBaseKey(obj: unknown): Map<string, string[]> {
+    const out = new Map<string, string[]>();
+    const walk = (node: unknown, prefix: string) => {
+      if (typeof node !== 'object' || node === null) {
+        const base = prefix.replace(PLURAL_SUFFIX, '');
+        out.set(base, [...(out.get(base) ?? []), ...placeholders(node)]);
+        return;
+      }
+      for (const [k, v] of Object.entries(node)) walk(v, prefix ? `${prefix}.${k}` : k);
+    };
+    walk(obj, '');
+    return out;
+  }
+
+  const supplied = byBaseKey(en);
+
+  it.each(Object.keys(LOCALES))('%s interpolates only variables en.json supplies', (lang) => {
+    const undefinedVars: string[] = [];
+    for (const [base, used] of byBaseKey(LOCALES[lang])) {
+      const allowed = new Set([...(supplied.get(base) ?? []), 'count']);
+      for (const v of new Set(used)) {
+        if (!allowed.has(v)) undefinedVars.push(`${base}: {{${v}}}`);
+      }
+    }
+    expect(undefinedVars).toEqual([]);
+  });
+});
+
+/**
+ * i18next picks a plural suffix from the language's CLDR categories. A key
+ * missing a category its language requires (Polish `_few`, Spanish `_many`)
+ * silently falls back, so the user reads a grammatically wrong sentence.
+ * Extra categories are dead weight rather than a defect, so they are allowed.
+ */
+describe('plural category completeness', () => {
+  const suffixesFor = (obj: unknown, base: string): string[] =>
+    flatKeysRaw(obj)
+      .filter((k) => k.replace(PLURAL_SUFFIX, '') === base && PLURAL_SUFFIX.test(k))
+      .map((k) => k.match(PLURAL_SUFFIX)![1]);
+
+  const pluralBases = [...new Set(
+    flatKeysRaw(en).filter((k) => PLURAL_SUFFIX.test(k)).map((k) => k.replace(PLURAL_SUFFIX, '')),
+  )];
+
+  it.each(Object.keys(LOCALES))('%s covers every CLDR plural category', (lang) => {
+    const required = new Intl.PluralRules(lang).resolvedOptions().pluralCategories;
+    const gaps: string[] = [];
+    for (const base of pluralBases) {
+      const have = new Set(suffixesFor(LOCALES[lang], base));
+      if (have.size === 0) continue; // not pluralized in this language
+      for (const cat of required) if (!have.has(cat)) gaps.push(`${base}_${cat}`);
+    }
+    expect(gaps).toEqual([]);
   });
 });
