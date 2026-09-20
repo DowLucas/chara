@@ -233,11 +233,12 @@ const config: ExpoConfig = {
     [
       'expo-splash-screen',
       {
-        // Background matches the paper tone at the art's edges so the
-        // full-bleed illustration blends seamlessly into the window color.
-        backgroundColor: '#F0EAD0',
+        // Exactly `colors.paper` from app/lib/theme.ts, and exactly the
+        // cream the seal is drawn on, so the art's edge is invisible and
+        // there is no tonal step when the splash hands over to the app.
+        backgroundColor: '#F0E5CC',
         image: './assets/splash-art.png',
-        imageWidth: 300,
+        imageWidth: 220,
         resizeMode: 'contain',
       },
     ],
