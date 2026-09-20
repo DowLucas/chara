@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Image, StyleSheet, ImageURISource } from 'react-native';
 import { colors, typography, fontSize } from '@/lib/theme';
 import { Text } from './Text';
+import { avatarSourceKey } from './Avatar.helpers';
 
 interface AvatarProps {
   initials: string;
@@ -17,10 +18,15 @@ export function Avatar({ initials, size = 'md', stack = false, style, source }: 
   const dim = size === 'sm' ? 26 : 34;
   const [failed, setFailed] = useState(false);
   // A new source resets the error state — otherwise switching avatars after a
-  // previous load failure would never re-attempt.
+  // previous load failure would never re-attempt. "New" covers the bearer
+  // token as well as the URI: the token is baked into the source at render
+  // time and the image loader has no 401 refresh-and-replay, so a load that
+  // failed unauthenticated (pre-hydration) or on an expired token must retry
+  // once a fresh token arrives. See Avatar.helpers.
+  const sourceKey = avatarSourceKey(source);
   useEffect(() => {
     setFailed(false);
-  }, [source?.uri]);
+  }, [sourceKey]);
 
   const showImage = !!source?.uri && !failed;
 
