@@ -10,7 +10,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/minio/minio-go/v7 v7.3.0
-	github.com/oklog/ulid/v2 v2.1.1
+	github.com/oklog/ulid/v2 v2.1.2
 	github.com/riverqueue/river v0.45.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.45.0
 	github.com/riverqueue/river/rivertype v0.45.0
