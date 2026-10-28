@@ -39,13 +39,14 @@ export const Route = createFileRoute("/")({
           description:
             "Open-source, self-hostable bill splitting. No ads, no daily cap, no bank linking.",
           offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-          // Derived from the same REVIEWS array the page renders, so the
+          // Derived from the same REVIEWS / RATINGS the page renders, so the
           // markup can never claim a rating the page does not show. The count
           // is small and stated plainly rather than hidden — search engines
           // are free to ignore it, but it must never overstate.
           aggregateRating: {
             "@type": "AggregateRating",
             ratingValue: RATING.toFixed(1),
+            ratingCount: RATINGS.length,
             reviewCount: REVIEWS.length,
             bestRating: "5",
             worstRating: "1",
@@ -153,8 +154,9 @@ function Hero() {
    Set deliberately below Price's clamp(120px,19vw,260px) so the
    free price stays the largest number on the page.
 
-   A second review is one more entry in REVIEWS — the average, the
-   count and its plural all follow from the array.
+   A new written review is one more entry in REVIEWS; a star-only
+   rating is one more number in STAR_ONLY_RATINGS. The average, the
+   count and its plural all follow from those two.
 ============================================================ */
 const REVIEWS = [
   {
@@ -166,7 +168,12 @@ const REVIEWS = [
   },
 ];
 
-const RATING = REVIEWS.reduce((sum, r) => sum + r.rating, 0) / REVIEWS.length;
+// App Store ratings left without a written review — they count toward the
+// average and the total, but there is nothing to render for them.
+const STAR_ONLY_RATINGS = [5];
+
+const RATINGS = [...REVIEWS.map((r) => r.rating), ...STAR_ONLY_RATINGS];
+const RATING = RATINGS.reduce((sum, r) => sum + r, 0) / RATINGS.length;
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -228,7 +235,7 @@ function Reviews() {
               {rating}
             </div>
             <div className="mt-6 label text-[11px] uppercase tracking-[0.18em] text-bone-mute">
-              {t("reviews.count", { count: REVIEWS.length })}
+              {t("reviews.count", { count: RATINGS.length })}
             </div>
           </div>
 
