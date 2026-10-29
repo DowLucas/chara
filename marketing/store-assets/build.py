@@ -75,13 +75,20 @@ def draw_status_bar(img, dark):
     d.rounded_rectangle((x - 82, 58, x, 98), radius=10, outline=fg, width=4)
     d.rounded_rectangle((x - 76, 64, x - 6, 92), radius=6, fill=fg)
     d.rounded_rectangle((x + 4, 70, x + 10, 86), radius=3, fill=fg)
-    x -= 110
-    for r in (16, 34, 52):
-        d.arc((x - 30 - r, 84 - r, x - 30 + r, 84 + r), 225, 315, fill=fg, width=6)
-    x -= 90
-    for i in range(4):
-        bx = x - 66 + i * 18
-        d.rounded_rectangle((bx, 92 - 14 - i * 10, bx + 11, 96), radius=3, fill=fg)
+    # Signal bars + wifi in iOS's shapes, drawn at 4x and scaled down for smooth
+    # edges. Wifi is three filled bands (pie-slice centre) fanning +-45deg.
+    S, left, top = 4, x - 220, 58
+    m = Image.new('L', (130 * S, 40 * S), 0)
+    md = ImageDraw.Draw(m)
+    for i, h in enumerate((13, 20, 27, 34)):
+        bx = i * 14
+        md.rounded_rectangle((bx * S, (38 - h) * S, (bx + 9) * S, 38 * S), radius=2 * S, fill=255)
+    cx = 94
+    for r0, r1 in ((28, 37), (15, 24), (0, 11)):   # outermost first: each erase clears only its own hole
+        md.pieslice(((cx - r1) * S, (38 - r1) * S, (cx + r1) * S, (38 + r1) * S), 225, 315, fill=255)
+        if r0:
+            md.pieslice(((cx - r0) * S, (38 - r0) * S, (cx + r0) * S, (38 + r0) * S), 225, 315, fill=0)
+    img.paste(fg, (left, top), m.resize((130, 40), Image.LANCZOS))
 
 def capture(path):
     return Image.open(os.path.join(HERE, path)).convert('RGB')
