@@ -28,7 +28,7 @@ import { AmountKeypad } from '@/components/AmountKeypad';
 import { Text } from '@/components/Text';
 import { Avatar } from '@/components/Avatar';
 import { avatarImageSourceOn, GroupMember } from '@/lib/api';
-import { currentLocale } from '@/lib/i18n';
+import { fmtMinor } from '@/components/SplitEditor.helpers';
 import { initialsOf } from '@/lib/name';
 import { previewApportion } from '@/lib/split';
 import { splitBalance } from '@/lib/split-reconcile';
@@ -84,11 +84,6 @@ export interface SplitEditorProps {
   /** Restrict the method picker. Defaults to all three. When length === 1
    *  the picker is hidden. */
   allowedMethods?: SplitMethod[];
-}
-
-function fmtMinor(n: number, currency: string): string {
-  const abs = Math.abs(n);
-  return `${(abs / 100).toLocaleString(currentLocale(), { minimumFractionDigits: 0 })} ${currency}`;
 }
 
 function distributeInt(total: number, count: number): number[] {

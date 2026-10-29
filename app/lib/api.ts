@@ -1530,7 +1530,21 @@ export function getMyNet(homeCurrency: string) {
 // backward-compat shims routing through the default account.
 // ---------------------------------------------------------------------------
 
+// One client per server: screens call `apiFor(serverUrl)` in the render body
+// and list the result in hook dependencies, so it must be referentially
+// stable or `useCallback`/`useEffect` re-run on every render.
+const apiCache = new Map<string, ReturnType<typeof buildApi>>();
+
 export function apiFor(serverUrl: string) {
+  let api = apiCache.get(serverUrl);
+  if (!api) {
+    api = buildApi(serverUrl);
+    apiCache.set(serverUrl, api);
+  }
+  return api;
+}
+
+function buildApi(serverUrl: string) {
   return {
     // Identity
     getMe: () => requestOn<User>(serverUrl, '/api/me'),
