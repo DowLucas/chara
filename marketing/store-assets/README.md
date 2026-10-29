@@ -12,7 +12,7 @@ Design Resources licence doesn't allow redistributing it on its own.
 
     ./seed-screens.sh            # local backend: screenshot account + groups (see Captures)
     python3 prepare-captures.py  # captures/raw/*.png -> captures/*-ui.png (+ scan composite)
-    python3 build.py             # manifest.json -> pages-v2/apple (10 x 1320x2868) + pages-v2/play (8 x 1440x2560)
+    python3 build.py             # manifest.json -> pages-v2/apple (10 x 1320x2868) + apple-medium (10 x 1206x2622) + pages-v2/play (8 x 1440x2560)
     python3 qa.py                # sizes, RGB, file size, counts, caption + alt-text lint, Play tagline area
 
 `manifest.json` is the single source, in store order: per page an id, `bg`
@@ -76,8 +76,11 @@ The Design Resources licence allows the bezel in screenshots of iOS mock-ups
 only, unmodified. So: bezel never tilted, recoloured or drawn on; copy sits beside
 the phone, not on it; only iOS-targeted UI goes inside; do not reuse the bezel for
 Play or with Android UI. Captions must not name other platforms (2.3.10), other
-apps, prices, or unverifiable claims (2.3.7). 6.9" size 1320x2868 is the only
-required iPhone size; Apple scales the rest down. iPad set not needed (tablet
+apps, prices, or unverifiable claims (2.3.7). App Store Connect requires the
+"iPhone with Dynamic Island (medium display)" slot (1206x2622 or 1179x2556) and
+rejects 1320x2868 there: upload `apple-medium/` to that slot and `apple/` to
+the optional "large display" slot. `apple-medium` is `apple` downscaled (same
+aspect within 0.1%). iPad set not needed (tablet
 support is nominal).
 
 **Google Play (`pages-v2/play`)** — frameless rounded UI cards at 9:16

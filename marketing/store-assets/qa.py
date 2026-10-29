@@ -18,8 +18,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 meta = json.load(open(os.path.join(HERE, 'pages-v2', 'meta.json')))
 fails = []
 
-SIZES = {'apple': (1320, 2868), 'play': (1440, 2560)}
-COUNTS = {'apple': (1, 10), 'play': (4, 8)}
+SIZES = {'apple': (1320, 2868), 'apple_medium': (1206, 2622), 'play': (1440, 2560)}
+COUNTS = {'apple': (1, 10), 'apple_medium': (1, 10), 'play': (4, 8)}
 MAX_BYTES = 8 * 1024 * 1024
 BANNED_BOTH = [
     '#1', 'no. 1', 'number one', 'best', 'top', 'new', 'free', 'discount', 'sale', 'off',
@@ -30,6 +30,7 @@ BANNED = {
     'apple': BANNED_BOTH + ['android', 'google', 'play store', 'pixel', 'galaxy'],
     'play': BANNED_BOTH + ['iphone', 'ios', 'apple', 'app store', 'ipad'],
 }
+BANNED['apple_medium'] = BANNED['apple']
 
 def words(text):
     return re.sub(r'[^a-z0-9#★+. ]', ' ', text.lower())
@@ -69,5 +70,5 @@ if fails:
     print('QA FAIL:')
     [print(' -', f) for f in fails]
     sys.exit(1)
-print(f'QA OK: {counts["apple"]} apple + {counts["play"]} play pages; sizes exact, RGB, < 8 MB, '
+print(f'QA OK: {counts["apple"]} apple + {counts["apple_medium"]} apple-medium + {counts["play"]} play pages; sizes exact, RGB, < 8 MB, '
       'captions and alt text clean, taglines < 20%')

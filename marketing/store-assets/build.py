@@ -29,6 +29,7 @@ BEZEL_SCREEN = (75, 66, 1320, 2868)   # Apple's bezel PNG: screen cutout at this
 SCREEN_RADIUS = 170
 STATUS_H = 145   # fills the screen exactly with a 1080x2228 capture
 APPLE = (1320, 2868)
+APPLE_MEDIUM = (1206, 2622)   # App Store Connect's required "Dynamic Island (medium)" slot; same aspect, downscaled
 PLAY = (1440, 2560)   # 9:16; the 1080px capture sits on it unscaled
 
 # ---------- background ----------
@@ -219,6 +220,12 @@ def main():
                                              'alt': page['alt']})
             m[store] = os.path.relpath(os.path.join(out, name), HERE)
             m[f'{store}_index'] = idx
+            if store == 'apple':
+                med_out = os.path.join(HERE, 'pages-v2', 'apple-medium')
+                os.makedirs(med_out, exist_ok=True)
+                med = f'{idx:02d}-{page["id"]}-{APPLE_MEDIUM[0]}x{APPLE_MEDIUM[1]}.png'
+                im.resize(APPLE_MEDIUM, Image.LANCZOS).save(os.path.join(med_out, med), optimize=True)
+                m['apple_medium'] = os.path.relpath(os.path.join(med_out, med), HERE)
             if store == 'play':
                 m['play_text_fraction'] = area / (size[0] * size[1])
             print(f'{store} {name}')
