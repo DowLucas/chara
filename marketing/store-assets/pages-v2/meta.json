@@ -17,7 +17,7 @@
     "apple_index": 2,
     "play": "pages-v2/play/02-add-1440x2560.png",
     "play_index": 2,
-    "play_text_fraction": 0.056305609809027775
+    "play_text_fraction": 0.0562158203125
   },
   {
     "id": "scan",
@@ -27,7 +27,7 @@
     "apple_index": 3,
     "play": "pages-v2/play/03-scan-1440x2560.png",
     "play_index": 3,
-    "play_text_fraction": 0.06474310980902778
+    "play_text_fraction": 0.06454833984375
   },
   {
     "id": "split",
@@ -37,7 +37,7 @@
     "apple_index": 4,
     "play": "pages-v2/play/04-split-1440x2560.png",
     "play_index": 4,
-    "play_text_fraction": 0.03152560763888889
+    "play_text_fraction": 0.031866319444444444
   },
   {
     "id": "standings",
@@ -47,7 +47,7 @@
     "apple_index": 5,
     "play": "pages-v2/play/05-standings-1440x2560.png",
     "play_index": 5,
-    "play_text_fraction": 0.04838134765625
+    "play_text_fraction": 0.0482421875
   },
   {
     "id": "settle",
@@ -64,7 +64,7 @@
     "apple_index": 7,
     "play": "pages-v2/play/06-recurring-1440x2560.png",
     "play_index": 6,
-    "play_text_fraction": 0.0668994140625
+    "play_text_fraction": 0.06697292751736111
   },
   {
     "id": "summary",
@@ -74,7 +74,7 @@
     "apple_index": 8,
     "play": "pages-v2/play/07-summary-1440x2560.png",
     "play_index": 7,
-    "play_text_fraction": 0.0557861328125
+    "play_text_fraction": 0.055562337239583336
   },
   {
     "id": "nocatch",
@@ -91,6 +91,6 @@
     "apple_index": 10,
     "play": "pages-v2/play/08-settled-1440x2560.png",
     "play_index": 8,
-    "play_text_fraction": 0.04451470269097222
+    "play_text_fraction": 0.04463161892361111
   }
 ]

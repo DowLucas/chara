@@ -158,12 +158,12 @@ def draw_copy(canvas, page, scale, x0, with_logo):
 APPLE_PHONE_W = 1160   # screen ~1040px wide: the UI reads at close to native size
 PLAY_CARD_W = 1080    # the capture's native width: no resampling of the UI
 
-def apple_layout(canvas, page, top):
-    p = framed_phone(page['capture'], CFG['bezel'], APPLE_PHONE_W)
+def apple_layout(canvas, page, top, width):
+    p = framed_phone(page['capture'], CFG['bezel'], width)
     drop_shadow(canvas, p, ((APPLE[0] - p.width) // 2, top))
 
-def play_layout(canvas, page, top):
-    c = ui_card(page['capture'], PLAY_CARD_W)
+def play_layout(canvas, page, top, width):
+    c = ui_card(page['capture'], width)
     drop_shadow(canvas, c, ((PLAY[0] - c.width) // 2, top), blur=40, offset=(0, 28))
 
 # ---------- main ----------
@@ -183,12 +183,19 @@ def render(pages, store):
     tops = [bottom + gap for _, _, bottom in copy]
     tape = ribbon.Ribbon(tops, size)
     layout = apple_layout if store == 'apple' else play_layout
+    # One size for the whole set: the largest that keeps the lowest-starting
+    # phone whole, so no page cuts off the bottom of the UI (tab bar, buttons).
+    if store == 'apple':
+        max_w, (bw, bh) = APPLE_PHONE_W, Image.open(os.path.join(HERE, CFG['bezel'])).size
+    else:
+        max_w, (bw, bh) = PLAY_CARD_W, capture(pages[0]['capture']).size
+    width = min(max_w, (H - max(tops) - round(90 * scale)) * bw // bh)
     out = []
     for k, (page, (layer, area, _)) in enumerate(zip(pages, copy)):
         canvas = background(size, page['bg'])
         ribbon.compose(canvas, tape, k)
         canvas.alpha_composite(layer)
-        layout(canvas, page, tops[k])
+        layout(canvas, page, tops[k], width)
         out.append((canvas.convert('RGB'), area))
     return out
 
