@@ -1,0 +1,77 @@
+{
+  "bezel": "bezels/iphone-17-pro-max-silver.png",
+  "pages": [
+    {
+      "id": "hero",
+      "bg": "bone",
+      "headline": "Split bills.\n*Skip the math.*",
+      "alt": "Chara home screen: a net balance across three groups, one you owe, one you're owed and one settled.",
+      "capture": "captures/home-ui.png"
+    },
+    {
+      "id": "add",
+      "bg": "brick",
+      "headline": "Add an expense\n*in seconds.*",
+      "alt": "Adding a $64.35 expense for concert tickets, paid by you, in the Apartment 5B group.",
+      "capture": "captures/add-ui.png"
+    },
+    {
+      "id": "scan",
+      "bg": "brick",
+      "headline": "Snap the receipt.\n*Chara reads it.*",
+      "alt": "Pointing the camera at a restaurant receipt to fill in the expense from the photo.",
+      "capture": "captures/scan-ui.png"
+    },
+    {
+      "id": "split",
+      "bg": "ink",
+      "headline": "Split it\n*your way.*",
+      "alt": "Splitting $64.35 equally three ways, $21.45 each, with manual and percent options.",
+      "capture": "captures/split-ui.png"
+    },
+    {
+      "id": "standings",
+      "bg": "bone",
+      "headline": "No more\n*“who owes who?”*",
+      "alt": "Group standings in Apartment 5B: who is owed and who owes, per person.",
+      "capture": "captures/standings-ui.png"
+    },
+    {
+      "id": "settle",
+      "bg": "moss",
+      "play": false,
+      "headline": "Settle up with\n*one payment.*",
+      "alt": "Repayments: two payments settle the whole group, with a history of past payments.",
+      "capture": "captures/repayments-ui.png"
+    },
+    {
+      "id": "recurring",
+      "bg": "ink",
+      "headline": "Rent splits itself.\n*Every month.*",
+      "alt": "Recurring bills for rent, internet, cleaning and streaming, each split equally on schedule.",
+      "capture": "captures/recurring-ui.png"
+    },
+    {
+      "id": "summary",
+      "bg": "bone",
+      "headline": "See where\n*the money went.*",
+      "alt": "Monthly summary: your share of the month, active days and spending by category.",
+      "capture": "captures/summary-ui.png"
+    },
+    {
+      "id": "nocatch",
+      "bg": "moss",
+      "play": false,
+      "headline": "No ads.\nNo daily caps.\n*No catch.*",
+      "alt": "Profile and settings with nothing in the way: no ads, no upsell screens, no daily cap on expenses.",
+      "capture": "captures/profile-ui.png"
+    },
+    {
+      "id": "settled",
+      "bg": "brick",
+      "headline": "All square.\n*Call it even.*",
+      "alt": "Apartment 5B is settled up: the expense history stays and nothing is left to pay.",
+      "capture": "captures/settled-ui.png"
+    }
+  ]
+}

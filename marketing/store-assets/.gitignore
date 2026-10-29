@@ -1,0 +1,19 @@
+# Apple's bezel: its licence forbids redistributing it on its own (see README).
+bezels/
+
+# Earlier screenshot experiments and the AI ribbon art they used; local only.
+pages/
+pages-enhanced/
+pages-framed/
+backgrounds/*
+!backgrounds/scan-table.png
+captures/2026-09/
+compare-sheet*.jpg
+pages-1-3-compare.jpg
+build-pages.py
+build-framed.py
+compose-page.py
+qa-check.py
+pages.json
+
+__pycache__/

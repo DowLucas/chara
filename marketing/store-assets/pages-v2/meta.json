@@ -1,0 +1,106 @@
+[
+  {
+    "id": "hero",
+    "headline": "Split bills.\nSkip the math.",
+    "alt": "Chara home screen: a net balance across three groups, one you owe, one you're owed and one settled.",
+    "apple": "pages-v2/apple/01-hero-1320x2868.png",
+    "apple_index": 1,
+    "apple_medium": "pages-v2/apple-medium/01-hero-1206x2622.png",
+    "play": "pages-v2/play/01-hero-1440x2560.png",
+    "play_index": 1,
+    "play_text_fraction": 0.0546875
+  },
+  {
+    "id": "add",
+    "headline": "Add an expense\nin seconds.",
+    "alt": "Adding a $64.35 expense for concert tickets, paid by you, in the Apartment 5B group.",
+    "apple": "pages-v2/apple/02-add-1320x2868.png",
+    "apple_index": 2,
+    "apple_medium": "pages-v2/apple-medium/02-add-1206x2622.png",
+    "play": "pages-v2/play/02-add-1440x2560.png",
+    "play_index": 2,
+    "play_text_fraction": 0.0562158203125
+  },
+  {
+    "id": "scan",
+    "headline": "Snap the receipt.\nChara reads it.",
+    "alt": "Pointing the camera at a restaurant receipt to fill in the expense from the photo.",
+    "apple": "pages-v2/apple/03-scan-1320x2868.png",
+    "apple_index": 3,
+    "apple_medium": "pages-v2/apple-medium/03-scan-1206x2622.png",
+    "play": "pages-v2/play/03-scan-1440x2560.png",
+    "play_index": 3,
+    "play_text_fraction": 0.06454833984375
+  },
+  {
+    "id": "split",
+    "headline": "Split it\nyour way.",
+    "alt": "Splitting $64.35 equally three ways, $21.45 each, with manual and percent options.",
+    "apple": "pages-v2/apple/04-split-1320x2868.png",
+    "apple_index": 4,
+    "apple_medium": "pages-v2/apple-medium/04-split-1206x2622.png",
+    "play": "pages-v2/play/04-split-1440x2560.png",
+    "play_index": 4,
+    "play_text_fraction": 0.031866319444444444
+  },
+  {
+    "id": "standings",
+    "headline": "No more\n“who owes who?”",
+    "alt": "Group standings in Apartment 5B: who is owed and who owes, per person.",
+    "apple": "pages-v2/apple/05-standings-1320x2868.png",
+    "apple_index": 5,
+    "apple_medium": "pages-v2/apple-medium/05-standings-1206x2622.png",
+    "play": "pages-v2/play/05-standings-1440x2560.png",
+    "play_index": 5,
+    "play_text_fraction": 0.0482421875
+  },
+  {
+    "id": "settle",
+    "headline": "Settle up with\none payment.",
+    "alt": "Repayments: two payments settle the whole group, with a history of past payments.",
+    "apple": "pages-v2/apple/06-settle-1320x2868.png",
+    "apple_index": 6,
+    "apple_medium": "pages-v2/apple-medium/06-settle-1206x2622.png"
+  },
+  {
+    "id": "recurring",
+    "headline": "Rent splits itself.\nEvery month.",
+    "alt": "Recurring bills for rent, internet, cleaning and streaming, each split equally on schedule.",
+    "apple": "pages-v2/apple/07-recurring-1320x2868.png",
+    "apple_index": 7,
+    "apple_medium": "pages-v2/apple-medium/07-recurring-1206x2622.png",
+    "play": "pages-v2/play/06-recurring-1440x2560.png",
+    "play_index": 6,
+    "play_text_fraction": 0.06697292751736111
+  },
+  {
+    "id": "summary",
+    "headline": "See where\nthe money went.",
+    "alt": "Monthly summary: your share of the month, active days and spending by category.",
+    "apple": "pages-v2/apple/08-summary-1320x2868.png",
+    "apple_index": 8,
+    "apple_medium": "pages-v2/apple-medium/08-summary-1206x2622.png",
+    "play": "pages-v2/play/07-summary-1440x2560.png",
+    "play_index": 7,
+    "play_text_fraction": 0.055562337239583336
+  },
+  {
+    "id": "nocatch",
+    "headline": "No ads.\nNo daily caps.\nNo catch.",
+    "alt": "Profile and settings with nothing in the way: no ads, no upsell screens, no daily cap on expenses.",
+    "apple": "pages-v2/apple/09-nocatch-1320x2868.png",
+    "apple_index": 9,
+    "apple_medium": "pages-v2/apple-medium/09-nocatch-1206x2622.png"
+  },
+  {
+    "id": "settled",
+    "headline": "All square.\nCall it even.",
+    "alt": "Apartment 5B is settled up: the expense history stays and nothing is left to pay.",
+    "apple": "pages-v2/apple/10-settled-1320x2868.png",
+    "apple_index": 10,
+    "apple_medium": "pages-v2/apple-medium/10-settled-1206x2622.png",
+    "play": "pages-v2/play/08-settled-1440x2560.png",
+    "play_index": 8,
+    "play_text_fraction": 0.04463161892361111
+  }
+]
