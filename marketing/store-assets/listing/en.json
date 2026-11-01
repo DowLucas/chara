@@ -1,0 +1,50 @@
+{
+  "name": "Chara: Split Bills & Expenses",
+  "subtitle": "Scan receipts, settle up fast",
+  "keywords": "split,bills,expenses,roommates,group,trip,shared,iou,settle,owe,tab,budget,friends",
+  "promotionalText": "",
+  "shortDescription": "Split bills with friends, track balances, and settle up. Private, open-source.",
+  "description": "Split expenses with roommates, partners and friends without the awkward math. Chara is an open-source bill splitter with no ads and no subscription.\n\nAdd an expense, pick who's in, and Chara does the math. See who owes who at a glance, and settle up when you're ready.\n\nWHAT YOU CAN DO\n\n• Create groups for roommates, trips, couples or one-off events\n• Split equally, by exact amounts or by percentage\n• Snap a receipt and Chara fills in the total and line items\n• Say it out loud: \"I paid 40 for dinner, split with Sam\" becomes an expense\n• Set up recurring bills like rent and subscriptions once, and they add themselves every month\n• Get a monthly summary of where the money went\n• Keep balances in each currency, never silently converted\n• Settle up with a tap and keep a clean history\n• Get notified when someone adds an expense or pays you back\n\nPRIVATE BY DESIGN\n\nNo ads, no ad SDKs, and your data is never sold. Your group's expenses are visible to your group and nobody else. Chara collects anonymous usage statistics to improve the app, with no personal data or expense content, and you can switch them off in Settings.\n\nSELF-HOST IT\n\nChara is open source. Run it on your own server if you like: the app talks to your server exactly the way it talks to ours. Keep accounts on several servers at once and see everything in one place.\n\nFREE, FOR REAL\n\nNo subscription and no premium tier. Receipt scanning and voice entry include a monthly allowance on Chara Cloud, and are unlimited on your own server.\n\nAvailable in English, Svenska, Deutsch, Français, Español, Italiano, Nederlands, Dansk, Norsk, Suomi, Polski, Português, 日本語, 简体中文 and العربية.",
+  "pages": {
+    "hero": {
+      "headline": "Split bills.\n*Skip the math.*",
+      "alt": "Chara home screen: a net balance across three groups, one you owe, one you're owed and one settled."
+    },
+    "add": {
+      "headline": "Add an expense\n*in seconds.*",
+      "alt": "Adding a $64.35 expense for concert tickets, paid by you, in the Apartment 5B group."
+    },
+    "scan": {
+      "headline": "Snap the receipt.\n*Chara reads it.*",
+      "alt": "Pointing the camera at a restaurant receipt to fill in the expense from the photo."
+    },
+    "split": {
+      "headline": "Split it\n*your way.*",
+      "alt": "Splitting $64.35 equally three ways, $21.45 each, with manual and percent options."
+    },
+    "standings": {
+      "headline": "No more\n*“who owes who?”*",
+      "alt": "Group standings in Apartment 5B: who is owed and who owes, per person."
+    },
+    "settle": {
+      "headline": "Settle up with\n*one payment.*",
+      "alt": "Repayments: two payments settle the whole group, with a history of past payments."
+    },
+    "recurring": {
+      "headline": "Rent splits itself.\n*Every month.*",
+      "alt": "Recurring bills for rent, internet, cleaning and streaming, each split equally on schedule."
+    },
+    "summary": {
+      "headline": "See where\n*the money went.*",
+      "alt": "Monthly summary: your share of the month, active days and spending by category."
+    },
+    "nocatch": {
+      "headline": "No ads.\nNo daily caps.\n*No catch.*",
+      "alt": "Profile and settings with nothing in the way: no ads, no upsell screens, no daily cap on expenses."
+    },
+    "settled": {
+      "headline": "All square.\n*Call it even.*",
+      "alt": "Apartment 5B is settled up: the expense history stays and nothing is left to pay."
+    }
+  }
+}

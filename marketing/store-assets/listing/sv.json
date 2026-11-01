@@ -1,0 +1,50 @@
+{
+  "name": "Chara: Dela räkningar enkelt",
+  "subtitle": "Skanna kvitton, gör upp snabbt",
+  "keywords": "kostnader,räkningar,kvitto,sambo,grupp,resa,skuld,hushåll,gemensam,budget,vänner,kompisar,hyra",
+  "promotionalText": "",
+  "shortDescription": "Dela räkningar, se vem som är skyldig vad och gör upp. Privat och öppen källkod.",
+  "description": "Dela utgifter med sambor, partner och vänner utan krånglig huvudräkning. Chara är en app för att dela utgifter, med öppen källkod, utan reklam och utan prenumeration.\n\nLägg till en utgift, välj vilka som är med, så räknar Chara ut resten. Se direkt vem som är skyldig vem, och gör upp när ni är redo.\n\nDET HÄR KAN DU GÖRA\n\n• Skapa grupper för sambor, resor, par eller enstaka tillfällen\n• Dela lika, med exakta belopp eller i procent\n• Fota kvittot så fyller Chara i summan och varje rad\n• Säg bara ”Jag betalade 400 för middagen, dela med Sam” så blir det en utgift\n• Lägg in hyra, prenumerationer och andra återkommande räkningar en gång, så läggs de till automatiskt varje månad\n• Få en månadssammanfattning av vart pengarna tog vägen\n• Saldon hålls i varje valuta och växlas aldrig i smyg\n• Gör upp med ett tryck och behåll en tydlig historik\n• Få en notis när någon lägger till en utgift eller betalar tillbaka\n\nPRIVAT FRÅN GRUNDEN\n\nIngen reklam, inga reklam-SDK:er och din data säljs aldrig. Gruppens utgifter syns bara för gruppen, ingen annan. Chara samlar in anonym användningsstatistik för att förbättra appen, utan personuppgifter eller detaljer om dina utgifter, och du kan stänga av den i Inställningar.\n\nKÖR DEN SJÄLV\n\nChara har öppen källkod. Kör den på din egen server om du vill: appen pratar med din server precis som den pratar med vår. Ha konton på flera servrar samtidigt och se allt på ett ställe.\n\nGRATIS PÅ RIKTIGT\n\nIngen prenumeration och ingen premiumnivå. Kvittoskanning och röstinmatning har en månadskvot på Chara Cloud och är obegränsade på din egen server.\n\nFinns på English, Svenska, Deutsch, Français, Español, Italiano, Nederlands, Dansk, Norsk, Suomi, Polski, Português, 日本語, 简体中文 och العربية.",
+  "pages": {
+    "hero": {
+      "headline": "Dela räkningar.\n*Slipp räknandet.*",
+      "alt": "Charas startskärm: ett nettosaldo över tre grupper, en där du är skyldig, en där du har pengar att få och en som är uppgjord."
+    },
+    "add": {
+      "headline": "Lägg till en utgift\n*på några sekunder.*",
+      "alt": "En utgift på 64,35 $ för konsertbiljetter, betald av dig, läggs till i gruppen Apartment 5B."
+    },
+    "scan": {
+      "headline": "Fota kvittot.\n*Chara läser det.*",
+      "alt": "Kameran riktas mot ett restaurangkvitto för att fylla i utgiften från bilden."
+    },
+    "split": {
+      "headline": "Dela på\n*ditt sätt.*",
+      "alt": "64,35 $ delas lika på tre, 21,45 $ var, med val för exakta belopp och procent."
+    },
+    "standings": {
+      "headline": "Slut på\n*”vem är skyldig vem?”*",
+      "alt": "Ställningen i Apartment 5B: vem som har pengar att få och vem som är skyldig, per person."
+    },
+    "settle": {
+      "headline": "Gör upp med\n*en enda betalning.*",
+      "alt": "Återbetalningar: två betalningar gör upp hela gruppen, med historik över tidigare betalningar."
+    },
+    "recurring": {
+      "headline": "Hyran delar sig själv.\n*Varje månad.*",
+      "alt": "Återkommande räkningar för hyra, internet, städning och streaming, var och en delad lika enligt schema."
+    },
+    "summary": {
+      "headline": "Se vart\n*pengarna tog vägen.*",
+      "alt": "Månadssammanfattning: din andel av månaden, aktiva dagar och utgifter per kategori."
+    },
+    "nocatch": {
+      "headline": "Ingen reklam.\nInga dagstak.\n*Ingen hake.*",
+      "alt": "Profil och inställningar utan något i vägen: ingen reklam, inga merförsäljningsskärmar, inget dagstak för utgifter."
+    },
+    "settled": {
+      "headline": "Allt är klart.\n*Vi är kvitt.*",
+      "alt": "Apartment 5B är uppgjord: utgiftshistoriken finns kvar och inget återstår att betala."
+    }
+  }
+}

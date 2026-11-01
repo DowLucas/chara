@@ -1,0 +1,50 @@
+{
+  "name": "Chara: Del regninger nemt",
+  "subtitle": "Scan kvitteringer og gør op",
+  "keywords": "udgifter,regning,bofælle,kollektiv,fælles,afregning,gæld,rejse,ferie,budget,venner,husholdning",
+  "promotionalText": "",
+  "shortDescription": "Del regninger med venner, hold styr på saldi og gør op. Privat og open source.",
+  "description": "Del udgifter med bofæller, kæresten og vennerne uden besværlig hovedregning. Chara er en open source-app til at dele regninger, uden reklamer og uden abonnement.\n\nTilføj en udgift, vælg hvem der er med, så regner Chara resten ud. Se hvem der skylder hvem med det samme, og gør op, når I er klar.\n\nDET KAN DU\n\n• Opret grupper til bofæller, rejser, par eller enkeltstående arrangementer\n• Del ligeligt, med præcise beløb eller i procent\n• Tag et billede af kvitteringen, så udfylder Chara beløbet og de enkelte varer\n• Sig det højt: »Jeg betalte 400 for middagen, delt med Sam« bliver til en udgift\n• Opret faste udgifter som husleje og abonnementer én gang, så lægger de sig selv ind hver måned\n• Få en månedsoversigt over, hvor pengene blev af\n• Hold saldi i hver valuta for sig – de bliver aldrig omregnet i det skjulte\n• Gør op med et tryk og bevar en overskuelig historik\n• Få besked, når nogen tilføjer en udgift eller betaler dig tilbage\n\nPRIVAT FRA BUNDEN\n\nIngen reklamer, ingen reklame-SDK’er, og dine data bliver aldrig solgt. Gruppens udgifter kan kun ses af gruppen. Chara indsamler anonym brugsstatistik for at forbedre appen, uden personoplysninger eller indhold fra dine udgifter, og du kan slå den fra under Indstillinger.\n\nHOST DEN SELV\n\nChara har åben kildekode. Kør den på din egen server, hvis du vil: appen taler med din server præcis som med vores. Hav konti på flere servere på én gang, og se det hele samlet ét sted.\n\nGRATIS – HELT ÆRLIGT\n\nIntet abonnement og ingen premiumversion. Scanning af kvitteringer og stemmeindtastning har en månedlig kvote på Chara Cloud og er ubegrænsede på din egen server.\n\nFås på English, Svenska, Deutsch, Français, Español, Italiano, Nederlands, Dansk, Norsk, Suomi, Polski, Português, 日本語, 简体中文 og العربية.",
+  "pages": {
+    "hero": {
+      "headline": "Del regningen.\n*Drop hovedregningen.*",
+      "alt": "Charas startskærm: en samlet saldo på tværs af tre grupper, én hvor du skylder, én hvor du har penge til gode og én der er gjort op."
+    },
+    "add": {
+      "headline": "Tilføj en udgift\n*på få sekunder.*",
+      "alt": "En udgift på 64,35 $ til koncertbilletter, betalt af dig, bliver tilføjet i gruppen Apartment 5B."
+    },
+    "scan": {
+      "headline": "Scan kvitteringen.\n*Chara læser den.*",
+      "alt": "Kameraet peger på en kvittering fra en restaurant for at udfylde udgiften ud fra billedet."
+    },
+    "split": {
+      "headline": "Del det\n*på din måde.*",
+      "alt": "64,35 $ delt ligeligt på tre, 21,45 $ hver, med mulighed for manuelle beløb og procent."
+    },
+    "standings": {
+      "headline": "Slut med\n*»hvem skylder hvem?«*",
+      "alt": "Saldi i Apartment 5B: hvem der har penge til gode, og hvem der skylder, per person."
+    },
+    "settle": {
+      "headline": "Gør op med\n*én betaling.*",
+      "alt": "Tilbagebetalinger: to betalinger gør hele gruppen kvit, med historik over tidligere betalinger."
+    },
+    "recurring": {
+      "headline": "Lejen deler sig selv.\n*Hver måned.*",
+      "alt": "Faste udgifter til husleje, internet, rengøring og streaming, hver delt ligeligt efter plan."
+    },
+    "summary": {
+      "headline": "Se, hvor\n*pengene blev af.*",
+      "alt": "Månedsoversigt: din andel af måneden, aktive dage og forbrug fordelt på kategorier."
+    },
+    "nocatch": {
+      "headline": "Ingen reklamer.\nIngen dagsgrænser.\n*Ingen hage.*",
+      "alt": "Profil og indstillinger uden noget i vejen: ingen reklamer, ingen mersalgsskærme, ingen daglig grænse for udgifter."
+    },
+    "settled": {
+      "headline": "Alt er gjort op.\n*Vi er kvit.*",
+      "alt": "Apartment 5B er gjort op: udgiftshistorikken bliver, og der er intet tilbage at betale."
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "name": "Chara: Ausgaben fair teilen",
+  "subtitle": "Belege scannen, fix abrechnen",
+  "keywords": "rechnung,kosten,abrechnung,wg,mitbewohner,gruppe,reise,urlaub,schulden,geld,splitten,freunde,paar",
+  "promotionalText": "",
+  "shortDescription": "Ausgaben mit Freunden teilen, Salden im Blick, ausgleichen. Privat, Open Source.",
+  "description": "Teil Ausgaben in der WG, mit deinem Partner oder unter Freunden – ohne lästiges Kopfrechnen. Chara ist eine Open-Source-App zum Kostenteilen, ohne Werbung und ohne Abo.\n\nAusgabe eintragen, auswählen, wer dabei ist, und Chara rechnet den Rest aus. Du siehst auf einen Blick, wer wem was schuldet, und gleichst aus, wann es dir passt.\n\nWAS CHARA KANN\n\n• Gruppen für WG, Reisen, Paare oder einmalige Anlässe anlegen\n• Gleichmäßig, nach genauen Beträgen oder prozentual aufteilen\n• Beleg fotografieren, und Chara trägt Summe und Positionen ein\n• Einfach sagen: „Ich hab 40 fürs Abendessen bezahlt, geteilt mit Sam“ – und schon ist es eine Ausgabe\n• Wiederkehrende Rechnungen wie Miete und Abos einmal anlegen – sie tragen sich jeden Monat selbst ein\n• In der Monatsübersicht sehen, wohin das Geld geflossen ist\n• Salden in jeder Währung getrennt führen – nichts wird heimlich umgerechnet\n• Mit einem Tippen ausgleichen – der Verlauf bleibt übersichtlich\n• Benachrichtigt werden, wenn jemand eine Ausgabe einträgt oder dir Geld zurückzahlt\n\nPRIVAT VON GRUND AUF\n\nKeine Werbung, keine Werbe-SDKs, und deine Daten werden nie verkauft. Die Ausgaben deiner Gruppe sieht nur deine Gruppe. Chara erfasst anonyme Nutzungsstatistiken, um die App zu verbessern – ohne persönliche Daten oder Inhalte deiner Ausgaben –, und du kannst sie in den Einstellungen abschalten.\n\nSELBST HOSTEN\n\nChara ist Open Source. Betreib Chara auf deinem eigenen Server, wenn du willst: Die App spricht mit deinem Server genauso wie mit unserem. Nutze Konten auf mehreren Servern gleichzeitig und sieh alles an einem Ort.\n\nWIRKLICH KOSTENLOS\n\nKein Abo und keine Premium-Stufe. Belegscan und Spracheingabe haben in der Chara Cloud ein monatliches Kontingent und sind auf deinem eigenen Server unbegrenzt.\n\nVerfügbar auf English, Svenska, Deutsch, Français, Español, Italiano, Nederlands, Dansk, Norsk, Suomi, Polski, Português, 日本語, 简体中文 und العربية.",
+  "pages": {
+    "hero": {
+      "headline": "Rechnungen teilen.\n*Ohne Kopfrechnen.*",
+      "alt": "Chara-Startbildschirm: ein Gesamtsaldo über drei Gruppen, eine mit Schulden, eine mit Guthaben und eine ausgeglichen."
+    },
+    "add": {
+      "headline": "Ausgabe eintragen\n*in Sekunden.*",
+      "alt": "Eine Ausgabe über 64,35 $ für Konzertkarten, von dir bezahlt, wird in der Gruppe Apartment 5B eingetragen."
+    },
+    "scan": {
+      "headline": "Beleg knipsen.\n*Chara liest ihn.*",
+      "alt": "Die Kamera ist auf einen Restaurantbeleg gerichtet, um die Ausgabe aus dem Foto auszufüllen."
+    },
+    "split": {
+      "headline": "Aufteilen,\n*wie du willst.*",
+      "alt": "64,35 $ gleichmäßig auf drei Personen aufgeteilt, 21,45 $ pro Person, mit Optionen für Beträge und Prozent."
+    },
+    "standings": {
+      "headline": "Schluss mit\n*„Wer schuldet wem?“*",
+      "alt": "Salden der Gruppe Apartment 5B: wer Geld bekommt und wer etwas schuldet, pro Person."
+    },
+    "settle": {
+      "headline": "Ausgleichen mit\n*einer Zahlung.*",
+      "alt": "Rückzahlungen: Zwei Zahlungen gleichen die ganze Gruppe aus, mit Verlauf früherer Zahlungen."
+    },
+    "recurring": {
+      "headline": "Die Miete teilt sich.\n*Jeden Monat.*",
+      "alt": "Wiederkehrende Rechnungen für Miete, Internet, Putzen und Streaming, jeweils planmäßig gleich aufgeteilt."
+    },
+    "summary": {
+      "headline": "Sieh, wohin\n*dein Geld fließt.*",
+      "alt": "Monatsübersicht: dein Anteil am Monat, aktive Tage und Ausgaben nach Kategorie."
+    },
+    "nocatch": {
+      "headline": "Keine Werbung.\nKein Tageslimit.\n*Kein Haken.*",
+      "alt": "Profil und Einstellungen ohne Ablenkung: keine Werbung, keine Upgrade-Hinweise, kein Tageslimit für Ausgaben."
+    },
+    "settled": {
+      "headline": "Alles beglichen.\n*Wir sind quitt.*",
+      "alt": "Apartment 5B ist ausgeglichen: Der Ausgabenverlauf bleibt erhalten, und es ist nichts mehr offen."
+    }
+  }
+}

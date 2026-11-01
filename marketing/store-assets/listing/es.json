@@ -1,0 +1,50 @@
+{
+  "name": "Chara: Divide gastos y cuentas",
+  "subtitle": "Escanea tickets y salda deudas",
+  "keywords": "compartidos,piso,compañeros,viaje,grupo,bote,medias,repartir,dividir,presupuesto,amigos,pareja,deuda",
+  "promotionalText": "",
+  "shortDescription": "Divide gastos, mira quién debe a quién y salda. Privada y de código abierto.",
+  "description": "Divide gastos con tus compañeros de piso, tu pareja y tus amigos sin líos de cuentas. Chara es una app de código abierto para dividir gastos, sin anuncios y sin suscripción.\n\nAñade un gasto, elige quién participa y Chara hace las cuentas. Mira de un vistazo quién debe a quién y salda cuando quieras.\n\nLO QUE PUEDES HACER\n\n• Crea grupos para el piso, viajes, parejas o planes puntuales\n• Divide a partes iguales, por importes exactos o por porcentaje\n• Hazle una foto al ticket y Chara rellena el total y cada concepto\n• Dilo en voz alta: «Pagué 40 por la cena, a medias con Sam» se convierte en un gasto\n• Configura una vez los gastos fijos como el alquiler y las suscripciones, y se añaden solos cada mes\n• Recibe cada mes un resumen para ver en qué se ha ido el dinero\n• Mantén los saldos en cada moneda, sin conversiones a escondidas\n• Salda cuentas con un toque y ten el historial siempre en orden\n• Recibe un aviso cuando alguien añade un gasto o te devuelve el dinero\n\nPRIVADA DESDE EL DISEÑO\n\nSin anuncios, sin SDK publicitarios y tus datos nunca se venden. Los gastos de tu grupo solo los ve tu grupo. Chara recoge estadísticas de uso anónimas para mejorar la app, sin datos personales ni contenido de los gastos, y puedes desactivarlas en Ajustes.\n\nALÓJALA TÚ MISMO\n\nChara es de código abierto. Ejecútala en tu propio servidor si quieres: la app se comunica con tu servidor exactamente igual que con el nuestro. Ten cuentas en varios servidores a la vez y míralo todo en un solo sitio.\n\nGRATIS DE VERDAD\n\nSin suscripción y sin versión premium. El escaneo de tickets y la entrada por voz incluyen un cupo mensual en Chara Cloud y son ilimitados en tu propio servidor.\n\nDisponible en English, Svenska, Deutsch, Français, Español, Italiano, Nederlands, Dansk, Norsk, Suomi, Polski, Português, 日本語, 简体中文 y العربية.",
+  "pages": {
+    "hero": {
+      "headline": "Divide los gastos.\n*Sin hacer cuentas.*",
+      "alt": "Pantalla de inicio de Chara: un saldo neto de tres grupos, uno en el que debes, otro en el que te deben y otro saldado."
+    },
+    "add": {
+      "headline": "Añade un gasto\n*en segundos.*",
+      "alt": "Añadiendo un gasto de 64,35 $ en entradas de concierto, pagado por ti, en el grupo Apartment 5B."
+    },
+    "scan": {
+      "headline": "Fotografía el ticket.\n*Chara lo lee.*",
+      "alt": "La cámara enfoca el ticket de un restaurante para rellenar el gasto a partir de la foto."
+    },
+    "split": {
+      "headline": "Divídelo\n*a tu manera.*",
+      "alt": "64,35 $ divididos a partes iguales entre tres, 21,45 $ cada uno, con opciones de importe manual y porcentaje."
+    },
+    "standings": {
+      "headline": "Se acabó el\n*«¿quién debe a quién?»*",
+      "alt": "Balances del grupo Apartment 5B: a quién le deben y quién debe, persona por persona."
+    },
+    "settle": {
+      "headline": "Salda cuentas con\n*un solo pago.*",
+      "alt": "Pagos: dos pagos saldan todo el grupo, con el historial de pagos anteriores."
+    },
+    "recurring": {
+      "headline": "El alquiler se reparte\n*solo, cada mes.*",
+      "alt": "Facturas recurrentes de alquiler, internet, limpieza y streaming, cada uno dividido a partes iguales según su calendario."
+    },
+    "summary": {
+      "headline": "Mira en qué\n*se te va el dinero.*",
+      "alt": "Resumen mensual: tu parte del mes, días activos y gasto por categoría."
+    },
+    "nocatch": {
+      "headline": "Sin anuncios.\nSin límites diarios.\n*Sin trampa ni cartón.*",
+      "alt": "Perfil y ajustes sin nada que estorbe: sin anuncios, sin pantallas para venderte nada y sin límite diario de gastos."
+    },
+    "settled": {
+      "headline": "Todo saldado.\n*Estamos en paz.*",
+      "alt": "Apartment 5B está saldado: el historial de gastos se conserva y no queda nada por pagar."
+    }
+  }
+}

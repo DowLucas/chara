@@ -1,0 +1,50 @@
+{
+  "name": "Chara: Kosten eerlijk delen",
+  "subtitle": "Scan bonnetjes, reken snel af",
+  "keywords": "rekening,verdelen,uitgaven,huisgenoten,groep,vakantie,reis,schulden,geld,terugbetalen,vrienden,bon",
+  "promotionalText": "",
+  "shortDescription": "Deel kosten met vrienden, zie wie moet betalen en reken af. Privé, open source.",
+  "description": "Deel kosten met huisgenoten, je partner en vrienden zonder gedoe met rekensommen. Chara is een open-source app om kosten te delen, zonder reclame en zonder abonnement.\n\nVoeg een uitgave toe, kies wie meedoet en Chara rekent het uit. Zie in één oogopslag wie wie wat schuldig is, en reken af wanneer het jullie uitkomt.\n\nWAT JE ERMEE KUNT\n\n• Maak groepen voor huisgenoten, reizen, stellen of losse gelegenheden\n• Verdeel gelijk, per exact bedrag of in procenten\n• Maak een foto van de bon en Chara vult het totaal en alle items in\n• Zeg het hardop: ‘Ik heb 40 betaald voor het eten, delen met Sam’ wordt een uitgave\n• Stel vaste lasten zoals huur en abonnementen één keer in, dan komen ze er elke maand vanzelf bij\n• Zie in je maandoverzicht waar je geld is gebleven\n• Saldo’s blijven in hun eigen valuta en worden nooit stiekem omgerekend\n• Reken af met één tik, alle betalingen blijven netjes bewaard\n• Ontvang een melding als iemand een uitgave toevoegt of je terugbetaalt\n\nPRIVACY VOOROP\n\nGeen reclame, geen advertentie-SDK’s en je gegevens worden nooit verkocht. De uitgaven van je groep zijn alleen zichtbaar voor je groep. Chara verzamelt anonieme gebruiksstatistieken om de app te verbeteren, zonder persoonsgegevens of inhoud van uitgaven, en je kunt ze uitzetten in Instellingen.\n\nZELF HOSTEN\n\nChara is open source. Draai het op je eigen server als je wilt: de app werkt met jouw server precies zoals met de onze. Gebruik accounts op meerdere servers tegelijk en zie alles op één plek.\n\nECHT GRATIS\n\nGeen abonnement en geen premiumversie. Bonnetjes scannen en uitgaven inspreken: op Chara Cloud zit er elke maand een vast aantal in, op je eigen server is het onbeperkt.\n\nBeschikbaar in English, Svenska, Deutsch, Français, Español, Italiano, Nederlands, Dansk, Norsk, Suomi, Polski, Português, 日本語, 简体中文 en العربية.",
+  "pages": {
+    "hero": {
+      "headline": "Kosten delen.\n*Zonder rekenwerk.*",
+      "alt": "Startscherm van Chara: een nettosaldo over drie groepen, één waar je moet betalen, één waar je geld krijgt en één die afgerekend is."
+    },
+    "add": {
+      "headline": "Uitgave toevoegen\n*in een paar tellen.*",
+      "alt": "Een uitgave van $ 64,35 voor concertkaartjes, door jou betaald, wordt toegevoegd in de groep Apartment 5B."
+    },
+    "scan": {
+      "headline": "Maak een foto.\n*Chara leest de bon.*",
+      "alt": "De camera is gericht op een restaurantbon om de uitgave vanaf de foto in te vullen."
+    },
+    "split": {
+      "headline": "Verdeel het\n*zoals jij wilt.*",
+      "alt": "$ 64,35 gelijk verdeeld over drie, $ 21,45 per persoon, met opties voor bedragen en procenten."
+    },
+    "standings": {
+      "headline": "Nooit meer\n*“wie betaalt wat?”*",
+      "alt": "Stand van de groep Apartment 5B: wie geld krijgt en wie moet betalen, per persoon."
+    },
+    "settle": {
+      "headline": "Reken af met\n*één betaling.*",
+      "alt": "Terugbetalingen: met twee betalingen is de hele groep afgerekend, met een overzicht van eerdere betalingen."
+    },
+    "recurring": {
+      "headline": "Huur? Gaat vanzelf.\n*Elke maand.*",
+      "alt": "Terugkerende rekeningen voor huur, internet, schoonmaak en streaming, elk volgens schema gelijk verdeeld."
+    },
+    "summary": {
+      "headline": "Zie waar\n*je geld is gebleven.*",
+      "alt": "Maandoverzicht: jouw deel van de maand, actieve dagen en uitgaven per categorie."
+    },
+    "nocatch": {
+      "headline": "Geen reclame.\nGeen daglimiet.\n*Geen addertje.*",
+      "alt": "Profiel en instellingen zonder gedoe: geen reclame, geen verkooppraatjes, geen daglimiet voor uitgaven."
+    },
+    "settled": {
+      "headline": "Alles afgerekend.\n*We staan quitte.*",
+      "alt": "Apartment 5B is afgerekend: alle uitgaven blijven bewaard en er staat niets meer open."
+    }
+  }
+}
