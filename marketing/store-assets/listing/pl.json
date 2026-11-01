@@ -1,0 +1,50 @@
+{
+  "name": "Chara: Dziel rachunki i koszty",
+  "subtitle": "Skanuj paragony, rozliczaj się",
+  "keywords": "podział,wydatki,współlokatorzy,grupa,wyjazd,wakacje,dług,rozliczenie,znajomi,długi,mieszkanie",
+  "promotionalText": "",
+  "shortDescription": "Dziel rachunki ze znajomymi, śledź salda, rozliczaj się. Prywatnie, open source.",
+  "description": "Dziel wydatki ze współlokatorami, partnerem i znajomymi bez kłopotliwego liczenia. Chara to aplikacja open source do dzielenia rachunków, bez reklam i bez subskrypcji.\n\nDodaj wydatek, wybierz, kogo dotyczy, a Chara wszystko policzy. Od razu widzisz, kto komu ile jest winien, i rozliczasz się, kiedy chcesz.\n\nCO MOŻESZ ZROBIĆ\n\n• Twórz grupy dla współlokatorów, na wyjazdy, dla par albo na jednorazowe okazje\n• Dziel po równo, według dokładnych kwot albo procentowo\n• Zrób zdjęcie paragonu, a Chara uzupełni sumę i pozycje\n• Powiedz na głos: „Zapłaciłem 40 za kolację, podziel z Samem”, a Chara doda wydatek\n• Ustaw raz cykliczne rachunki, takie jak czynsz i subskrypcje, a co miesiąc dodadzą się same\n• Miesięczne podsumowanie pokaże ci, na co poszły pieniądze\n• Salda w każdej walucie osobno, bez ukrytego przeliczania\n• Rozliczaj się jednym dotknięciem i miej porządek w historii\n• Dostawaj powiadomienie, gdy ktoś doda wydatek albo odda ci pieniądze\n\nPRYWATNOŚĆ OD PODSTAW\n\nBez reklam, bez reklamowych SDK, a twoje dane nigdy nie są sprzedawane. Wydatki twojej grupy widzi tylko twoja grupa i nikt więcej. Chara zbiera anonimowe statystyki użytkowania, by ulepszać aplikację, bez danych osobowych i treści wydatków, a w Ustawieniach możesz to wyłączyć.\n\nHOSTUJ U SIEBIE\n\nChara jest open source. Jeśli chcesz, uruchom ją na własnym serwerze: aplikacja łączy się z twoim serwerem dokładnie tak samo jak z naszym. Możesz mieć konta na kilku serwerach naraz i widzieć wszystko w jednym miejscu.\n\nNAPRAWDĘ ZA DARMO\n\nBez subskrypcji i bez wersji premium. Skanowanie paragonów i wprowadzanie głosowe mają miesięczny limit w Chara Cloud, a na twoim własnym serwerze są bez limitu.\n\nDostępna w językach: English, Svenska, Deutsch, Français, Español, Italiano, Nederlands, Dansk, Norsk, Suomi, Polski, Português, 日本語, 简体中文 i العربية.",
+  "pages": {
+    "hero": {
+      "headline": "Dziel rachunki.\n*Bez liczenia.*",
+      "alt": "Ekran główny Chary: saldo netto z trzech grup, w jednej jesteś winien, w drugiej to tobie są winni, trzecia jest rozliczona."
+    },
+    "add": {
+      "headline": "Dodaj wydatek\n*w kilka sekund.*",
+      "alt": "Dodawanie wydatku 64,35 $ na bilety na koncert, zapłaconego przez ciebie, w grupie Apartment 5B."
+    },
+    "scan": {
+      "headline": "Sfotografuj paragon.\n*Chara go odczyta.*",
+      "alt": "Aparat skierowany na paragon z restauracji, by uzupełnić wydatek na podstawie zdjęcia."
+    },
+    "split": {
+      "headline": "Dziel tak,\n*jak chcesz.*",
+      "alt": "64,35 $ podzielone po równo na trzy osoby, po 21,45 $, z opcjami kwot i procentów."
+    },
+    "standings": {
+      "headline": "Koniec z\n*„kto komu ile?”*",
+      "alt": "Salda w grupie Apartment 5B: komu są winni i kto jest winien, osoba po osobie."
+    },
+    "settle": {
+      "headline": "Rozlicz się\n*jedną płatnością.*",
+      "alt": "Spłaty: dwie płatności rozliczają całą grupę, z historią wcześniejszych płatności."
+    },
+    "recurring": {
+      "headline": "Czynsz dzieli się sam.\n*Co miesiąc.*",
+      "alt": "Cykliczne rachunki za czynsz, internet, sprzątanie i streaming, każdy dzielony po równo według harmonogramu."
+    },
+    "summary": {
+      "headline": "Zobacz, na co\n*poszły pieniądze.*",
+      "alt": "Podsumowanie miesiąca: twój udział w miesiącu, aktywne dni i wydatki według kategorii."
+    },
+    "nocatch": {
+      "headline": "Bez reklam.\nBez dziennych limitów.\n*Bez haczyka.*",
+      "alt": "Profil i ustawienia bez przeszkód: bez reklam, bez namawiania do płatnej wersji, bez dziennego limitu wydatków."
+    },
+    "settled": {
+      "headline": "Wszystko rozliczone.\n*Jesteśmy kwita.*",
+      "alt": "Grupa Apartment 5B jest rozliczona: historia wydatków zostaje, a do zapłaty nie ma nic."
+    }
+  }
+}

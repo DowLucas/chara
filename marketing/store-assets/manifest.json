@@ -1,0 +1,57 @@
+{
+  "bezel": "bezels/iphone-17-pro-max-silver.png",
+  "pages": [
+    {
+      "id": "hero",
+      "bg": "bone",
+      "capture": "captures/home-ui.png"
+    },
+    {
+      "id": "add",
+      "bg": "brick",
+      "capture": "captures/add-ui.png"
+    },
+    {
+      "id": "scan",
+      "bg": "brick",
+      "capture": "captures/scan-ui.png"
+    },
+    {
+      "id": "split",
+      "bg": "ink",
+      "capture": "captures/split-ui.png"
+    },
+    {
+      "id": "standings",
+      "bg": "bone",
+      "capture": "captures/standings-ui.png"
+    },
+    {
+      "id": "settle",
+      "bg": "moss",
+      "play": false,
+      "capture": "captures/repayments-ui.png"
+    },
+    {
+      "id": "recurring",
+      "bg": "ink",
+      "capture": "captures/recurring-ui.png"
+    },
+    {
+      "id": "summary",
+      "bg": "bone",
+      "capture": "captures/summary-ui.png"
+    },
+    {
+      "id": "nocatch",
+      "bg": "moss",
+      "play": false,
+      "capture": "captures/profile-ui.png"
+    },
+    {
+      "id": "settled",
+      "bg": "brick",
+      "capture": "captures/settled-ui.png"
+    }
+  ]
+}

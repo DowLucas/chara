@@ -1,0 +1,50 @@
+{
+  "name": "Chara: Del regninger enkelt",
+  "subtitle": "Skann kvitteringer, gjør opp",
+  "keywords": "utgifter,dele,splitte,spleis,regning,kollektiv,samboer,gruppe,tur,reise,felles,gjeld,oppgjør,venner",
+  "promotionalText": "",
+  "shortDescription": "Del regninger med venner, hold oversikt og gjør opp. Privat og åpen kildekode.",
+  "description": "Del utgifter med bofellene, kjæresten og vennene dine uten kronglete hoderegning. Chara er en app for å dele regninger, med åpen kildekode, uten reklame og uten abonnement.\n\nLegg til en utgift, velg hvem som er med, så regner Chara ut resten. Se raskt hvem som skylder hvem, og gjør opp når dere er klare.\n\nDETTE KAN DU GJØRE\n\n• Lag grupper for kollektivet, turer, par eller én enkelt anledning\n• Del likt, med nøyaktige beløp eller i prosent\n• Ta bilde av kvitteringen, så fyller Chara inn totalbeløpet og varene\n• Si det høyt: «Jeg betalte 400 for middagen, delt med Sam» blir en utgift\n• Legg inn faste regninger som husleie og abonnementer én gang, så legges de til automatisk hver måned\n• Få en månedsoppsummering av hvor pengene ble av\n• Saldoer holdes i hver valuta og veksles aldri i det stille\n• Gjør opp med ett trykk og behold en ryddig historikk\n• Få varsel når noen legger til en utgift eller betaler deg tilbake\n\nPRIVAT FRA GRUNNEN AV\n\nIngen reklame, ingen reklame-SDK-er, og dataene dine selges aldri. Gruppens utgifter er synlige for gruppen og ingen andre. Chara samler inn anonym bruksstatistikk for å forbedre appen, uten personopplysninger eller utgiftsinnhold, og du kan slå det av i Innstillinger.\n\nKJØR DEN SELV\n\nChara har åpen kildekode. Kjør den på din egen server hvis du vil: appen snakker med serveren din akkurat som den snakker med vår. Ha kontoer på flere servere samtidig og se alt på ett sted.\n\nGRATIS, PÅ ORDENTLIG\n\nIngen abonnement og ingen premiumnivå. Skanning av kvitteringer og innsnakking av utgifter har en månedskvote på Chara Cloud og er ubegrenset på din egen server.\n\nTilgjengelig på English, Svenska, Deutsch, Français, Español, Italiano, Nederlands, Dansk, Norsk, Suomi, Polski, Português, 日本語, 简体中文 og العربية.",
+  "pages": {
+    "hero": {
+      "headline": "Del regninger.\n*Slipp hoderegningen.*",
+      "alt": "Charas startskjerm: en nettosaldo på tvers av tre grupper, én der du skylder, én der du har til gode og én som er gjort opp."
+    },
+    "add": {
+      "headline": "Legg til en utgift\n*på sekunder.*",
+      "alt": "En utgift på 64,35 $ for konsertbilletter, betalt av deg, legges til i gruppen Apartment 5B."
+    },
+    "scan": {
+      "headline": "Knips kvitteringen.\n*Chara leser den.*",
+      "alt": "Kameraet rettes mot en restaurantkvittering for å fylle inn utgiften fra bildet."
+    },
+    "split": {
+      "headline": "Del akkurat\n*som du vil.*",
+      "alt": "64,35 $ deles likt på tre, 21,45 $ hver, med valg for nøyaktige beløp og prosent."
+    },
+    "standings": {
+      "headline": "Slutt på\n*«hvem skylder hvem?»*",
+      "alt": "Status i Apartment 5B: hvem som har til gode og hvem som skylder, per person."
+    },
+    "settle": {
+      "headline": "Gjør opp med\n*én betaling.*",
+      "alt": "Tilbakebetalinger: to betalinger gjør opp hele gruppen, med historikk over tidligere betalinger."
+    },
+    "recurring": {
+      "headline": "Husleia deler seg.\n*Hver måned.*",
+      "alt": "Faste regninger for husleie, internett, vask og strømmetjenester, hver delt likt etter plan."
+    },
+    "summary": {
+      "headline": "Se hvor\n*pengene ble av.*",
+      "alt": "Månedsoppsummering: din andel av måneden, aktive dager og utgifter per kategori."
+    },
+    "nocatch": {
+      "headline": "Ingen reklame.\nIngen dagsgrenser.\n*Ingen hake.*",
+      "alt": "Profil og innstillinger uten noe i veien: ingen reklame, ingen mersalgsskjermer, ingen daglig grense for utgifter."
+    },
+    "settled": {
+      "headline": "Alt er gjort opp.\n*Vi er skuls.*",
+      "alt": "Apartment 5B er gjort opp: utgiftshistorikken blir liggende og ingenting gjenstår å betale."
+    }
+  }
+}

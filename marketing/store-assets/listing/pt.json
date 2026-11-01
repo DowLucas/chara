@@ -1,0 +1,50 @@
+{
+  "name": "Chara: Dividir contas e gastos",
+  "subtitle": "Escaneie recibos e acerte tudo",
+  "keywords": "rachar,rateio,despesas,república,aluguel,viagem,grupo,amigos,casal,dívida,nota,orçamento,colegas",
+  "promotionalText": "",
+  "shortDescription": "Divida contas com amigos, veja os saldos e acerte tudo. Privado e open source.",
+  "description": "Divida despesas com quem mora com você, com seu amor e com os amigos, sem aquela matemática chata. O Chara é um app de código aberto para dividir contas, sem anúncios e sem assinatura.\n\nAdicione uma despesa, escolha quem entra e o Chara faz as contas. Veja na hora quem deve para quem e acerte tudo quando quiser.\n\nO QUE VOCÊ PODE FAZER\n\n• Crie grupos para a república, viagens, casais ou eventos pontuais\n• Divida em partes iguais, por valores exatos ou por porcentagem\n• Tire uma foto do recibo e o Chara preenche o total e os itens\n• Fale em voz alta: \"Paguei 40 no jantar, divide com o Sam\" vira uma despesa\n• Contas fixas, como aluguel e assinaturas: configure uma vez e elas entram sozinhas todo mês\n• Veja num resumo mensal para onde foi o dinheiro\n• Mantenha os saldos em cada moeda, sem conversões escondidas\n• Acerte as contas com um toque e tenha um histórico organizado\n• Receba uma notificação quando alguém adicionar uma despesa ou te pagar\n\nPRIVACIDADE DE FÁBRICA\n\nSem anúncios, sem SDKs de publicidade, e seus dados nunca são vendidos. As despesas do seu grupo só aparecem para o seu grupo e mais ninguém. O Chara coleta estatísticas de uso anônimas para melhorar o app, sem dados pessoais nem conteúdo das despesas, e você pode desativar isso nas Configurações.\n\nHOSPEDE VOCÊ MESMO\n\nO Chara é de código aberto. Se quiser, rode no seu próprio servidor: o app conversa com o seu servidor exatamente do mesmo jeito que conversa com o nosso. Use contas em vários servidores ao mesmo tempo e veja tudo num lugar só.\n\nGRÁTIS DE VERDADE\n\nSem assinatura e sem plano premium. A leitura de recibos e o registro por voz têm uma cota mensal no Chara Cloud e são ilimitados no seu próprio servidor.\n\nDisponível em English, Svenska, Deutsch, Français, Español, Italiano, Nederlands, Dansk, Norsk, Suomi, Polski, Português, 日本語, 简体中文 e العربية.",
+  "pages": {
+    "hero": {
+      "headline": "Rache a conta.\n*Sem fazer conta.*",
+      "alt": "Tela inicial do Chara: o saldo total de três grupos, um em que você deve, outro em que te devem e outro já acertado."
+    },
+    "add": {
+      "headline": "Adicione gastos\n*em segundos.*",
+      "alt": "Adicionando uma despesa de US$ 64,35 em ingressos de show, paga por você, no grupo Apartment 5B."
+    },
+    "scan": {
+      "headline": "Tire foto do recibo.\n*O Chara lê para você.*",
+      "alt": "A câmera apontada para o recibo de um restaurante para preencher a despesa a partir da foto."
+    },
+    "split": {
+      "headline": "Divida do\n*seu jeito.*",
+      "alt": "US$ 64,35 divididos em partes iguais entre três, US$ 21,45 para cada, com opções de valor exato e porcentagem."
+    },
+    "standings": {
+      "headline": "Chega de\n*“quem deve pra quem?”*",
+      "alt": "Saldos do grupo Apartment 5B: quem tem a receber e quem deve, pessoa por pessoa."
+    },
+    "settle": {
+      "headline": "Acerte tudo com\n*um só pagamento.*",
+      "alt": "Pagamentos: dois pagamentos acertam o grupo inteiro, com o histórico dos pagamentos anteriores."
+    },
+    "recurring": {
+      "headline": "O aluguel se divide\n*sozinho, todo mês.*",
+      "alt": "Contas recorrentes de aluguel, internet, faxina e streaming, cada uma dividida em partes iguais na data certa."
+    },
+    "summary": {
+      "headline": "Veja para onde\n*foi o dinheiro.*",
+      "alt": "Resumo mensal: a sua parte do mês, dias ativos e gastos por categoria."
+    },
+    "nocatch": {
+      "headline": "Sem anúncios.\nSem limite diário.\n*Sem pegadinha.*",
+      "alt": "Perfil e configurações sem nada atrapalhando: sem anúncios, sem telas vendendo extras, sem limite diário de despesas."
+    },
+    "settled": {
+      "headline": "Tudo acertado.\n*Tá quitado.*",
+      "alt": "O grupo Apartment 5B está acertado: o histórico de despesas continua e não sobrou nada para pagar."
+    }
+  }
+}

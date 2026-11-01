@@ -1,0 +1,50 @@
+{
+  "name": "Chara: Jaa laskut ja kulut",
+  "subtitle": "Skannaa kuitit, tasaa velat",
+  "keywords": "jako,kämppis,kimppakämppä,ryhmä,matka,reissu,yhteiset,velka,tasaus,kuitti,budjetti,kaverit,mökki",
+  "promotionalText": "",
+  "shortDescription": "Jaa laskut kavereiden kanssa, näe saldot, tasaa velat. Yksityinen, avoin koodi.",
+  "description": "Jaa kulut kämppisten, kumppanin ja kavereiden kanssa ilman kiusallista laskeskelua. Chara on avoimen lähdekoodin laskunjakaja ilman mainoksia ja tilausmaksuja.\n\nLisää kulu, valitse, ketkä ovat mukana, ja Chara laskee loput. Näet yhdellä silmäyksellä, kuka on velkaa kenellekin, ja tasaat velat, kun sinulle sopii.\n\nMITÄ VOIT TEHDÄ\n\n• Luo ryhmiä kämppiksille, matkoille, pariskunnille tai yksittäisiin tapahtumiin\n• Jaa tasan, tarkoilla summilla tai prosenteittain\n• Kuvaa kuitti, niin Chara täyttää kokonaissumman ja tuoterivit\n• Sano se ääneen: ”Maksoin illallisesta 40, jaa Samin kanssa” muuttuu kuluksi\n• Lisää vuokra, tilaukset ja muut toistuvat laskut vain kerran, niin ne tulevat mukaan itsestään joka kuukausi\n• Saat kuukausiyhteenvedon siitä, mihin rahat menivät\n• Saldot pysyvät omissa valuutoissaan, eikä mitään muunneta huomaamatta\n• Tasaa velat yhdellä napautuksella ja pidä historia siistinä\n• Saat ilmoituksen, kun joku lisää kulun tai maksaa sinulle takaisin\n\nYKSITYISYYS EDELLÄ\n\nEi mainoksia, ei mainosseurantaa, eikä tietojasi koskaan myydä. Ryhmäsi kulut näkyvät vain ryhmällesi. Chara kerää nimettömiä käyttötilastoja sovelluksen parantamiseksi, ilman henkilötietoja tai kulujen sisältöä, ja voit kytkeä ne pois päältä asetuksista.\n\nPYÖRITÄ OMALLA PALVELIMELLA\n\nChara on avointa lähdekoodia. Voit halutessasi pyörittää sitä omalla palvelimellasi: sovellus toimii palvelimesi kanssa täsmälleen samoin kuin meidän palvelimemme kanssa. Käytä tilejä usealla palvelimella yhtä aikaa ja näe kaikki yhdestä paikasta.\n\nILMAINEN, OIKEASTI\n\nEi tilausmaksua eikä maksullista premium-versiota. Kuittien skannauksessa ja puhesyötössä on kuukausikiintiö Chara Cloudissa, ja omalla palvelimellasi ne ovat rajattomia.\n\nSaatavilla kielillä English, Svenska, Deutsch, Français, Español, Italiano, Nederlands, Dansk, Norsk, Suomi, Polski, Português, 日本語, 简体中文 ja العربية.",
+  "pages": {
+    "hero": {
+      "headline": "Jaa laskut.\n*Unohda laskeminen.*",
+      "alt": "Charan etusivu: kolmen ryhmän nettosaldo – yhdessä olet velkaa, yhdessä sinulle ollaan velkaa ja yksi on tasattu."
+    },
+    "add": {
+      "headline": "Lisää kulu\n*sekunneissa.*",
+      "alt": "Lisätään 64,35 $:n kulu konserttilipuista ryhmään Apartment 5B, maksajana sinä."
+    },
+    "scan": {
+      "headline": "Kuvaa kuitti.\n*Chara lukee sen.*",
+      "alt": "Kamera osoittaa ravintolan kuittiin, ja kulu täytetään kuvan perusteella."
+    },
+    "split": {
+      "headline": "Jaa kulut\n*omalla tavallasi.*",
+      "alt": "64,35 $ jaetaan tasan kolmelle, 21,45 $ kullekin, ja valittavana myös tarkat summat ja prosentit."
+    },
+    "standings": {
+      "headline": "Ei enää\n*”kuka on velkaa?”*",
+      "alt": "Ryhmän Apartment 5B saldot: kuka saa rahaa ja kuka on velkaa, henkilöittäin."
+    },
+    "settle": {
+      "headline": "Tasaa velat\n*yhdellä maksulla.*",
+      "alt": "Takaisinmaksut: kaksi maksua tasaa koko ryhmän, ja aiemmat maksut näkyvät historiassa."
+    },
+    "recurring": {
+      "headline": "Vuokra jakautuu itse.\n*Joka kuukausi.*",
+      "alt": "Toistuvat laskut: vuokra, netti, siivous ja suoratoisto, kukin jaettuna tasan aikataulun mukaan."
+    },
+    "summary": {
+      "headline": "Näe, mihin\n*rahat menivät.*",
+      "alt": "Kuukausiyhteenveto: osuutesi kuukauden kuluista, aktiiviset päivät ja kulut luokittain."
+    },
+    "nocatch": {
+      "headline": "Ei mainoksia.\nEi päivärajoja.\n*Ei koukkuja.*",
+      "alt": "Profiili ja asetukset ilman häiriöitä: ei mainoksia, ei lisämyyntinäkymiä, ei päivärajaa kuluille."
+    },
+    "settled": {
+      "headline": "Kaikki tasattu.\n*Ollaan sujut.*",
+      "alt": "Apartment 5B on tasattu: kuluhistoria säilyy, eikä mitään jää maksettavaksi."
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "name": "Chara : Partage de dépenses",
+  "subtitle": "Scanne tes reçus, c'est réglé",
+  "keywords": "frais,comptes,colocation,coloc,vacances,voyage,addition,rembourser,dette,ticket,reçu,amis,couple",
+  "promotionalText": "",
+  "shortDescription": "Partage les frais, vois qui doit quoi et règle les comptes. Privé, open source.",
+  "description": "Partage les dépenses avec tes colocs, ton ou ta partenaire et tes amis, sans calculs prise de tête. Chara est une appli open source pour partager les frais, sans pub et sans abonnement.\n\nAjoute une dépense, choisis qui participe, et Chara fait le calcul. Repère d'un coup d'œil qui doit quoi à qui, et règle les comptes quand tu veux.\n\nCE QUE TU PEUX FAIRE\n\n• Crée des groupes pour la coloc, les voyages, le couple ou un événement ponctuel\n• Partage à parts égales, avec des montants exacts ou en pourcentage\n• Prends un reçu en photo et Chara remplit le total et le détail des articles\n• Dis-le à voix haute : « J'ai payé 40 pour le dîner, partagé avec Sam » devient une dépense\n• Configure une seule fois les factures récurrentes comme le loyer et les abonnements, et elles s'ajoutent toutes seules chaque mois\n• Reçois un récapitulatif mensuel pour savoir où est passé l'argent\n• Garde les soldes dans chaque devise, sans conversion en douce\n• Règle tes dettes d'un geste et garde un historique clair\n• Reçois une notification quand quelqu'un ajoute une dépense ou te rembourse\n\nTA VIE PRIVÉE, RESPECTÉE\n\nPas de pub, pas de SDK publicitaire, et tes données ne sont jamais vendues. Les dépenses de ton groupe ne sont visibles que par ton groupe. Chara collecte des statistiques d'utilisation anonymes pour améliorer l'appli, sans données personnelles ni contenu de dépenses, et tu peux les désactiver dans les Paramètres.\n\nHÉBERGE-LE TOI-MÊME\n\nChara est open source. Fais-le tourner sur ton propre serveur si tu veux : l'appli communique avec ton serveur exactement comme avec le nôtre. Garde des comptes sur plusieurs serveurs à la fois et retrouve tout au même endroit.\n\nGRATUIT, VRAIMENT\n\nPas d'abonnement, pas de version premium. Le scan des reçus et la saisie vocale incluent un quota mensuel sur Chara Cloud, et sont illimités sur ton propre serveur.\n\nDisponible en English, Svenska, Deutsch, Français, Español, Italiano, Nederlands, Dansk, Norsk, Suomi, Polski, Português, 日本語, 简体中文 et العربية.",
+  "pages": {
+    "hero": {
+      "headline": "Partage les frais.\n*Oublie les calculs.*",
+      "alt": "Écran d'accueil de Chara : un solde net sur trois groupes, un où tu dois de l'argent, un où on te doit et un où tout est réglé."
+    },
+    "add": {
+      "headline": "Ajoute une dépense\n*en quelques secondes.*",
+      "alt": "Ajout d'une dépense de 64,35 $ pour des places de concert, payée par toi, dans le groupe Apartment 5B."
+    },
+    "scan": {
+      "headline": "Scanne le reçu.\n*Chara le lit.*",
+      "alt": "L'appareil photo vise un reçu de restaurant pour remplir la dépense à partir de la photo."
+    },
+    "split": {
+      "headline": "Partage\n*à ta façon.*",
+      "alt": "64,35 $ partagés à parts égales entre trois personnes, 21,45 $ chacun, avec les options montants exacts et pourcentage."
+    },
+    "standings": {
+      "headline": "Fini les\n*« qui doit quoi ? »*",
+      "alt": "Bilan du groupe Apartment 5B : qui doit recevoir et qui doit payer, personne par personne."
+    },
+    "settle": {
+      "headline": "Règle tout\n*en un seul paiement.*",
+      "alt": "Remboursements : deux paiements soldent tout le groupe, avec l'historique des paiements passés."
+    },
+    "recurring": {
+      "headline": "Chaque mois, le loyer\n*se partage tout seul.*",
+      "alt": "Factures récurrentes pour le loyer, internet, le ménage et le streaming, chacune partagée à parts égales à date fixe."
+    },
+    "summary": {
+      "headline": "Découvre où\n*part ton argent.*",
+      "alt": "Récapitulatif mensuel : ta part du mois, les jours actifs et les dépenses par catégorie."
+    },
+    "nocatch": {
+      "headline": "Zéro pub.\nZéro limite par jour.\n*Zéro piège.*",
+      "alt": "Profil et réglages sans rien qui gêne : pas de pub, pas d'écrans de vente forcée, pas de limite quotidienne de dépenses."
+    },
+    "settled": {
+      "headline": "Tout est réglé.\n*On est quittes.*",
+      "alt": "Tout est réglé dans Apartment 5B : l'historique des dépenses reste et il n'y a plus rien à payer."
+    }
+  }
+}
