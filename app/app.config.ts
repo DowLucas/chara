@@ -191,6 +191,10 @@ const config: ExpoConfig = {
         // string here makes the merged plist inconsistent at App Review.
         microphonePermission:
           'Allow Chara to use the microphone so you can add an expense by describing it out loud.',
+        // The plugin defaults this to true, which adds `audio` to iOS
+        // UIBackgroundModes — App Review rejected 1.5.1 for it (2.5.4).
+        // Voice capture records in the foreground only.
+        enableBackgroundPlayback: false,
       },
     ],
     [
