@@ -1012,6 +1012,13 @@
     "saving": "Opslaan…",
     "submit": "Verder"
   },
+  "pendingSwish": {
+    "body": "Je opende Swish om {{name}} {{amount}} te betalen in {{group}}, maar Chara sloot voordat je kon bevestigen. Als de betaling gelukt is, leg haar nu vast.",
+    "errorBody": "De betaling kon niet worden vastgelegd. Open de groep en reken af om haar vast te leggen.",
+    "no": "Nee",
+    "title": "Is je Swish-betaling gelukt?",
+    "yes": "Ja, vastleggen"
+  },
   "privacy": {
     "analyticsDescription": "Dit helpt ons begrijpen hoe Chara wordt gebruikt. Er worden geen persoonsgegevens, IP-adressen of inhoud verzameld. Je kunt dit altijd uitschakelen.",
     "analyticsLabel": "Anonieme gebruiksstatistieken sturen",

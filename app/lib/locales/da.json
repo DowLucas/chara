@@ -1012,6 +1012,13 @@
     "saving": "Gemmer…",
     "submit": "Fortsæt"
   },
+  "pendingSwish": {
+    "body": "Du åbnede Swish for at betale {{name}} {{amount}} i {{group}}, men Chara lukkede, før du nåede at bekræfte. Hvis betalingen gik igennem, så registrér den nu.",
+    "errorBody": "Betalingen kunne ikke registreres. Åbn gruppen og gør op for at registrere den.",
+    "no": "Nej",
+    "title": "Gik din Swish-betaling igennem?",
+    "yes": "Ja, registrér den"
+  },
   "privacy": {
     "analyticsDescription": "Hjælper os med at forstå, hvordan Chara bruges. Vi indsamler ingen personlige data, IP-adresser eller indhold. Du kan slå det fra når som helst.",
     "analyticsLabel": "Send anonym brugsstatistik",

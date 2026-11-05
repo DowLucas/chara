@@ -1037,6 +1037,13 @@
     "saving": "Enregistrement…",
     "submit": "Continuer"
   },
+  "pendingSwish": {
+    "body": "Vous avez ouvert Swish pour payer {{amount}} à {{name}} dans {{group}}, mais Chara s'est fermé avant que vous puissiez confirmer. Si le paiement a abouti, enregistrez-le maintenant.",
+    "errorBody": "Impossible d'enregistrer le paiement. Ouvrez le groupe et réglez pour l'enregistrer.",
+    "no": "Non",
+    "title": "Votre paiement Swish a-t-il abouti ?",
+    "yes": "Oui, l'enregistrer"
+  },
   "privacy": {
     "analyticsDescription": "Ça nous aide à comprendre comment Chara est utilisé. Aucune donnée personnelle, adresse IP ou contenu n'est collecté. Tu peux désactiver à tout moment.",
     "analyticsLabel": "Envoyer des statistiques anonymes d'utilisation",

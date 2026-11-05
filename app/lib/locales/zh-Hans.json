@@ -1012,6 +1012,13 @@
     "saving": "保存中……",
     "submit": "继续"
   },
+  "pendingSwish": {
+    "body": "你打开了 Swish 向 {{name}} 支付 {{group}} 中的 {{amount}}，但 Chara 在你确认之前关闭了。如果付款已成功，请立即记录。",
+    "errorBody": "无法记录付款。请打开群组并结算以记录。",
+    "no": "否",
+    "title": "你的 Swish 付款成功了吗？",
+    "yes": "是，记录"
+  },
   "privacy": {
     "analyticsDescription": "帮助我们了解 Chara 的使用情况。不会收集任何个人数据、IP 地址或内容，可随时关闭。",
     "analyticsLabel": "发送匿名使用统计",

@@ -25,6 +25,7 @@ import {
   subscribe as subscribeAccounts,
 } from '@/lib/accounts-store';
 import { AppAlertHost } from '@/components/AppAlert/AppAlertHost';
+import { PendingSwishRecovery } from '@/components/PendingSwishRecovery';
 import { showAlert } from '@/lib/app-alert';
 import * as analytics from '@/lib/analytics';
 import { runRecoveryProbes } from '@/lib/compat-recovery';
@@ -397,6 +398,7 @@ export default function RootLayout() {
         <StatusBar style="dark" />
         <AppAlertHost />
         <ShareIntentListener />
+        <PendingSwishRecovery />
       </AccountsProvider>
     </SafeAreaProvider>
   );

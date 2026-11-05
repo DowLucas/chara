@@ -95,7 +95,7 @@ sequenceDiagram
 |-----------|----------|
 | `Linking.canOpenURL("swish://")` returns false | Show "Swish app not installed" sheet with a link to the App Store / Play Store. Do not record a settlement. |
 | User returns and taps "No, it didn't work" | Close the sheet, leave balances untouched. Surface "Copy details" as a fallback. |
-| Swish never redirects back (user cancelled, callback URL unsupported, or app crashed) | The pending-settle in AsyncStorage is the safety net. On next foreground of the group screen, the banner appears: "You started a Swish settle for 240 SEK 3 minutes ago. Did it go through?" Banner clears after 24 h. |
+| Chara is killed while the user is in Swish/BankID (the waiting screen is lost) | Implemented in `app/lib/pending-swish.ts`: the settle screen persists the pending settle (SecureStore, incl. its settlement id) right before opening Swish and clears it whenever the wait ends with the app alive. A record that survives to the next cold launch triggers a one-time "Did your Swish payment go through?" prompt (`components/PendingSwishRecovery.tsx`); "Yes" posts the settle under the original id (idempotent), "No" discards. Expires after 24 h. |
 | User backgrounds Chara and never confirms | Same as above — banner on next foreground. |
 | Payee disputes ("I never got it") | Either party taps the settlement in the activity feed → "Undo settlement". Available for 24 h after creation. Older settlements require a manual reversing entry. |
 

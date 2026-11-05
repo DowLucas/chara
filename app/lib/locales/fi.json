@@ -1012,6 +1012,13 @@
     "saving": "Tallennetaan…",
     "submit": "Jatka"
   },
+  "pendingSwish": {
+    "body": "Avasit Swishin maksaaksesi {{name}}lle {{amount}} ryhmässä {{group}}, mutta Chara sulkeutui ennen kuin ehdit vahvistaa. Jos maksu meni läpi, kirjaa se nyt.",
+    "errorBody": "Maksun kirjaaminen epäonnistui. Avaa ryhmä ja tee tilitys kirjataksesi sen.",
+    "no": "Ei",
+    "title": "Menikö Swish-maksusi läpi?",
+    "yes": "Kyllä, kirjaa se"
+  },
   "privacy": {
     "analyticsDescription": "Auttaa ymmärtämään, miten Charaa käytetään. Henkilötietoja, IP-osoitteita tai sisältöä ei kerätä. Voit ottaa tämän pois päältä koska tahansa.",
     "analyticsLabel": "Lähetä anonyymiä käyttödataa",

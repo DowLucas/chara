@@ -1012,6 +1012,13 @@
     "saving": "Saving…",
     "submit": "Continue"
   },
+  "pendingSwish": {
+    "body": "You opened Swish to pay {{name}} {{amount}} in {{group}}, but Chara closed before you could confirm. If the payment went through, record it now.",
+    "errorBody": "Couldn't record the payment. Open the group and settle up to record it.",
+    "no": "No",
+    "title": "Did your Swish payment go through?",
+    "yes": "Yes, record it"
+  },
   "privacy": {
     "analyticsDescription": "Helps us understand how Chara is used. No personal data, IP addresses, or content is collected. You can turn this off at any time.",
     "analyticsLabel": "Send anonymous usage analytics",

@@ -57,6 +57,11 @@ export type AnalyticsEvent =
   | 'voice_draft_saved'
   | 'voice_draft_discarded'
   | 'voice_queue_abandoned'
+  // settle up
+  | 'swish_opened'
+  | 'swish_confirmed'
+  | 'swish_recovery_shown'
+  | 'swish_recovery_declined'
   // growth
   | 'review_prompt_requested'
   // errors

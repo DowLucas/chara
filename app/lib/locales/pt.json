@@ -1037,6 +1037,13 @@
     "saving": "Salvando…",
     "submit": "Continuar"
   },
+  "pendingSwish": {
+    "body": "Abriste o Swish para pagar {{amount}} a {{name}} em {{group}}, mas o Chara fechou antes de poderes confirmar. Se o pagamento foi concluído, regista-o agora.",
+    "errorBody": "Não foi possível registar o pagamento. Abre o grupo e acerta contas para o registar.",
+    "no": "Não",
+    "title": "O teu pagamento Swish foi concluído?",
+    "yes": "Sim, registar"
+  },
   "privacy": {
     "analyticsDescription": "Ajuda a entender como o Chara é usado. Nenhum dado pessoal, IP ou conteúdo é coletado. Você pode desativar a qualquer momento.",
     "analyticsLabel": "Enviar análises de uso anônimas",

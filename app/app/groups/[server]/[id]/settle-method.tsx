@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Linking, Platform, Image } from 'react-native';
 import { showAlert } from '@/lib/app-alert';
 import { isPopupJustClosed } from '@/lib/popup-guard';
@@ -34,6 +34,8 @@ import {
   setSwishPhonePromptDismissed,
 } from '@/lib/preferences';
 import { settlementMethodFor } from '@/lib/settlement-method';
+import { clearPendingSwish, savePendingSwish } from '@/lib/pending-swish';
+import { track } from '@/lib/analytics';
 import { maybeRequestReviewAfterSettlement } from '@/lib/review-prompt';
 import { newUlid } from '@/lib/ulid';
 import {
@@ -95,10 +97,22 @@ export default function SettleMethodScreen() {
   // One-time "add your own Swish number" nudge: only fires while the user
   // has no number on file and hasn't dismissed it before.
   const [phonePromptDismissed, setPhonePromptDismissed] = useState(true);
+  // Whether this screen persisted a pending-Swish record (lib/pending-swish)
+  // that it still owns. Cleared whenever the wait ends while the app is
+  // alive, so a record only survives if the OS killed us mid-wait.
+  const pendingSavedRef = useRef(false);
 
   useEffect(() => {
     getSwishPhonePromptDismissed().then(setPhonePromptDismissed).catch(() => {});
   }, []);
+
+  function dropPendingSwish() {
+    if (!pendingSavedRef.current) return;
+    pendingSavedRef.current = false;
+    clearPendingSwish().catch(() => {});
+  }
+
+  useEffect(() => dropPendingSwish, []);
 
   // Members come from the GroupDetail response — no separate /members route.
   const members: GroupMember[] = group?.members ?? [];
@@ -171,6 +185,10 @@ export default function SettleMethodScreen() {
         currency,
         method: settlementMethodFor(rail),
       });
+      if (rail === 'swish') {
+        dropPendingSwish();
+        track('swish_confirmed', { source: 'screen' });
+      }
       setCompletedAt(new Date());
       setStage('done');
       hapticSuccess();
@@ -190,10 +208,29 @@ export default function SettleMethodScreen() {
     // LSApplicationQueriesSchemes declared) it returns false even when
     // the Swish app is installed. openURL is the source of truth: it
     // rejects iff iOS finds no handler for the scheme.
+    // Persist before handing off: the OS may kill us while the user is in
+    // Swish/BankID, taking this waiting screen with it.
+    if (id && from && to && amount && currency && serverUrl) {
+      pendingSavedRef.current = true;
+      await savePendingSwish({
+        serverUrl,
+        groupId: id,
+        groupName: group?.name ?? '',
+        fromMemberId: from,
+        toMemberId: to,
+        payeeName: counter?.name ?? '',
+        amount,
+        currency,
+        settlementId,
+        startedAt: Date.now(),
+      }).catch(() => {});
+    }
     try {
       await Linking.openURL(swishUrl);
+      track('swish_opened');
       setSwishOpened(true);
     } catch {
+      dropPendingSwish();
       showAlert({
         title: t('settleMethod.swishUnavailableTitle'),
         message: t('settleMethod.swishUnavailableBody'),
@@ -278,7 +315,7 @@ export default function SettleMethodScreen() {
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <TopBar
           title={t('settleMethod.swishWaitTitle', { amount: formattedSwishAmount })}
-          left={<IconButton icon="arrow-left" onPress={() => { setStage('pick'); setSwishUrl(null); setSwishOpened(false); }} label={t('common.back')} />}
+          left={<IconButton icon="arrow-left" onPress={() => { dropPendingSwish(); setStage('pick'); setSwishUrl(null); setSwishOpened(false); }} label={t('common.back')} />}
         />
         <ScrollView style={styles.scroll} contentContainerStyle={styles.awaitingScroll}>
           <ContentContainer>

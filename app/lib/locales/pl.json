@@ -1066,6 +1066,13 @@
     "saving": "Zapisywanie…",
     "submit": "Dalej"
   },
+  "pendingSwish": {
+    "body": "Otworzyłeś Swish, aby zapłacić {{name}} {{amount}} w grupie {{group}}, ale Chara zamknęła się, zanim zdążyłeś potwierdzić. Jeśli płatność się powiodła, zapisz ją teraz.",
+    "errorBody": "Nie udało się zapisać płatności. Otwórz grupę i rozlicz się, aby ją zapisać.",
+    "no": "Nie",
+    "title": "Czy płatność Swish się powiodła?",
+    "yes": "Tak, zapisz"
+  },
   "privacy": {
     "analyticsDescription": "Pomaga nam zrozumieć, jak używa się Chara. Nie zbieramy żadnych danych osobowych, adresów IP ani treści. Możesz to wyłączyć w dowolnym momencie.",
     "analyticsLabel": "Wysyłaj anonimowe statystyki użycia",
