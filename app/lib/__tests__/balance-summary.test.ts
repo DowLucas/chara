@@ -7,7 +7,10 @@
  */
 
 import type { Group, MyBalance } from '../api';
+import { colors } from '../theme';
 import {
+  directionColor,
+  directionOf,
   groupPosition,
   mergeGroupsWithBalances,
   netByCurrency,
@@ -181,5 +184,21 @@ describe('groupPosition', () => {
     expect(pos.direction).toBe('owe');
     expect(pos.minor).toBe(-4250);
     expect(pos.mixedSigns).toBe(false);
+  });
+});
+
+describe('directionOf', () => {
+  it('reads a balance relative to you, with zero as settled', () => {
+    expect(directionOf(24000)).toBe('owed');
+    expect(directionOf(-1)).toBe('owe');
+    expect(directionOf(0)).toBe('settled');
+  });
+});
+
+describe('directionColor', () => {
+  it('colors owe/owed and keeps settled neutral (never a green 0)', () => {
+    expect(directionColor('owed')).toBe(colors.moss);
+    expect(directionColor('owe')).toBe(colors.brick);
+    expect(directionColor('settled')).toBe(colors.graphite);
   });
 });

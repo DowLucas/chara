@@ -14,12 +14,15 @@ export const colors = {
   graphite: '#2D1F1A',
   lead: '#6B5A4E',
   vermillion: '#B83D3D',
-  // moss reads "you're owed / settled / positive". The pale brand olive
-  // (#8FA055) fails WCAG AA on the cream paper background when used as text,
-  // so the semantic token is a darker olive that hits ~4.6:1. The brand
-  // anchor `palmLeaf` keeps the pale shade for surfaces that aren't text.
-  moss: '#586D2A',
-  brick: '#8A2A2A',
+  // moss reads "you're owed / settled"; brick reads "you owe / destructive".
+  // The pair is tuned for red-green color blindness, not just hue: moss is a
+  // deep pine green and brick a rust red, so they separate on the blue-yellow
+  // axis deuteranopes and protanopes keep (the old olive/maroon pair collapsed
+  // into one brown). Both pass WCAG AA as text on paper *and* bone. Guarded
+  // by lib/__tests__/theme-palette.test.ts. The brand anchor `palmLeaf` keeps
+  // the pale olive for surfaces that aren't text.
+  moss: '#1F6458',
+  brick: '#8E3B1A',
   citrine: '#E0A040',
 
   ruleSoft: 'rgba(45, 31, 26, 0.07)',

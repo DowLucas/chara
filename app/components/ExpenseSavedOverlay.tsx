@@ -3,7 +3,6 @@ import { Animated, Easing, Modal, StyleSheet, View, TouchableOpacity, Text } fro
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { Stamp } from './Stamp';
 import { ContentContainer } from '@/components/ContentContainer';
 import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 
@@ -14,15 +13,15 @@ interface Props {
   onContinue: () => void;
 }
 
-// Brand-consistent post-save celebration: animated check disc + the same
-// CHARA stamp used on settled-expense rows. Design brief is "no confetti,
-// no fanfare" — restrained, monochrome, deliberate timing.
+// Brand-consistent post-save confirmation: check disc + headline. No
+// "settled" stamp — adding an expense creates a debt, it doesn't settle one.
+// Design brief is "no confetti, no fanfare" — restrained, deliberate timing.
 export function ExpenseSavedOverlay({ visible, subtitle, onContinue }: Props) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 
   // Disc + check render in their final state immediately — no draw-in.
-  // The body (stamp + headline) still slides up so the screen has a tiny
+  // The body (headline) still slides up so the screen has a tiny
   // sense of arrival without holding the checkmark hostage.
   const bodyTranslate = useRef(new Animated.Value(16)).current;
   const bodyOpacity = useRef(new Animated.Value(0)).current;
@@ -63,7 +62,6 @@ export function ExpenseSavedOverlay({ visible, subtitle, onContinue }: Props) {
                 { opacity: bodyOpacity, transform: [{ translateY: bodyTranslate }] },
               ]}
             >
-              <Stamp size="lg" animateIn speed={2} />
               <Text style={styles.headline}>{t('expenseSaved.headline')}</Text>
               {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
             </Animated.View>

@@ -1410,6 +1410,8 @@
   "widget": {
     "addExpense": "Legg til utgift",
     "allSettled": "Alt er gjort opp",
+    "groupOwe": "skylder {{amount}}",
+    "groupOwed": "får {{amount}}",
     "mixedSignsLabel": "Blandede saldoer på tvers av valutaer",
     "netBalance": "nettosaldo",
     "noGroups": "Ingen grupper ennå",

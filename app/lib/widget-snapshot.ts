@@ -14,10 +14,10 @@
 import type { Group, MyBalance, MyNetResponse } from './api';
 import { aggregateMyNetReads } from './aggregate-mynet';
 import {
+  directionOf,
   groupPosition,
   mergeGroupsWithBalances,
   netByCurrency,
-  type BalanceDirection,
   type Read,
 } from './balance-summary';
 import {
@@ -51,7 +51,7 @@ export interface SnapshotDeps {
    *  variant. Minted into every deep link so widget taps route to the app that
    *  actually published the snapshot, not a differently-schemed build. */
   scheme: string;
-  t: (key: string) => string;
+  t: (key: string, opts?: Record<string, string>) => string;
   /** Absolute minor units → display string. */
   formatAmount: (minor: number, currency: string) => string;
   formatAmountCompact: (minor: number, currency: string) => string;
@@ -59,10 +59,6 @@ export interface SnapshotDeps {
   locale: string;
   language: string;
   now: () => Date;
-}
-
-function directionOf(minor: number): BalanceDirection {
-  return minor > 0 ? 'owed' : minor < 0 ? 'owe' : 'settled';
 }
 
 function groupLink(scheme: string, serverUrl: string, groupId: string, target?: string): string {
@@ -167,7 +163,11 @@ export function buildWidgetSnapshot(
       currency: pos.currency,
       minor: pos.minor,
       direction: pos.direction,
-      amountText: deps.formatAmount(Math.abs(pos.minor), pos.currency),
+      // Direction word in the text itself, so the row never relies on
+      // color alone (red-green color blindness).
+      amountText: deps.t(pos.direction === 'owe' ? 'widget.groupOwe' : 'widget.groupOwed', {
+        amount: deps.formatAmount(Math.abs(pos.minor), pos.currency),
+      }),
       mixedSigns: pos.mixedSigns,
       deepLink: groupLink(deps.scheme, row.serverUrl, row.group.id),
     }));

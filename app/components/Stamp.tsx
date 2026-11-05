@@ -83,7 +83,9 @@ export function Stamp({ size = 'sm', animateIn, speed = 1 }: Props) {
 const styles = StyleSheet.create({
   base: {
     borderWidth: 1.5,
-    borderColor: colors.vermillion,
+    // Moss, not vermillion: settling is the completed, good-for-you moment,
+    // and red sits too close to "you owe".
+    borderColor: colors.moss,
     borderRadius: 4,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -94,11 +96,11 @@ const styles = StyleSheet.create({
   },
   text: {
     ...typography.monoStamp,
-    color: colors.vermillion,
+    color: colors.moss,
   },
   textLg: {
     ...typography.amountM,
     letterSpacing: 2,
-    color: colors.vermillion,
+    color: colors.moss,
   },
 });

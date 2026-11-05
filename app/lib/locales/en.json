@@ -1410,6 +1410,8 @@
   "widget": {
     "addExpense": "Add expense",
     "allSettled": "All settled up",
+    "groupOwe": "owe {{amount}}",
+    "groupOwed": "owed {{amount}}",
     "mixedSignsLabel": "Mixed balances across currencies",
     "netBalance": "net balance",
     "noGroups": "No groups yet",

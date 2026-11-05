@@ -1410,6 +1410,8 @@
   "widget": {
     "addExpense": "Uitgave toevoegen",
     "allSettled": "Alles is vereffend",
+    "groupOwe": "je betaalt {{amount}}",
+    "groupOwed": "je krijgt {{amount}}",
     "mixedSignsLabel": "Gemengde saldi over valuta's",
     "netBalance": "nettosaldo",
     "noGroups": "Nog geen groepen",

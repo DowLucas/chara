@@ -107,10 +107,14 @@ Preview / dense lists (home-screen activity preview, members section inside the 
 
 ### Color semantics
 
-- `colors.graphite` — neutral facts (per-person share, expense amount on a list row, paid-by-you amount).
-- `colors.brick` — "you owe" / "to be paid" / destructive actions.
-- `colors.moss` — "you're owed" / completed settlement.
-- Only apply signal color where direction actually matters. The expenses tab list is neutral (it's spend history, not balance). The standings tab is colored (it's net per person). The +/- prefix lives only where the value is a balance delta, never where it's just an amount.
+- `colors.graphite` — neutral facts (per-person share, expense amount on a list row, paid-by-you amount), zero balances, and anything about *other* people.
+- `colors.brick` (rust) — "you owe" / "to be paid" / errors / destructive actions.
+- `colors.moss` (pine) — "you're owed" / completed settlement / the settled stamp.
+- `colors.vermillion` — brand fills (primary buttons, toggles), links and selection only. It never marks a state: not errors, not destructive labels, not "settled".
+- **A colored amount always has a direction word in the same row** ("you owe", "you're owed", "owes the group"). Color is the second cue, never the only one — moss/brick are tuned to stay apart under red-green color blindness (`lib/__tests__/theme-palette.test.ts`), but words carry the meaning.
+- When the words are there, the amount is unsigned. +/- appears only on non-balance deltas (e.g. the monthly summary's net).
+- Zero is "settled up" in graphite, never a green "0". Use `directionOf` / `directionColor` from `lib/balance-summary.ts`.
+- Color is relative to you. Your own standings row and transfers you're part of are colored; other members' rows, transfers between others, and the expenses list stay graphite.
 
 ### Typography
 

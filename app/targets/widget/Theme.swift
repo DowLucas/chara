@@ -8,9 +8,9 @@ enum Theme {
   static let graphite = Color(red: 0x2D / 255, green: 0x1F / 255, blue: 0x1A / 255)
   static let lead = Color(red: 0x6B / 255, green: 0x5A / 255, blue: 0x4E / 255)
   /// "You're owed" / settled.
-  static let moss = Color(red: 0x58 / 255, green: 0x6D / 255, blue: 0x2A / 255)
+  static let moss = Color(red: 0x1F / 255, green: 0x64 / 255, blue: 0x58 / 255)
   /// "You owe" / destructive.
-  static let brick = Color(red: 0x8A / 255, green: 0x2A / 255, blue: 0x2A / 255)
+  static let brick = Color(red: 0x8E / 255, green: 0x3B / 255, blue: 0x1A / 255)
   static let ruleSoft = Color(red: 0x2D / 255, green: 0x1F / 255, blue: 0x1A / 255, opacity: 0.07)
 
   /// Font names are PostScript names, not filenames — the two differ, and a

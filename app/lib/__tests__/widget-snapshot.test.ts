@@ -52,7 +52,7 @@ function myNet(over: Partial<MyNetResponse> = {}): MyNetResponse {
 /** Deterministic deps: no i18next, no clock, no locale lookup. */
 const deps: SnapshotDeps = {
   scheme: 'chara',
-  t: (key) => `T:${key}`,
+  t: (key, opts) => (opts ? `T:${key}(${Object.values(opts).join(',')})` : `T:${key}`),
   formatAmount: (minor, currency) => `${minor} ${currency}`,
   formatAmountCompact: (minor, currency) => `${minor}${currency}`,
   formatTime: () => '14:32',
@@ -147,6 +147,22 @@ describe('buildWidgetSnapshot — currency honesty', () => {
     expect(row.minor).toBe(-42000);
     expect(row.amountText).toBe('42000 SEK');
     expect(row.captionText).toBe('T:widget.youOwe');
+  });
+
+  it('puts a direction word on each group row so it never relies on color alone', () => {
+    const s = buildWidgetSnapshot(
+      {
+        ...baseInput(),
+        groupReads: [{ serverUrl: SERVER, data: [group('g1', 'Owe'), group('g2', 'Owed')] }],
+        balanceReads: [
+          { serverUrl: SERVER, data: [bal('g1', 'SEK', '-240.00'), bal('g2', 'SEK', '75.00')] },
+        ],
+      },
+      deps,
+    );
+    const byName = Object.fromEntries(s.groups.map((g) => [g.name, g.amountText]));
+    expect(byName.Owe).toBe('T:widget.groupOwe(24000 SEK)');
+    expect(byName.Owed).toBe('T:widget.groupOwed(7500 SEK)');
   });
 
   it('propagates mixed signs onto the group row', () => {

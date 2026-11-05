@@ -37,9 +37,12 @@ import { getPinnedGroupKeys, groupKey, togglePinnedGroup } from '@/lib/pinned-gr
 import { useHomeCurrency } from '@/lib/use-home-currency';
 import { aggregateMyNetReads } from '@/lib/aggregate-mynet';
 import {
+  directionColor,
+  directionOf,
   groupPosition,
   mergeGroupsWithBalances,
   netByCurrency as netByCurrencyOf,
+  type BalanceDirection,
   type MergedGroup,
 } from '@/lib/balance-summary';
 import { formatMinorUnits, formatMinorUnitsCompact, decimalToMinor } from '@/lib/i18n';
@@ -56,12 +59,11 @@ import {
 } from '@/lib/theme';
 import { displayHostFor } from '@/lib/server-url';
 
-const fmtBalance = (minor: string, currency: string) =>
-  formatMinorUnits(minor, currency, { relative: true });
 /** Hero-only formatter: hair-spaces in place of locale spaces so a long
- *  number like "−10 019 JPY" doesn't blow past the screen edge. */
-const fmtHero = (minor: number | string, currency: string) =>
-  formatMinorUnitsCompact(minor, currency, { relative: true });
+ *  number like "10 019 JPY" doesn't blow past the screen edge. Unsigned —
+ *  the direction word above the amount says which way it goes. */
+const fmtHero = (minor: number, currency: string) =>
+  formatMinorUnitsCompact(Math.abs(minor), currency);
 const fmtAmount = (minor: string, currency: string) => formatMinorUnits(minor, currency);
 
 // Host renders go through `displayHostFor` so the canonical hosted URL
@@ -214,6 +216,15 @@ export default function HomeScreen() {
     [balanceReads, homeCurrency],
   );
   const showHomeNet = !!aggregatedHomeNet && hasForeignBalance;
+  // The hero says which way the balance goes in words; color is the second
+  // cue, never the only one.
+  const heroDirection = directionOf(showHomeNet ? aggregatedHomeNet!.minor : primaryNet);
+  const directionLabel = (d: BalanceDirection) =>
+    d === 'owe'
+      ? t('home.youOweStamp')
+      : d === 'owed'
+        ? t('home.youreOwedStamp')
+        : t('groupDetail.settledUp');
   const homeNetEstimated =
     !!aggregatedHomeNet &&
     (aggregatedHomeNet.skippedAccounts > 0 ||
@@ -308,6 +319,11 @@ export default function HomeScreen() {
             the per-currency hero stays as-is. */}
         <View style={styles.hero}>
           <Text style={styles.eyebrow}>{t('home.netBalance')}</Text>
+          {(showHomeNet || netByCurrency.length > 0) && (
+            <Text style={[styles.heroDirection, { color: directionColor(heroDirection) }]}>
+              {directionLabel(heroDirection)}
+            </Text>
+          )}
           {showHomeNet ? (
             <>
               <View style={styles.heroRow}>
@@ -315,7 +331,7 @@ export default function HomeScreen() {
                   value={fmtHero(aggregatedHomeNet!.minor, homeCurrency)}
                   style={[
                     styles.heroBalance,
-                    { color: aggregatedHomeNet!.minor >= 0 ? colors.moss : colors.brick },
+                    { color: directionColor(heroDirection) },
                     { flexShrink: 1 },
                   ]}
                   numberOfLines={1}
@@ -332,7 +348,7 @@ export default function HomeScreen() {
                   <Feather
                     name="info"
                     size={18}
-                    color={homeNetEstimated ? colors.vermillion : colors.lead}
+                    color={homeNetEstimated ? colors.brick : colors.lead}
                     strokeWidth={1.5}
                   />
                 </TouchableOpacity>
@@ -344,7 +360,7 @@ export default function HomeScreen() {
             </>
           ) : netByCurrency.length === 0 ? (
             <MoneyText
-              value={fmtHero('0', primaryCurrency)}
+              value={fmtHero(0, primaryCurrency)}
               style={[styles.heroBalance, { color: colors.lead }]}
               numberOfLines={1}
               adjustsFontSizeToFit
@@ -356,7 +372,7 @@ export default function HomeScreen() {
                 value={fmtHero(primaryNet, primaryCurrency)}
                 style={[
                   styles.heroBalance,
-                  { color: primaryNet >= 0 ? colors.moss : colors.brick },
+                  { color: directionColor(heroDirection) },
                 ]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
@@ -367,10 +383,10 @@ export default function HomeScreen() {
                   {netByCurrency.slice(1).map((c) => (
                     <View key={c.currency} style={styles.currencyChip}>
                       <MoneyText
-                        value={fmtBalance(String(c.minor), c.currency)}
+                        value={`${directionLabel(directionOf(c.minor))} ${fmtAmount(String(Math.abs(c.minor)), c.currency)}`}
                         style={[
                           styles.currencyChipAmt,
-                          { color: c.minor >= 0 ? colors.moss : colors.brick },
+                          { color: directionColor(directionOf(c.minor)) },
                         ]}
                       />
                     </View>
@@ -492,7 +508,7 @@ export default function HomeScreen() {
                                 <Feather
                                   name="alert-triangle"
                                   size={12}
-                                  color={colors.vermillion}
+                                  color={colors.brick}
                                   strokeWidth={1.8}
                                 />
                               </TouchableOpacity>
@@ -798,6 +814,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     marginBottom: 6,
   },
+  heroDirection: {
+    fontFamily: fontBody,
+    fontSize: fontSize.body,
+    marginBottom: 2,
+  },
   heroBalance: {
     fontFamily: fontMono,
     fontSize: fontSize.displayXl,
@@ -985,7 +1006,7 @@ const styles = StyleSheet.create({
   errorStripCta: {
     fontFamily: fontMonoMedium,
     fontSize: fontSize.caption,
-    color: colors.vermillion,
+    color: colors.brick,
     letterSpacing: 0.3,
   },
 

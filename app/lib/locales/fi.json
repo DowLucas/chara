@@ -1410,6 +1410,8 @@
   "widget": {
     "addExpense": "Lisää kulu",
     "allSettled": "Kaikki selvitetty",
+    "groupOwe": "velkaa {{amount}}",
+    "groupOwed": "saatavaa {{amount}}",
     "mixedSignsLabel": "Sekalaisia saldoja eri valuutoissa",
     "netBalance": "nettosaldo",
     "noGroups": "Ei vielä ryhmiä",

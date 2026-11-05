@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
   cardActionDestructive: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
-    color: colors.vermillion,
+    color: colors.brick,
     letterSpacing: 0.3,
   },
   deleteForeverRow: {

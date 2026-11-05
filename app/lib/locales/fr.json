@@ -1451,6 +1451,8 @@
   "widget": {
     "addExpense": "Ajouter une dépense",
     "allSettled": "Tout est réglé",
+    "groupOwe": "vous devez {{amount}}",
+    "groupOwed": "on vous doit {{amount}}",
     "mixedSignsLabel": "Soldes mixtes selon les devises",
     "netBalance": "solde net",
     "noGroups": "Aucun groupe pour l'instant",

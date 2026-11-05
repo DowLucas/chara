@@ -1407,6 +1407,8 @@
   "widget": {
     "addExpense": "添加支出",
     "allSettled": "已全部结清",
+    "groupOwe": "欠 {{amount}}",
+    "groupOwed": "应收 {{amount}}",
     "mixedSignsLabel": "不同货币的余额方向不一致",
     "netBalance": "净余额",
     "noGroups": "暂无群组",

@@ -1451,6 +1451,8 @@
   "widget": {
     "addExpense": "Añadir gasto",
     "allSettled": "Todo saldado",
+    "groupOwe": "debes {{amount}}",
+    "groupOwed": "te deben {{amount}}",
     "mixedSignsLabel": "Saldos mixtos entre monedas",
     "netBalance": "saldo neto",
     "noGroups": "Aún no hay grupos",
