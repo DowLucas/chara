@@ -1436,6 +1436,7 @@
     "appearanceDark": "ダーク",
     "appearanceLight": "ライト",
     "appearanceSystem": "システム",
+    "appearanceTileHint": "ダブルタップで切り替え。長押しですべてのオプションを表示。",
     "archivedGroups": "アーカイブ済みグループ",
     "avatar": {
       "choosePhoto": "ライブラリから選ぶ",
@@ -1469,6 +1470,7 @@
     "rateUnavailableBody": "Charaはまだストアで公開されていません。",
     "rateUnavailableTitle": "まだ利用できません",
     "replayOnboarding": "オンボーディングを再生",
+    "sealLabel": "あなたの名前の印。タップで押印します。",
     "sendFeedback": "フィードバックを送る",
     "settingsEyebrow": "設定",
     "shareMessage": "Charaで割り勘してみたよ。チェックしてみて: https://getchara.dowtech.dev",

@@ -115,7 +115,7 @@ describe('dark palette', () => {
 
 describe('camera and media chrome', () => {
   it('is identical in both palettes (it always sits on a dark camera or photo)', () => {
-    for (const k of ['mediaBlack', 'mediaScrim', 'mediaChip', 'mediaRing', 'printNight'] as const) {
+    for (const k of ['mediaBlack', 'mediaScrim', 'mediaChip', 'mediaRing', 'printNight', 'printSealWash'] as const) {
       expect(darkColors[k]).toBe(lightColors[k]);
     }
   });

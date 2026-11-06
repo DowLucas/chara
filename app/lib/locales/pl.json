@@ -1535,6 +1535,7 @@
     "appearanceDark": "Ciemny",
     "appearanceLight": "Jasny",
     "appearanceSystem": "Systemowy",
+    "appearanceTileHint": "Dotknij dwukrotnie, aby zmienić. Przytrzymaj, aby zobaczyć wszystkie opcje.",
     "archivedGroups": "Zarchiwizowane grupy",
     "avatar": {
       "choosePhoto": "Wybierz z galerii",
@@ -1568,6 +1569,7 @@
     "rateUnavailableBody": "Chara nie jest jeszcze opublikowana w sklepie.",
     "rateUnavailableTitle": "Jeszcze niedostępne",
     "replayOnboarding": "Powtórz wprowadzenie",
+    "sealLabel": "Twoja pieczęć z imieniem. Dotknij, aby odbić.",
     "sendFeedback": "Wyślij opinię",
     "settingsEyebrow": "ustawienia",
     "shareMessage": "Dzielę rachunki z Chara — sprawdź: https://getchara.dowtech.dev",

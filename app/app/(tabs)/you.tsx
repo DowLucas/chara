@@ -8,7 +8,9 @@ import {
   Linking,
   ScrollView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
+import { setStatusBarStyle } from 'expo-status-bar';
 import { showAlert } from '@/lib/app-alert';
 import { hapticWarning } from '@/lib/haptics';
 import { userErrorMessage } from '@/lib/user-error';
@@ -19,7 +21,9 @@ import * as Application from 'expo-application';
 import Constants from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
 import { getLocales } from 'expo-localization';
-import { TopBar } from '@/components/TopBar';
+import { SceneHeader } from '@/components/profile/SceneHeader';
+import { SettingTile } from '@/components/profile/SettingTile';
+import { nextAppearance, tileLayoutFor } from '@/lib/profile-scene';
 import { ContentContainer } from '@/components/ContentContainer';
 import { Avatar } from '@/components/Avatar';
 import { ActionSheet, openNativeActionSheet, ActionSheetOption } from '@/components/ActionSheet';
@@ -105,7 +109,17 @@ export default function YouScreen() {
   const [avatarSheetVisible, setAvatarSheetVisible] = useState(false);
   const [languageSheetVisible, setLanguageSheetVisible] = useState(false);
   const [appearanceSheetVisible, setAppearanceSheetVisible] = useState(false);
-  const { preference: appearance, setPreference: setAppearance } = useTheme();
+  const { preference: appearance, setPreference: setAppearance, scheme } = useTheme();
+  const { fontScale } = useWindowDimensions();
+  const tileLayout = tileLayoutFor(fontScale);
+  // The scene header is night in both themes, so the status bar is light
+  // while this tab is on screen and goes back to the theme's on blur.
+  useFocusEffect(
+    useCallback(() => {
+      setStatusBarStyle('light');
+      return () => setStatusBarStyle(scheme === 'dark' ? 'light' : 'dark');
+    }, [scheme]),
+  );
   const appearanceLabel = (p: AppearancePreference) =>
     p === 'light'
       ? t('you.appearanceLight')
@@ -518,9 +532,15 @@ export default function YouScreen() {
         : t('you.rateStore');
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <TopBar title={t('you.title')} />
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
+        <SceneHeader
+          title={t('you.title')}
+          name={user?.name}
+          sealLabel={t('you.sealLabel')}
+          topInset={insets.top}
+        />
+        <View style={styles.body}>
         <ContentContainer>
         <View style={styles.profile}>
           <TouchableOpacity
@@ -530,9 +550,15 @@ export default function YouScreen() {
             accessibilityLabel={t('you.avatar.chooseTitle')}
             style={styles.avatarWrap}
           >
-            <Avatar initials={initials} size="md" style={styles.avatar} source={avatarSource} />
+            <Avatar
+              initials={initials}
+              size="md"
+              style={styles.avatar}
+              textStyle={styles.avatarInitials}
+              source={avatarSource}
+            />
             <View style={styles.avatarBadge}>
-              <Feather name="camera" size={12} color={colors.paper} />
+              <Feather name="camera" size={14} color={colors.paper} />
             </View>
           </TouchableOpacity>
           {uploading && (
@@ -552,6 +578,39 @@ export default function YouScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* The three settings people change most, as large tiles. Appearance
+            cycles in place; long-press (or the accessibility hint) still
+            opens the full sheet. */}
+        <View style={[styles.tiles, tileLayout === 'rows' && styles.tilesRows]}>
+          <SettingTile
+            layout={tileLayout}
+            icon={appearance === 'light' ? 'sun' : appearance === 'dark' ? 'moon' : 'smartphone'}
+            label={t('you.appearance')}
+            value={appearanceLabel(appearance)}
+            onPress={() => setAppearance(nextAppearance(appearance))}
+            onLongPress={() => setAppearanceSheetVisible(true)}
+            accessibilityHint={t('you.appearanceTileHint')}
+          />
+          <SettingTile
+            layout={tileLayout}
+            icon="globe"
+            label={t('you.language')}
+            value={languageRowValue}
+            onPress={() => setLanguageSheetVisible(true)}
+          />
+          <SettingTile
+            layout={tileLayout}
+            icon="credit-card"
+            label={t('you.homeCurrency')}
+            value={
+              homeCurrencyExplicit
+                ? homeCurrency
+                : `${t('you.languageAuto')} · ${homeCurrency}`
+            }
+            onPress={() => setCurrencySheetVisible(true)}
+          />
+        </View>
+
         <Text style={[styles.sectionEyebrow, styles.firstSectionEyebrow]}>
           {t('you.settingsEyebrow')}
         </Text>
@@ -564,25 +623,6 @@ export default function YouScreen() {
           <NavRow
             label={t('you.archivedGroups')}
             onPress={() => router.push('/settings/archived-groups')}
-          />
-          <NavRow
-            label={t('you.language')}
-            value={languageRowValue}
-            onPress={() => setLanguageSheetVisible(true)}
-          />
-          <NavRow
-            label={t('you.appearance')}
-            value={appearanceLabel(appearance)}
-            onPress={() => setAppearanceSheetVisible(true)}
-          />
-          <NavRow
-            label={t('you.homeCurrency')}
-            value={
-              homeCurrencyExplicit
-                ? homeCurrency
-                : `${t('you.languageAuto')} · ${homeCurrency}`
-            }
-            onPress={() => setCurrencySheetVisible(true)}
           />
           {/* Hosted-only, so the row is gated on the server actually
               advertising the feature rather than shown-then-404. Opens the
@@ -692,6 +732,7 @@ export default function YouScreen() {
           </Text>
         ) : null}
         </ContentContainer>
+        </View>
       </ScrollView>
       <ActionSheet
         visible={avatarSheetVisible}
@@ -777,17 +818,31 @@ const useStyles = makeStyles((colors) => ({
     letterSpacing: 0.3,
     marginTop: spacing.s6,
   },
-  scroll: { paddingHorizontal: spacing.s5, paddingTop: spacing.s5, paddingBottom: spacing.s7 },
+  scroll: { paddingBottom: spacing.s7 },
+  body: { paddingHorizontal: spacing.s5 },
   profile: { alignItems: 'center' },
-  avatarWrap: { position: 'relative' },
-  avatar: { width: 64, height: 64, borderRadius: 32 },
+  // The avatar sits on a paper ring that overlaps the scene's waterline.
+  avatarWrap: {
+    position: 'relative',
+    marginTop: -56,
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+    backgroundColor: colors.paper,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatar: { width: 100, height: 100, borderRadius: 50 },
+  avatarInitials: { fontSize: fontSize.displayM },
+  tiles: { flexDirection: 'row', gap: spacing.s2, marginTop: spacing.s6 },
+  tilesRows: { flexDirection: 'column' },
   avatarBadge: {
     position: 'absolute',
-    right: -2,
-    bottom: -2,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    right: 6,
+    bottom: 6,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: colors.graphite,
     alignItems: 'center',
     justifyContent: 'center',
@@ -803,7 +858,7 @@ const useStyles = makeStyles((colors) => ({
   },
   name: {
     fontFamily: fontDisplay,
-    fontSize: fontSize.displayS,
+    fontSize: fontSize.displayM,
     letterSpacing: -0.5,
     color: colors.graphite,
     marginTop: spacing.s3,

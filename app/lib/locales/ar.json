@@ -1631,6 +1631,7 @@
     "appearanceDark": "داكن",
     "appearanceLight": "فاتح",
     "appearanceSystem": "النظام",
+    "appearanceTileHint": "اضغط مرتين للتغيير. اضغط مطولًا لكل الخيارات.",
     "archivedGroups": "المجموعات المؤرشفة",
     "avatar": {
       "choosePhoto": "اختيار من المكتبة",
@@ -1664,6 +1665,7 @@
     "rateUnavailableBody": "لم يُنشر Chara في أي متجر بعد.",
     "rateUnavailableTitle": "غير متوفر بعد",
     "replayOnboarding": "إعادة التهيئة",
+    "sealLabel": "ختم اسمك. اضغط لتختم.",
     "sendFeedback": "إرسال ملاحظات",
     "settingsEyebrow": "الإعدادات",
     "shareMessage": "أنا أقسّم الفواتير مع Chara — جرّبه: https://getchara.dowtech.dev",

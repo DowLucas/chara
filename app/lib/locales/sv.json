@@ -1439,6 +1439,7 @@
     "appearanceDark": "Mörkt",
     "appearanceLight": "Ljust",
     "appearanceSystem": "System",
+    "appearanceTileHint": "Dubbeltryck för att ändra. Tryck länge för alla alternativ.",
     "archivedGroups": "Arkiverade grupper",
     "avatar": {
       "choosePhoto": "Välj från bilder",
@@ -1472,6 +1473,7 @@
     "rateUnavailableBody": "Chara finns inte i någon butik ännu.",
     "rateUnavailableTitle": "Inte tillgängligt ännu",
     "replayOnboarding": "Spela upp introduktionen igen",
+    "sealLabel": "Din namnstämpel. Tryck för att stämpla.",
     "sendFeedback": "Skicka feedback",
     "settingsEyebrow": "inställningar",
     "shareMessage": "Jag delar utgifter med Chara — kolla in det: https://getchara.dowtech.dev",

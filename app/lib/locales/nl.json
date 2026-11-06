@@ -1439,6 +1439,7 @@
     "appearanceDark": "Donker",
     "appearanceLight": "Licht",
     "appearanceSystem": "Systeem",
+    "appearanceTileHint": "Dubbeltik om te wijzigen. Houd ingedrukt voor alle opties.",
     "archivedGroups": "Gearchiveerde groepen",
     "avatar": {
       "choosePhoto": "Kies uit bibliotheek",
@@ -1472,6 +1473,7 @@
     "rateUnavailableBody": "Chara staat nog niet in een winkel.",
     "rateUnavailableTitle": "Nog niet beschikbaar",
     "replayOnboarding": "Onboarding opnieuw afspelen",
+    "sealLabel": "Je naamstempel. Tik om te stempelen.",
     "sendFeedback": "Feedback sturen",
     "settingsEyebrow": "instellingen",
     "shareMessage": "Ik splits rekeningen met Chara — check het even: https://getchara.dowtech.dev",

@@ -1482,6 +1482,7 @@
     "appearanceDark": "Escuro",
     "appearanceLight": "Claro",
     "appearanceSystem": "Sistema",
+    "appearanceTileHint": "Toque duas vezes para mudar. Toque e segure para ver todas as opções.",
     "archivedGroups": "Grupos arquivados",
     "avatar": {
       "choosePhoto": "Escolher da galeria",
@@ -1515,6 +1516,7 @@
     "rateUnavailableBody": "O Chara ainda não foi publicado em uma loja.",
     "rateUnavailableTitle": "Ainda não disponível",
     "replayOnboarding": "Repetir tutorial",
+    "sealLabel": "Seu selo com seu nome. Toque para carimbar.",
     "sendFeedback": "Enviar comentários",
     "settingsEyebrow": "configurações",
     "shareMessage": "Estou dividindo contas com o Chara — dá uma olhada: https://getchara.dowtech.dev",

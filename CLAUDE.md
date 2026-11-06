@@ -144,6 +144,8 @@ For settings-style screens (`(tabs)/you.tsx`, `groups/.../settings.tsx`):
 - Each row: horizontal padding `spacing.s5`, vertical padding `spacing.s4`, `borderBottomWidth: 1, borderBottomColor: ruleSoft`.
 - `NavRow` (label + chevron) for navigation; `InfoRow` (label + right-aligned mono value) for read-only key/value.
 
+The You tab opens with the night-print `SceneHeader` (no `TopBar`; light status bar while focused) and three `SettingTile`s (Appearance, Language, Home currency) above this list (`components/profile/`). Don't add those three back as rows.
+
 ## i18n
 
 The mobile app (`app/`) uses `i18next` + `react-i18next` + `expo-localization`. **All user-facing strings must go through `t()`** — no hardcoded English in JSX, `Alert.alert`, `placeholder`, `accessibilityLabel`, `Share.share`, etc.

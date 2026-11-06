@@ -1439,6 +1439,7 @@
     "appearanceDark": "Dunkel",
     "appearanceLight": "Hell",
     "appearanceSystem": "System",
+    "appearanceTileHint": "Doppeltippen zum Ändern. Lange drücken für alle Optionen.",
     "archivedGroups": "Archivierte Gruppen",
     "avatar": {
       "choosePhoto": "Aus Mediathek wählen",
@@ -1472,6 +1473,7 @@
     "rateUnavailableBody": "Chara ist noch in keinem Store veröffentlicht.",
     "rateUnavailableTitle": "Noch nicht verfügbar",
     "replayOnboarding": "Onboarding nochmal ansehen",
+    "sealLabel": "Dein Namensstempel. Tippen zum Stempeln.",
     "sendFeedback": "Feedback senden",
     "settingsEyebrow": "Einstellungen",
     "shareMessage": "Ich teile meine Rechnungen mit Chara – schau mal: https://getchara.dowtech.dev",

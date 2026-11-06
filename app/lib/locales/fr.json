@@ -1482,6 +1482,7 @@
     "appearanceDark": "Sombre",
     "appearanceLight": "Clair",
     "appearanceSystem": "Système",
+    "appearanceTileHint": "Touchez deux fois pour changer. Appui long pour toutes les options.",
     "archivedGroups": "Groupes archivés",
     "avatar": {
       "choosePhoto": "Choisir dans la bibliothèque",
@@ -1515,6 +1516,7 @@
     "rateUnavailableBody": "Chara n'est pas encore disponible sur les stores.",
     "rateUnavailableTitle": "Pas encore disponible",
     "replayOnboarding": "Revoir l'introduction",
+    "sealLabel": "Votre sceau. Touchez pour tamponner.",
     "sendFeedback": "Envoyer un retour",
     "settingsEyebrow": "paramètres",
     "shareMessage": "Je partage mes dépenses avec Chara — jette un œil : https://getchara.dowtech.dev",

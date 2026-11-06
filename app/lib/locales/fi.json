@@ -1439,6 +1439,7 @@
     "appearanceDark": "Tumma",
     "appearanceLight": "Vaalea",
     "appearanceSystem": "Järjestelmä",
+    "appearanceTileHint": "Muuta kaksoisnapautuksella. Pitkä painallus näyttää kaikki vaihtoehdot.",
     "archivedGroups": "Arkistoidut ryhmät",
     "avatar": {
       "choosePhoto": "Valitse kirjastosta",
@@ -1472,6 +1473,7 @@
     "rateUnavailableBody": "Charaa ei ole vielä julkaistu kauppaan.",
     "rateUnavailableTitle": "Ei vielä saatavilla",
     "replayOnboarding": "Käy perehdytys uudelleen",
+    "sealLabel": "Nimileimasi. Napauta leimataksesi.",
     "sendFeedback": "Lähetä palautetta",
     "settingsEyebrow": "asetukset",
     "shareMessage": "Olen jakanut laskuja Charalla — kokeile sinäkin: https://getchara.dowtech.dev",

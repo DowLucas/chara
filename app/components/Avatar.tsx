@@ -13,9 +13,11 @@ interface AvatarProps {
   /** Optional remote image source. When provided, the image is rendered;
    *  on load failure (or null), it falls back to the `initials` view. */
   source?: ImageURISource | null;
+  /** Overrides the initials text style, for avatars sized up via `style`. */
+  textStyle?: object;
 }
 
-export function Avatar({ initials, size = 'md', stack = false, style, source }: AvatarProps) {
+export function Avatar({ initials, size = 'md', stack = false, style, source, textStyle }: AvatarProps) {
   const styles = useStyles();
   const dim = size === 'sm' ? 26 : 34;
   const [failed, setFailed] = useState(false);
@@ -52,7 +54,7 @@ export function Avatar({ initials, size = 'md', stack = false, style, source }: 
           onError={() => setFailed(true)}
         />
       ) : (
-        <Text style={[styles.text, size === 'sm' && styles.textSm]}>{initials}</Text>
+        <Text style={[styles.text, size === 'sm' && styles.textSm, textStyle]}>{initials}</Text>
       )}
     </View>
   );

@@ -1439,6 +1439,7 @@
     "appearanceDark": "Mørkt",
     "appearanceLight": "Lyst",
     "appearanceSystem": "System",
+    "appearanceTileHint": "Dobbelttryk for at ændre. Hold nede for alle muligheder.",
     "archivedGroups": "Arkiverede grupper",
     "avatar": {
       "choosePhoto": "Vælg fra biblioteket",
@@ -1472,6 +1473,7 @@
     "rateUnavailableBody": "Chara er ikke udgivet i en butik endnu.",
     "rateUnavailableTitle": "Ikke tilgængelig endnu",
     "replayOnboarding": "Tag introen igen",
+    "sealLabel": "Dit navnestempel. Tryk for at stemple.",
     "sendFeedback": "Send feedback",
     "settingsEyebrow": "indstillinger",
     "shareMessage": "Jeg deler regninger med Chara — prøv det: https://getchara.dowtech.dev",
