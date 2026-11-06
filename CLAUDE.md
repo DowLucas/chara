@@ -225,6 +225,8 @@ Do not confuse this with `./deploy` — that's an unrelated directory holding se
 
 Android build artifacts land in `build-artifacts/chara-android-<version>.aab` (gitignored).
 
+`./release` stops at Play's **internal** track and an App Store Connect build upload. Store copy lives in `release-notes/<version>/`: `play.txt` (Play language tags) and `appstore.txt` (App Store locale codes, pt-BR rather than pt-PT), 15 languages each. Promoting to Play production and setting App Store "What's New" are separate steps after the builds land.
+
 ## Design system
 
 `design-system/` is the Chara design system as consumed by Claude Design (project

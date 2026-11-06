@@ -1,0 +1,75 @@
+<en-US>
+- A new Profile page: your name under a night-sky print, with quick tiles for Appearance, Language and Currency.
+- A calmer Activity feed: one card per day, each group in its own color, amounts at a glance.
+- Icons on every setting, and layouts that fit smaller screens and larger text.
+</en-US>
+<sv-SE>
+- En ny Profil-sida: ditt namn under en natthimmel, med snabbrutor för Utseende, Språk och Valuta.
+- Ett lugnare Aktivitet-flöde: ett kort per dag, varje grupp i sin egen färg och beloppen direkt synliga.
+- Ikoner på alla inställningar, och layouter som passar mindre skärmar och större text.
+</sv-SE>
+<da-DK>
+- En ny Profil-side: dit navn under en nattehimmel, med hurtigfelter til Udseende, Sprog og Valuta.
+- Et roligere Aktivitet-feed: ét kort pr. dag, hver gruppe i sin egen farve og beløbene lige til at se.
+- Ikoner på alle indstillinger, og layouts der passer til mindre skærme og større tekst.
+</da-DK>
+<de-DE>
+- Eine neue Profil-Seite: dein Name unter einem Nachthimmel, mit Schnellkacheln für Darstellung, Sprache und Währung.
+- Ein ruhigerer Aktivität-Feed: eine Karte pro Tag, jede Gruppe in ihrer Farbe, Beträge auf einen Blick.
+- Symbole bei allen Einstellungen und Layouts, die auf kleinere Bildschirme und größere Schrift passen.
+</de-DE>
+<fi-FI>
+- Uusi Profiili-sivu: nimesi yötaivaan alla ja pikaruudut asetuksille Ulkoasu, Kieli ja Valuutta.
+- Rauhallisempi Tapahtumat-näkymä: yksi kortti päivää kohden, jokainen ryhmä omalla värillään ja summat heti näkyvissä.
+- Kuvakkeet kaikkiin asetuksiin sekä asettelut, jotka sopivat pienemmille näytöille ja suuremmalle tekstille.
+</fi-FI>
+<fr-FR>
+- Une nouvelle page Profil : votre nom sous un ciel nocturne, avec des tuiles rapides Apparence, Langue et Devise.
+- Un fil Activité plus apaisé : une carte par jour, chaque groupe dans sa couleur, les montants en un coup d'œil.
+- Des icônes pour chaque réglage, et une mise en page adaptée aux petits écrans et aux grands textes.
+</fr-FR>
+<it-IT>
+- Una nuova pagina Profilo: il tuo nome sotto un cielo notturno, con riquadri rapidi per Aspetto, Lingua e Valuta.
+- Un feed Attività più tranquillo: una scheda al giorno, ogni gruppo col suo colore, importi a colpo d'occhio.
+- Icone su ogni impostazione e layout adatti a schermi più piccoli e testo più grande.
+</it-IT>
+<es-ES>
+- Una nueva página de Perfil: tu nombre bajo un cielo nocturno, con accesos rápidos a Apariencia, Idioma y Moneda.
+- Una Actividad más tranquila: una tarjeta por día, cada grupo con su color y los importes de un vistazo.
+- Iconos en cada ajuste y diseños que se adaptan a pantallas pequeñas y textos más grandes.
+</es-ES>
+<ja-JP>
+- 新しい「あなた」ページ：夜空の版画の下にあなたの名前。「外観」「言語」「通貨」をすぐに切り替えられます。
+- 「アクティビティ」がすっきり：1日ごとに1枚のカード、グループごとの色、金額もひと目でわかります。
+- すべての設定にアイコンを追加し、小さな画面や大きな文字でも見やすくなりました。
+</ja-JP>
+<no-NO>
+- En ny Profil-side: navnet ditt under en nattehimmel, med hurtigfelt for Utseende, Språk og Valuta.
+- En roligere Aktivitet-strøm: ett kort per dag, hver gruppe i sin egen farge og beløpene rett foran deg.
+- Ikoner på alle innstillinger, og oppsett som passer mindre skjermer og større tekst.
+</no-NO>
+<zh-CN>
+- 全新的“我的”页面：夜空版画下方显示你的名字，并可快速设置外观、语言和货币。
+- 更清爽的“动态”：每天一张卡片，每个群组都有自己的颜色，金额一目了然。
+- 每项设置都配上了图标，小屏幕和大字体下也能完整显示。
+</zh-CN>
+<pt-PT>
+- Uma nova página de Perfil: o seu nome sob um céu noturno, com atalhos para Aparência, Idioma e Moeda.
+- Uma Atividade mais calma: um cartão por dia, cada grupo com a sua cor e os valores à vista.
+- Ícones em todas as definições e esquemas que se adaptam a ecrãs menores e texto maior.
+</pt-PT>
+<pl-PL>
+- Nowa strona Profil: Twoje imię pod nocnym niebem i szybkie kafelki Wygląd, Język i Waluta.
+- Spokojniejsza Aktywność: jedna karta na dzień, każda grupa w swoim kolorze, kwoty widoczne od razu.
+- Ikony przy każdym ustawieniu i układ dopasowany do mniejszych ekranów i większego tekstu.
+</pl-PL>
+<nl-NL>
+- Een nieuwe Profiel-pagina: je naam onder een nachtelijke hemel, met snelle tegels voor Weergave, Taal en Valuta.
+- Een rustigere Activiteit: één kaart per dag, elke groep in een eigen kleur, bedragen in één oogopslag.
+- Iconen bij elke instelling, en indelingen die passen op kleinere schermen en bij grotere tekst.
+</nl-NL>
+<ar>
+- صفحة جديدة للملف الشخصي: اسمك تحت سماء ليلية، مع مربعات سريعة للمظهر واللغة والعملة.
+- قسم النشاط أكثر هدوءًا: بطاقة واحدة لكل يوم، ولكل مجموعة لونها، والمبالغ واضحة من النظرة الأولى.
+- أيقونات لكل الإعدادات، وتصميم يناسب الشاشات الصغيرة والخطوط الكبيرة.
+</ar>
