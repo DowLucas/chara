@@ -74,15 +74,8 @@ import {
   savedSplitToPct,
   type GroupDefaultSplit,
 } from '@/lib/saved-splits';
-import {
-  colors,
-  fontBody,
-  fontDisplay,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors, useTheme } from '@/lib/theme-context';
 
 const MAX_AMOUNT_MINOR = 9_999_999_99;
 
@@ -273,6 +266,7 @@ function initialKeyOf(
 
 export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>(
   function ExpenseWizard(props, ref) {
+    const styles = useStyles();
     const {
       mode,
       groupName,
@@ -1252,6 +1246,7 @@ export const ExpenseWizard = forwardRef<ExpenseWizardHandle, ExpenseWizardProps>
 
 // ─── Stepper ──────────────────────────────────────────────────────────────────
 function Stepper({ current, t }: { current: Step; t: (k: string) => string }) {
+  const styles = useStyles();
   const labels = [t('addExpense.stepWhat'), t('addExpense.stepSplit')];
   return (
     <View style={styles.stepperWrap}>
@@ -1333,6 +1328,8 @@ function Step1({
   setRateInput,
   rateNumber,
 }: Step1Props) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <View>
       {topSlot}
@@ -1455,6 +1452,8 @@ function Step2({
   onSplitRemainder,
   onSaveDefaultSplit,
 }: Step2Props) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   return (
     <View>
@@ -1484,7 +1483,7 @@ function Step2({
           activeOpacity={0.85}
           accessibilityRole="button"
         >
-          <Feather name="divide-circle" size={20} color={colors.fgOnAccent} />
+          <Feather name="divide-circle" size={20} color={colors.paper} />
           <View style={styles.remainderText}>
             <Text style={styles.remainderCtaLabel}>
               {t('addExpense.splitRemainder')}
@@ -1495,7 +1494,7 @@ function Step2({
               })}
             </Text>
           </View>
-          <Feather name="chevron-right" size={20} color={colors.fgOnAccent} />
+          <Feather name="chevron-right" size={20} color={colors.paper} />
         </TouchableOpacity>
       )}
       {onSaveDefaultSplit && splitValue.method === 'percentage' && (
@@ -1516,6 +1515,7 @@ function Step2({
 
 // ─── Shared subcomponents ─────────────────────────────────────────────────────
 function Recap({ eyebrow, line, amount }: { eyebrow: string; line: string; amount: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.recapWrap}>
       <View style={styles.recapCard}>
@@ -1542,6 +1542,9 @@ function DateInput({
   setDate: (d: Date) => void;
   onOpenPicker: () => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
+  const { scheme } = useTheme();
   const formatted = date.toLocaleDateString(currentLocale(), {
     weekday: 'short',
     month: 'short',
@@ -1562,7 +1565,7 @@ function DateInput({
             return d;
           })()}
           display="compact"
-          themeVariant="light"
+          themeVariant={scheme}
           accentColor={colors.vermillion}
           onChange={(_, selected) => {
             if (selected) setDate(selected);
@@ -1581,7 +1584,7 @@ function DateInput({
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
   ctaRow: { flexDirection: 'row', gap: spacing.s2 },
@@ -1669,12 +1672,12 @@ const styles = StyleSheet.create({
   remainderCtaLabel: {
     fontFamily: fontDisplay,
     fontSize: 15,
-    color: colors.fgOnAccent,
+    color: colors.paper,
   },
   remainderCtaHint: {
     fontFamily: fontBody,
     fontSize: 12,
-    color: colors.fgOnAccent,
+    color: colors.paper,
     opacity: 0.75,
     marginTop: 2,
   },
@@ -1744,4 +1747,4 @@ const styles = StyleSheet.create({
     fontSize: fontSize.body,
     color: colors.graphite,
   },
-});
+}));

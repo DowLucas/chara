@@ -44,9 +44,12 @@ import { computeBalanceImpact } from '@/lib/balance-impact';
 import { expenseToRecurringPrefill } from '@/lib/recurring/from-expense';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import { initialsOf, makeNameShortener } from '@/lib/name';
-import { colors, fontDisplay, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontDisplay, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 export default function ExpenseDetailScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { server, id, groupId } = useLocalSearchParams<{
     server: string;
     id: string;
@@ -544,7 +547,7 @@ export default function ExpenseDetailScreen() {
               onPress={() => setViewer(null)}
               accessibilityLabel={t('common.close')}
             >
-              <Feather name="x" size={24} color={colors.paper} />
+              <Feather name="x" size={24} color={colors.fgOnAccent} />
             </TouchableOpacity>
             {viewer?.isPdf ? (
               <>
@@ -555,7 +558,7 @@ export default function ExpenseDetailScreen() {
                   }}
                   accessibilityLabel={t('common.share')}
                 >
-                  <Feather name="share" size={22} color={colors.paper} />
+                  <Feather name="share" size={22} color={colors.fgOnAccent} />
                 </TouchableOpacity>
                 <PdfView
                   source={{ uri: viewer.uri, headers: viewer.headers, cache: true }}
@@ -643,6 +646,7 @@ interface SplitRowProps {
 }
 
 function SplitRow({ name, initials, share, currency, avatarSource }: SplitRowProps) {
+  const styles = useStyles();
   const minor = parseInt(share, 10);
   // No sign — this is each person's share of the cost, not a balance delta.
   // The header already says how the total split, so the row is reinforcement.
@@ -663,7 +667,7 @@ function SplitRow({ name, initials, share, currency, avatarSource }: SplitRowPro
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
   loading: {
@@ -841,7 +845,7 @@ const styles = StyleSheet.create({
   },
   viewerBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.92)',
+    backgroundColor: colors.mediaBlack,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -854,7 +858,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: colors.mediaChip,
     zIndex: 1,
   },
   viewerImage: { width: '100%', height: '100%' },
@@ -874,4 +878,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.s5,
     paddingTop: spacing.s6,
   },
-});
+}));

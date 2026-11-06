@@ -680,7 +680,6 @@
     "mixedSignsBody": "Du ska få i vissa valutor och är fortfarande skyldig i andra — summan visar bara en. Öppna gruppen för att se hela bilden.",
     "mixedSignsLabel": "Blandade saldon i olika valutor",
     "mixedSignsTitle": "Blandade saldon",
-    "netBalance": "nettosaldo",
     "noActivity": "Ingen aktivitet ännu.",
     "noGroupsBody": "Skapa en grupp för att börja dela utgifter.",
     "noGroupsCta": "Skapa din första grupp",
@@ -1436,6 +1435,10 @@
     "accountsRowMany_one": "Konton · {{count}}",
     "accountsRowMany_other": "Konton · {{count}}",
     "accountsRowSingle": "Konton · 1",
+    "appearance": "Utseende",
+    "appearanceDark": "Mörkt",
+    "appearanceLight": "Ljust",
+    "appearanceSystem": "System",
     "archivedGroups": "Arkiverade grupper",
     "avatar": {
       "choosePhoto": "Välj från bilder",

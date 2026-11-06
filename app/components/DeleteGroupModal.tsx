@@ -27,14 +27,8 @@ import {
 } from './DeleteGroupModal.helpers';
 import { formatMinorUnits } from '../lib/i18n';
 import { markPopupClosed } from '../lib/popup-guard';
-import {
-  colors,
-  fontBody,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  spacing,
-} from '../lib/theme';
+import { fontBody, fontMono, fontMonoMedium, fontSize, spacing } from '../lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 interface Props {
   visible: boolean;
@@ -53,6 +47,8 @@ export function DeleteGroupModal({
   onCancel,
   onConfirm,
 }: Props) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   const { sheetMaxWidth } = useResponsive();
   const [typed, setTyped] = useState('');
@@ -181,7 +177,7 @@ export function DeleteGroupModal({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scrollBody: { padding: spacing.s5, paddingBottom: spacing.s7 },
   title: {
@@ -261,4 +257,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brick,
     borderColor: colors.brick,
   },
-});
+}));

@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'rea
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 interface Props {
   onScanned: (data: string) => void;
@@ -14,6 +15,8 @@ interface Props {
  *  is responsible for closing the screen or re-enabling scanning if it wants
  *  to keep the camera open after a failed join. */
 export function QRScanner({ onScanned, onCancel }: Props) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
@@ -76,7 +79,7 @@ export function QRScanner({ onScanned, onCancel }: Props) {
       </View>
       {onCancel && (
         <TouchableOpacity style={styles.closeBtn} onPress={onCancel} accessibilityLabel={t('common.close')}>
-          <Feather name="x" size={22} color={colors.paper} />
+          <Feather name="x" size={22} color={colors.fgOnAccent} />
         </TouchableOpacity>
       )}
     </View>
@@ -85,8 +88,8 @@ export function QRScanner({ onScanned, onCancel }: Props) {
 
 const VIEWFINDER = 260;
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+const useStyles = makeStyles((colors) => ({
+  container: { flex: 1, backgroundColor: colors.mediaBlack },
   center: {
     flex: 1,
     alignItems: 'center',
@@ -108,7 +111,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 28,
     height: 28,
-    borderColor: colors.paper,
+    borderColor: colors.fgOnAccent,
   },
   cornerTL: { top: 0, left: 0, borderTopWidth: 3, borderLeftWidth: 3 },
   cornerTR: { top: 0, right: 0, borderTopWidth: 3, borderRightWidth: 3 },
@@ -117,7 +120,7 @@ const styles = StyleSheet.create({
   hint: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
-    color: colors.paper,
+    color: colors.fgOnAccent,
     letterSpacing: 0.3,
     marginTop: spacing.s4,
     opacity: 0.85,
@@ -129,7 +132,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: colors.mediaScrim,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -159,4 +162,4 @@ const styles = StyleSheet.create({
     fontSize: fontSize.body,
     color: colors.graphite,
   },
-});
+}));

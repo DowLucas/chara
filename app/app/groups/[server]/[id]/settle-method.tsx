@@ -38,15 +38,8 @@ import { clearPendingSwish, savePendingSwish } from '@/lib/pending-swish';
 import { track } from '@/lib/analytics';
 import { maybeRequestReviewAfterSettlement } from '@/lib/review-prompt';
 import { newUlid } from '@/lib/ulid';
-import {
-  colors,
-  fontDisplay,
-  fontBody,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontDisplay, fontBody, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 type MethodId = 'swish' | 'vipps' | 'paypal' | 'bank' | 'manual';
 
@@ -63,6 +56,8 @@ function initialsOf(name?: string | null): string {
 }
 
 export default function SettleMethodScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { server, id, from, to, amount, currency } = useLocalSearchParams<{
     server: string;
     id: string;
@@ -619,7 +614,7 @@ function subForMethod(
   }
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
   counterRow: {
@@ -719,7 +714,7 @@ const styles = StyleSheet.create({
     color: colors.lead,
     letterSpacing: 0.5,
   },
-  methodTileLetterPrimary: { color: colors.paper },
+  methodTileLetterPrimary: { color: colors.fgOnAccent },
   methodTextWrap: { flex: 1, minWidth: 0 },
   methodNameRow: {
     flexDirection: 'row',
@@ -742,7 +737,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontFamily: fontMono,
     fontSize: 11,
-    color: colors.vermillion,
+    color: colors.vermillionInk,
     letterSpacing: 0.5,
   },
   methodSub: {
@@ -826,7 +821,7 @@ const styles = StyleSheet.create({
   },
   settledRoot: {
     flex: 1,
-    backgroundColor: '#0E1A2E', // matches the deep dusk sky of the print
+    backgroundColor: colors.printNight, // matches the deep dusk sky of the print
   },
   settledHero: {
     width: '100%',
@@ -838,7 +833,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.85)',
+    backgroundColor: colors.paper,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -927,4 +922,4 @@ const styles = StyleSheet.create({
     color: colors.lead,
     letterSpacing: 0.5,
   },
-});
+}));

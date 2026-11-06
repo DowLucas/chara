@@ -4,7 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ContentContainer } from '@/components/ContentContainer';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 interface Props {
   visible: boolean;
@@ -17,6 +18,8 @@ interface Props {
 // "settled" stamp — adding an expense creates a debt, it doesn't settle one.
 // Design brief is "no confetti, no fanfare" — restrained, deliberate timing.
 export function ExpenseSavedOverlay({ visible, subtitle, onContinue }: Props) {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 
@@ -77,7 +80,7 @@ export function ExpenseSavedOverlay({ visible, subtitle, onContinue }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: colors.paper,
@@ -119,4 +122,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.vermillion,
   },
   ctaLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.fgOnAccent },
-});
+}));

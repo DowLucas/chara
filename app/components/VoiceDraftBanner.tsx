@@ -5,7 +5,8 @@ import { useTranslation } from 'react-i18next';
 
 import { Text } from '@/components/Text';
 
-import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 export interface VoiceDraftBannerProps {
   /** How many drafts wait BEHIND the one currently in the wizard. */
@@ -24,6 +25,8 @@ export interface VoiceDraftBannerProps {
  * the screen's card vocabulary.
  */
 export function VoiceDraftBanner({ remaining, nextPhrase, onDiscardRest }: VoiceDraftBannerProps) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   if (remaining <= 0) return null;
 
@@ -50,7 +53,7 @@ export function VoiceDraftBanner({ remaining, nextPhrase, onDiscardRest }: Voice
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   card: {
     backgroundColor: colors.bone,
     borderRadius: 10,
@@ -73,4 +76,4 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     marginTop: spacing.s2,
   },
-});
+}));

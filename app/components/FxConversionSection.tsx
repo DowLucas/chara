@@ -8,13 +8,8 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import {
-  colors,
-  fontBody,
-  fontMono,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import { ApiError, FxConvertResponse } from '@/lib/api';
 import { formatFxRate } from '@/lib/i18n';
 
@@ -124,6 +119,8 @@ export function FxConversionSection({
   setRateInput,
   rateNumber,
 }: Props) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
 
   // Resting display of the rate is clamped to 2 decimals; while the field is
@@ -257,7 +254,7 @@ function stripTrailingZeros(s: string): string {
   return s.replace(/0+$/, '').replace(/\.$/, '');
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   fxWrap: {
     marginTop: spacing.s4,
     padding: spacing.s4,
@@ -371,4 +368,4 @@ const styles = StyleSheet.create({
     color: colors.lead,
     lineHeight: 18,
   },
-});
+}));

@@ -47,15 +47,8 @@ import { reviewState, ReviewRow } from '@/lib/import-review';
 import { decimalToMinor, minorToDecimal } from '@/lib/money-utils';
 import { formatMinorUnits } from '@/lib/i18n';
 import { notifyGroupChanged } from '@/lib/group-refresh';
-import {
-  colors,
-  fontBody,
-  fontDisplay,
-  fontMono,
-  fontSize,
-  radii,
-  spacing,
-} from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, radii, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 const MAX_IMAGES = 10;
 
@@ -76,6 +69,7 @@ function inferMime(asset: ImagePicker.ImagePickerAsset): string {
 
 /** Hero header shared by every step: mono step indicator + display headline + body. */
 function StepHeader({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.header}>
       <Text style={styles.headerEyebrow}>{eyebrow}</Text>
@@ -86,6 +80,8 @@ function StepHeader({ eyebrow, title, body }: { eyebrow: string; title: string; 
 }
 
 export default function ImportSourceScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { server, id, source } = useLocalSearchParams<{
     server: string;
     id: string;
@@ -278,7 +274,7 @@ export default function ImportSourceScreen() {
                     accessibilityLabel={t('import.tray.remove')}
                     onPress={() => removeImage(img.uri)}
                   >
-                    <Feather name="x" size={14} color={colors.fgOnAccent} />
+                    <Feather name="x" size={14} color={colors.paper} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -410,7 +406,7 @@ export default function ImportSourceScreen() {
 
         {step === 'importing' && (
           <View style={styles.center}>
-            <ActivityIndicator color={colors.vermillion} />
+            <ActivityIndicator color={colors.vermillionInk} />
             <Text style={styles.guidanceBody}>{t('import.progress.committing')}</Text>
           </View>
         )}
@@ -445,7 +441,7 @@ export default function ImportSourceScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   screen: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
   center: { alignItems: 'center', paddingVertical: spacing.s7, gap: spacing.s3 },
@@ -562,7 +558,7 @@ const styles = StyleSheet.create({
   },
   chipActive: { backgroundColor: colors.graphite, borderColor: colors.graphite },
   chipLabel: { fontFamily: fontBody, fontSize: fontSize.bodyS, color: colors.lead },
-  chipLabelActive: { color: colors.fgOnAccent },
+  chipLabelActive: { color: colors.paper },
   reviewCard: {
     marginHorizontal: spacing.s4,
     marginTop: spacing.s2,
@@ -623,4 +619,4 @@ const styles = StyleSheet.create({
     borderTopColor: colors.ruleSoft,
     backgroundColor: colors.paper,
   },
-});
+}));

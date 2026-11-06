@@ -6,10 +6,13 @@ import { OnboardingScaffold } from '@/components/OnboardingScaffold';
 import { useEnglishT } from '@/lib/i18n';
 import { loadDraft, nextAfterName, updateDraft } from '@/lib/onboarding-draft';
 import { legacyHostedUrl } from '@/lib/legacy-hosted-url';
-import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import * as analytics from '@/lib/analytics';
 
 export default function WelcomeNameScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const t = useEnglishT();
   const [name, setName] = useState('');
 
@@ -57,7 +60,7 @@ export default function WelcomeNameScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   field: { gap: spacing.s2 },
   fieldLabel: {
     fontFamily: fontMono,
@@ -75,4 +78,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.s4,
     paddingVertical: spacing.s3,
   },
-});
+}));

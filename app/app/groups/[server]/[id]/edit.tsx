@@ -20,9 +20,12 @@ import { ContentContainer } from '@/components/ContentContainer';
 import { Text } from '@/components/Text';
 import { CurrencyPicker } from '@/components/CurrencyPicker';
 import { SUGGESTED_CURRENCY_CODES } from '@/lib/currencies';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 export default function EditGroupScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { server, id } = useLocalSearchParams<{ server: string; id: string }>();
@@ -239,7 +242,7 @@ const GROUP_LANGUAGES: Array<{ code: string; label: string }> = [
   { code: 'ko', label: '한국어' },
 ];
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper, paddingHorizontal: spacing.s5 },
   scroll: { flex: 1 },
   center: { alignItems: 'center', justifyContent: 'center' },
@@ -306,4 +309,4 @@ const styles = StyleSheet.create({
   },
   ctaDisabled: { opacity: 0.45 },
   ctaLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.fgOnAccent },
-});
+}));

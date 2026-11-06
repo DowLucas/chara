@@ -20,10 +20,13 @@ import { displayHostFor } from '@/lib/server-url';
 import { unregisterForAccount } from '@/lib/push';
 import { initialsOf } from '@/lib/name';
 import { formatMinorUnits } from '@/lib/i18n';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import type { Account } from '@/lib/accounts-store';
 
 export default function AccountsScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { accounts, defaultAccount, removeAccount, setDefault } = useAccounts();
@@ -224,6 +227,8 @@ function AccountCard({
   onEditProfile,
   busy,
 }: AccountCardProps) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   const initials = initialsOf(account.user.name);
   const host = displayHostFor(account.serverUrl, t('common.mainServerLabel'));
@@ -311,7 +316,7 @@ function AccountCard({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: {
     paddingHorizontal: spacing.s5,
@@ -432,4 +437,4 @@ const styles = StyleSheet.create({
     fontSize: fontSize.body,
     color: colors.graphite,
   },
-});
+}));

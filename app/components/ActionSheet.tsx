@@ -14,7 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import i18n from '@/lib/i18n';
 import { markPopupClosed } from '@/lib/popup-guard';
 import { useResponsive } from '@/lib/use-responsive';
-import { colors, fontBody, fontBodyMedium, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontBodyMedium, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles } from '@/lib/theme-context';
 
 export interface ActionSheetOption {
   label: string;
@@ -31,6 +32,7 @@ interface Props {
 
 /** Bottom sheet on Android / Web, native iOS sheet on iOS. */
 export function ActionSheet({ visible, onClose, title, options }: Props) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const { sheetMaxWidth } = useResponsive();
@@ -152,13 +154,13 @@ export function openNativeActionSheet(
   return false;
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     flex: 1,
   },
   backdrop: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: colors.scrim,
   },
   sheet: {
     position: 'absolute',
@@ -214,4 +216,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     width: '100%',
   },
-});
+}));

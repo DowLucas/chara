@@ -6,9 +6,10 @@ import { useDefaultAccount } from '@/lib/accounts';
 import { TabBar } from '@/components/TabBar';
 import { decideSignedOutEntry, needsNameStep } from '@/lib/onboarding-gate';
 import { getFlag, setFlag, FLAG_ONBOARDING_COMPLETE } from '@/lib/storage';
-import { colors } from '@/lib/theme';
+import { useColors } from '@/lib/theme-context';
 
 export default function TabsLayout() {
+  const colors = useColors();
   const { user, loading } = useAuth();
   const defaultAccount = useDefaultAccount();
   // A freshly-migrated account starts with an empty-id placeholder user
@@ -64,7 +65,7 @@ export default function TabsLayout() {
   }
   return (
     <Tabs
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.paper } }}
       tabBar={(props) => <TabBar {...props} />}
     >
       <Tabs.Screen name="index" />

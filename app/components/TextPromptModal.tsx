@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { colors, fontDisplay, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontDisplay, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 interface Props {
   visible: boolean;
@@ -34,6 +35,8 @@ export function TextPromptModal({
   onSubmit,
   onClose,
 }: Props) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   const [value, setValue] = useState('');
 
@@ -83,10 +86,10 @@ export function TextPromptModal({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: colors.scrim,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.s5,
@@ -117,4 +120,4 @@ const styles = StyleSheet.create({
   btnPrimary: { backgroundColor: colors.graphite },
   btnText: { fontFamily: fontMono, fontSize: fontSize.bodyS, color: colors.lead },
   btnTextPrimary: { color: colors.paper },
-});
+}));

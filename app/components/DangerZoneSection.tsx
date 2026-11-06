@@ -16,12 +16,8 @@ import { Button } from './Button';
 import { Text } from './Text';
 import { lifecycleActionsForViewer } from '../lib/group-settings';
 import { showAlert } from '@/lib/app-alert';
-import {
-  colors,
-  fontMono,
-  fontSize,
-  spacing,
-} from '../lib/theme';
+import { fontMono, fontSize, spacing } from '../lib/theme';
+import { makeStyles } from '@/lib/theme-context';
 
 interface Props {
   isOwner: boolean;
@@ -40,6 +36,7 @@ export function DangerZoneSection({
   onArchiveToggle,
   onDeletePress,
 }: Props) {
+  const styles = useStyles();
   const { t } = useTranslation();
   const actions = lifecycleActionsForViewer({ isOwner, isLocked, isArchived });
 
@@ -126,7 +123,7 @@ export function DangerZoneSection({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: {
     marginHorizontal: spacing.s5,
     marginTop: spacing.s5,
@@ -155,4 +152,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brick,
     borderColor: colors.brick,
   },
-});
+}));

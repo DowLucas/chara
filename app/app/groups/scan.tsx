@@ -9,9 +9,11 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { QRScanner } from '@/components/QRScanner';
 import { useInviteJoin } from '@/lib/use-invite-join';
-import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles } from '@/lib/theme-context';
 
 export default function GroupsScanScreen() {
+  const styles = useStyles();
   const { t } = useTranslation();
   const { busy, handle } = useInviteJoin();
   const [error, setError] = useState<string | null>(null);
@@ -46,13 +48,13 @@ export default function GroupsScanScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+const useStyles = makeStyles((colors) => ({
+  container: { flex: 1, backgroundColor: colors.mediaBlack },
   toast: {
     position: 'absolute',
     bottom: 120,
     alignSelf: 'center',
-    backgroundColor: 'rgba(184, 61, 61, 0.95)',
+    backgroundColor: colors.vermillion,
     paddingHorizontal: spacing.s4,
     paddingVertical: spacing.s3,
     borderRadius: 6,
@@ -62,12 +64,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 120,
     alignSelf: 'center',
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: colors.mediaScrim,
     paddingHorizontal: spacing.s4,
     paddingVertical: spacing.s3,
     borderRadius: 6,
   },
-  busyText: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.paper },
+  busyText: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.fgOnAccent },
   bottomBar: {
     position: 'absolute',
     bottom: 32,
@@ -78,9 +80,9 @@ const styles = StyleSheet.create({
   bottomLink: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
-    color: colors.paper,
+    color: colors.fgOnAccent,
     letterSpacing: 0.3,
     paddingVertical: spacing.s2,
     paddingHorizontal: spacing.s4,
   },
-});
+}));

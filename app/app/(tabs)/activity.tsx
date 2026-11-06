@@ -46,14 +46,8 @@ import {
   SettlementActivitySnapshot,
   GroupActivitySnapshot,
 } from '@/lib/api';
-import {
-  colors,
-  fontDisplay,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontDisplay, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 interface Row {
   event: ActivityEvent;
@@ -69,6 +63,8 @@ function isSameDay(a: Date, b: Date) {
 }
 
 export default function ActivityScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   // Rows are aggregated across servers — "you" must be matched against the
@@ -181,6 +177,7 @@ export default function ActivityScreen() {
 }
 
 function ActivityRow({ row, youUserId }: { row: Row; youUserId: string }) {
+  const styles = useStyles();
   const { t } = useTranslation();
   const { event, serverUrl } = row;
   const isYou = event.actor_id === youUserId;
@@ -346,7 +343,7 @@ function describeEvent(event: ActivityEvent, ctx: DescribeCtx): string {
   }
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
   loading: {
@@ -392,4 +389,4 @@ const styles = StyleSheet.create({
     marginTop: 3,
     letterSpacing: 0.3,
   },
-});
+}));

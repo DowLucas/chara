@@ -1,17 +1,32 @@
 import SwiftUI
+import UIKit
 
 /// Mirrors the semantic tokens in `lib/theme.ts`. Kept as literals because
 /// the extension has no access to the JS bundle.
 enum Theme {
-  static let paper = Color(red: 0xF0 / 255, green: 0xE5 / 255, blue: 0xCC / 255)
-  static let bone = Color(red: 0xE6 / 255, green: 0xD9 / 255, blue: 0xBB / 255)
-  static let graphite = Color(red: 0x2D / 255, green: 0x1F / 255, blue: 0x1A / 255)
-  static let lead = Color(red: 0x6B / 255, green: 0x5A / 255, blue: 0x4E / 255)
+  /// Light value plus the Sumi dark value (`darkColors`). Widgets follow the
+  /// system appearance, not the in-app setting.
+  private static func dynamic(_ light: UInt32, _ dark: UInt32, opacity: CGFloat = 1) -> Color {
+    func ui(_ hex: UInt32) -> UIColor {
+      UIColor(
+        red: CGFloat((hex >> 16) & 0xFF) / 255,
+        green: CGFloat((hex >> 8) & 0xFF) / 255,
+        blue: CGFloat(hex & 0xFF) / 255,
+        alpha: opacity
+      )
+    }
+    return Color(UIColor { $0.userInterfaceStyle == .dark ? ui(dark) : ui(light) })
+  }
+
+  static let paper = dynamic(0xF0E5CC, 0x1A1512)
+  static let bone = dynamic(0xE6D9BB, 0x251E1A)
+  static let graphite = dynamic(0x2D1F1A, 0xEFE5CF)
+  static let lead = dynamic(0x6B5A4E, 0xB4A592)
   /// "You're owed" / settled.
-  static let moss = Color(red: 0x1F / 255, green: 0x64 / 255, blue: 0x58 / 255)
+  static let moss = dynamic(0x1F6458, 0x5DB39C)
   /// "You owe" / destructive.
-  static let brick = Color(red: 0x8E / 255, green: 0x3B / 255, blue: 0x1A / 255)
-  static let ruleSoft = Color(red: 0x2D / 255, green: 0x1F / 255, blue: 0x1A / 255, opacity: 0.07)
+  static let brick = dynamic(0x8E3B1A, 0xE58B5F)
+  static let ruleSoft = dynamic(0x2D1F1A, 0xEFE5CF, opacity: 0.07)
 
   /// Font names are PostScript names, not filenames — the two differ, and a
   /// wrong value silently falls back to the system font.

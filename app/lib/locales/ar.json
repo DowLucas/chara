@@ -752,7 +752,6 @@
     "mixedSignsBody": "لك أرصدة بعملات معينة وعليك أرصدة بعملات أخرى — يعرض العنوان عملة واحدة فقط. افتح المجموعة لرؤية الصورة كاملة.",
     "mixedSignsLabel": "أرصدة مختلطة عبر عملات متعددة",
     "mixedSignsTitle": "أرصدة مختلطة",
-    "netBalance": "الرصيد الصافي",
     "noActivity": "لا يوجد نشاط بعد.",
     "noGroupsBody": "أنشئ مجموعة لبدء تقسيم المصروفات.",
     "noGroupsCta": "أنشئ مجموعتك الأولى",
@@ -1628,6 +1627,10 @@
     "accountsRowMany_two": "الحسابات · {{count}}",
     "accountsRowMany_zero": "الحسابات · {{count}}",
     "accountsRowSingle": "الحسابات · 1",
+    "appearance": "المظهر",
+    "appearanceDark": "داكن",
+    "appearanceLight": "فاتح",
+    "appearanceSystem": "النظام",
     "archivedGroups": "المجموعات المؤرشفة",
     "avatar": {
       "choosePhoto": "اختيار من المكتبة",

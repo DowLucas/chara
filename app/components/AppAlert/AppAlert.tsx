@@ -21,15 +21,8 @@ import { FullWindowOverlay } from 'react-native-screens';
 import { Text } from '../Text';
 import { markPopupClosed } from '@/lib/popup-guard';
 import type { AppAlertRequest, AppAlertButton } from '@/lib/app-alert';
-import {
-  colors,
-  fontBody,
-  fontBodyMedium,
-  fontMonoMedium,
-  fontSize,
-  radii,
-  spacing,
-} from '@/lib/theme';
+import { fontBody, fontBodyMedium, fontMonoMedium, fontSize, radii, spacing } from '@/lib/theme';
+import { makeStyles } from '@/lib/theme-context';
 
 interface Props {
   request: AppAlertRequest;
@@ -39,6 +32,7 @@ const SCREEN = Dimensions.get('window');
 const MAX_WIDTH = Math.min(320, SCREEN.width - spacing.s7);
 
 export function AppAlert({ request }: Props) {
+  const styles = useStyles();
   const { title, message, buttons, dismissable } = request;
 
   // Stamp the popup-guard on every dismissal path so the screen underneath
@@ -131,7 +125,7 @@ export function AppAlert({ request }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     flex: 1,
     alignItems: 'center',
@@ -140,7 +134,7 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: colors.scrim,
   },
   card: {
     width: '100%',
@@ -209,4 +203,4 @@ const styles = StyleSheet.create({
   buttonLabelCancel: {
     color: colors.lead,
   },
-});
+}));

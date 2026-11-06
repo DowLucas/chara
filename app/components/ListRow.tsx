@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors, typography } from '@/lib/theme';
+import { typography } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import { Text } from './Text';
 
 interface Props {
@@ -14,6 +15,8 @@ interface Props {
 }
 
 export function ListRow({ title, meta, amount, amountTone, settled, onPress, right }: Props) {
+  const colors = useColors();
+  const styles = useStyles();
   const amtColor =
     amountTone === 'pos' ? colors.moss : amountTone === 'neg' ? colors.brick : colors.lead;
 
@@ -41,7 +44,7 @@ export function ListRow({ title, meta, amount, amountTone, settled, onPress, rig
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -73,4 +76,4 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
     fontVariant: ['tabular-nums'],
   },
-});
+}));

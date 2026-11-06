@@ -696,7 +696,6 @@
     "mixedSignsBody": "En algunas monedas te deben y en otras aún debes; el titular solo muestra una. Abre el grupo para ver el panorama completo.",
     "mixedSignsLabel": "Saldos mixtos entre monedas",
     "mixedSignsTitle": "Saldos mixtos",
-    "netBalance": "saldo neto",
     "noActivity": "Aún no hay actividad.",
     "noGroupsBody": "Crea un grupo para empezar a dividir gastos.",
     "noGroupsCta": "Crea tu primer grupo",
@@ -1479,6 +1478,10 @@
     "accountsRowMany_one": "Cuentas · {{count}}",
     "accountsRowMany_other": "Cuentas · {{count}}",
     "accountsRowSingle": "Cuentas · 1",
+    "appearance": "Apariencia",
+    "appearanceDark": "Oscuro",
+    "appearanceLight": "Claro",
+    "appearanceSystem": "Sistema",
     "archivedGroups": "Grupos archivados",
     "avatar": {
       "choosePhoto": "Elegir de la galería",

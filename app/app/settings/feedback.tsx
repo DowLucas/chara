@@ -45,7 +45,8 @@ import { useAccount } from '@/lib/accounts';
 import { useFeatureServer } from '@/lib/use-feature-server';
 import { userErrorMessage } from '@/lib/user-error';
 import { currentLocale } from '@/lib/i18n';
-import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 /** Matches maxFeedbackBodyLen in backend/internal/handler/text_limits.go. */
 const MAX_BODY = 4000;
@@ -62,6 +63,8 @@ const VERSION_LABEL = APP_VERSION
   : '';
 
 export default function FeedbackScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   // The row that opened this screen resolved the server already. Probe only
@@ -216,7 +219,7 @@ export default function FeedbackScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   center: { paddingVertical: spacing.s8, alignItems: 'center' },
   scroll: { paddingBottom: spacing.s6, paddingHorizontal: spacing.s5 },
@@ -291,4 +294,4 @@ const styles = StyleSheet.create({
   },
   ctaDisabled: { opacity: 0.45 },
   ctaLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.fgOnAccent },
-});
+}));

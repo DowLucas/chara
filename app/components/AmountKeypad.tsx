@@ -12,14 +12,8 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useResponsive } from '@/lib/use-responsive';
-import {
-  colors,
-  fontBodyMedium,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontBodyMedium, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { makeStyles } from '@/lib/theme-context';
 import { evalExpression, hasOperator } from '@/lib/evalExpression';
 import { markPopupClosed } from '@/lib/popup-guard';
 
@@ -110,6 +104,7 @@ export function AmountKeypad({
   onSubmit,
   onClose,
 }: Props) {
+  const styles = useStyles();
   const { t } = useTranslation();
 
   const preview = useMemo(() => {
@@ -278,6 +273,7 @@ interface DisplayFieldProps {
 }
 
 function DisplayField({ value, preview, currency, placeholder }: DisplayFieldProps) {
+  const styles = useStyles();
   return (
     <View style={styles.displayField}>
       <Text
@@ -307,6 +303,7 @@ interface KeypadKeyProps {
 }
 
 function KeypadKey({ label, span, onPress, onLongPress, accessibilityLabel }: KeypadKeyProps) {
+  const styles = useStyles();
   const isOp = isDisplayOperator(label);
   const isBack = label === BACKSPACE_KEY;
   const isClear = label === CLEAR_KEY;
@@ -342,9 +339,9 @@ function accessibilityLabelFor(k: string, t: (k: string) => string): string {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   scrimPressable: { flex: 1 },
-  scrimBg: { backgroundColor: 'rgba(45, 31, 26, 0.35)' },
+  scrimBg: { backgroundColor: colors.scrim },
   sheet: {
     backgroundColor: colors.paper,
     borderTopLeftRadius: 20,
@@ -403,9 +400,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  keyOp: { backgroundColor: 'rgba(45, 31, 26, 0.08)' },
-  keyBack: { backgroundColor: 'rgba(184, 61, 61, 0.10)' },
-  keyClear: { backgroundColor: 'rgba(184, 61, 61, 0.10)' },
+  keyOp: { backgroundColor: colors.ruleSoft },
+  keyBack: { backgroundColor: colors.vermillionTint },
+  keyClear: { backgroundColor: colors.vermillionTint },
   keyLabel: {
     fontFamily: fontMonoMedium,
     fontSize: 22,
@@ -425,4 +422,4 @@ const styles = StyleSheet.create({
     color: colors.fgOnAccent,
     letterSpacing: 0.2,
   },
-});
+}));

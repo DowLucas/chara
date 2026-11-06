@@ -680,7 +680,6 @@
     "mixedSignsBody": "Du har penge til gode i nogle valutaer og skylder stadig i andre — overskriften viser kun den ene. Åbn gruppen for at se det fulde billede.",
     "mixedSignsLabel": "Blandede saldi på tværs af valutaer",
     "mixedSignsTitle": "Blandede saldi",
-    "netBalance": "nettosaldo",
     "noActivity": "Ingen aktivitet endnu.",
     "noGroupsBody": "Lav en gruppe, og kom i gang med at dele udgifter.",
     "noGroupsCta": "Lav din første gruppe",
@@ -1436,6 +1435,10 @@
     "accountsRowMany_one": "Konti · {{count}}",
     "accountsRowMany_other": "Konti · {{count}}",
     "accountsRowSingle": "Konti · 1",
+    "appearance": "Udseende",
+    "appearanceDark": "Mørkt",
+    "appearanceLight": "Lyst",
+    "appearanceSystem": "System",
     "archivedGroups": "Arkiverede grupper",
     "avatar": {
       "choosePhoto": "Vælg fra biblioteket",

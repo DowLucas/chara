@@ -35,17 +35,12 @@ import { computeSuggestions } from '@/lib/settle';
 import { directionColor, directionOf } from '@/lib/balance-summary';
 import { decimalToMinor, formatMinorUnits } from '@/lib/i18n';
 import { initialsOf } from '@/lib/name';
-import {
-  colors,
-  fontBody,
-  fontDisplay,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 export default function SettleScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { server, id } = useLocalSearchParams<{ server: string; id: string }>();
   const serverUrl = decodeURIComponent(server ?? '');
   const api = apiFor(serverUrl);
@@ -251,7 +246,7 @@ export default function SettleScreen() {
             <>
               {/* Direction in words; color is the second cue. Zero is
                   "settled up" in graphite, never a green 0. */}
-              <Text style={[styles.heroDirection, { color: directionColor(directionOf(myNet)) }]}>
+              <Text style={[styles.heroDirection, { color: directionColor(directionOf(myNet), colors) }]}>
                 {myNet < 0
                   ? t('groupDetail.youOwe')
                   : myNet > 0
@@ -259,7 +254,7 @@ export default function SettleScreen() {
                     : t('groupDetail.settledUp')}
               </Text>
               <MoneyText
-                style={[styles.heroBalance, { color: directionColor(directionOf(myNet)) }]}
+                style={[styles.heroBalance, { color: directionColor(directionOf(myNet), colors) }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
                 minimumFontScale={0.4}
@@ -403,7 +398,7 @@ export default function SettleScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
   hero: {
@@ -554,4 +549,4 @@ const styles = StyleSheet.create({
     color: colors.lead,
     fontVariant: ['tabular-nums'],
   },
-});
+}));

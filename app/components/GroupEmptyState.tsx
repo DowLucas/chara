@@ -13,7 +13,8 @@ import { View, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
-import { colors, typography, spacing } from '@/lib/theme';
+import { typography, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import { Text } from './Text';
 import { Button } from './Button';
 
@@ -23,6 +24,8 @@ interface Props {
 }
 
 export function GroupEmptyState({ onAddExpense, onImport }: Props) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   return (
     <View style={styles.container}>
@@ -41,7 +44,7 @@ export function GroupEmptyState({ onAddExpense, onImport }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: {
     flex: 1,
     alignItems: 'center',
@@ -69,4 +72,4 @@ const styles = StyleSheet.create({
   button: {
     alignSelf: 'stretch',
   },
-});
+}));

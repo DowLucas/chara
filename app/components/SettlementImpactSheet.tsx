@@ -34,7 +34,8 @@ import { markPopupClosed } from '../lib/popup-guard';
 import { initialsOf } from '../lib/name';
 import type { MemberDelta } from '../lib/balance-impact';
 import type { Settlement, GroupMember } from '../lib/api';
-import { colors, fontBody, fontMono, fontMonoMedium, fontSize, spacing } from '../lib/theme';
+import { fontBody, fontMono, fontMonoMedium, fontSize, spacing } from '../lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 interface Props {
   visible: boolean;
@@ -61,6 +62,7 @@ export function SettlementImpactSheet({
   onCancel,
   onConfirm,
 }: Props) {
+  const styles = useStyles();
   const { t } = useTranslation();
   const { sheetMaxWidth } = useResponsive();
   // On tablet, cap+center the inner content so it doesn't stretch; the
@@ -180,6 +182,8 @@ interface DeltaRowProps {
 }
 
 function DeltaRow({ delta, member, currency }: DeltaRowProps) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   const c = deltaCopy(delta);
   const initials = member ? initialsOf(member.name) : initialsOf(delta.displayName);
@@ -215,6 +219,7 @@ function SettlementRow({
   settlement: Settlement;
   members: GroupMember[];
 }) {
+  const styles = useStyles();
   const from = members.find((m) => m.id === settlement.from_member_id);
   const to = members.find((m) => m.id === settlement.to_member_id);
   const amountMinor = Math.round(parseFloat(settlement.amount) * 100);
@@ -230,7 +235,7 @@ function SettlementRow({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scrollBody: { padding: spacing.s5, paddingBottom: spacing.s7 },
   title: {
@@ -348,4 +353,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.moss,
     borderColor: colors.moss,
   },
-});
+}));

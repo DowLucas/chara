@@ -17,7 +17,8 @@ import {
   SUGGESTED_CURRENCY_CODES,
   Currency,
 } from '@/lib/currencies';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import { ContentContainer } from '@/components/ContentContainer';
 import { useResponsive } from '@/lib/use-responsive';
 
@@ -35,6 +36,8 @@ type Row =
   | { kind: 'item'; key: string; currency: Currency };
 
 export function CurrencyPicker({ visible, selected, onClose, onSelect }: Props) {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { contentMaxWidth } = useResponsive();
@@ -141,7 +144,7 @@ export function CurrencyPicker({ visible, selected, onClose, onSelect }: Props) 
                 </View>
                 <View style={styles.rowRight}>
                   {c.symbol ? <Text style={styles.symbol}>{c.symbol}</Text> : null}
-                  {active ? <Feather name="check" size={18} color={colors.vermillion} /> : null}
+                  {active ? <Feather name="check" size={18} color={colors.vermillionInk} /> : null}
                 </View>
               </Pressable>
             );
@@ -166,7 +169,7 @@ export function CurrencyPicker({ visible, selected, onClose, onSelect }: Props) 
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   header: {
     flexDirection: 'row',
@@ -231,7 +234,7 @@ const styles = StyleSheet.create({
     width: 48,
     letterSpacing: 0.4,
   },
-  codeActive: { color: colors.vermillion },
+  codeActive: { color: colors.vermillionInk },
   name: {
     fontFamily: fontBody,
     fontSize: fontSize.bodyS,
@@ -246,4 +249,4 @@ const styles = StyleSheet.create({
   },
   empty: { paddingHorizontal: spacing.s5, paddingVertical: spacing.s5, alignItems: 'center' },
   emptyText: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
-});
+}));

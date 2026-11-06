@@ -7,7 +7,8 @@ import { useEnglishT } from '@/lib/i18n';
 import { CurrencyPicker } from '@/components/CurrencyPicker';
 import { GroupColorPicker } from '@/components/GroupColorPicker';
 import { SUGGESTED_CURRENCY_CODES } from '@/lib/currencies';
-import { colors, fontBody, fontMono, fontSize, groupAccentSwatches, spacing } from '@/lib/theme';
+import { contrastInkFor, displaySwatch, fontBody, fontMono, fontSize, groupAccentSwatches, spacing } from '@/lib/theme';
+import { makeStyles, useColors, useTheme } from '@/lib/theme-context';
 
 export type GroupSetupValue = { name: string; currency: string; color: string | null };
 
@@ -28,6 +29,9 @@ export function GroupSetupForm({
   value: GroupSetupValue;
   onChange: (v: GroupSetupValue) => void;
 }) {
+  const colors = useColors();
+  const { scheme } = useTheme();
+  const styles = useStyles();
   const t = useEnglishT();
   const { name, currency, color } = value;
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -100,11 +104,11 @@ export function GroupSetupForm({
                 <View
                   style={[
                     styles.swatch,
-                    { backgroundColor: hex },
+                    { backgroundColor: displaySwatch(hex, scheme) },
                     active && styles.swatchActive,
                   ]}
                 >
-                  {active && <Feather name="check" size={16} color={colors.fgOnAccent} />}
+                  {active && <Feather name="check" size={16} color={contrastInkFor(displaySwatch(hex, scheme))} />}
                 </View>
               </TouchableOpacity>
             );
@@ -119,12 +123,12 @@ export function GroupSetupForm({
               style={[
                 styles.swatch,
                 styles.customSwatch,
-                customSelected && { backgroundColor: color! },
+                customSelected && { backgroundColor: displaySwatch(color!, scheme) },
                 customSelected && styles.swatchActive,
               ]}
             >
               {customSelected ? (
-                <Feather name="check" size={16} color={colors.fgOnAccent} />
+                <Feather name="check" size={16} color={contrastInkFor(displaySwatch(color!, scheme))} />
               ) : (
                 <Feather name="plus" size={18} color={colors.lead} />
               )}
@@ -151,7 +155,7 @@ export function GroupSetupForm({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   field: { gap: spacing.s2, marginBottom: spacing.s4 },
   fieldLabel: {
     fontFamily: fontMono,
@@ -198,4 +202,4 @@ const styles = StyleSheet.create({
     borderColor: colors.graphite,
     backgroundColor: 'transparent',
   },
-});
+}));

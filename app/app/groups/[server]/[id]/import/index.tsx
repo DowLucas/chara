@@ -21,9 +21,12 @@ import { IconButton } from '@/components/IconButton';
 import { ListRow } from '@/components/ListRow';
 import { Text } from '@/components/Text';
 import { IMPORT_APPS } from '@/lib/import-apps';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 export default function ImportPickerScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { server, id } = useLocalSearchParams<{ server: string; id: string }>();
   const serverUrl = decodeURIComponent(server ?? '');
   const insets = useSafeAreaInsets();
@@ -62,7 +65,7 @@ export default function ImportPickerScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   screen: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
   header: {
@@ -95,4 +98,4 @@ const styles = StyleSheet.create({
     borderTopWidth: 0.5,
     borderTopColor: colors.ruleSoft,
   },
-});
+}));

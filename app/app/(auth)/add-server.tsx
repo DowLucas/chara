@@ -24,14 +24,8 @@ import { runDiscoveryHandshake } from '@/lib/discovery';
 import { updateDraft } from '@/lib/onboarding-draft';
 import * as analytics from '@/lib/analytics';
 import type { AccountInstanceInfo } from '@/lib/accounts-store';
-import {
-  colors,
-  fontBody,
-  fontDisplay,
-  fontMono,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 type Mode = 'first-launch' | 'settings' | 'invite' | 'welcome';
 type Stage = 'url' | 'validating' | 'confirm';
@@ -42,6 +36,7 @@ interface ConfirmState {
 }
 
 export default function AddServerScreen() {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const t = useEnglishT();
   const params = useLocalSearchParams<{
@@ -219,6 +214,8 @@ function UrlStage({
   error: string | null;
   onContinue: () => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const t = useEnglishT();
   const canSubmit = urlInput.trim().length > 0;
   return (
@@ -263,6 +260,8 @@ function UrlStage({
 }
 
 function ValidatingStage({ host }: { host: string }) {
+  const colors = useColors();
+  const styles = useStyles();
   const t = useEnglishT();
   return (
     <View style={[styles.stage, styles.centeredStage]}>
@@ -285,6 +284,8 @@ function ConfirmStage({
   onCancel: () => void;
   onEdit: () => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const t = useEnglishT();
   let host = serverUrl;
   try {
@@ -338,6 +339,7 @@ function ConfirmStage({
 }
 
 function ConfirmRow({ label, value }: { label: string; value: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.confirmRow}>
       <Text style={styles.confirmRowLabel}>{label}</Text>
@@ -346,7 +348,7 @@ function ConfirmRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: colors.paper,
@@ -491,4 +493,4 @@ const styles = StyleSheet.create({
   ctaLabelSecondary: {
     color: colors.graphite,
   },
-});
+}));

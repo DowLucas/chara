@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { colors, typography } from '@/lib/theme';
+import { typography } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import { Text } from './Text';
 
 interface Props {
@@ -11,6 +12,8 @@ interface Props {
 }
 
 export function EmptyState({ title, body, icon = 'file-text' }: Props) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <View style={styles.container}>
       <Feather name={icon} size={28} color={colors.lead} />
@@ -20,7 +23,7 @@ export function EmptyState({ title, body, icon = 'file-text' }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: {
     flex: 1,
     alignItems: 'center',
@@ -40,4 +43,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
-});
+}));

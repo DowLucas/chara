@@ -31,16 +31,12 @@ import { RecurringListCard } from '@/components/recurring/RecurringListCard';
 import { showAlert } from '@/lib/app-alert';
 import { apiFor, GroupDetail } from '@/lib/api';
 import type { RecurringExpense } from '@/lib/api-types-recurring';
-import {
-  colors,
-  fontBody,
-  fontDisplay,
-  fontMono,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 export default function RecurringListScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { server, id } = useLocalSearchParams<{ server: string; id: string }>();
   const serverUrl = decodeURIComponent(server ?? '');
   const groupId = id ?? '';
@@ -210,7 +206,7 @@ export default function RecurringListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
   banner: {
@@ -237,7 +233,7 @@ const styles = StyleSheet.create({
   bannerCtaLabel: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
-    color: colors.fgOnAccent,
+    color: colors.paper,
     letterSpacing: 0.3,
   },
   loading: {
@@ -274,7 +270,7 @@ const styles = StyleSheet.create({
   newButtonLabel: {
     fontFamily: fontMono,
     fontSize: fontSize.body,
-    color: colors.fgOnAccent,
+    color: colors.paper,
     letterSpacing: 0.3,
   },
-});
+}));

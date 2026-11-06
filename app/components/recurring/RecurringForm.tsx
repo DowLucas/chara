@@ -61,15 +61,8 @@ import { hapticSelect, hapticWarning } from '@/lib/haptics';
 import { formatDate, formatMinorUnits, formatTime } from '@/lib/i18n';
 import { isPopupJustClosed, markPopupClosed } from '@/lib/popup-guard';
 import { nextFire } from '@/lib/recurring/next-fire';
-import {
-  colors,
-  fontBody,
-  fontDisplay,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 type FreqUnit = RecurringExpense['freq_unit'];
 
@@ -128,6 +121,8 @@ export function RecurringForm({
   prefill,
   onSaved,
 }: Props) {
+  const colors = useColors();
+  const styles = useStyles();
   const api = apiFor(serverUrl);
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
@@ -665,6 +660,7 @@ function Section({
   eyebrow: string;
   children: React.ReactNode;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.section}>
       <Text style={styles.sectionEyebrow}>{eyebrow}</Text>
@@ -688,6 +684,8 @@ function LabeledInput({
   keyboardType?: 'default' | 'decimal-pad' | 'number-pad';
   mono?: boolean;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <View style={styles.inputRow}>
       <Text style={styles.inputLabel}>{label}</Text>
@@ -724,6 +722,8 @@ function NativePickerRow({
   minimumDate?: Date;
   onChange: (next: Date) => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const [androidOpen, setAndroidOpen] = React.useState(false);
 
   if (Platform.OS === 'ios') {
@@ -774,6 +774,7 @@ function DateRow({
   onPress?: () => void;
   readOnly?: boolean;
 }) {
+  const styles = useStyles();
   const disabled = readOnly || !onPress;
   return (
     <Pressable
@@ -787,7 +788,7 @@ function DateRow({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
   errorBanner: {
@@ -884,7 +885,7 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     letterSpacing: 0.3,
   },
-  unitChipLabelOn: { color: colors.fgOnAccent },
+  unitChipLabelOn: { color: colors.paper },
   intervalRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -963,7 +964,7 @@ const styles = StyleSheet.create({
   keyboardDone: {
     fontFamily: fontMonoMedium,
     fontSize: fontSize.body,
-    color: colors.vermillion,
+    color: colors.vermillionInk,
   },
   previewText: {
     fontFamily: fontBody,
@@ -988,4 +989,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.s2,
   },
-});
+}));

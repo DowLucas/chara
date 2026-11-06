@@ -14,7 +14,7 @@
 
 import type { Group, MyBalance } from './api';
 import { decimalToMinor } from './money-utils';
-import { colors } from './theme';
+import type { ColorPalette } from './theme';
 
 /** Structural subset of `AccountRead<T>` from `aggregated-reads.ts`. */
 export interface Read<T> {
@@ -96,7 +96,7 @@ export function directionOf(minor: number): BalanceDirection {
 /** Signal color for a balance about *you*. Zero is neutral graphite, never a
  *  green "0". Rows about other people stay graphite regardless — don't call
  *  this for them. Always pair the color with a direction word. */
-export function directionColor(d: BalanceDirection): string {
+export function directionColor(d: BalanceDirection, colors: ColorPalette): string {
   return d === 'owed' ? colors.moss : d === 'owe' ? colors.brick : colors.graphite;
 }
 

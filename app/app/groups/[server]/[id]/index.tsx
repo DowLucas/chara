@@ -50,13 +50,16 @@ import { directionColor, directionOf } from '@/lib/balance-summary';
 import { filterMenuEntries, matchesExpenseQuery } from '@/lib/expense-search';
 import { categoryIcon } from '@/lib/categories';
 import { displayHostFor, isMainHostedServer } from '@/lib/server-url';
-import { colors, fontDisplay, fontBody, fontBodyMedium, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { fontDisplay, fontBody, fontBodyMedium, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 const fmtAmount = (minor: string, currency: string, relative?: boolean) =>
   formatMinorUnits(minor, currency, { relative });
 
 
 export default function GroupDetailScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { server, id, tab: initialTab } = useLocalSearchParams<{
     server: string;
     id: string;
@@ -646,13 +649,13 @@ export default function GroupDetailScreen() {
                                   value={formatMinorUnits(Math.abs(netMinor), currency)}
                                   style={[
                                     styles.memberCardTotal,
-                                    isYou && { color: directionColor(directionOf(netMinor)) },
+                                    isYou && { color: directionColor(directionOf(netMinor), colors) },
                                   ]}
                                 />
                                 <Text
                                   style={[
                                     styles.rowMeta,
-                                    isYou && { color: directionColor(directionOf(netMinor)) },
+                                    isYou && { color: directionColor(directionOf(netMinor), colors) },
                                   ]}
                                 >
                                   {isYou
@@ -1003,7 +1006,7 @@ export default function GroupDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
   topLeft: {
@@ -1060,7 +1063,7 @@ const styles = StyleSheet.create({
   },
   infoBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: colors.scrim,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: spacing.s4,
@@ -1451,4 +1454,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.s5,
   },
   ctaBtn: { flex: 1 },
-});
+}));

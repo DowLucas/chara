@@ -30,7 +30,8 @@ import { checkProtocolCompat } from '@/lib/protocol';
 import { signUpHref, updateDraft } from '@/lib/onboarding-draft';
 import { legacyHostedUrl } from '@/lib/legacy-hosted-url';
 import { normalizeServerUrl } from '@/lib/server-url';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 type State =
   | { kind: 'loading' }
@@ -47,6 +48,8 @@ function mapNotOk(state: string): Extract<State, { kind: 'invalid' }>['reason'] 
 }
 
 export default function JoinConfirmScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ server: string; token: string }>();
   // `server` is untrusted — `chara://join/<anything>/<token>` routes straight
@@ -302,7 +305,7 @@ export default function JoinConfirmScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   scroll: {
     flexGrow: 1,
     padding: spacing.s5,
@@ -381,4 +384,4 @@ const styles = StyleSheet.create({
     color: colors.lead,
     textAlign: 'center',
   },
-});
+}));

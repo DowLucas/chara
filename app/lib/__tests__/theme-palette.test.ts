@@ -11,7 +11,13 @@
  * direction everywhere — this keeps color a genuine second cue.
  */
 
-import { colors } from '../theme';
+import {
+  contrastInkFor,
+  darkColors,
+  groupAccentSwatches,
+  lightColors,
+  liftSwatchForDark,
+} from '../theme';
 
 type RGB = [number, number, number];
 
@@ -62,24 +68,71 @@ function deltaE(a: RGB, b: RGB): number {
   return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]);
 }
 
-describe('balance signal colors', () => {
-  it.each([
-    ['moss', colors.moss],
-    ['brick', colors.brick],
-  ])('%s passes WCAG AA (4.5:1) as text on paper and bone', (_name, c) => {
-    expect(contrast(c, colors.paper)).toBeGreaterThanOrEqual(4.5);
-    expect(contrast(c, colors.bone)).toBeGreaterThanOrEqual(4.5);
-  });
+const PALETTES = [
+  ['light', lightColors],
+  ['dark (Sumi)', darkColors],
+] as const;
 
-  it.each(Object.entries(MACHADO))(
-    'moss and brick stay clearly apart under %s',
-    (_name, m) => {
-      const d = deltaE(simulate(hex(colors.moss), m), simulate(hex(colors.brick), m));
-      expect(d).toBeGreaterThanOrEqual(20);
+describe.each(PALETTES)('%s palette', (_name, colors) => {
+  it.each(['graphite', 'lead', 'moss', 'brick', 'vermillionInk'] as const)(
+    '%s passes WCAG AA (4.5:1) as text on paper and bone',
+    (token) => {
+      expect(contrast(colors[token], colors.paper)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(colors[token], colors.bone)).toBeGreaterThanOrEqual(4.5);
     },
   );
 
+  it('the label on a vermillion button passes AA', () => {
+    expect(contrast(colors.fgOnAccent, colors.vermillion)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it.each(Object.entries(MACHADO))('moss and brick stay clearly apart under %s', (_cvd, m) => {
+    const d = deltaE(simulate(hex(colors.moss), m), simulate(hex(colors.brick), m));
+    expect(d).toBeGreaterThanOrEqual(20);
+  });
+
   it('brick is distinguishable from the brand vermillion', () => {
     expect(deltaE(hex(colors.brick), hex(colors.vermillion))).toBeGreaterThanOrEqual(18);
+  });
+});
+
+describe('dark palette', () => {
+  it('defines exactly the same tokens as light', () => {
+    expect(Object.keys(darkColors).sort()).toEqual(Object.keys(lightColors).sort());
+  });
+
+  it('lifts every group swatch to at least 3:1 against the dark paper', () => {
+    for (const sw of groupAccentSwatches) {
+      expect(contrast(liftSwatchForDark(sw), darkColors.paper)).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it('lifts an arbitrary too-dark custom color, and leaves a readable one alone', () => {
+    expect(contrast(liftSwatchForDark('#000000'), darkColors.paper)).toBeGreaterThanOrEqual(3);
+    expect(liftSwatchForDark('#C99A2E')).toBe('#C99A2E');
+  });
+});
+
+describe('camera and media chrome', () => {
+  it('is identical in both palettes (it always sits on a dark camera or photo)', () => {
+    for (const k of ['mediaBlack', 'mediaScrim', 'mediaChip', 'mediaRing', 'printNight'] as const) {
+      expect(darkColors[k]).toBe(lightColors[k]);
+    }
+  });
+});
+
+describe('contrastInkFor', () => {
+  it.each([
+    ...groupAccentSwatches,
+    ...groupAccentSwatches.map(liftSwatchForDark),
+    lightColors.graphite,
+    darkColors.graphite,
+    lightColors.citrine,
+    darkColors.citrine,
+  ])('picks the better ink on %s, at least 3:1 (WCAG non-text marks)', (fill) => {
+    const ink = contrastInkFor(fill);
+    const other = ink === lightColors.graphite ? darkColors.fgOnAccent : lightColors.graphite;
+    expect(contrast(ink, fill)).toBeGreaterThanOrEqual(contrast(other, fill));
+    expect(contrast(ink, fill)).toBeGreaterThanOrEqual(3);
   });
 });

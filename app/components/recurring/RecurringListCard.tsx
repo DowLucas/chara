@@ -17,15 +17,8 @@ import { useTranslation } from 'react-i18next';
 import { Text } from '@/components/Text';
 import type { RecurringExpense } from '@/lib/api-types-recurring';
 import { formatDate, formatMinorUnits } from '@/lib/i18n';
-import {
-  colors,
-  fontBody,
-  fontDisplay,
-  fontMonoMedium,
-  fontMono,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontBody, fontDisplay, fontMonoMedium, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 interface Props {
   rule: RecurringExpense;
@@ -46,6 +39,8 @@ export function RecurringListCard({
   onPress,
   onLongPress,
 }: Props) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
 
   const scheduleLine = t(`recurring.schedule.every_${rule.freq_unit}`, {
@@ -116,7 +111,7 @@ export function RecurringListCard({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   card: {
     backgroundColor: colors.bone,
     borderRadius: 10,
@@ -172,4 +167,4 @@ const styles = StyleSheet.create({
     color: colors.brick,
     letterSpacing: 0.3,
   },
-});
+}));

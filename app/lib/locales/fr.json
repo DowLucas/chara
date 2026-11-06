@@ -696,7 +696,6 @@
     "mixedSignsBody": "On te doit dans certaines devises et tu dois dans d'autres — le total n'en affiche qu'une. Ouvre le groupe pour voir le détail complet.",
     "mixedSignsLabel": "Soldes mixtes selon les devises",
     "mixedSignsTitle": "Soldes mixtes",
-    "netBalance": "solde net",
     "noActivity": "Pas encore d'activité.",
     "noGroupsBody": "Crée un groupe pour commencer à partager des dépenses.",
     "noGroupsCta": "Créer ton premier groupe",
@@ -1479,6 +1478,10 @@
     "accountsRowMany_one": "Comptes · {{count}}",
     "accountsRowMany_other": "Comptes · {{count}}",
     "accountsRowSingle": "Comptes · 1",
+    "appearance": "Apparence",
+    "appearanceDark": "Sombre",
+    "appearanceLight": "Clair",
+    "appearanceSystem": "Système",
     "archivedGroups": "Groupes archivés",
     "avatar": {
       "choosePhoto": "Choisir dans la bibliothèque",

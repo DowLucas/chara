@@ -716,7 +716,6 @@
     "mixedSignsBody": "W niektórych walutach jesteś na plusie, a w innych nadal masz dług — nagłówek pokazuje tylko jedną. Otwórz grupę, aby zobaczyć pełny obraz.",
     "mixedSignsLabel": "Mieszane salda w różnych walutach",
     "mixedSignsTitle": "Mieszane salda",
-    "netBalance": "saldo netto",
     "noActivity": "Brak aktywności.",
     "noGroupsBody": "Utwórz grupę, aby zacząć dzielić wydatki.",
     "noGroupsCta": "Stwórz pierwszą grupę",
@@ -1532,6 +1531,10 @@
     "accountsRowMany_one": "Konta · {{count}}",
     "accountsRowMany_other": "Konta · {{count}}",
     "accountsRowSingle": "Konta · 1",
+    "appearance": "Wygląd",
+    "appearanceDark": "Ciemny",
+    "appearanceLight": "Jasny",
+    "appearanceSystem": "Systemowy",
     "archivedGroups": "Zarchiwizowane grupy",
     "avatar": {
       "choosePhoto": "Wybierz z galerii",

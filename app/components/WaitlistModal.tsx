@@ -24,15 +24,8 @@ import { Button } from './Button';
 import { Text } from './Text';
 import { formatDate } from '../lib/i18n';
 import { markPopupClosed } from '../lib/popup-guard';
-import {
-  colors,
-  fontBody,
-  fontDisplay,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  spacing,
-} from '../lib/theme';
+import { fontBody, fontDisplay, fontMono, fontMonoMedium, fontSize, spacing } from '../lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -70,6 +63,8 @@ export function WaitlistModal({
   onDismiss,
   onSelfHostPressed,
 }: Props): React.JSX.Element {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   const { sheetMaxWidth } = useResponsive();
   const [email, setEmail] = useState(defaultEmail ?? '');
@@ -233,7 +228,7 @@ export function WaitlistModal({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   panel: { flex: 1 },
   scrollBody: { padding: spacing.s5, paddingBottom: spacing.s7 },
@@ -331,4 +326,4 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     textDecorationLine: 'underline',
   },
-});
+}));

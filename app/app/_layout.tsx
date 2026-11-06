@@ -25,6 +25,7 @@ import {
   subscribe as subscribeAccounts,
 } from '@/lib/accounts-store';
 import { AppAlertHost } from '@/components/AppAlert/AppAlertHost';
+import { ThemeProvider, useTheme } from '@/lib/theme-context';
 import { PendingSwishRecovery } from '@/components/PendingSwishRecovery';
 import { showAlert } from '@/lib/app-alert';
 import * as analytics from '@/lib/analytics';
@@ -290,6 +291,40 @@ function ShareIntentListener() {
   return null;
 }
 
+/**
+ * The navigation stack and status bar, inside ThemeProvider so both follow
+ * the Appearance setting (screen background behind transitions included).
+ */
+function RootNavigator() {
+  const { scheme, colors } = useTheme();
+  return (
+    <>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper } }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="welcome" />
+        <Stack.Screen name="onboarding" />
+        <Stack.Screen name="groups/[server]/[id]/index" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="groups/[server]/[id]/add-expense" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="groups/[server]/[id]/settle" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="groups/[server]/[id]/settle-method" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="groups/[server]/[id]/invite" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="groups/[server]/[id]/edit" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="groups/[server]/[id]/members" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="groups/scan" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="receipt-inbox" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="join/[server]/[token]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="expenses/[server]/[id]/index" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="settings/about" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="settings/accounts" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="settings/archived-groups" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="settings/feedback" options={{ animation: 'slide_from_right' }} />
+      </Stack>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+    </>
+  );
+}
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     'SNPro-Regular': require('../assets/fonts/SNPro-Regular.ttf'),
@@ -372,34 +407,15 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <SafeAreaProvider>
-      <AccountsProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="welcome" />
-          <Stack.Screen name="onboarding" />
-          <Stack.Screen name="groups/[server]/[id]/index" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="groups/[server]/[id]/add-expense" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="groups/[server]/[id]/settle" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="groups/[server]/[id]/settle-method" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="groups/[server]/[id]/invite" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="groups/[server]/[id]/edit" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="groups/[server]/[id]/members" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="groups/scan" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="receipt-inbox" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="join/[server]/[token]" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="expenses/[server]/[id]/index" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="settings/about" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="settings/accounts" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="settings/archived-groups" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="settings/feedback" options={{ animation: 'slide_from_right' }} />
-        </Stack>
-        <StatusBar style="dark" />
-        <AppAlertHost />
-        <ShareIntentListener />
-        <PendingSwishRecovery />
-      </AccountsProvider>
-    </SafeAreaProvider>
+    <ThemeProvider>
+      <SafeAreaProvider>
+        <AccountsProvider>
+          <RootNavigator />
+          <AppAlertHost />
+          <ShareIntentListener />
+          <PendingSwishRecovery />
+        </AccountsProvider>
+      </SafeAreaProvider>
+    </ThemeProvider>
   );
 }

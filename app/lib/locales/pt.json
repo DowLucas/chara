@@ -696,7 +696,6 @@
     "mixedSignsBody": "Você é credor em algumas moedas e ainda deve em outras — o resumo mostra só uma. Abra o grupo para ver o quadro completo.",
     "mixedSignsLabel": "Saldos mistos entre moedas",
     "mixedSignsTitle": "Saldos mistos",
-    "netBalance": "saldo líquido",
     "noActivity": "Nenhuma atividade ainda.",
     "noGroupsBody": "Crie um grupo para começar a dividir despesas.",
     "noGroupsCta": "Crie seu primeiro grupo",
@@ -1479,6 +1478,10 @@
     "accountsRowMany_one": "Contas · {{count}}",
     "accountsRowMany_other": "Contas · {{count}}",
     "accountsRowSingle": "Contas · 1",
+    "appearance": "Aparência",
+    "appearanceDark": "Escuro",
+    "appearanceLight": "Claro",
+    "appearanceSystem": "Sistema",
     "archivedGroups": "Grupos arquivados",
     "avatar": {
       "choosePhoto": "Escolher da galeria",

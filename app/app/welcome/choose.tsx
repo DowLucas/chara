@@ -7,10 +7,13 @@ import { OnboardingScaffold } from '@/components/OnboardingScaffold';
 import { useEnglishT } from '@/lib/i18n';
 import { loadDraft, updateDraft } from '@/lib/onboarding-draft';
 import { displayHostFor } from '@/lib/server-url';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { contrastInkFor, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import * as analytics from '@/lib/analytics';
 
 export default function WelcomeChooseScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const t = useEnglishT();
   const [name, setName] = useState('');
   const [serverUrl, setServerUrl] = useState<string | undefined>(undefined);
@@ -101,10 +104,12 @@ function ChoiceCard({
   body: string;
   onPress: () => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
       <View style={[styles.cardIcon, { backgroundColor: accent }]}>
-        <Feather name={icon} size={20} color={colors.fgOnAccent} />
+        <Feather name={icon} size={20} color={contrastInkFor(accent)} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.cardEyebrow}>{eyebrow}</Text>
@@ -116,7 +121,7 @@ function ChoiceCard({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   choices: { gap: spacing.s3, marginBottom: spacing.s4 },
   card: {
     flexDirection: 'row',
@@ -164,4 +169,4 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginTop: 3,
   },
-});
+}));
