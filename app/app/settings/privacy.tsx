@@ -8,9 +8,12 @@ import { IconButton } from '@/components/IconButton';
 import { ContentContainer } from '@/components/ContentContainer';
 import * as analytics from '@/lib/analytics';
 import { hapticSelect } from '@/lib/haptics';
-import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 export default function PrivacyScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const [optedIn, setOptedIn] = useState(true);
@@ -68,7 +71,7 @@ export default function PrivacyScreen() {
                 onValueChange={handleToggle}
                 disabled={!loaded}
                 trackColor={{ false: colors.bone, true: colors.vermillion }}
-                thumbColor={colors.paper}
+                thumbColor={colors.fgOnAccent}
                 accessibilityLabel={t('privacy.analyticsLabel')}
               />
             </View>
@@ -80,7 +83,7 @@ export default function PrivacyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   content: { padding: spacing.s5, paddingBottom: spacing.s7 },
   list: {
@@ -105,4 +108,4 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginTop: spacing.s3,
   },
-});
+}));

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Image, StyleSheet, ImageURISource } from 'react-native';
-import { colors, typography, fontSize } from '@/lib/theme';
+import { typography, fontSize } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import { Text } from './Text';
 import { avatarSourceKey } from './Avatar.helpers';
 
@@ -15,6 +16,7 @@ interface AvatarProps {
 }
 
 export function Avatar({ initials, size = 'md', stack = false, style, source }: AvatarProps) {
+  const styles = useStyles();
   const dim = size === 'sm' ? 26 : 34;
   const [failed, setFailed] = useState(false);
   // A new source resets the error state — otherwise switching avatars after a
@@ -75,6 +77,8 @@ interface AvatarStackProps {
 }
 
 export function AvatarStack({ people, max = 3, overflow = 'count', tone = 'bone' }: AvatarStackProps) {
+  const colors = useColors();
+  const styles = useStyles();
   const normalized: StackPerson[] = people.map((p) =>
     typeof p === 'string' ? { initials: p } : p,
   );
@@ -112,7 +116,7 @@ export function AvatarStack({ people, max = 3, overflow = 'count', tone = 'bone'
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   base: {
     backgroundColor: colors.bone,
     borderWidth: 1,
@@ -144,4 +148,4 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     backgroundColor: colors.bone,
   },
-});
+}));

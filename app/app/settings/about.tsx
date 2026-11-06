@@ -8,12 +8,14 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { TopBar } from '@/components/TopBar';
 import { IconButton } from '@/components/IconButton';
 import { ContentContainer } from '@/components/ContentContainer';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles } from '@/lib/theme-context';
 
 const SOURCE_URL = 'https://github.com/lucasdow/chara';
 const WEBSITE_URL = 'https://getchara.dowtech.dev';
 
 export default function AboutScreen() {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 
@@ -61,6 +63,7 @@ export default function AboutScreen() {
 }
 
 function Row({ label, value }: { label: string; value: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
@@ -70,6 +73,7 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 function LinkRow({ label, onPress }: { label: string; onPress: () => void }) {
+  const styles = useStyles();
   return (
     <TouchableOpacity style={styles.linkRow} onPress={onPress} activeOpacity={0.7}>
       <Text style={styles.linkLabel}>{label}</Text>
@@ -78,7 +82,7 @@ function LinkRow({ label, onPress }: { label: string; onPress: () => void }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   content: { padding: spacing.s5, paddingBottom: spacing.s7 },
   eyebrow: {
@@ -139,4 +143,4 @@ const styles = StyleSheet.create({
   },
   linkLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite },
   linkArrow: { fontFamily: fontMono, fontSize: fontSize.body, color: colors.graphite },
-});
+}));

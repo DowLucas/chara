@@ -13,7 +13,8 @@ import { Feather } from '@expo/vector-icons';
 import { Text } from '@/components/Text';
 import { ContentContainer } from '@/components/ContentContainer';
 import { useEnglishT } from '@/lib/i18n';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 /**
  * Shared chrome for the pre-signup welcome steps: back chevron, mono eyebrow,
@@ -32,6 +33,8 @@ export function OnboardingScaffold({
   cta?: { label: string; onPress: () => void; disabled?: boolean };
   children?: React.ReactNode;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const t = useEnglishT();
   return (
@@ -80,7 +83,7 @@ export function OnboardingScaffold({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper, paddingHorizontal: spacing.s5 },
   scroll: { flex: 1 },
   back: { paddingVertical: spacing.s2, marginLeft: -spacing.s2, alignSelf: 'flex-start' },
@@ -111,4 +114,4 @@ const styles = StyleSheet.create({
   },
   ctaDisabled: { opacity: 0.45 },
   ctaLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.fgOnAccent },
-});
+}));

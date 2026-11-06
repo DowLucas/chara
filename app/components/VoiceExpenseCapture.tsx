@@ -25,7 +25,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
 import { WaitlistModal } from '@/components/WaitlistModal';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import {
   apiFor,
   isVoiceCapReached,
@@ -116,6 +117,8 @@ export function VoiceExpenseCapture({
   onGoToSettle,
   onCancel,
 }: VoiceExpenseCaptureProps) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
@@ -478,6 +481,8 @@ export function VoiceExpenseCapture({
 // ── sub-views ───────────────────────────────────────────────────────────
 
 function IdleView({ onRecord, onType }: { onRecord(): void; onType(): void }) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   return (
     <View style={styles.centered}>
@@ -513,6 +518,7 @@ function RecordingView({
   level: number;
   onStop(): void;
 }) {
+  const styles = useStyles();
   const { t } = useTranslation();
   const pulse = useRef(new Animated.Value(0)).current;
 
@@ -581,6 +587,8 @@ function ReviewView({
   onRegenerate(): void;
   onUse(): void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   return (
     <ScrollView contentContainerStyle={styles.reviewScroll} keyboardShouldPersistTaps="handled">
@@ -706,6 +714,7 @@ function DraftSplitList({
   members: RosterMember[];
   groupCurrency: string;
 }) {
+  const styles = useStyles();
   const { t } = useTranslation();
   const summary = splitSummary(draft, members);
   if (summary.memberNames.length === 0) return null;
@@ -766,6 +775,8 @@ function ErrorView({
   onRetry(): void;
   onGoToSettle(): void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   const message = t(`voiceExpense.err_${code}` as const);
 
@@ -805,7 +816,7 @@ function deviceTimezone(): string {
   }
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   header: {
     flexDirection: 'row',
@@ -950,4 +961,4 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     textAlign: 'center',
   },
-});
+}));

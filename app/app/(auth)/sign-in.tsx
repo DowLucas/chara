@@ -37,14 +37,8 @@ import { registerForAccount } from '@/lib/push';
 import { OnboardingDraft, isDraftActive, loadDraft } from '@/lib/onboarding-draft';
 import { setFlag, FLAG_ONBOARDING_COMPLETE } from '@/lib/storage';
 import * as analytics from '@/lib/analytics';
-import {
-  colors,
-  fontBody,
-  fontDisplay,
-  fontMono,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors, useTheme } from '@/lib/theme-context';
 
 type Mode = 'first-launch' | 'settings' | 'invite' | 'reauth';
 
@@ -92,6 +86,9 @@ async function generateNonce(): Promise<string> {
 }
 
 export default function SignInScreen() {
+  const colors = useColors();
+  const { scheme } = useTheme();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const t = useEnglishT();
   const params = useLocalSearchParams<{
@@ -632,7 +629,9 @@ export default function SignInScreen() {
                 AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
               }
               buttonStyle={
-                AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+                scheme === 'dark'
+                  ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                  : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
               }
               cornerRadius={6}
               style={styles.appleBtn}
@@ -744,7 +743,7 @@ export default function SignInScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: {
     flex: 1,
     backgroundColor: colors.paper,
@@ -919,4 +918,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: fontBody,
   },
-});
+}));

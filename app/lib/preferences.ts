@@ -1,8 +1,28 @@
 import * as SecureStore from 'expo-secure-store';
+import { APPEARANCE_PREFERENCES, type AppearancePreference } from './appearance';
 
 const KEY_LANGUAGE = 'chara.language';
 const KEY_SWISH_PHONE_PROMPT_DISMISSED = 'chara.swishPhonePromptDismissed';
 const KEY_LAST_ACTIVE_GROUP = 'chara.lastActiveGroup';
+const KEY_APPEARANCE = 'chara.appearance';
+
+/** The stored Appearance choice. Read synchronously so the first frame
+ *  already uses the right palette (no light flash for Dark users). */
+export function readAppearancePreference(): AppearancePreference {
+  try {
+    const v = SecureStore.getItem(KEY_APPEARANCE);
+    return (APPEARANCE_PREFERENCES as readonly string[]).includes(v ?? '')
+      ? (v as AppearancePreference)
+      : 'system';
+  } catch {
+    // Keychain locked before first unlock, etc. — fall back to the phone.
+    return 'system';
+  }
+}
+
+export async function setAppearancePreference(p: AppearancePreference): Promise<void> {
+  await SecureStore.setItemAsync(KEY_APPEARANCE, p);
+}
 
 /** Returns the user's explicitly-picked language code, or null if they're
  *  on auto-detect (the default — i18n.ts falls back to the device locale). */

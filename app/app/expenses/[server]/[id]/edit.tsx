@@ -51,7 +51,8 @@ import {
   projectExpenseToInputCurrency,
   splitShareInInputCurrency,
 } from '@/lib/edit-expense-flow';
-import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles } from '@/lib/theme-context';
 
 function expenseToInitialValue(expense: Expense): ExpenseWizardInitialValue {
   const { amount, currency } = expenseInputCurrencyAmount(expense);
@@ -134,6 +135,7 @@ function payloadToUpdateInput(
 }
 
 export default function EditExpenseScreen() {
+  const styles = useStyles();
   const { server, id, groupId } = useLocalSearchParams<{
     server: string;
     id: string;
@@ -378,7 +380,7 @@ export default function EditExpenseScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   staleBanner: {
     flexDirection: 'row',
@@ -399,7 +401,7 @@ const styles = StyleSheet.create({
   staleBannerLink: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
-    color: colors.vermillion,
+    color: colors.vermillionInk,
     textDecorationLine: 'underline',
   },
   loadError: {
@@ -426,4 +428,4 @@ const styles = StyleSheet.create({
     fontSize: fontSize.bodyS,
     color: colors.brick,
   },
-});
+}));

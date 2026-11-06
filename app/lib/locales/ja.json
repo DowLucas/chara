@@ -680,7 +680,6 @@
     "mixedSignsBody": "受け取る通貨と支払う通貨が混在しており、見出しには一方しか表示されません。グループを開くと全体を確認できます。",
     "mixedSignsLabel": "通貨ごとに残高の向きが異なります",
     "mixedSignsTitle": "残高が混在",
-    "netBalance": "純残高",
     "noActivity": "まだ活動はありません",
     "noGroupsBody": "グループを作成して割り勘を始めましょう。",
     "noGroupsCta": "最初のグループを作成",
@@ -1433,6 +1432,10 @@
     "accountsRowMany_one": "アカウント・{{count}}件",
     "accountsRowMany_other": "アカウント・{{count}}件",
     "accountsRowSingle": "アカウント・1件",
+    "appearance": "外観",
+    "appearanceDark": "ダーク",
+    "appearanceLight": "ライト",
+    "appearanceSystem": "システム",
     "archivedGroups": "アーカイブ済みグループ",
     "avatar": {
       "choosePhoto": "ライブラリから選ぶ",

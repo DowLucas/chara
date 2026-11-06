@@ -105,6 +105,17 @@ Primary content lists (expenses, members, groups, splits) use the **bone card** 
 
 Preview / dense lists (home-screen activity preview, members section inside the settings hub) can use a hairline `colors.ruleSoft` divider list. Reserve the heavy `colors.graphite` 1.5px rule for hero-level separators only — for routine section dividers, use 1px `ruleSoft`.
 
+### Theming (light / dark)
+
+The app has two palettes, `lightColors` and `darkColors` (Sumi), in `lib/theme.ts`, and an Appearance setting (System / Light / Dark) on the You tab. There is no static `colors` export, so a module-level color read doesn't compile.
+
+- Styles: `const useStyles = makeStyles((colors) => ({ … }))` at module level, `const styles = useStyles()` in the component (`lib/theme-context.tsx`).
+- Inline colors: `const colors = useColors()` inside the component. Never as a default parameter value (it runs before hooks).
+- No hex, `rgba(...)`, `'white'` or `'black'` literals in components — add a token to both palettes instead (`theme-palette.test.ts` checks they have the same keys and that text tokens pass AA in both).
+- Every React Native `<Text>` and `<TextInput>` sets a color from the palette; RN defaults to black, which disappears in dark mode. `TextInput` also sets `placeholderTextColor` and `keyboardAppearance`. Prefer the shared `@/components/Text`.
+- Group colors are stored as the light hex; draw them through `displaySwatch(hex, scheme)` so dark mode lifts the ones that would vanish.
+- Brand red as text (links, checks, badges) uses `vermillionInk`; `vermillion` is for fills.
+
 ### Color semantics
 
 - `colors.graphite` — neutral facts (per-person share, expense amount on a list row, paid-by-you amount), zero balances, and anything about *other* people.

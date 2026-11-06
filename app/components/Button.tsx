@@ -1,6 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
-import { colors, typography } from '@/lib/theme';
+import { typography } from '@/lib/theme';
+import { makeStyles } from '@/lib/theme-context';
 import { Text } from './Text';
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function Button({ kind = 'primary', onPress, children, style, disabled }: Props) {
+  const styles = useStyles();
   const labelOnAccent = kind === 'primary' || kind === 'positive';
   return (
     <TouchableOpacity
@@ -20,14 +22,23 @@ export function Button({ kind = 'primary', onPress, children, style, disabled }:
       style={[styles.base, styles[kind], disabled && styles.disabled, style]}
       activeOpacity={0.8}
     >
-      <Text style={[styles.label, labelOnAccent ? styles.labelPrimary : styles.labelDefault]}>
+      <Text
+        style={[
+          styles.label,
+          kind === 'positive'
+            ? styles.labelPositive
+            : labelOnAccent
+              ? styles.labelPrimary
+              : styles.labelDefault,
+        ]}
+      >
         {children}
       </Text>
     </TouchableOpacity>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   base: {
     height: 52,
     borderRadius: 6,
@@ -61,5 +72,8 @@ const styles = StyleSheet.create({
     letterSpacing: -0.1,
   },
   labelPrimary: { color: colors.fgOnAccent },
+  // `positive` fills with graphite, which turns cream in dark mode; paper is
+  // its inverse in both palettes.
+  labelPositive: { color: colors.paper },
   labelDefault: { color: colors.graphite },
-});
+}));

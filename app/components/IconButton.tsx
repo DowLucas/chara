@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { colors } from '@/lib/theme';
+import { useColors } from '@/lib/theme-context';
 
 interface Props {
   icon: React.ComponentProps<typeof Feather>['name'];
@@ -11,7 +11,8 @@ interface Props {
   color?: string;
 }
 
-export function IconButton({ icon, onPress, label, size = 22, color = colors.graphite }: Props) {
+export function IconButton({ icon, onPress, label, size = 22, color }: Props) {
+  const colors = useColors();
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -20,7 +21,7 @@ export function IconButton({ icon, onPress, label, size = 22, color = colors.gra
       style={styles.btn}
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
     >
-      <Feather name={icon} size={size} color={color} strokeWidth={1.5} />
+      <Feather name={icon} size={size} color={color ?? colors.graphite} strokeWidth={1.5} />
     </TouchableOpacity>
   );
 }

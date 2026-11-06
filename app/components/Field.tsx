@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TextInput, StyleSheet, TextInputProps } from 'react-native';
-import { colors, typography } from '@/lib/theme';
+import { typography } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import { Text } from './Text';
 
 interface Props extends TextInputProps {
@@ -11,6 +12,8 @@ interface Props extends TextInputProps {
 }
 
 export function Field({ label, value, onChangeText, amount = false, ...rest }: Props) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
@@ -27,7 +30,7 @@ export function Field({ label, value, onChangeText, amount = false, ...rest }: P
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   field: {
     paddingHorizontal: 20,
     paddingVertical: 14,
@@ -49,4 +52,4 @@ const styles = StyleSheet.create({
     ...typography.amountXL,
     fontSize: 40,
   },
-});
+}));

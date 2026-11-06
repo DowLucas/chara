@@ -32,15 +32,8 @@ import { fmtMinor } from '@/components/SplitEditor.helpers';
 import { initialsOf } from '@/lib/name';
 import { previewApportion } from '@/lib/split';
 import { splitBalance } from '@/lib/split-reconcile';
-import {
-  colors,
-  fontBody,
-  fontBodyMedium,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontBody, fontBodyMedium, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 /** `itemized` is a client-side authoring mode backed by per-receipt-line
  *  assignments: its per-member amounts are derived, not typed, so the editor
@@ -114,6 +107,8 @@ export function SplitEditor({
   serverUrl,
   allowedMethods = ['equal', 'exact', 'percentage'],
 }: SplitEditorProps) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
 
   const { method, splits, included } = value;
@@ -421,6 +416,7 @@ function SectionLabel({
   children: React.ReactNode;
   hint?: string;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.sectionLabelWrap}>
       <Text style={styles.sectionLabel}>{children}</Text>
@@ -442,6 +438,7 @@ function SegmentButton({
   first?: boolean;
   last?: boolean;
 }) {
+  const styles = useStyles();
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -477,6 +474,7 @@ function AutoSplitField({
   unit: string;
   narrow?: boolean;
 }) {
+  const styles = useStyles();
   const { t } = useTranslation();
   const locked = value !== '';
   return (
@@ -513,7 +511,7 @@ function AutoSplitField({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   sectionLabelWrap: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -677,4 +675,4 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
   },
-});
+}));

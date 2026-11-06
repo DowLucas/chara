@@ -37,14 +37,8 @@ import {
   formatTime,
   formatMinorUnits,
 } from '@/lib/i18n';
-import {
-  colors,
-  fontDisplay,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontDisplay, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 function isSameDay(a: Date, b: Date) {
   return (
@@ -55,6 +49,8 @@ function isSameDay(a: Date, b: Date) {
 }
 
 export default function GroupActivityScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { server, id } = useLocalSearchParams<{ server: string; id: string }>();
   const serverUrl = decodeURIComponent(server ?? '');
   const groupId = id ?? '';
@@ -169,6 +165,7 @@ function ActivityRow({
   event: ActivityEvent;
   youUserId: string;
 }) {
+  const styles = useStyles();
   const { t } = useTranslation();
   const isYou = event.actor_id === youUserId;
   const actor = isYou ? t('activity.you') : event.actor_name || t('common.dash');
@@ -259,7 +256,7 @@ function describeEvent(event: ActivityEvent, ctx: DescribeCtx): string {
   }
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
   dayHeader: {
@@ -299,4 +296,4 @@ const styles = StyleSheet.create({
     marginTop: 3,
     letterSpacing: 0.3,
   },
-});
+}));

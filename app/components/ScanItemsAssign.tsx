@@ -23,15 +23,8 @@ import { initialsOf, makeNameShortener } from '@/lib/name';
 import { avatarImageSourceOn, GroupMember, ScannedReceiptItem } from '@/lib/api';
 import { decimalToMinor } from '@/lib/money-utils';
 import { markPopupClosed } from '@/lib/popup-guard';
-import {
-  colors,
-  fontBody,
-  fontBodyMedium,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontBody, fontBodyMedium, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import {
   prorateItemAssignments,
   ScanItem,
@@ -87,6 +80,8 @@ export interface ScanItemsAssignProps {
 }
 
 export function ScanItemsAssign(props: ScanItemsAssignProps) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
@@ -548,7 +543,7 @@ export function ScanItemsAssign(props: ScanItemsAssignProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   ctaRow: { flexDirection: 'row', gap: spacing.s2 },
   subtitle: {
@@ -739,7 +734,7 @@ const styles = StyleSheet.create({
   // Picker sheet
   sheetOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: colors.scrim,
     justifyContent: 'flex-end',
   },
   sheet: {
@@ -779,4 +774,4 @@ const styles = StyleSheet.create({
   checkboxOn: { backgroundColor: colors.graphite, borderColor: colors.graphite },
   checkmark: { color: colors.paper, fontSize: 12, fontFamily: fontMonoMedium },
   sheetCta: { flexDirection: 'row', gap: spacing.s2, paddingTop: spacing.s3 },
-});
+}));

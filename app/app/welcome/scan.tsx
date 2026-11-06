@@ -14,7 +14,8 @@ import { useAccounts } from '@/lib/accounts';
 import * as analytics from '@/lib/analytics';
 import { classifyInvite } from '@/lib/invite-handler';
 import { dispatchInviteIntent } from '@/lib/invite-dispatcher';
-import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles } from '@/lib/theme-context';
 
 /**
  * Map a classifier `invalid.reason` (free-text) to the small enum we send
@@ -31,6 +32,7 @@ function mapInvalidReason(
 }
 
 export default function ScanToJoinScreen() {
+  const styles = useStyles();
   const t = useEnglishT();
   const { accounts } = useAccounts();
   const [busy, setBusy] = useState(false);
@@ -85,13 +87,13 @@ export default function ScanToJoinScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+const useStyles = makeStyles((colors) => ({
+  container: { flex: 1, backgroundColor: colors.mediaBlack },
   toast: {
     position: 'absolute',
     bottom: 120,
     alignSelf: 'center',
-    backgroundColor: 'rgba(184, 61, 61, 0.95)',
+    backgroundColor: colors.vermillion,
     paddingHorizontal: spacing.s4,
     paddingVertical: spacing.s3,
     borderRadius: 6,
@@ -101,12 +103,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 120,
     alignSelf: 'center',
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: colors.mediaScrim,
     paddingHorizontal: spacing.s4,
     paddingVertical: spacing.s3,
     borderRadius: 6,
   },
-  busyText: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.paper },
+  busyText: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.fgOnAccent },
   bottomBar: {
     position: 'absolute',
     bottom: 32,
@@ -117,9 +119,9 @@ const styles = StyleSheet.create({
   bottomLink: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
-    color: colors.paper,
+    color: colors.fgOnAccent,
     letterSpacing: 0.3,
     paddingVertical: spacing.s2,
     paddingHorizontal: spacing.s4,
   },
-});
+}));

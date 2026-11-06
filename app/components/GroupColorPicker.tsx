@@ -21,15 +21,8 @@ import {
   hasOverride,
   setOverride,
 } from '@/lib/group-color';
-import {
-  colors,
-  fontBody,
-  fontBodyMedium,
-  fontMono,
-  fontSize,
-  groupAccentSwatches,
-  spacing,
-} from '@/lib/theme';
+import { contrastInkFor, displaySwatch, fontBody, fontBodyMedium, fontMono, fontSize, groupAccentSwatches, spacing } from '@/lib/theme';
+import { makeStyles, useColors, useTheme } from '@/lib/theme-context';
 
 // Maps each swatch hex to the i18n key used for its accessibility label.
 // Names are i18n-keyed (not the hexes themselves) so designers can retune
@@ -78,6 +71,9 @@ function isEphemeral(p: Props): p is EphemeralProps {
  *   - Persisted: pass (serverUrl, groupId); writes via group-color overrides.
  *   - Ephemeral: pass (value, onChange); used before the group exists. */
 export function GroupColorPicker(props: Props) {
+  const colors = useColors();
+  const { scheme } = useTheme();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { sheetMaxWidth } = useResponsive();
   const { t } = useTranslation();
@@ -250,12 +246,12 @@ export function GroupColorPicker(props: Props) {
                     <View
                       style={[
                         styles.swatch,
-                        { backgroundColor: hex },
+                        { backgroundColor: displaySwatch(hex, scheme) },
                         selected && styles.swatchSelected,
                       ]}
                     >
                       {selected && (
-                        <Feather name="check" size={18} color={colors.fgOnAccent} />
+                        <Feather name="check" size={18} color={contrastInkFor(displaySwatch(hex, scheme))} />
                       )}
                     </View>
                   </TouchableOpacity>
@@ -283,7 +279,7 @@ export function GroupColorPicker(props: Props) {
               >
                 <View style={styles.actionRowLeft}>
                   <View
-                    style={[styles.autoDot, { backgroundColor: autoColor }]}
+                    style={[styles.autoDot, { backgroundColor: displaySwatch(autoColor, scheme) }]}
                   />
                   <Text style={styles.actionRowLabel}>{t('groupColor.reset')}</Text>
                 </View>
@@ -298,10 +294,10 @@ export function GroupColorPicker(props: Props) {
 
 const SWATCH_DIM = 56;
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: colors.scrim,
   },
   sheet: {
     position: 'absolute',
@@ -432,4 +428,4 @@ const styles = StyleSheet.create({
     fontSize: fontSize.body,
     color: colors.graphite,
   },
-});
+}));

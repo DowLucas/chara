@@ -4,7 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, typography } from '@/lib/theme';
+import { typography } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import { useResponsive } from '@/lib/use-responsive';
 import { Text } from './Text';
 
@@ -18,6 +19,8 @@ const ROUTE_TO_TAB: Record<
 };
 
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { contentMaxWidth } = useResponsive();
@@ -75,7 +78,7 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: {
     backgroundColor: colors.paper,
     borderTopWidth: 1.5,
@@ -100,4 +103,4 @@ const styles = StyleSheet.create({
   labelActive: {
     color: colors.graphite,
   },
-});
+}));

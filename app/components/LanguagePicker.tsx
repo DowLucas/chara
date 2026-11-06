@@ -19,7 +19,8 @@ import {
   SUPPORTED_LANGUAGES,
   type SupportedLanguage,
 } from '@/lib/i18n';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 interface Props {
   visible: boolean;
@@ -62,6 +63,8 @@ export function LanguagePicker({
   onSelectAutomatic,
   onSelect,
 }: Props) {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { contentMaxWidth } = useResponsive();
@@ -161,7 +164,7 @@ export function LanguagePicker({
                     </Text>
                   </View>
                   <View style={styles.rowRight}>
-                    {active ? <Feather name="check" size={18} color={colors.vermillion} /> : null}
+                    {active ? <Feather name="check" size={18} color={colors.vermillionInk} /> : null}
                   </View>
                 </Pressable>
               );
@@ -183,7 +186,7 @@ export function LanguagePicker({
                 </View>
                 <View style={styles.rowRight}>
                   <Text style={styles.code}>{item.code}</Text>
-                  {active ? <Feather name="check" size={18} color={colors.vermillion} /> : null}
+                  {active ? <Feather name="check" size={18} color={colors.vermillionInk} /> : null}
                 </View>
               </Pressable>
             );
@@ -208,7 +211,7 @@ export function LanguagePicker({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   header: {
     flexDirection: 'row',
@@ -259,7 +262,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.body,
     color: colors.graphite,
   },
-  nameActive: { color: colors.vermillion },
+  nameActive: { color: colors.vermillionInk },
   code: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
@@ -268,4 +271,4 @@ const styles = StyleSheet.create({
   },
   empty: { paddingHorizontal: spacing.s5, paddingVertical: spacing.s5, alignItems: 'center' },
   emptyText: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
-});
+}));

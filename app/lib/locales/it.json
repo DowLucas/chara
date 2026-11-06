@@ -696,7 +696,6 @@
     "mixedSignsBody": "In alcune valute ti devono, in altre devi ancora — il totale ne mostra solo una. Apri il gruppo per il quadro completo.",
     "mixedSignsLabel": "Saldi misti tra valute",
     "mixedSignsTitle": "Saldi misti",
-    "netBalance": "saldo netto",
     "noActivity": "Nessuna attività.",
     "noGroupsBody": "Crea un gruppo per iniziare a dividere le spese.",
     "noGroupsCta": "Crea il primo gruppo",
@@ -1479,6 +1478,10 @@
     "accountsRowMany_one": "Account · {{count}}",
     "accountsRowMany_other": "Account · {{count}}",
     "accountsRowSingle": "Account · 1",
+    "appearance": "Aspetto",
+    "appearanceDark": "Scuro",
+    "appearanceLight": "Chiaro",
+    "appearanceSystem": "Sistema",
     "archivedGroups": "Gruppi archiviati",
     "avatar": {
       "choosePhoto": "Scegli dalla galleria",

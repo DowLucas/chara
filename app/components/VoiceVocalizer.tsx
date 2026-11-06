@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, type ViewStyle } from 'react-native';
 
-import { colors, spacing } from '@/lib/theme';
+import { spacing } from '@/lib/theme';
+import { makeStyles } from '@/lib/theme-context';
 import { BAR_COUNT, barTargets } from '@/lib/voice-levels';
 
 /** Tallest a bar gets, in points. */
@@ -36,6 +37,7 @@ export interface VoiceVocalizerProps {
  * keeps running smoothly while JS is busy encoding audio.
  */
 export function VoiceVocalizer({ level, thinking = false, style }: VoiceVocalizerProps) {
+  const styles = useStyles();
   // One value per bar, holding a 0..1 scale factor.
   const scales = useRef(
     Array.from({ length: BAR_COUNT }, () => new Animated.Value(0.08)),
@@ -94,7 +96,7 @@ export function VoiceVocalizer({ level, thinking = false, style }: VoiceVocalize
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   row: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -108,4 +110,4 @@ const styles = StyleSheet.create({
     borderRadius: BAR_WIDTH / 2,
     backgroundColor: colors.graphite,
   },
-});
+}));

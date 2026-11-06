@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { colors, fontDisplay, fontBodyMedium, fontSize } from '@/lib/theme';
+import { fontDisplay, fontBodyMedium, fontSize } from '@/lib/theme';
+import { makeStyles } from '@/lib/theme-context';
 import { useResponsive } from '@/lib/use-responsive';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function TopBar({ title, left, right }: Props) {
+  const styles = useStyles();
   const { t } = useTranslation();
   const { contentMaxWidth } = useResponsive();
   const appName = t('app.name');
@@ -45,7 +47,7 @@ export function TopBar({ title, left, right }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: {
     backgroundColor: colors.paper,
     borderBottomWidth: 1.5,
@@ -103,4 +105,4 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
     color: colors.graphite,
   },
-});
+}));

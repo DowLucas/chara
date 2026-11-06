@@ -60,14 +60,8 @@ import {
   ExpenseWizardHandle,
   ExpenseWizardSubmitPayload,
 } from '@/components/ExpenseWizard';
-import {
-  colors,
-  fontDisplay,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontDisplay, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 function fmtMinor(n: number, currency: string): string {
   const abs = Math.abs(n);
@@ -75,6 +69,8 @@ function fmtMinor(n: number, currency: string): string {
 }
 
 export default function AddExpenseScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { server, id } = useLocalSearchParams<{ server: string; id: string }>();
   const serverUrl = decodeURIComponent(server ?? '');
   const api = apiFor(serverUrl);
@@ -713,14 +709,14 @@ export default function AddExpenseScreen() {
                     accessibilityLabel={t('common.share')}
                     style={styles.receiptPdfBarBtn}
                   >
-                    <Feather name="share" size={22} color={colors.paper} />
+                    <Feather name="share" size={22} color={colors.fgOnAccent} />
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => setReceiptViewerOpen(false)}
                     accessibilityLabel={t('common.close')}
                     style={styles.receiptPdfBarBtn}
                   >
-                    <Feather name="x" size={24} color={colors.paper} />
+                    <Feather name="x" size={24} color={colors.fgOnAccent} />
                   </TouchableOpacity>
                 </View>
                 <PdfView
@@ -788,6 +784,8 @@ function ShortcutPill({
   accessibilityLabel: string;
   onPress(): void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <TouchableOpacity
       style={styles.shortcutPill}
@@ -804,7 +802,7 @@ function ShortcutPill({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   shortcutRow: {
     flexDirection: 'row',
@@ -867,7 +865,7 @@ const styles = StyleSheet.create({
   },
   receiptViewer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.9)',
+    backgroundColor: colors.mediaBlack,
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.s4,
@@ -885,7 +883,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fontDisplay,
     fontSize: fontSize.bodyS,
-    color: colors.paper,
+    color: colors.fgOnAccent,
   },
   receiptPdfBarBtn: { padding: spacing.s2 },
   receiptPdf: { flex: 1, alignSelf: 'stretch', backgroundColor: 'transparent' },
@@ -898,7 +896,7 @@ const styles = StyleSheet.create({
   receiptDocName: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
-    color: colors.paper,
+    color: colors.fgOnAccent,
     letterSpacing: 0.3,
     textAlign: 'center',
   },
@@ -930,4 +928,4 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     textDecorationLine: 'underline',
   },
-});
+}));

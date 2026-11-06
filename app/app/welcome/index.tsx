@@ -25,12 +25,15 @@ import {
   setPreferredLanguage,
 } from '@/lib/preferences';
 import { clearDraft } from '@/lib/onboarding-draft';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import * as analytics from '@/lib/analytics';
 
 const SLIDES = 3;
 
 export default function WelcomeIntroScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const t = useEnglishT();
   const pager = useRef<ScrollView>(null);
@@ -198,6 +201,7 @@ export default function WelcomeIntroScreen() {
 
 // Each slide scrolls vertically on its own so large OS font sizes never clip.
 function Slide({ width, children }: { width: number; children: React.ReactNode }) {
+  const styles = useStyles();
   return (
     <ScrollView style={{ width }} contentContainerStyle={styles.slide}>
       <ContentContainer>{children}</ContentContainer>
@@ -205,7 +209,7 @@ function Slide({ width, children }: { width: number; children: React.ReactNode }
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   topBar: {
     height: 44,
@@ -308,4 +312,4 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
     textDecorationColor: colors.ruleSoft,
   },
-});
+}));

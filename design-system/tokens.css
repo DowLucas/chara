@@ -21,6 +21,8 @@
   --color-citrine: #E0A040;
   --color-rule-soft: rgba(45, 31, 26, 0.07);
   --color-fg-on-accent: #F4F1E6;
+  --color-vermillion-ink: #A33430;
+  --color-scrim: rgba(45, 31, 26, 0.45);
 
   /* ---------- Group accents (index is significant — hash % 8 picks here) ---------- */
   --accent-1: #1F3A6E;
@@ -68,6 +70,51 @@
   --fs-body: 17px;
   --fs-body-s: 15px;
   --fs-caption: 13px;
+}
+
+/* ---------- Dark (Sumi) — mirrors darkColors in app/lib/theme.ts ----------
+   Applies under the OS dark setting unless a page pins data-theme="light",
+   and always under data-theme="dark". Group accents are lifted at render
+   time in the app (liftSwatchForDark); the four that need it are listed. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-paper: #1A1512;
+    --color-bone: #251E1A;
+    --color-graphite: #EFE5CF;
+    --color-lead: #B4A592;
+    --color-vermillion: #B8423A;
+    --color-moss: #5DB39C;
+    --color-brick: #E58B5F;
+    --color-citrine: #E6AE52;
+    --color-rule-soft: rgba(239, 229, 207, 0.08);
+    --color-fg-on-accent: #FBF6EC;
+    --color-vermillion-ink: #EC7B6C;
+    --color-scrim: rgba(0, 0, 0, 0.55);
+    --accent-1: #5679C0;
+    --accent-4: #9A78AE;
+    --accent-7: #AC7A52;
+    --accent-8: #D8CDB8;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --color-paper: #1A1512;
+  --color-bone: #251E1A;
+  --color-graphite: #EFE5CF;
+  --color-lead: #B4A592;
+  --color-vermillion: #B8423A;
+  --color-moss: #5DB39C;
+  --color-brick: #E58B5F;
+  --color-citrine: #E6AE52;
+  --color-rule-soft: rgba(239, 229, 207, 0.08);
+  --color-fg-on-accent: #FBF6EC;
+  --color-vermillion-ink: #EC7B6C;
+  --color-scrim: rgba(0, 0, 0, 0.55);
+  --accent-1: #5679C0;
+  --accent-4: #9A78AE;
+  --accent-7: #AC7A52;
+  --accent-8: #D8CDB8;
+  color-scheme: dark;
 }
 
 /* Typography tokens, one class per `typography` entry. */

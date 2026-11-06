@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { colors, typography } from '@/lib/theme';
+import { typography } from '@/lib/theme';
+import { makeStyles } from '@/lib/theme-context';
 import { Text } from './Text';
 
 interface Props {
@@ -18,6 +19,7 @@ interface Props {
 // confetti, no fanfare." A quick fade + scale-overshoot + rotation spring
 // gives the stamp a weighty landing without violating the brand tone.
 export function Stamp({ size = 'sm', animateIn, speed = 1 }: Props) {
+  const styles = useStyles();
   const { t } = useTranslation();
   const shouldAnimate = animateIn ?? size === 'lg';
 
@@ -80,7 +82,7 @@ export function Stamp({ size = 'sm', animateIn, speed = 1 }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   base: {
     borderWidth: 1.5,
     // Moss, not vermillion: settling is the completed, good-for-you moment,
@@ -103,4 +105,4 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     color: colors.moss,
   },
-});
+}));

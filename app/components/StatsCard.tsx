@@ -13,15 +13,8 @@ import { useTranslation } from 'react-i18next';
 import { Text } from './Text';
 import { formatMinorUnits, formatDate } from '../lib/i18n';
 import type { GroupStats } from '../lib/api';
-import {
-  colors,
-  fontBody,
-  fontDisplay,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  spacing,
-} from '../lib/theme';
+import { fontBody, fontDisplay, fontMono, fontMonoMedium, fontSize, spacing } from '../lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 interface Props {
   stats: GroupStats | null;
@@ -31,6 +24,8 @@ interface Props {
 }
 
 export function StatsCard({ stats, loading }: Props) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
 
   return (
@@ -99,6 +94,7 @@ export function StatsCard({ stats, loading }: Props) {
 }
 
 function Row({ label, value }: { label: string; value: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.row}>
       <Text style={styles.label}>{label}</Text>
@@ -107,7 +103,7 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: {
     marginHorizontal: spacing.s5,
     marginTop: spacing.s4,
@@ -192,4 +188,4 @@ const styles = StyleSheet.create({
     color: colors.lead,
     paddingVertical: spacing.s2,
   },
-});
+}));

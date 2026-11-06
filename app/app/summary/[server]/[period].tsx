@@ -39,16 +39,8 @@ import {
   monthStrip,
   netDirection,
 } from '@/lib/summary-view';
-import {
-  colors,
-  fontBody,
-  fontDisplay,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  groupAccentSwatches,
-  spacing,
-} from '@/lib/theme';
+import { contrastInkFor, fontBody, fontDisplay, fontMono, fontMonoMedium, fontSize, groupAccentSwatches, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 /** Asagi. --accent-3 in the canvas, which is what 1c is drawn with. */
 const ACCENT = groupAccentSwatches[2];
@@ -77,6 +69,8 @@ function signedNet(net: string, currency: string): string {
 }
 
 export default function MonthlySummaryScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ server: string; period: string }>();
@@ -416,7 +410,7 @@ export default function MonthlySummaryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { paddingBottom: spacing.s7 },
   center: { paddingVertical: spacing.s8, alignItems: 'center', gap: spacing.s4 },
@@ -561,9 +555,9 @@ const styles = StyleSheet.create({
   dowLabel: { fontFamily: fontMono, fontSize: 11, color: colors.lead },
   dayCell: { height: 26 },
   dayBlank: { backgroundColor: 'transparent' },
-  dayOff: { backgroundColor: 'rgba(45,31,26,0.05)', borderRadius: 4 },
+  dayOff: { backgroundColor: colors.ruleSoft, borderRadius: 4 },
   dayText: { fontFamily: fontMono, fontSize: 11, color: colors.lead, fontVariant: ['tabular-nums'] },
-  dayTextOn: { color: colors.fgOnAccent },
+  dayTextOn: { color: contrastInkFor(ACCENT) },
   legend: { flexDirection: 'row', gap: spacing.s4, marginTop: spacing.s3 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   legendSwatch: { width: 10, height: 10, borderRadius: 2 },
@@ -626,4 +620,4 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   hlChev: { fontFamily: fontMono, fontSize: fontSize.bodyL, color: colors.lead },
-});
+}));

@@ -29,16 +29,12 @@ import { isPopupJustClosed } from '@/lib/popup-guard';
 import { formatLeaveReasons } from '@/lib/group-settings';
 import { formatMinorUnits, formatDate } from '@/lib/i18n';
 import { initialsOf, makeNameShortener } from '@/lib/name';
-import {
-  colors,
-  fontDisplay,
-  fontBody,
-  fontMono,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontDisplay, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 export default function GroupMembersScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { server, id } = useLocalSearchParams<{ server: string; id: string }>();
   const serverUrl = decodeURIComponent(server ?? '');
   const api = apiFor(serverUrl);
@@ -358,7 +354,7 @@ export default function GroupMembersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
   header: {
@@ -453,4 +449,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.s4,
   },
-});
+}));

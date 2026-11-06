@@ -15,7 +15,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useEnglishT } from '@/lib/i18n';
 import { apiFor } from '@/lib/api';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import { setOverride as setGroupColorOverride } from '@/lib/group-color';
 import { GroupSetupForm, GroupSetupValue, defaultGroupCurrency } from '@/components/GroupSetupForm';
 import { useDefaultAccount } from '@/lib/accounts';
@@ -23,6 +24,8 @@ import * as analytics from '@/lib/analytics';
 import { ContentContainer } from '@/components/ContentContainer';
 
 export default function CreateGroupScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const t = useEnglishT();
   const defaultAccount = useDefaultAccount();
@@ -101,7 +104,7 @@ export default function CreateGroupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper, paddingHorizontal: spacing.s5 },
   scroll: { flex: 1 },
   back: { paddingVertical: spacing.s2, marginLeft: -spacing.s2, alignSelf: 'flex-start' },
@@ -132,4 +135,4 @@ const styles = StyleSheet.create({
   },
   ctaDisabled: { opacity: 0.45 },
   ctaLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.fgOnAccent },
-});
+}));

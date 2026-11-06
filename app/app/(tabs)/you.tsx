@@ -57,7 +57,9 @@ import {
   setPreferredLanguage,
 } from '@/lib/preferences';
 import { storeReviewUrl, type StorePlatform } from '@/lib/store-url';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors, useTheme } from '@/lib/theme-context';
+import { APPEARANCE_PREFERENCES, type AppearancePreference } from '@/lib/appearance';
 import { currentPeriod } from '@/lib/summary-view';
 import { useFeatureServerUrl, useSummaryServerUrl } from '@/lib/use-feature-server';
 
@@ -79,6 +81,8 @@ const VERSION_LABEL = APP_VERSION
   : '';
 
 export default function YouScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { user, signOut, refreshUser } = useAuth();
@@ -100,6 +104,14 @@ export default function YouScreen() {
   const hasMultipleAccounts = accountCount >= 2;
   const [avatarSheetVisible, setAvatarSheetVisible] = useState(false);
   const [languageSheetVisible, setLanguageSheetVisible] = useState(false);
+  const [appearanceSheetVisible, setAppearanceSheetVisible] = useState(false);
+  const { preference: appearance, setPreference: setAppearance } = useTheme();
+  const appearanceLabel = (p: AppearancePreference) =>
+    p === 'light'
+      ? t('you.appearanceLight')
+      : p === 'dark'
+        ? t('you.appearanceDark')
+        : t('you.appearanceSystem');
   const [currencySheetVisible, setCurrencySheetVisible] = useState(false);
   const [storedLanguage, setStoredLanguage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -559,6 +571,11 @@ export default function YouScreen() {
             onPress={() => setLanguageSheetVisible(true)}
           />
           <NavRow
+            label={t('you.appearance')}
+            value={appearanceLabel(appearance)}
+            onPress={() => setAppearanceSheetVisible(true)}
+          />
+          <NavRow
             label={t('you.homeCurrency')}
             value={
               homeCurrencyExplicit
@@ -682,6 +699,15 @@ export default function YouScreen() {
         title={t('you.avatar.chooseTitle')}
         options={avatarSheetOptions}
       />
+      <ActionSheet
+        visible={appearanceSheetVisible}
+        onClose={() => setAppearanceSheetVisible(false)}
+        title={t('you.appearance')}
+        options={APPEARANCE_PREFERENCES.map((p) => ({
+          label: appearanceLabel(p),
+          onPress: () => setAppearance(p),
+        }))}
+      />
       <LanguagePicker
         visible={languageSheetVisible}
         selected={(storedLanguage as SupportedLanguage | null) ?? null}
@@ -717,6 +743,8 @@ function NavRow({
   showChevron?: boolean;
   disabled?: boolean;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const labelColor = destructive ? colors.brick : colors.graphite;
   return (
     <TouchableOpacity
@@ -739,7 +767,7 @@ function NavRow({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   versionText: {
     fontFamily: fontMono,
@@ -826,4 +854,4 @@ const styles = StyleSheet.create({
     color: colors.lead,
     letterSpacing: 0.3,
   },
-});
+}));

@@ -680,7 +680,6 @@
     "mixedSignsBody": "你在部分币种中是应收，在其他币种中仍是应付——头条只显示其中一项。打开群组可查看完整情况。",
     "mixedSignsLabel": "多种币种余额涨跌不一",
     "mixedSignsTitle": "余额涨跌不一",
-    "netBalance": "净余额",
     "noActivity": "暂无动态。",
     "noGroupsBody": "新建一个群组，开始分账。",
     "noGroupsCta": "新建第一个群组",
@@ -1433,6 +1432,10 @@
     "accountsRowMany_one": "账户 · {{count}}",
     "accountsRowMany_other": "账户 · {{count}}",
     "accountsRowSingle": "账户 · 1",
+    "appearance": "外观",
+    "appearanceDark": "深色",
+    "appearanceLight": "浅色",
+    "appearanceSystem": "跟随系统",
     "archivedGroups": "已归档群组",
     "avatar": {
       "choosePhoto": "从相册选择",

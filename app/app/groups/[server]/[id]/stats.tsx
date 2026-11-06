@@ -24,17 +24,12 @@ import { apiFor, Expense, GroupStats } from '@/lib/api';
 import { formatDate, formatMinorUnits } from '@/lib/i18n';
 import { aggregateByCategory } from '@/lib/category-stats';
 import { categoryIcon, categoryLabel } from '@/lib/categories';
-import {
-  colors,
-  fontBody,
-  fontDisplay,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 export default function GroupStatsScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { server, id } = useLocalSearchParams<{ server: string; id: string }>();
   const serverUrl = decodeURIComponent(server ?? '');
   const groupId = id ?? '';
@@ -161,7 +156,7 @@ export default function GroupStatsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
   section: { marginTop: spacing.s5 },
@@ -194,4 +189,4 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
   },
-});
+}));

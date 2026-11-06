@@ -35,9 +35,12 @@ import {
   resolveGroupCategorySlugs,
 } from '@/lib/categories';
 import { hapticSuccess } from '@/lib/haptics';
-import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 export default function GroupCategoriesScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { server, id } = useLocalSearchParams<{ server: string; id: string }>();
@@ -148,7 +151,7 @@ export default function GroupCategoriesScreen() {
                     <Feather
                       name={active ? 'check-square' : 'square'}
                       size={20}
-                      color={active ? colors.vermillion : colors.lead}
+                      color={active ? colors.vermillionInk : colors.lead}
                     />
                   </TouchableOpacity>
                 );
@@ -176,7 +179,7 @@ export default function GroupCategoriesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   banner: {
@@ -233,4 +236,4 @@ const styles = StyleSheet.create({
   },
   ctaDisabled: { opacity: 0.45 },
   ctaLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.fgOnAccent },
-});
+}));

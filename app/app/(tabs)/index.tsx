@@ -48,15 +48,8 @@ import {
 import { formatMinorUnits, formatMinorUnitsCompact, decimalToMinor } from '@/lib/i18n';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import { useWidgetSnapshot } from '@/lib/use-widget-snapshot';
-import {
-  colors,
-  fontBody,
-  fontDisplay,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import { displayHostFor } from '@/lib/server-url';
 
 /** Hero-only formatter: hair-spaces in place of locale spaces so a long
@@ -73,6 +66,8 @@ const fmtAmount = (minor: string, currency: string) => formatMinorUnits(minor, c
 
 
 export default function HomeScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { accounts } = useAccounts();
@@ -318,12 +313,11 @@ export default function HomeScreen() {
             truth per-currency, just secondary. For monocurrency users
             the per-currency hero stays as-is. */}
         <View style={styles.hero}>
-          <Text style={styles.eyebrow}>{t('home.netBalance')}</Text>
-          {(showHomeNet || netByCurrency.length > 0) && (
-            <Text style={[styles.heroDirection, { color: directionColor(heroDirection) }]}>
-              {directionLabel(heroDirection)}
-            </Text>
-          )}
+          {/* The direction word is the hero's label ("you're owed" /
+              "you owe" / "settled up"), colored like the amount. */}
+          <Text style={[styles.heroDirection, { color: directionColor(heroDirection, colors) }]}>
+            {directionLabel(heroDirection)}
+          </Text>
           {showHomeNet ? (
             <>
               <View style={styles.heroRow}>
@@ -331,7 +325,7 @@ export default function HomeScreen() {
                   value={fmtHero(aggregatedHomeNet!.minor, homeCurrency)}
                   style={[
                     styles.heroBalance,
-                    { color: directionColor(heroDirection) },
+                    { color: directionColor(heroDirection, colors) },
                     { flexShrink: 1 },
                   ]}
                   numberOfLines={1}
@@ -372,7 +366,7 @@ export default function HomeScreen() {
                 value={fmtHero(primaryNet, primaryCurrency)}
                 style={[
                   styles.heroBalance,
-                  { color: directionColor(heroDirection) },
+                  { color: directionColor(heroDirection, colors) },
                 ]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
@@ -386,7 +380,7 @@ export default function HomeScreen() {
                         value={`${directionLabel(directionOf(c.minor))} ${fmtAmount(String(Math.abs(c.minor)), c.currency)}`}
                         style={[
                           styles.currencyChipAmt,
-                          { color: directionColor(directionOf(c.minor)) },
+                          { color: directionColor(directionOf(c.minor), colors) },
                         ]}
                       />
                     </View>
@@ -715,6 +709,7 @@ function summariseActivity(
  * fan-out; the failing account is re-queried along with the healthy ones.
  */
 function ErrorStrip({ label, cta }: { label: string; cta: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.errorStrip}>
       <Text style={styles.errorStripText} numberOfLines={1}>
@@ -786,7 +781,7 @@ function GroupMemberStrip({ serverUrl, groupId }: { serverUrl: string; groupId: 
   return <AvatarStack people={people} max={MEMBER_STRIP_MAX} overflow="ellipsis" tone="paper" />;
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
   topAction: {
@@ -807,17 +802,10 @@ const styles = StyleSheet.create({
     paddingTop: spacing.s6,
     paddingBottom: spacing.s5,
   },
-  eyebrow: {
-    fontFamily: fontMono,
-    fontSize: fontSize.bodyS,
-    color: colors.lead,
-    letterSpacing: 0.3,
-    marginBottom: 6,
-  },
   heroDirection: {
     fontFamily: fontBody,
     fontSize: fontSize.body,
-    marginBottom: 2,
+    marginBottom: 6,
   },
   heroBalance: {
     fontFamily: fontMono,
@@ -1087,4 +1075,4 @@ const styles = StyleSheet.create({
     fontSize: fontSize.body,
     color: colors.fgOnAccent,
   },
-});
+}));

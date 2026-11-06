@@ -19,7 +19,8 @@ import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import { apiFor, ScannedReceipt, ApiError, isOcrCapReached } from '@/lib/api';
 import { useAccount } from '@/lib/accounts';
 import { WaitlistModal } from '@/components/WaitlistModal';
@@ -110,6 +111,8 @@ export function ReceiptScanner({
   onCancel,
   initialScan,
 }: Props) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
@@ -318,7 +321,7 @@ export function ReceiptScanner({
       accessibilityLabel={t('common.close')}
       hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
     >
-      <Feather name="x" size={26} color={colors.paper} />
+      <Feather name="x" size={26} color={colors.fgOnAccent} />
     </TouchableOpacity>
   );
 
@@ -355,7 +358,7 @@ export function ReceiptScanner({
               accessibilityLabel={t('receiptScanner.pickFromLibrary')}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-              <Feather name="image" size={22} color={colors.paper} />
+              <Feather name="image" size={22} color={colors.fgOnAccent} />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.galleryBtn}
@@ -363,7 +366,7 @@ export function ReceiptScanner({
               accessibilityLabel={t('receiptScanner.pickDocument')}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-              <Feather name="file-text" size={22} color={colors.paper} />
+              <Feather name="file-text" size={22} color={colors.fgOnAccent} />
             </TouchableOpacity>
           </View>
         </View>
@@ -394,7 +397,7 @@ export function ReceiptScanner({
       <View style={styles.container}>
         <SourcePreview source={phase.source} style={styles.fullPhoto} />
         <View style={styles.errorOverlay}>
-          <Feather name="alert-triangle" size={28} color={colors.paper} />
+          <Feather name="alert-triangle" size={28} color={colors.fgOnAccent} />
           <Text style={styles.errorTitle}>{t('receiptScanner.errorTitle')}</Text>
           <Text style={styles.errorBody}>{phase.message}</Text>
           <View style={styles.errorBtns}>
@@ -450,6 +453,8 @@ export function ReceiptScanner({
  * its filename.
  */
 function SourcePreview({ source, style }: { source: ReceiptSource; style?: object }) {
+  const colors = useColors();
+  const styles = useStyles();
   if (source.kind === 'image') {
     return <Image source={{ uri: source.uri }} style={style} resizeMode="contain" />;
   }
@@ -465,6 +470,8 @@ function SourcePreview({ source, style }: { source: ReceiptSource; style?: objec
 
 // ─── Analyzing phase ──────────────────────────────────────────────────────────
 function AnalyzingView({ source }: { source: ReceiptSource }) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   const anim = useRef(new Animated.Value(0)).current;
   const [stepIdx, setStepIdx] = useState(0);
@@ -581,6 +588,7 @@ function ResultView({
   topPad,
   bottomPad,
 }: ResultViewProps) {
+  const styles = useStyles();
   const { t } = useTranslation();
   const needsConversion = receipt.currency !== groupCurrency;
 
@@ -763,8 +771,8 @@ function ResultView({
 
 const VIEWFINDER = 280;
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+const useStyles = makeStyles((colors) => ({
+  container: { flex: 1, backgroundColor: colors.mediaBlack },
 
   // Permission screen
   permWrap: {
@@ -805,7 +813,7 @@ const styles = StyleSheet.create({
   // Camera phase
   overlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   window: { width: VIEWFINDER, height: VIEWFINDER * 1.3 },
-  corner: { position: 'absolute', width: 28, height: 28, borderColor: colors.paper },
+  corner: { position: 'absolute', width: 28, height: 28, borderColor: colors.fgOnAccent },
   cornerTL: { top: 0, left: 0, borderTopWidth: 3, borderLeftWidth: 3 },
   cornerTR: { top: 0, right: 0, borderTopWidth: 3, borderRightWidth: 3 },
   cornerBL: { bottom: 0, left: 0, borderBottomWidth: 3, borderLeftWidth: 3 },
@@ -813,7 +821,7 @@ const styles = StyleSheet.create({
   hint: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
-    color: colors.paper,
+    color: colors.fgOnAccent,
     letterSpacing: 0.3,
     marginTop: spacing.s4,
     opacity: 0.85,
@@ -825,7 +833,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: colors.mediaScrim,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
@@ -850,7 +858,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: colors.mediaScrim,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -862,7 +870,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 4,
-    borderColor: 'rgba(255,255,255,0.4)',
+    borderColor: colors.mediaRing,
   },
   shutterInner: {
     width: 56,
@@ -890,7 +898,7 @@ const styles = StyleSheet.create({
   },
   scanTint: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(45,31,26,0.06)',
+    backgroundColor: colors.ruleSoft,
   },
   analyzingMeta: {
     alignItems: 'center',
@@ -947,27 +955,27 @@ const styles = StyleSheet.create({
   },
 
   // Error phase
-  fullPhoto: { ...StyleSheet.absoluteFill, backgroundColor: '#000' },
+  fullPhoto: { ...StyleSheet.absoluteFill, backgroundColor: colors.mediaBlack },
   errorOverlay: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
     padding: spacing.s5,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: colors.mediaScrim,
     gap: spacing.s3,
     alignItems: 'center',
   },
   errorTitle: {
     fontFamily: fontDisplay,
     fontSize: fontSize.displayS,
-    color: colors.paper,
+    color: colors.fgOnAccent,
     letterSpacing: -0.5,
   },
   errorBody: {
     fontFamily: fontBody,
     fontSize: fontSize.bodyS,
-    color: colors.paper,
+    color: colors.fgOnAccent,
     opacity: 0.85,
     textAlign: 'center',
     lineHeight: 20,
@@ -988,7 +996,7 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: '#000',
+    backgroundColor: colors.bone,
     borderWidth: 0.5,
     borderColor: colors.ruleSoft,
     marginBottom: spacing.s4,
@@ -1060,4 +1068,4 @@ const styles = StyleSheet.create({
     paddingTop: spacing.s3,
   },
 
-});
+}));

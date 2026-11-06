@@ -17,7 +17,8 @@ import { Feather } from '@expo/vector-icons';
 
 import { Text } from '@/components/Text';
 
-import { colors, fontMono, spacing } from '@/lib/theme';
+import { fontMono, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 export interface AmountFieldProps {
   amount: string;
@@ -39,6 +40,8 @@ export function AmountField({
   placeholder = '0',
   currencyAccessibilityLabel,
 }: AmountFieldProps) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <View style={styles.row}>
       <TouchableOpacity
@@ -73,7 +76,7 @@ export function AmountField({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   row: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   amountTouchable: { flex: 1 },
   amountInput: {
@@ -103,4 +106,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   currency: { fontFamily: fontMono, fontSize: 24, color: colors.lead },
-});
+}));

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { colors, typography } from '@/lib/theme';
+import { typography } from '@/lib/theme';
+import { makeStyles } from '@/lib/theme-context';
 import { Text } from './Text';
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function Chip({ children, solid = false }: Props) {
+  const styles = useStyles();
   return (
     <View style={[styles.base, solid && styles.solid]}>
       <Text style={[styles.text, solid && styles.textSolid]}>{children}</Text>
@@ -16,7 +18,7 @@ export function Chip({ children, solid = false }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   base: {
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -35,4 +37,4 @@ const styles = StyleSheet.create({
   textSolid: {
     color: colors.paper,
   },
-});
+}));

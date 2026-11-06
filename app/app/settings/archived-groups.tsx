@@ -21,17 +21,12 @@ import { useAccounts } from '@/lib/accounts';
 import { useAggregatedArchivedGroups, refreshAggregatedReads } from '@/lib/aggregated-reads';
 import { displayHostFor } from '@/lib/server-url';
 import { isPopupJustClosed } from '@/lib/popup-guard';
-import {
-  colors,
-  fontBody,
-  fontDisplay,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 export default function ArchivedGroupsScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { accounts } = useAccounts();
@@ -137,7 +132,7 @@ export default function ArchivedGroupsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: {
     paddingHorizontal: spacing.s4,
@@ -167,7 +162,7 @@ const styles = StyleSheet.create({
   retryLabel: {
     fontFamily: fontMonoMedium,
     fontSize: fontSize.caption,
-    color: colors.vermillion,
+    color: colors.vermillionInk,
     letterSpacing: 0.3,
   },
   list: {
@@ -198,4 +193,4 @@ const styles = StyleSheet.create({
     color: colors.lead,
     letterSpacing: 0.3,
   },
-});
+}));

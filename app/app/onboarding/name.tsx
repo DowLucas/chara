@@ -18,11 +18,14 @@ import { useAuth } from '@/lib/auth';
 import { useAccount, useAccounts, useDefaultAccount } from '@/lib/accounts';
 import { apiFor } from '@/lib/api';
 import { userErrorMessage } from '@/lib/user-error';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import * as analytics from '@/lib/analytics';
 import { ContentContainer } from '@/components/ContentContainer';
 
 export default function OnboardingNameScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const t = useEnglishT();
   // Profile writes target the account being edited, not the default one:
@@ -184,7 +187,7 @@ export default function OnboardingNameScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper, paddingHorizontal: spacing.s5 },
   scroll: { flex: 1 },
   header: { gap: spacing.s2, marginTop: spacing.s4, marginBottom: spacing.s5 },
@@ -245,4 +248,4 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
     textDecorationColor: colors.ruleSoft,
   },
-});
+}));

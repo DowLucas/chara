@@ -10,9 +10,12 @@ import { apiFor, Group } from '@/lib/api';
 import { ContentContainer } from '@/components/ContentContainer';
 import { Text } from '@/components/Text';
 import { hapticSuccess } from '@/lib/haptics';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, lightColors, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 export default function GroupInviteScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { server, id } = useLocalSearchParams<{ server: string; id: string }>();
@@ -82,7 +85,7 @@ export default function GroupInviteScreen() {
 
               <View style={styles.qrWrap}>
                 <View style={styles.qrCard}>
-                  <QRCode value={link} size={240} backgroundColor={colors.paper} color={colors.graphite} />
+                  <QRCode value={link} size={240} backgroundColor={lightColors.paper} color={lightColors.graphite} />
                 </View>
                 <Text style={styles.token} selectable>{group.invite_token}</Text>
               </View>
@@ -119,7 +122,7 @@ export default function GroupInviteScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper, paddingHorizontal: spacing.s5 },
   fill: { flex: 1 },
   scroll: { flex: 1 },
@@ -148,7 +151,9 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: colors.graphite,
     borderRadius: 8,
-    backgroundColor: colors.paper,
+    // The QR stays dark-on-cream in both themes: many scanners can't read
+    // an inverted code.
+    backgroundColor: lightColors.paper,
   },
   token: {
     fontFamily: fontMono,
@@ -178,4 +183,4 @@ const styles = StyleSheet.create({
     borderColor: colors.graphite,
   },
   secondaryCtaLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite },
-});
+}));

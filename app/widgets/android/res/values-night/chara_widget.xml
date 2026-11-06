@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Dark (Sumi) overrides for the widget colors in ../values/chara_widget.xml.
+  Mirrors darkColors in lib/theme.ts. Android picks this up when the system
+  is in dark mode; widgets always follow the system, not the in-app setting.
+-->
+<resources>
+    <color name="chara_widget_paper">#1A1512</color>
+    <color name="chara_widget_bone">#251E1A</color>
+    <color name="chara_widget_graphite">#EFE5CF</color>
+    <color name="chara_widget_lead">#B4A592</color>
+    <color name="chara_widget_moss">#5DB39C</color>
+    <color name="chara_widget_brick">#E58B5F</color>
+    <color name="chara_widget_rule_soft">#14EFE5CF</color>
+</resources>

@@ -17,12 +17,15 @@ import { Button } from '@/components/Button';
 import { Text } from '@/components/Text';
 import { useAccounts } from '@/lib/accounts';
 import { useAggregatedGroups } from '@/lib/aggregated-reads';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import { usePendingShare } from '@/lib/pending-share';
 import { addExpenseHref, flattenGroupChoices } from './receipt-inbox.helpers';
 
 export default function ReceiptInbox() {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { accounts, lastUsedCreateServerUrl, loading: accountsLoading } = useAccounts();
@@ -115,7 +118,7 @@ export default function ReceiptInbox() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   screen: { flex: 1, backgroundColor: colors.paper },
   empty: {
     flex: 1,
@@ -188,4 +191,4 @@ const styles = StyleSheet.create({
   rowText: { flex: 1, gap: 2 },
   rowLabel: { fontFamily: fontDisplay, fontSize: fontSize.body, color: colors.graphite },
   rowSub: { fontFamily: fontMono, fontSize: fontSize.caption, color: colors.lead },
-});
+}));

@@ -28,9 +28,12 @@ import { EmptyState } from '@/components/EmptyState';
 import { showAlert } from '@/lib/app-alert';
 import { apiFor } from '@/lib/api';
 import { useSummaryServerUrl } from '@/lib/use-feature-server';
-import { colors, fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 export default function NotificationsScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   // Live feature read rather than the cached account.instance blob, which is
@@ -141,7 +144,7 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { paddingBottom: spacing.s8 },
   center: { paddingVertical: spacing.s8, alignItems: 'center', gap: spacing.s4 },
@@ -186,4 +189,4 @@ const styles = StyleSheet.create({
     color: colors.lead,
     marginTop: spacing.s1,
   },
-});
+}));

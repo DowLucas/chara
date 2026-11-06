@@ -7,7 +7,7 @@
  */
 
 import type { Group, MyBalance } from '../api';
-import { colors } from '../theme';
+import { darkColors, lightColors } from '../theme';
 import {
   directionColor,
   directionOf,
@@ -196,9 +196,12 @@ describe('directionOf', () => {
 });
 
 describe('directionColor', () => {
-  it('colors owe/owed and keeps settled neutral (never a green 0)', () => {
-    expect(directionColor('owed')).toBe(colors.moss);
-    expect(directionColor('owe')).toBe(colors.brick);
-    expect(directionColor('settled')).toBe(colors.graphite);
+  it.each([
+    ['light', lightColors],
+    ['dark', darkColors],
+  ])('colors owe/owed and keeps settled neutral in the %s palette (never a green 0)', (_n, c) => {
+    expect(directionColor('owed', c)).toBe(c.moss);
+    expect(directionColor('owe', c)).toBe(c.brick);
+    expect(directionColor('settled', c)).toBe(c.graphite);
   });
 });

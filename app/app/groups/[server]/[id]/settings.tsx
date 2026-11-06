@@ -48,15 +48,8 @@ import { formatLeaveReasons } from '@/lib/group-settings';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import type { DeleteGroupModalError } from '@/components/DeleteGroupModal.helpers';
 import { formatMinorUnits } from '@/lib/i18n';
-import {
-  colors,
-  fontBody,
-  fontDisplay,
-  fontMono,
-  fontMonoMedium,
-  fontSize,
-  spacing,
-} from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 
 interface DeleteApiError {
   code?: string;
@@ -78,6 +71,8 @@ function parseDeleteError(e: unknown): DeleteGroupModalError {
 }
 
 export default function GroupSettingsScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const { server, id } = useLocalSearchParams<{ server: string; id: string }>();
   const serverUrl = decodeURIComponent(server ?? '');
   const api = apiFor(serverUrl);
@@ -524,6 +519,8 @@ function GroupColorRow({
   groupId: string;
   onPress: () => void;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const { t } = useTranslation();
   return (
     <TouchableOpacity
@@ -545,6 +542,7 @@ function GroupColorRow({
 }
 
 function Badge({ tone, label }: { tone: 'brick' | 'lead'; label: string }) {
+  const styles = useStyles();
   return (
     <View
       style={[
@@ -574,6 +572,8 @@ function NavRow({
   disabled?: boolean;
   hint?: string;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const tint = disabled
     ? colors.lead
     : destructive
@@ -607,7 +607,7 @@ function NavRow({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
   header: {
@@ -728,4 +728,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.s2,
   },
-});
+}));

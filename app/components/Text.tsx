@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text as RNText, TextProps } from 'react-native';
-import { colors, typography, TypographyVariant } from '@/lib/theme';
+import { typography, TypographyVariant } from '@/lib/theme';
+import { useColors } from '@/lib/theme-context';
 
 interface Props extends TextProps {
   variant?: TypographyVariant;
@@ -16,16 +17,17 @@ const MAX_FONT_SCALE = 2;
 
 export function Text({
   variant = 'body',
-  color = colors.graphite,
+  color,
   style,
   maxFontSizeMultiplier = MAX_FONT_SCALE,
   ...props
 }: Props) {
+  const colors = useColors();
   return (
     <RNText
       allowFontScaling
       maxFontSizeMultiplier={maxFontSizeMultiplier}
-      style={[typography[variant], { color }, style]}
+      style={[typography[variant], { color: color ?? colors.graphite }, style]}
       {...props}
     />
   );

@@ -22,12 +22,14 @@ import {
 } from '@/lib/onboarding-setup';
 import { userErrorMessage } from '@/lib/user-error';
 import { hapticSuccess } from '@/lib/haptics';
-import { colors, fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { fontBody, fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
+import { makeStyles, useColors } from '@/lib/theme-context';
 import * as analytics from '@/lib/analytics';
 
 type StepState = 'pending' | 'running' | 'done' | 'failed';
 
 export default function OnboardingSetupScreen() {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const t = useEnglishT();
   const { server } = useLocalSearchParams<{ server?: string }>();
@@ -179,6 +181,8 @@ function StepRow({
   state: StepState;
   detail?: string | null;
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <View style={styles.row}>
       <View style={styles.rowIcon}>
@@ -202,7 +206,7 @@ function StepRow({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper, paddingHorizontal: spacing.s5 },
   headline: {
     fontFamily: fontDisplay,
@@ -241,4 +245,4 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
     textDecorationColor: colors.ruleSoft,
   },
-});
+}));
