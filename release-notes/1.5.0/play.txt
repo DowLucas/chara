@@ -1,0 +1,90 @@
+<en-US>
+- Your month, once a month. On the 1st, Chara Cloud sends one notification showing what you paid, what was really your share, and where the money went.
+- Send feedback without leaving the app. Report a bug or ask for a feature in You > Send feedback. Chara Cloud only.
+- Search expenses inside a group, and a calmer first run.
+- Security and reliability fixes throughout.
+</en-US>
+<sv-SE>
+- Din månad, en gång i månaden. Den 1:a skickar Chara Cloud en avisering som visar vad du betalade, vad som faktiskt var din del och vart pengarna tog vägen.
+- Skicka feedback utan att lämna appen. Rapportera en bugg eller önska en funktion under Du > Skicka feedback. Endast Chara Cloud.
+- Sök bland utgifter i en grupp, och en lugnare start.
+- Säkerhets- och stabilitetsfixar rakt igenom.
+</sv-SE>
+<da-DK>
+- Din måned, en gang om måneden. Den 1. sender Chara Cloud én notifikation, der viser, hvad du betalte, hvad der reelt var din del, og hvor pengene gik hen.
+- Send feedback uden at forlade appen. Meld en fejl, eller ønsk en funktion under Dig > Send feedback. Kun Chara Cloud.
+- Søg i udgifter i en gruppe, og en roligere opstart.
+- Sikkerheds- og stabilitetsrettelser hele vejen igennem.
+</da-DK>
+<de-DE>
+- Dein Monat, einmal im Monat. Am 1. schickt Chara Cloud eine Mitteilung: was du bezahlt hast, was wirklich dein Anteil war und wohin das Geld ging.
+- Feedback senden, ohne die App zu verlassen. Melde einen Fehler oder wünsch dir eine Funktion unter Du > Feedback senden. Nur Chara Cloud.
+- Ausgaben in einer Gruppe durchsuchen, und ein ruhigerer Einstieg.
+- Sicherheits- und Stabilitätskorrekturen überall.
+</de-DE>
+<fi-FI>
+- Kuukautesi, kerran kuussa. Chara Cloud lähettää 1. päivä yhden ilmoituksen: mitä maksoit, mikä oli oikeasti sinun osuutesi ja mihin rahat menivät.
+- Lähetä palautetta poistumatta sovelluksesta. Ilmoita virheestä tai ehdota ominaisuutta kohdassa Sinä > Lähetä palautetta. Vain Chara Cloud.
+- Hae kuluja ryhmän sisällä, ja rauhallisempi aloitus.
+- Tietoturva- ja vakauskorjauksia kauttaaltaan.
+</fi-FI>
+<fr-FR>
+- Votre mois, une fois par mois. Le 1er, Chara Cloud envoie une notification : ce que vous avez payé, votre part réelle et où l'argent est passé.
+- Envoyez un retour sans quitter l'app. Signalez un bug ou demandez une fonctionnalité dans Vous > Envoyer un retour. Chara Cloud uniquement.
+- Recherchez des dépenses dans un groupe, et un premier lancement plus clair.
+- Corrections de sécurité et de fiabilité partout.
+</fr-FR>
+<it-IT>
+- Il tuo mese, una volta al mese. Il 1° Chara Cloud invia una notifica: quanto hai pagato, qual era davvero la tua parte e dove sono finiti i soldi.
+- Invia un feedback senza uscire dall'app. Segnala un bug o chiedi una funzione in Tu > Invia un feedback. Solo Chara Cloud.
+- Cerca tra le spese di un gruppo, e un avvio più sereno.
+- Correzioni di sicurezza e affidabilità ovunque.
+</it-IT>
+<es-ES>
+- Tu mes, una vez al mes. El día 1, Chara Cloud envía una notificación: lo que pagaste, lo que era realmente tu parte y adónde fue el dinero.
+- Envía comentarios sin salir de la app. Informa de un fallo o pide una función en Tú > Enviar comentarios. Solo en Chara Cloud.
+- Busca gastos dentro de un grupo, y un primer inicio más tranquilo.
+- Correcciones de seguridad y fiabilidad en toda la app.
+</es-ES>
+<ja-JP>
+- ひと月を、月に一度。毎月1日に Chara Cloud が通知を1件送り、支払った額、実際のあなたの負担、そしてお金の行き先を表示します。
+- アプリを離れずにフィードバックを送信。「あなた」＞「フィードバックを送る」から不具合の報告や機能の要望を送れます。Chara Cloud のみ。
+- グループ内の支出を検索できるようになりました。初回の案内も落ち着いた流れに。
+- セキュリティと安定性の修正も全体に。
+</ja-JP>
+<no-NO>
+- Måneden din, én gang i måneden. Den 1. sender Chara Cloud ett varsel: hva du betalte, hva som faktisk var din del, og hvor pengene tok veien.
+- Send tilbakemelding uten å forlate appen. Meld en feil eller ønsk deg en funksjon under Deg > Send tilbakemelding. Kun Chara Cloud.
+- Søk i utgifter i en gruppe, og en roligere start.
+- Sikkerhets- og stabilitetsfikser hele veien.
+</no-NO>
+<zh-CN>
+- 每月一次，看完整的一个月。每月 1 日，Chara Cloud 会发一条通知，显示你付了多少、实际该你承担多少，以及钱花在了哪里。
+- 不用离开应用就能发送反馈。在「你」>「发送反馈」中报告问题或提出功能建议。仅限 Chara Cloud。
+- 可以在群组内搜索支出，首次使用的引导也更清爽。
+- 多处安全性与稳定性修复。
+</zh-CN>
+<pt-PT>
+- O seu mês, uma vez por mês. No dia 1, o Chara Cloud envia uma notificação: o que pagou, qual era mesmo a sua parte e para onde foi o dinheiro.
+- Envie comentários sem sair da app. Comunique um erro ou peça uma funcionalidade em Você > Enviar comentários. Apenas no Chara Cloud.
+- Pesquise despesas dentro de um grupo, e um primeiro arranque mais calmo.
+- Correções de segurança e fiabilidade em toda a app.
+</pt-PT>
+<pl-PL>
+- Twój miesiąc, raz w miesiącu. 1. dnia Chara Cloud wysyła jedno powiadomienie: ile zapłaciłeś, ile naprawdę wyniósł Twój udział i na co poszły pieniądze.
+- Wyślij opinię bez wychodzenia z aplikacji. Zgłoś błąd lub poproś o funkcję w Ty > Wyślij opinię. Tylko Chara Cloud.
+- Wyszukiwanie wydatków w grupie i spokojniejszy pierwszy start.
+- Poprawki bezpieczeństwa i stabilności w całej aplikacji.
+</pl-PL>
+<nl-NL>
+- Je maand, één keer per maand. Op de 1e stuurt Chara Cloud één melding: wat je betaalde, wat echt jouw deel was en waar het geld heen ging.
+- Stuur feedback zonder de app te verlaten. Meld een bug of vraag een functie aan via Jij > Feedback sturen. Alleen Chara Cloud.
+- Zoek uitgaven binnen een groep, en een rustiger eerste start.
+- Beveiligings- en stabiliteitsfixes door de hele app.
+</nl-NL>
+<ar>
+- شهرك، مرة في الشهر. في اليوم الأول يرسل Chara Cloud إشعاراً واحداً يعرض ما دفعته، وما كان فعلاً نصيبك، وأين ذهبت النقود.
+- أرسل ملاحظاتك دون مغادرة التطبيق. أبلغ عن خلل أو اطلب ميزة من أنت > إرسال ملاحظات. في Chara Cloud فقط.
+- ابحث في مصروفات المجموعة، مع بداية أهدأ عند أول تشغيل.
+- إصلاحات للأمان والاستقرار في كل مكان.
+</ar>

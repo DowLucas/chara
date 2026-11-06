@@ -1,0 +1,5 @@
+- Your month, once a month. On the 1st, Chara Cloud sends one notification showing what you paid, what was really your share, and where the money went. Page back through earlier months any time, or turn the notification off in You > Notifications.
+- Send feedback without leaving the app. Report a bug or ask for a feature in You > Send feedback, and it goes straight to the people building Chara. Chara Cloud only.
+- A new first run. Pick your language on the very first screen, name your first group or scan an invite, and enter your name, all before you create an account. Running your own server is offered from the start rather than hidden in settings.
+- Search expenses inside a group.
+- Security and reliability fixes throughout, including safer handling of sign-in links and clearer errors when something fails.
