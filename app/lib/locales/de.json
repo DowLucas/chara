@@ -1417,6 +1417,8 @@
   "widget": {
     "addExpense": "Ausgabe hinzufügen",
     "allSettled": "Alles ausgeglichen",
+    "groupOwe": "schuldest {{amount}}",
+    "groupOwed": "bekommst {{amount}}",
     "mixedSignsLabel": "Gemischte Salden über Währungen hinweg",
     "netBalance": "Nettosaldo",
     "noGroups": "Noch keine Gruppen",

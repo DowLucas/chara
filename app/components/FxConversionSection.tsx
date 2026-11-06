@@ -155,7 +155,7 @@ export function FxConversionSection({
     return (
       <View style={styles.fxWrap}>
         <View style={styles.fxErrorRow}>
-          <Feather name="alert-triangle" size={16} color={colors.vermillion} />
+          <Feather name="alert-triangle" size={16} color={colors.brick} />
           <Text style={styles.fxErrorText}>
             {t('fx.error', { from, to })}
           </Text>
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
   fxErrorText: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
-    color: colors.vermillion,
+    color: colors.brick,
     letterSpacing: 0.3,
     flexShrink: 1,
   },

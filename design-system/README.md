@@ -24,7 +24,7 @@ The test: if a line is text — a sentence, a status word, a name — use the hu
 
 These do not survive as CSS, and getting them wrong is what makes a mockup look almost-but-not-Chara.
 
-- **`moss` is `#586D2A`, not the pale brand olive `#8FA055`.** The pale shade fails WCAG AA as text on cream. `palmLeaf` keeps it for surfaces that aren't text.
+- **`moss` is `#1F6458` (pine) and `brick` is `#8E3B1A` (rust), tuned for red-green colour blindness** — they stay apart under deuteranopia/protanopia and both pass WCAG AA on paper and bone (guarded by `app/lib/__tests__/theme-palette.test.ts`). The pale brand olive `#8FA055` (`palmLeaf`) is for surfaces that aren't text. Signal colour is always relative to you and paired with a direction word; zero is "settled up" in graphite; the settled stamp is moss, never vermillion.
 - **The group accent order is load-bearing.** A group picks its colour by `hash % 8` into the swatch array, so reordering it recolours every group that already exists.
 - **Signal colour only where direction matters.** The expenses tab is neutral — it is spend history, not balance. The standings tab is coloured — it is net per person. `graphite` for neutral facts, `brick` for "you owe" and destructive actions, `moss` for "you're owed" and completed settlements.
 - **The `+` / `−` prefix belongs only on balance deltas**, never on a plain amount.

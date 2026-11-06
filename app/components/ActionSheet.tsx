@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
   rowLabelDestructive: {
-    color: colors.vermillion,
+    color: colors.brick,
   },
   cancelRow: {
     marginTop: spacing.s2,

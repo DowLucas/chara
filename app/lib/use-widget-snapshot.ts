@@ -73,7 +73,7 @@ export function useWidgetSnapshot(input: WidgetSnapshotInput): void {
         { ...latest.current, lastActiveGroup },
         {
           scheme: APP_SCHEME,
-          t: (key) => t(key),
+          t: (key, opts) => t(key, opts),
           formatAmount: (minor, currency) => formatMinorUnits(minor, currency),
           formatAmountCompact: (minor, currency) => formatMinorUnitsCompact(minor, currency),
           formatTime: (d) => formatTime(d),

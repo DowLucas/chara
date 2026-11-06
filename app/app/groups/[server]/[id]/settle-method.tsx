@@ -430,8 +430,9 @@ export default function SettleMethodScreen() {
           <IconButton icon="x" onPress={() => router.back()} label={t('common.close')} />
         </View>
 
-        {/* Paper card slides up over the image edge; the vermillion
-            top rule echoes the red chop in the print. */}
+        {/* Paper card slides up over the image edge. The top rule, eyebrow
+            and stamp are moss — settled is the completed, good-for-you
+            state, and red here read as debt. */}
         <View style={styles.settledPanel}>
           <View style={styles.settledPanelRule} />
           <ContentContainer>
@@ -854,7 +855,7 @@ const styles = StyleSheet.create({
   },
   settledPanelRule: {
     height: 3,
-    backgroundColor: colors.vermillion,
+    backgroundColor: colors.moss,
   },
   settledPanelInner: {
     paddingHorizontal: spacing.s6,
@@ -865,7 +866,7 @@ const styles = StyleSheet.create({
   settledEyebrow: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,
-    color: colors.vermillion,
+    color: colors.moss,
     letterSpacing: 4,
     textTransform: 'lowercase',
     marginBottom: spacing.s3,

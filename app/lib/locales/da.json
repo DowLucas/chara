@@ -1417,6 +1417,8 @@
   "widget": {
     "addExpense": "Tilføj udgift",
     "allSettled": "Alt er gjort op",
+    "groupOwe": "skylder {{amount}}",
+    "groupOwed": "får {{amount}}",
     "mixedSignsLabel": "Blandede saldi på tværs af valutaer",
     "netBalance": "nettosaldo",
     "noGroups": "Ingen grupper endnu",

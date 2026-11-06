@@ -1509,6 +1509,8 @@
   "widget": {
     "addExpense": "Dodaj wydatek",
     "allSettled": "Wszystko rozliczone",
+    "groupOwe": "winien {{amount}}",
+    "groupOwed": "należne {{amount}}",
     "mixedSignsLabel": "Mieszane salda w różnych walutach",
     "netBalance": "saldo netto",
     "noGroups": "Brak grup",

@@ -46,6 +46,7 @@ import { isPopupJustClosed, markPopupClosed } from '@/lib/popup-guard';
 import { setLastActiveGroup } from '@/lib/preferences';
 import { subscribeGroupChanged, notifyGroupChanged } from '@/lib/group-refresh';
 import { computeStandings, expensesInvolvingMember } from '@/lib/standings';
+import { directionColor, directionOf } from '@/lib/balance-summary';
 import { filterMenuEntries, matchesExpenseQuery } from '@/lib/expense-search';
 import { categoryIcon } from '@/lib/categories';
 import { displayHostFor, isMainHostedServer } from '@/lib/server-url';
@@ -484,9 +485,14 @@ export default function GroupDetailScreen() {
                         {t('groupDetail.paymentRow', { from: fromName, to: toName })}
                       </Text>
                     </View>
+                    {/* Colored only when it's about you: paying out is
+                        brick, receiving is moss, others are graphite. */}
                     <MoneyText
                       value={fmtAmount(String(decimalToMinor(s.amount)), s.currency)}
-                      style={[styles.rowAmount, { color: colors.brick }]}
+                      style={[
+                        styles.rowAmount,
+                        { color: fromIsYou ? colors.brick : toIsYou ? colors.moss : colors.graphite },
+                      ]}
                     />
                   </View>
                 );
@@ -568,7 +574,9 @@ export default function GroupDetailScreen() {
                       value={fmtAmount(String(decimalToMinor(s.amount)), s.currency)}
                       style={[
                         styles.rowAmount,
-                        { color: reverted ? colors.lead : colors.moss },
+                        // Moss marks a completed payment you were part of;
+                        // payments between others stay neutral.
+                        { color: reverted ? colors.lead : fromIsYou || toIsYou ? colors.moss : colors.graphite },
                         reverted && { textDecorationLine: 'line-through' },
                       ]}
                     />
@@ -627,15 +635,35 @@ export default function GroupDetailScreen() {
                           {row.isSettled ? (
                             <Text style={styles.rowMeta}>{t('groupDetail.settledUp')}</Text>
                           ) : (
+                            // Direction in words, amount unsigned. Your own row
+                            // is colored relative to you; other members' rows
+                            // are about them and the group, so they stay
+                            // graphite — green next to Anna used to mean
+                            // "Anna is owed", possibly by you.
                             row.entries.map(({ currency, netMinor }) => (
-                              <MoneyText
-                                key={currency}
-                                value={formatMinorUnits(netMinor, currency, { relative: true })}
-                                style={[
-                                  styles.memberCardTotal,
-                                  { color: netMinor >= 0 ? colors.moss : colors.brick },
-                                ]}
-                              />
+                              <View key={currency} style={styles.totalEntry}>
+                                <MoneyText
+                                  value={formatMinorUnits(Math.abs(netMinor), currency)}
+                                  style={[
+                                    styles.memberCardTotal,
+                                    isYou && { color: directionColor(directionOf(netMinor)) },
+                                  ]}
+                                />
+                                <Text
+                                  style={[
+                                    styles.rowMeta,
+                                    isYou && { color: directionColor(directionOf(netMinor)) },
+                                  ]}
+                                >
+                                  {isYou
+                                    ? netMinor < 0
+                                      ? t('groupDetail.youOwe')
+                                      : t('groupDetail.youreOwed')
+                                    : netMinor < 0
+                                      ? t('groupDetail.owesGroup')
+                                      : t('groupDetail.owedByGroup')}
+                                </Text>
+                              </View>
                             ))
                           )}
                         </View>
@@ -799,11 +827,7 @@ export default function GroupDetailScreen() {
             // in the standings tab. Color stays neutral here; the meta line
             // ("you paid", "Alice paid") carries the who-owes-who signal.
             const display = fmtAmount(String(decimalToMinor(e.amount)), e.currency);
-            const amountColor = settled
-              ? colors.lead
-              : youPaid
-                ? colors.moss
-                : colors.brick;
+            const amountColor = settled ? colors.lead : colors.graphite;
             const selected = selectedIds.includes(e.id);
             return (
               <TouchableOpacity
@@ -1234,6 +1258,7 @@ const styles = StyleSheet.create({
     color: colors.graphite,
     fontVariant: ['tabular-nums'],
   },
+  totalEntry: { alignItems: 'flex-end' },
   memberCardBody: {
     borderTopWidth: 1,
     borderTopColor: colors.ruleSoft,

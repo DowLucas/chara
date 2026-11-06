@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontFamily: fontBody,
     fontSize: fontSize.caption,
-    color: colors.vermillion,
+    color: colors.brick,
     marginTop: spacing.s1,
   },
   validatingText: {

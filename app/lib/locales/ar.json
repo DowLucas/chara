@@ -1601,6 +1601,8 @@
   "widget": {
     "addExpense": "إضافة مصروف",
     "allSettled": "تمت التسوية بالكامل",
+    "groupOwe": "عليك {{amount}}",
+    "groupOwed": "لك {{amount}}",
     "mixedSignsLabel": "أرصدة متباينة بين العملات",
     "netBalance": "الرصيد الصافي",
     "noGroups": "لا توجد مجموعات بعد",

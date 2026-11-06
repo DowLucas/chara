@@ -1458,6 +1458,8 @@
   "widget": {
     "addExpense": "Adicionar despesa",
     "allSettled": "Tudo acertado",
+    "groupOwe": "deves {{amount}}",
+    "groupOwed": "devem-te {{amount}}",
     "mixedSignsLabel": "Saldos mistos entre moedas",
     "netBalance": "saldo líquido",
     "noGroups": "Ainda sem grupos",

@@ -68,11 +68,12 @@ function money(amount: string, currency: string): string {
   return formatMinorUnits(decimalToMinor(amount), currency);
 }
 
-/** Net is the one figure with a direction, so it is the one that shows a
- *  sign. formatMinorUnits already renders the minus. */
+/** Net is the month's delta (what you paid minus your share), so it is the
+ *  one figure that shows a sign — both of them. Plain formatMinorUnits
+ *  formats the absolute value, so a negative net used to lose its minus and
+ *  read as positive to anyone who can't tell the colors apart. */
 function signedNet(net: string, currency: string): string {
-  const formatted = money(net, currency);
-  return decimalToMinor(net) > 0 ? `+${formatted}` : formatted;
+  return formatMinorUnits(decimalToMinor(net), currency, { relative: true });
 }
 
 export default function MonthlySummaryScreen() {

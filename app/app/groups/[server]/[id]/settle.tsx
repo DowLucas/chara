@@ -32,10 +32,12 @@ import { showAlert } from '@/lib/app-alert';
 import { userErrorMessage } from '@/lib/user-error';
 import { useAccount } from '@/lib/accounts';
 import { computeSuggestions } from '@/lib/settle';
+import { directionColor, directionOf } from '@/lib/balance-summary';
 import { decimalToMinor, formatMinorUnits } from '@/lib/i18n';
 import { initialsOf } from '@/lib/name';
 import {
   colors,
+  fontBody,
   fontDisplay,
   fontMono,
   fontMonoMedium,
@@ -246,13 +248,24 @@ export default function SettleScreen() {
             {t('settle.yourNet', { group: group?.name ?? '' })}
           </Text>
           {loaded ? (
-            <MoneyText
-              style={[styles.heroBalance, { color: myNet >= 0 ? colors.moss : colors.brick }]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.4}
-              value={formatMinorUnits(myNet, heroCurrency, { relative: true })}
-            />
+            <>
+              {/* Direction in words; color is the second cue. Zero is
+                  "settled up" in graphite, never a green 0. */}
+              <Text style={[styles.heroDirection, { color: directionColor(directionOf(myNet)) }]}>
+                {myNet < 0
+                  ? t('groupDetail.youOwe')
+                  : myNet > 0
+                    ? t('groupDetail.youreOwed')
+                    : t('groupDetail.settledUp')}
+              </Text>
+              <MoneyText
+                style={[styles.heroBalance, { color: directionColor(directionOf(myNet)) }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.4}
+                value={formatMinorUnits(Math.abs(myNet), heroCurrency)}
+              />
+            </>
           ) : (
             <View style={styles.heroLoading}>
               <ActivityIndicator color={colors.graphite} />
@@ -403,6 +416,11 @@ const styles = StyleSheet.create({
     color: colors.lead,
     letterSpacing: 0.4,
     marginBottom: 6,
+  },
+  heroDirection: {
+    fontFamily: fontBody,
+    fontSize: fontSize.body,
+    marginBottom: 2,
   },
   heroBalance: {
     fontFamily: fontMono,

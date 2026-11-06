@@ -14,6 +14,7 @@
 
 import type { Group, MyBalance } from './api';
 import { decimalToMinor } from './money-utils';
+import { colors } from './theme';
 
 /** Structural subset of `AccountRead<T>` from `aggregated-reads.ts`. */
 export interface Read<T> {
@@ -87,6 +88,18 @@ export function mergeGroupsWithBalances(
 
 export type BalanceDirection = 'owe' | 'owed' | 'settled';
 
+/** A balance read relative to you: positive = you're owed. */
+export function directionOf(minor: number): BalanceDirection {
+  return minor > 0 ? 'owed' : minor < 0 ? 'owe' : 'settled';
+}
+
+/** Signal color for a balance about *you*. Zero is neutral graphite, never a
+ *  green "0". Rows about other people stay graphite regardless — don't call
+ *  this for them. Always pair the color with a direction word. */
+export function directionColor(d: BalanceDirection): string {
+  return d === 'owed' ? colors.moss : d === 'owe' ? colors.brick : colors.graphite;
+}
+
 export interface GroupPosition {
   /** Largest-absolute row; null when the group has no balance rows. */
   dominant: MyBalance | null;
@@ -127,6 +140,6 @@ export function groupPosition(row: MergedGroup): GroupPosition {
     hasActivity,
     settled,
     mixedSigns: hasPositive && hasNegative,
-    direction: minor > 0 ? 'owed' : minor < 0 ? 'owe' : 'settled',
+    direction: directionOf(minor),
   };
 }

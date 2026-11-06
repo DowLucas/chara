@@ -9,9 +9,9 @@
     <color name="chara_widget_graphite">#2D1F1A</color>
     <color name="chara_widget_lead">#6B5A4E</color>
     <!-- "You're owed" / settled. -->
-    <color name="chara_widget_moss">#586D2A</color>
+    <color name="chara_widget_moss">#1F6458</color>
     <!-- "You owe". -->
-    <color name="chara_widget_brick">#8A2A2A</color>
+    <color name="chara_widget_brick">#8E3B1A</color>
     <color name="chara_widget_rule_soft">#122D1F1A</color>
 
     <string name="chara_widget_description">Your balances at a glance.</string>

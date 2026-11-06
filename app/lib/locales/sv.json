@@ -1417,6 +1417,8 @@
   "widget": {
     "addExpense": "Lägg till utgift",
     "allSettled": "Allt är reglerat",
+    "groupOwe": "skyldig {{amount}}",
+    "groupOwed": "få {{amount}}",
     "mixedSignsLabel": "Blandade saldon i olika valutor",
     "netBalance": "nettosaldo",
     "noGroups": "Inga grupper än",
