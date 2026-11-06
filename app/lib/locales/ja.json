@@ -110,7 +110,24 @@
     "title": "アクティビティ",
     "today": "今日",
     "yesterday": "昨日",
-    "you": "自分"
+    "you": "自分",
+    "row": {
+      "expense_added": "<b>{{actor}}</b>が「{{title}}」を追加",
+      "expense_added_simple": "<b>{{actor}}</b>が支出を追加",
+      "expense_edited": "<b>{{actor}}</b>が「{{title}}」を編集",
+      "expense_edited_simple": "<b>{{actor}}</b>が支出を編集",
+      "expense_deleted": "<b>{{actor}}</b>が「{{title}}」を削除",
+      "expense_deleted_simple": "<b>{{actor}}</b>が支出を削除",
+      "settlement_added": "<b>{{actor}}</b>が{{to}}に精算",
+      "settlement_reverted": "<b>{{actor}}</b>が精算を取り消し",
+      "member_joined": "<b>{{actor}}</b>が参加",
+      "group_created": "<b>{{actor}}</b>がグループを作成",
+      "group_renamed": "<b>{{actor}}</b>がグループ名を「{{newName}}」に変更",
+      "group_updated": "<b>{{actor}}</b>がグループを更新",
+      "group_archived": "<b>{{actor}}</b>がグループをアーカイブ",
+      "invite_link_rotated": "<b>{{actor}}</b>が招待リンクを更新",
+      "generic": "<b>{{actor}}</b>・{{event}}"
+    }
   },
   "addExpense": {
     "addCategory": "カテゴリを追加…",
@@ -1451,7 +1468,7 @@
     "devEyebrow": "開発ツール",
     "editNameAndPhone": "名前と電話番号を編集",
     "editProfile": "プロフィールを編集",
-    "homeCurrency": "ホーム通貨",
+    "currencyTile": "通貨",
     "language": "言語",
     "languageAuto": "自動",
     "monthlySummary": "月間サマリー",
@@ -1461,8 +1478,6 @@
       "githubLabel": "GitHubでソースを見る",
       "selfHostLabel": "セルフホストのドキュメント"
     },
-    "phoneLabel": "電話番号",
-    "phoneMissing": "未設定",
     "rateAppStore": "App Storeで評価する",
     "ratePlayStore": "Play Storeで評価する",
     "rateStore": "評価する",

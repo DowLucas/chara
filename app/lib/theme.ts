@@ -52,6 +52,8 @@ export const lightColors = {
   mediaRing: 'rgba(255, 255, 255, 0.4)',
   // The night sky of the settled print, behind the full-bleed illustration.
   printNight: '#0E1A2E',
+  // Dims the print in dark mode so it doesn't glare against Sumi paper.
+  printDim: 'rgba(10, 8, 6, 0)',
 };
 
 export type ColorPalette = { readonly [K in keyof typeof lightColors]: string };
@@ -87,6 +89,7 @@ export const darkColors: ColorPalette = {
   mediaChip: 'rgba(255, 255, 255, 0.15)',
   mediaRing: 'rgba(255, 255, 255, 0.4)',
   printNight: '#0E1A2E',
+  printDim: 'rgba(10, 8, 6, 0.18)',
 };
 
 // Per-group accent palette: 8 Edo-period pigments tuned to sit on `paper`

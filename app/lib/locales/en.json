@@ -110,7 +110,24 @@
     "title": "Activity",
     "today": "Today",
     "yesterday": "Yesterday",
-    "you": "You"
+    "you": "You",
+    "row": {
+      "expense_added": "<b>{{actor}}</b> added \"{{title}}\"",
+      "expense_added_simple": "<b>{{actor}}</b> added an expense",
+      "expense_edited": "<b>{{actor}}</b> edited \"{{title}}\"",
+      "expense_edited_simple": "<b>{{actor}}</b> edited an expense",
+      "expense_deleted": "<b>{{actor}}</b> deleted \"{{title}}\"",
+      "expense_deleted_simple": "<b>{{actor}}</b> deleted an expense",
+      "settlement_added": "<b>{{actor}}</b> settled with {{to}}",
+      "settlement_reverted": "<b>{{actor}}</b> reverted a settlement",
+      "member_joined": "<b>{{actor}}</b> joined",
+      "group_created": "<b>{{actor}}</b> created the group",
+      "group_renamed": "<b>{{actor}}</b> renamed the group to \"{{newName}}\"",
+      "group_updated": "<b>{{actor}}</b> updated the group",
+      "group_archived": "<b>{{actor}}</b> archived the group",
+      "invite_link_rotated": "<b>{{actor}}</b> reset the invite link",
+      "generic": "<b>{{actor}}</b> · {{event}}"
+    }
   },
   "addExpense": {
     "addCategory": "Add category…",
@@ -1454,7 +1471,7 @@
     "devEyebrow": "dev tools",
     "editNameAndPhone": "Edit name and phone",
     "editProfile": "Edit profile",
-    "homeCurrency": "Home currency",
+    "currencyTile": "Currency",
     "language": "Language",
     "languageAuto": "Automatic",
     "monthlySummary": "Monthly summary",
@@ -1464,8 +1481,6 @@
       "githubLabel": "View source on GitHub",
       "selfHostLabel": "Self-hosting docs"
     },
-    "phoneLabel": "phone",
-    "phoneMissing": "not set",
     "rateAppStore": "Rate us on the App Store",
     "ratePlayStore": "Rate us on the Play Store",
     "rateStore": "Rate us",

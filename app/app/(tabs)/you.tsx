@@ -8,19 +8,45 @@ import {
   Linking,
   ScrollView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
+import { setStatusBarStyle } from 'expo-status-bar';
 import { showAlert } from '@/lib/app-alert';
 import { hapticWarning } from '@/lib/haptics';
 import { userErrorMessage } from '@/lib/user-error';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
+// Per-icon paths: the package root pulls every icon in all six weights into the bundle.
+import type { Icon } from 'phosphor-react-native';
+import { Archive } from 'phosphor-react-native/src/icons/Archive';
+import { Bell } from 'phosphor-react-native/src/icons/Bell';
+import { CalendarBlank } from 'phosphor-react-native/src/icons/CalendarBlank';
+import { CaretRight } from 'phosphor-react-native/src/icons/CaretRight';
+import { ChatCircleText } from 'phosphor-react-native/src/icons/ChatCircleText';
+import { Coins } from 'phosphor-react-native/src/icons/Coins';
+import { DeviceMobile } from 'phosphor-react-native/src/icons/DeviceMobile';
+import { FileText } from 'phosphor-react-native/src/icons/FileText';
+import { Globe } from 'phosphor-react-native/src/icons/Globe';
+import { Info } from 'phosphor-react-native/src/icons/Info';
+import { Moon } from 'phosphor-react-native/src/icons/Moon';
+import { Scroll } from 'phosphor-react-native/src/icons/Scroll';
+import { ShareNetwork } from 'phosphor-react-native/src/icons/ShareNetwork';
+import { ShieldCheck } from 'phosphor-react-native/src/icons/ShieldCheck';
+import { SignOut } from 'phosphor-react-native/src/icons/SignOut';
+import { Star } from 'phosphor-react-native/src/icons/Star';
+import { Sun } from 'phosphor-react-native/src/icons/Sun';
+import { Trash } from 'phosphor-react-native/src/icons/Trash';
+import { UsersThree } from 'phosphor-react-native/src/icons/UsersThree';
 import * as Application from 'expo-application';
 import Constants from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
 import { getLocales } from 'expo-localization';
-import { TopBar } from '@/components/TopBar';
+import { SceneHeader } from '@/components/profile/SceneHeader';
+import { SettingTile } from '@/components/profile/SettingTile';
+import { contactLine, tileLayoutFor } from '@/lib/profile-scene';
 import { ContentContainer } from '@/components/ContentContainer';
+import { useResponsive } from '@/lib/use-responsive';
 import { Avatar } from '@/components/Avatar';
 import { ActionSheet, openNativeActionSheet, ActionSheetOption } from '@/components/ActionSheet';
 import { LanguagePicker } from '@/components/LanguagePicker';
@@ -105,7 +131,18 @@ export default function YouScreen() {
   const [avatarSheetVisible, setAvatarSheetVisible] = useState(false);
   const [languageSheetVisible, setLanguageSheetVisible] = useState(false);
   const [appearanceSheetVisible, setAppearanceSheetVisible] = useState(false);
-  const { preference: appearance, setPreference: setAppearance } = useTheme();
+  const { preference: appearance, setPreference: setAppearance, scheme } = useTheme();
+  const { fontScale, width } = useWindowDimensions();
+  const { contentMaxWidth } = useResponsive();
+  const tileLayout = tileLayoutFor(fontScale, Math.min(width, contentMaxWidth ?? width));
+  // The scene header is night in both themes, so the status bar is light
+  // while this tab is on screen and goes back to the theme's on blur.
+  useFocusEffect(
+    useCallback(() => {
+      setStatusBarStyle('light');
+      return () => setStatusBarStyle(scheme === 'dark' ? 'light' : 'dark');
+    }, [scheme]),
+  );
   const appearanceLabel = (p: AppearancePreference) =>
     p === 'light'
       ? t('you.appearanceLight')
@@ -518,9 +555,13 @@ export default function YouScreen() {
         : t('you.rateStore');
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <TopBar title={t('you.title')} />
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
+        <SceneHeader
+          title={t('you.title')}
+          topInset={insets.top}
+        />
+        <View style={styles.body}>
         <ContentContainer>
         <View style={styles.profile}>
           <TouchableOpacity
@@ -530,53 +571,57 @@ export default function YouScreen() {
             accessibilityLabel={t('you.avatar.chooseTitle')}
             style={styles.avatarWrap}
           >
-            <Avatar initials={initials} size="md" style={styles.avatar} source={avatarSource} />
+            <Avatar
+              initials={initials}
+              size="md"
+              style={styles.avatar}
+              textStyle={styles.avatarInitials}
+              source={avatarSource}
+            />
             <View style={styles.avatarBadge}>
-              <Feather name="camera" size={12} color={colors.paper} />
+              <Feather name="camera" size={14} color={colors.paper} />
             </View>
           </TouchableOpacity>
           {uploading && (
             <Text style={styles.uploadingText}>{t('you.avatar.uploading')}</Text>
           )}
+          {/* A print caption: name, a hairline, then one contact line. */}
           <Text style={styles.name}>{user?.name ?? t('common.dash')}</Text>
-          <Text style={styles.email}>{user?.email ?? t('common.dash')}</Text>
-          <Text style={styles.email}>
-            {t('you.phoneLabel')} · {user?.phone?.trim() || t('you.phoneMissing')}
-          </Text>
+          <View style={styles.captionRule} />
+          <Text style={styles.contact}>{contactLine(user?.email, user?.phone) ?? t('common.dash')}</Text>
           <TouchableOpacity
-            style={styles.editBtn}
+            style={styles.editLink}
             onPress={() => router.push('/onboarding/name')}
             activeOpacity={0.7}
+            accessibilityRole="link"
+            hitSlop={8}
           >
-            <Text style={styles.editBtnLabel}>{t('you.editNameAndPhone')}</Text>
+            <Text style={styles.editLinkLabel}>{t('you.editNameAndPhone')}</Text>
+            <CaretRight size={14} color={colors.vermillionInk} />
           </TouchableOpacity>
         </View>
 
-        <Text style={[styles.sectionEyebrow, styles.firstSectionEyebrow]}>
-          {t('you.settingsEyebrow')}
-        </Text>
-        <View style={styles.list}>
-          <NavRow
-            label={t('accounts.title')}
-            value={t('you.accountsRowCount', { count: accountCount })}
-            onPress={handleAccountsRowPress}
-          />
-          <NavRow
-            label={t('you.archivedGroups')}
-            onPress={() => router.push('/settings/archived-groups')}
-          />
-          <NavRow
-            label={t('you.language')}
-            value={languageRowValue}
-            onPress={() => setLanguageSheetVisible(true)}
-          />
-          <NavRow
+        {/* The three settings people change most, as large tiles. Each opens
+            its picker sheet. */}
+        <View style={[styles.tiles, tileLayout === 'rows' && styles.tilesRows]}>
+          <SettingTile
+            layout={tileLayout}
+            icon={appearance === 'light' ? Sun : appearance === 'dark' ? Moon : DeviceMobile}
             label={t('you.appearance')}
             value={appearanceLabel(appearance)}
             onPress={() => setAppearanceSheetVisible(true)}
           />
-          <NavRow
-            label={t('you.homeCurrency')}
+          <SettingTile
+            layout={tileLayout}
+            icon={Globe}
+            label={t('you.language')}
+            value={languageRowValue}
+            onPress={() => setLanguageSheetVisible(true)}
+          />
+          <SettingTile
+            layout={tileLayout}
+            icon={Coins}
+            label={t('you.currencyTile')}
             value={
               homeCurrencyExplicit
                 ? homeCurrency
@@ -584,11 +629,29 @@ export default function YouScreen() {
             }
             onPress={() => setCurrencySheetVisible(true)}
           />
+        </View>
+
+        <Text style={[styles.sectionEyebrow, styles.firstSectionEyebrow]}>
+          {t('you.settingsEyebrow')}
+        </Text>
+        <View style={styles.list}>
+          <NavRow
+            icon={UsersThree}
+            label={t('accounts.title')}
+            value={t('you.accountsRowCount', { count: accountCount })}
+            onPress={handleAccountsRowPress}
+          />
+          <NavRow
+            icon={Archive}
+            label={t('you.archivedGroups')}
+            onPress={() => router.push('/settings/archived-groups')}
+          />
           {/* Hosted-only, so the row is gated on the server actually
               advertising the feature rather than shown-then-404. Opens the
               month in progress; the push opens the month it is about. */}
           {summaryServer && (
             <NavRow
+              icon={CalendarBlank}
               label={t('you.monthlySummary')}
               onPress={() =>
                 router.push(
@@ -599,13 +662,15 @@ export default function YouScreen() {
           )}
           {summaryServer && (
             <NavRow
+              icon={Bell}
               label={t('notifications.title')}
               onPress={() => router.push('/settings/notifications')}
             />
           )}
-          <NavRow label={t('privacy.title')} onPress={() => router.push('/settings/privacy')} />
+          <NavRow icon={ShieldCheck} label={t('privacy.title')} onPress={() => router.push('/settings/privacy')} />
           {feedbackServer && (
             <NavRow
+              icon={ChatCircleText}
               label={t('you.sendFeedback')}
               // Hand over the server this row already resolved, so the
               // screen doesn't probe (and risk failing) a second time.
@@ -616,9 +681,9 @@ export default function YouScreen() {
               }
             />
           )}
-          <NavRow label={t('you.about')} onPress={() => router.push('/settings/about')} />
-          <NavRow label={t('you.tellFriend')} onPress={handleTellFriend} />
-          <NavRow label={rateLabel} onPress={handleRate} />
+          <NavRow icon={Info} label={t('you.about')} onPress={() => router.push('/settings/about')} />
+          <NavRow icon={ShareNetwork} label={t('you.tellFriend')} onPress={handleTellFriend} />
+          <NavRow icon={Star} label={rateLabel} onPress={handleRate} />
         </View>
 
         <Text style={[styles.sectionEyebrow, { marginTop: spacing.s5 }]}>
@@ -626,12 +691,14 @@ export default function YouScreen() {
         </Text>
         <View style={styles.list}>
           <NavRow
+            icon={FileText}
             label={t('legal.privacyPolicy')}
             onPress={() => {
               void Linking.openURL('https://getchara.dowtech.dev/privacy').catch(() => {});
             }}
           />
           <NavRow
+            icon={Scroll}
             label={t('legal.termsOfService')}
             onPress={() => {
               void Linking.openURL('https://getchara.dowtech.dev/terms').catch(() => {});
@@ -669,6 +736,7 @@ export default function YouScreen() {
         </Text>
         <View style={styles.list}>
           <NavRow
+            icon={SignOut}
             label={hasMultipleAccounts ? t('you.signOutAll') : t('you.signOut')}
             onPress={handleSignOutPress}
             destructive
@@ -677,6 +745,7 @@ export default function YouScreen() {
           />
           {accountCount > 0 && (
             <NavRow
+              icon={Trash}
               label={t('account.deleteAll.title')}
               value={t('account.deleteAll.rowValue')}
               onPress={handleDeleteFromAll}
@@ -692,6 +761,7 @@ export default function YouScreen() {
           </Text>
         ) : null}
         </ContentContainer>
+        </View>
       </ScrollView>
       <ActionSheet
         visible={avatarSheetVisible}
@@ -729,6 +799,7 @@ export default function YouScreen() {
 }
 
 function NavRow({
+  icon: RowIcon,
   label,
   value,
   onPress,
@@ -736,6 +807,7 @@ function NavRow({
   showChevron = true,
   disabled = false,
 }: {
+  icon?: Icon;
   label: string;
   value?: string;
   onPress: () => void;
@@ -752,7 +824,10 @@ function NavRow({
       onPress={onPress}
       activeOpacity={0.7}
       disabled={disabled}>
-      <Text style={[styles.rowLabel, { color: labelColor }]}>{label}</Text>
+      <View style={styles.rowLeft}>
+        {RowIcon && <RowIcon size={20} color={labelColor} />}
+        <Text style={[styles.rowLabel, { color: labelColor }]}>{label}</Text>
+      </View>
       <View style={styles.rowRight}>
         {value && <Text style={styles.rowValue}>{value}</Text>}
         {showChevron && (
@@ -777,17 +852,31 @@ const useStyles = makeStyles((colors) => ({
     letterSpacing: 0.3,
     marginTop: spacing.s6,
   },
-  scroll: { paddingHorizontal: spacing.s5, paddingTop: spacing.s5, paddingBottom: spacing.s7 },
+  scroll: { paddingBottom: spacing.s7 },
+  body: { paddingHorizontal: spacing.s5 },
   profile: { alignItems: 'center' },
-  avatarWrap: { position: 'relative' },
-  avatar: { width: 64, height: 64, borderRadius: 32 },
+  // The avatar sits on a paper ring that overlaps the scene's waterline.
+  avatarWrap: {
+    position: 'relative',
+    marginTop: -56,
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+    backgroundColor: colors.paper,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatar: { width: 100, height: 100, borderRadius: 50 },
+  avatarInitials: { fontSize: fontSize.displayM },
+  tiles: { flexDirection: 'row', gap: spacing.s2, marginTop: spacing.s6 },
+  tilesRows: { flexDirection: 'column' },
   avatarBadge: {
     position: 'absolute',
-    right: -2,
-    bottom: -2,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    right: 6,
+    bottom: 6,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: colors.graphite,
     alignItems: 'center',
     justifyContent: 'center',
@@ -803,26 +892,33 @@ const useStyles = makeStyles((colors) => ({
   },
   name: {
     fontFamily: fontDisplay,
-    fontSize: fontSize.displayS,
+    fontSize: fontSize.displayM,
     letterSpacing: -0.5,
     color: colors.graphite,
     marginTop: spacing.s3,
   },
-  email: { fontFamily: fontMono, fontSize: fontSize.bodyS, color: colors.lead, marginTop: 4 },
-  editBtn: {
-    marginTop: spacing.s4,
+  captionRule: {
+    alignSelf: 'stretch',
+    marginHorizontal: spacing.s7,
+    height: 1,
+    backgroundColor: colors.ruleSoft,
+    marginTop: spacing.s3,
+  },
+  contact: {
+    fontFamily: fontBody,
+    fontSize: fontSize.bodyS,
+    color: colors.lead,
+    textAlign: 'center',
+    marginTop: spacing.s3,
+  },
+  editLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    marginTop: spacing.s3,
     paddingVertical: spacing.s2,
-    paddingHorizontal: spacing.s4,
-    borderWidth: 0.5,
-    borderColor: colors.graphite,
-    borderRadius: 6,
   },
-  editBtnLabel: {
-    fontFamily: fontMono,
-    fontSize: fontSize.caption,
-    color: colors.graphite,
-    letterSpacing: 0.3,
-  },
+  editLinkLabel: { fontFamily: fontBody, fontSize: fontSize.bodyS, color: colors.vermillionInk },
   sectionEyebrow: {
     fontFamily: fontMono,
     fontSize: fontSize.bodyS,
@@ -847,6 +943,7 @@ const useStyles = makeStyles((colors) => ({
     gap: spacing.s3,
   },
   rowLabel: { fontFamily: fontBody, fontSize: fontSize.body, color: colors.graphite },
+  rowLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.s3 },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.s2 },
   rowValue: {
     fontFamily: fontMono,

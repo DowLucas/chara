@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { Appearance, StyleSheet, useColorScheme } from 'react-native';
+import { Appearance, StyleSheet, useColorScheme, type ImageStyle, type TextStyle, type ViewStyle } from 'react-native';
 import {
   resolveScheme,
   type AppearancePreference,
@@ -73,7 +73,11 @@ export function useColors(): ColorPalette {
  * Styles are built once per palette and cached, so this is as cheap as a
  * static StyleSheet after the first render in each scheme.
  */
-export function makeStyles<T extends StyleSheet.NamedStyles<T> | StyleSheet.NamedStyles<any>>(
+// RN 0.88's strict types dropped `StyleSheet.NamedStyles`; this is its shape.
+// Constraining keys to style types keeps literals like 'row' from widening to string.
+type NamedStyles<T> = { [P in keyof T]: ViewStyle | TextStyle | ImageStyle };
+
+export function makeStyles<T extends NamedStyles<T>>(
   factory: (colors: ColorPalette) => T,
 ): () => T {
   const cache = new Map<ColorPalette, T>();

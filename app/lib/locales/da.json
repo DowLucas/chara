@@ -110,7 +110,24 @@
     "title": "Aktivitet",
     "today": "I dag",
     "yesterday": "I går",
-    "you": "Du"
+    "you": "Du",
+    "row": {
+      "expense_added": "<b>{{actor}}</b> tilføjede \"{{title}}\"",
+      "expense_added_simple": "<b>{{actor}}</b> tilføjede en udgift",
+      "expense_edited": "<b>{{actor}}</b> redigerede \"{{title}}\"",
+      "expense_edited_simple": "<b>{{actor}}</b> redigerede en udgift",
+      "expense_deleted": "<b>{{actor}}</b> slettede \"{{title}}\"",
+      "expense_deleted_simple": "<b>{{actor}}</b> slettede en udgift",
+      "settlement_added": "<b>{{actor}}</b> betalte {{to}}",
+      "settlement_reverted": "<b>{{actor}}</b> fortrød en afregning",
+      "member_joined": "<b>{{actor}}</b> kom med",
+      "group_created": "<b>{{actor}}</b> lavede gruppen",
+      "group_renamed": "<b>{{actor}}</b> omdøbte gruppen til \"{{newName}}\"",
+      "group_updated": "<b>{{actor}}</b> opdaterede gruppen",
+      "group_archived": "<b>{{actor}}</b> arkiverede gruppen",
+      "invite_link_rotated": "<b>{{actor}}</b> fornyede invitationslinket",
+      "generic": "<b>{{actor}}</b> · {{event}}"
+    }
   },
   "addExpense": {
     "addCategory": "Tilføj kategori…",
@@ -1454,7 +1471,7 @@
     "devEyebrow": "udviklerværktøjer",
     "editNameAndPhone": "Rediger navn og telefon",
     "editProfile": "Rediger profil",
-    "homeCurrency": "Hjemmevaluta",
+    "currencyTile": "Valuta",
     "language": "Sprog",
     "languageAuto": "Automatisk",
     "monthlySummary": "Månedsoversigt",
@@ -1464,8 +1481,6 @@
       "githubLabel": "Se kildekoden på GitHub",
       "selfHostLabel": "Dokumentation for selv-hosting"
     },
-    "phoneLabel": "telefon",
-    "phoneMissing": "ikke angivet",
     "rateAppStore": "Bedøm os i App Store",
     "ratePlayStore": "Bedøm os i Play Butik",
     "rateStore": "Bedøm os",

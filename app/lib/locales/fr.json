@@ -114,7 +114,24 @@
     "title": "Activité",
     "today": "Aujourd'hui",
     "yesterday": "Hier",
-    "you": "Moi"
+    "you": "Moi",
+    "row": {
+      "expense_added": "<b>{{actor}}</b> a ajouté « {{title}} »",
+      "expense_added_simple": "<b>{{actor}}</b> a ajouté une dépense",
+      "expense_edited": "<b>{{actor}}</b> a modifié « {{title}} »",
+      "expense_edited_simple": "<b>{{actor}}</b> a modifié une dépense",
+      "expense_deleted": "<b>{{actor}}</b> a supprimé « {{title}} »",
+      "expense_deleted_simple": "<b>{{actor}}</b> a supprimé une dépense",
+      "settlement_added": "<b>{{actor}}</b> a réglé {{to}}",
+      "settlement_reverted": "<b>{{actor}}</b> a annulé un règlement",
+      "member_joined": "<b>{{actor}}</b> a rejoint le groupe",
+      "group_created": "<b>{{actor}}</b> a créé le groupe",
+      "group_renamed": "<b>{{actor}}</b> a renommé le groupe en « {{newName}} »",
+      "group_updated": "<b>{{actor}}</b> a mis à jour le groupe",
+      "group_archived": "<b>{{actor}}</b> a archivé le groupe",
+      "invite_link_rotated": "<b>{{actor}}</b> a régénéré le lien d'invitation",
+      "generic": "<b>{{actor}}</b> · {{event}}"
+    }
   },
   "addExpense": {
     "addCategory": "Ajouter une catégorie…",
@@ -1497,7 +1514,7 @@
     "devEyebrow": "outils dev",
     "editNameAndPhone": "Modifier le nom et le téléphone",
     "editProfile": "Modifier le profil",
-    "homeCurrency": "Devise principale",
+    "currencyTile": "Devise",
     "language": "Langue",
     "languageAuto": "Automatique",
     "monthlySummary": "Récapitulatif mensuel",
@@ -1507,8 +1524,6 @@
       "githubLabel": "Voir le code source sur GitHub",
       "selfHostLabel": "Docs d'auto-hébergement"
     },
-    "phoneLabel": "téléphone",
-    "phoneMissing": "non défini",
     "rateAppStore": "Nous noter sur l'App Store",
     "ratePlayStore": "Nous noter sur le Play Store",
     "rateStore": "Nous noter",

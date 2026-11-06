@@ -15,4 +15,5 @@ packages:
 nodeLinker: hoisted
 
 allowBuilds:
+  '@parcel/watcher': false
   esbuild: true

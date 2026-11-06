@@ -7,6 +7,7 @@ import {
   Image,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  type ScrollViewInstance,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,7 +37,7 @@ export default function WelcomeIntroScreen() {
   const styles = useStyles();
   const insets = useSafeAreaInsets();
   const t = useEnglishT();
-  const pager = useRef<ScrollView>(null);
+  const pager = useRef<ScrollViewInstance>(null);
   const [width, setWidth] = useState(0);
   const [index, setIndex] = useState(0);
   const [languageSheetVisible, setLanguageSheetVisible] = useState(false);

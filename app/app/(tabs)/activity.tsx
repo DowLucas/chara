@@ -7,8 +7,9 @@
  *
  * Rendering rules:
  *   • Day-bucketed (Today / Yesterday / specific date).
- *   • Per-event-type i18n templates (activity.event_*). Writers populate
- *     snapshots with the required fields; missing fields render as blank.
+ *   • One bone card per day; each row is an icon on the group's color, a
+ *     short headline (activity.row.*, mapped in lib/activity-display.ts),
+ *     a "group · time" meta line and the amount on the right.
  *   • Taps deep-link to:
  *       expense_* → /expenses/{server}/{entity_id}
  *       settlement_* → /groups/{server}/{group_id} (settlements list lives
@@ -26,7 +27,19 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
+import type { Icon } from 'phosphor-react-native';
+// Per-icon paths: the package root pulls every icon in all six weights into the bundle.
+import { Archive } from 'phosphor-react-native/src/icons/Archive';
+import { ArrowCounterClockwise } from 'phosphor-react-native/src/icons/ArrowCounterClockwise';
+import { ArrowsLeftRight } from 'phosphor-react-native/src/icons/ArrowsLeftRight';
+import { DotsThree } from 'phosphor-react-native/src/icons/DotsThree';
+import { Link } from 'phosphor-react-native/src/icons/Link';
+import { PencilSimple } from 'phosphor-react-native/src/icons/PencilSimple';
+import { Receipt } from 'phosphor-react-native/src/icons/Receipt';
+import { Trash } from 'phosphor-react-native/src/icons/Trash';
+import { UserPlus } from 'phosphor-react-native/src/icons/UserPlus';
+import { UsersThree } from 'phosphor-react-native/src/icons/UsersThree';
 
 import { TopBar } from '@/components/TopBar';
 import { ContentContainer } from '@/components/ContentContainer';
@@ -39,15 +52,35 @@ import {
   formatTime,
   formatMinorUnits,
 } from '@/lib/i18n';
+import { ActivityEvent } from '@/lib/api';
+import { activityDisplay, type ActivityIcon } from '@/lib/activity-display';
+import { useGroupColor } from '@/lib/group-color';
 import {
-  ActivityEvent,
-  ActivityPayload,
-  ExpenseActivitySnapshot,
-  SettlementActivitySnapshot,
-  GroupActivitySnapshot,
-} from '@/lib/api';
-import { fontDisplay, fontMono, fontMonoMedium, fontSize, spacing } from '@/lib/theme';
-import { makeStyles, useColors } from '@/lib/theme-context';
+  contrastInkFor,
+  displaySwatch,
+  fontBody,
+  fontBodyMedium,
+  fontDisplay,
+  fontMono,
+  fontSize,
+  spacing,
+} from '@/lib/theme';
+import { makeStyles, useColors, useTheme } from '@/lib/theme-context';
+
+const ICON_DISC = 36;
+
+const ICONS: Record<ActivityIcon, Icon> = {
+  expense: Receipt,
+  edit: PencilSimple,
+  delete: Trash,
+  settle: ArrowsLeftRight,
+  revert: ArrowCounterClockwise,
+  join: UserPlus,
+  group: UsersThree,
+  archive: Archive,
+  link: Link,
+  generic: DotsThree,
+};
 
 interface Row {
   event: ActivityEvent;
@@ -155,17 +188,17 @@ export default function ActivityScreen() {
 
           {buckets.map((b) => (
             <View key={b.label}>
-              <View style={styles.dayHeader}>
-                <Text style={styles.dayLabel}>{b.label}</Text>
-                <View style={styles.dayRule} />
+              <Text style={styles.dayLabel} accessibilityRole="header">
+                {b.label}
+              </Text>
+              <View style={styles.dayCard}>
+                {b.rows.map((r, i) => (
+                  <React.Fragment key={r.event.id}>
+                    {i > 0 && <View style={styles.rowRule} />}
+                    <ActivityRow row={r} youUserId={userIdByServer[r.serverUrl] ?? ''} />
+                  </React.Fragment>
+                ))}
               </View>
-              {b.rows.map((r) => (
-                <ActivityRow
-                  key={r.event.id}
-                  row={r}
-                  youUserId={userIdByServer[r.serverUrl] ?? ''}
-                />
-              ))}
             </View>
           ))}
 
@@ -178,30 +211,47 @@ export default function ActivityScreen() {
 
 function ActivityRow({ row, youUserId }: { row: Row; youUserId: string }) {
   const styles = useStyles();
+  const colors = useColors();
+  const { scheme } = useTheme();
   const { t } = useTranslation();
   const { event, serverUrl } = row;
-  const isYou = event.actor_id === youUserId;
-  const actor = isYou ? t('activity.you') : event.actor_name || t('common.dash');
-  const group = event.group_name ?? '';
-  const sentence = describeEvent(event, { actor, group, t });
-  const time = formatTime(new Date(event.created_at));
-
+  const display = activityDisplay(event);
+  const actor =
+    event.actor_id === youUserId ? t('activity.you') : event.actor_name || t('common.dash');
+  const meta = [event.group_name, formatTime(new Date(event.created_at))]
+    .filter(Boolean)
+    .join(' · ');
+  const groupFill = displaySwatch(useGroupColor(serverUrl, event.group_id), scheme);
+  // Housekeeping sits back: a neutral disc and muted text.
+  const fill = display.quiet ? colors.paper : groupFill;
+  const RowIcon = ICONS[display.icon];
   const target = resolveActivityTarget(event, serverUrl);
   const Wrapper: any = target ? TouchableOpacity : View;
-
   return (
     <Wrapper
       style={styles.row}
-      activeOpacity={target ? 0.7 : 1}
+      activeOpacity={target ? 0.6 : 1}
       onPress={target ? () => router.push(target as any) : undefined}
       accessibilityRole={target ? 'button' : undefined}
     >
-      <View style={styles.rowLeft}>
-        <Text style={styles.rowTitle} numberOfLines={2}>
-          {sentence}
-        </Text>
-        <Text style={styles.rowMeta}>{time}</Text>
+      <View style={[styles.iconDisc, { backgroundColor: fill }]}>
+        <RowIcon size={18} color={display.quiet ? colors.lead : contrastInkFor(fill)} />
       </View>
+      <View style={styles.rowText}>
+        <Text style={[styles.headline, display.quiet && styles.headlineQuiet]} numberOfLines={2}>
+          <Trans
+            i18nKey={display.headlineKey}
+            values={{ actor, to: t('common.dash'), ...display.params }}
+            components={{ b: <Text style={styles.headlineActor} /> }}
+          />
+        </Text>
+        {meta ? <Text style={styles.meta} numberOfLines={1}>{meta}</Text> : null}
+      </View>
+      {display.amount && (
+        <Text style={styles.amount}>
+          {formatMinorUnits(display.amount.minor, display.amount.currency)}
+        </Text>
+      )}
     </Wrapper>
   );
 }
@@ -260,89 +310,6 @@ function resolveActivityTarget(
   }
 }
 
-interface DescribeCtx {
-  actor: string;
-  group: string;
-  t: (key: string, opts?: Record<string, unknown>) => string;
-}
-
-// Render a one-line summary for one activity row. Writers always populate
-// snapshots with the fields the rich templates need; on the rare row with
-// a missing field we fall back to `event_generic`.
-function describeEvent(event: ActivityEvent, ctx: DescribeCtx): string {
-  const { actor, group, t } = ctx;
-  const p: ActivityPayload | undefined = event.payload ?? undefined;
-
-  switch (event.event_type) {
-    case 'expense_added': {
-      const s = (p?.snapshot ?? {}) as ExpenseActivitySnapshot;
-      const hasFull = !!s.title && s.amount != null && !!s.currency;
-      if (!hasFull) {
-        return t('activity.event_expense_added_simple', { actor, group });
-      }
-      return t('activity.event_expense_added', {
-        actor,
-        group,
-        title: s.title,
-        amount: formatMinorUnits(s.amount!, s.currency!),
-      });
-    }
-    case 'expense_edited':
-    case 'expense_updated': {
-      // 'expense_updated' is the pre-rename event_type still in legacy rows.
-      const s = (p?.snapshot ?? {}) as ExpenseActivitySnapshot;
-      if (!s.title) {
-        return t('activity.event_expense_edited_simple', { actor, group });
-      }
-      return t('activity.event_expense_edited', { actor, group, title: s.title });
-    }
-    case 'expense_deleted': {
-      const s = (p?.snapshot ?? {}) as ExpenseActivitySnapshot;
-      if (!s.title) {
-        return t('activity.event_expense_deleted_simple', { actor, group });
-      }
-      return t('activity.event_expense_deleted', { actor, group, title: s.title });
-    }
-    case 'settlement_added': {
-      const s = (p?.snapshot ?? {}) as SettlementActivitySnapshot;
-      return t('activity.event_settlement_added', {
-        actor,
-        group,
-        from: s.from_member_name ?? actor,
-        to: s.to_member_name ?? t('common.dash'),
-        amount: s.amount != null && s.currency ? formatMinorUnits(s.amount, s.currency) : '',
-      });
-    }
-    case 'settlement_reverted':
-      return t('activity.event_settlement_reverted', { actor, group });
-    case 'member_joined':
-      return t('activity.event_member_joined', { actor, group });
-    case 'group_created':
-      return t('activity.event_group_created', { actor, group });
-    case 'group_updated': {
-      const s = (p?.snapshot ?? {}) as GroupActivitySnapshot;
-      if (s.changed?.includes('name') && s.name && s.old_name) {
-        return t('activity.event_group_renamed', {
-          actor,
-          oldName: s.old_name,
-          newName: s.name,
-        });
-      }
-      return t('activity.event_group_updated', { actor, group });
-    }
-    case 'group_archived':
-      return t('activity.event_group_archived', { actor, group });
-    case 'invite_link_rotated':
-      return t('activity.event_invite_link_rotated', { actor, group });
-    default:
-      return t('activity.event_generic', {
-        actor,
-        group,
-        event: event.event_type,
-      });
-  }
-}
-
 const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.paper },
   scroll: { flex: 1 },
@@ -352,41 +319,58 @@ const useStyles = makeStyles((colors) => ({
     color: colors.lead,
     padding: spacing.s5,
   },
-  dayHeader: {
+  dayLabel: {
+    fontFamily: fontBodyMedium,
+    fontSize: fontSize.caption,
+    color: colors.lead,
     paddingHorizontal: spacing.s5,
     paddingTop: spacing.s5,
-    paddingBottom: 6,
+    paddingBottom: spacing.s2,
   },
-  dayLabel: {
-    fontFamily: fontMono,
-    fontSize: fontSize.bodyS,
-    color: colors.lead,
-    letterSpacing: 0.3,
-    marginBottom: 6,
-  },
-  dayRule: {
-    height: 1.5,
-    backgroundColor: colors.graphite,
+  dayCard: {
+    backgroundColor: colors.bone,
+    borderRadius: 10,
+    marginHorizontal: spacing.s4,
   },
   row: {
-    paddingVertical: 12,
-    paddingHorizontal: spacing.s5,
-    borderBottomWidth: 0.5,
-    borderBottomColor: colors.ruleSoft,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.s3,
+    paddingVertical: spacing.s3,
+    paddingHorizontal: spacing.s3,
   },
-  rowLeft: { flex: 1, minWidth: 0 },
-  rowTitle: {
-    fontFamily: fontDisplay,
+  // Inset past the icon so the rule reads as part of the text column.
+  rowRule: {
+    height: 1,
+    backgroundColor: colors.ruleSoft,
+    marginLeft: spacing.s3 + ICON_DISC + spacing.s3,
+  },
+  iconDisc: {
+    width: ICON_DISC,
+    height: ICON_DISC,
+    borderRadius: ICON_DISC / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowText: { flex: 1, minWidth: 0 },
+  headline: {
+    fontFamily: fontBody,
     fontSize: fontSize.bodyS,
-    letterSpacing: -0.2,
-    color: colors.graphite,
     lineHeight: 20,
+    color: colors.graphite,
   },
-  rowMeta: {
-    fontFamily: fontMonoMedium,
-    fontSize: fontSize.bodyS,
+  headlineQuiet: { color: colors.lead },
+  headlineActor: { fontFamily: fontDisplay },
+  meta: {
+    fontFamily: fontBody,
+    fontSize: fontSize.caption,
     color: colors.lead,
-    marginTop: 3,
-    letterSpacing: 0.3,
+    marginTop: 2,
+  },
+  amount: {
+    fontFamily: fontMono,
+    fontSize: fontSize.bodyS,
+    color: colors.graphite,
+    fontVariant: ['tabular-nums'],
   },
 }));

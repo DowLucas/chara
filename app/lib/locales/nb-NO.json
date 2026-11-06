@@ -110,7 +110,24 @@
     "title": "Aktivitet",
     "today": "I dag",
     "yesterday": "I går",
-    "you": "Du"
+    "you": "Du",
+    "row": {
+      "expense_added": "<b>{{actor}}</b> la til «{{title}}»",
+      "expense_added_simple": "<b>{{actor}}</b> la til en utgift",
+      "expense_edited": "<b>{{actor}}</b> redigerte «{{title}}»",
+      "expense_edited_simple": "<b>{{actor}}</b> redigerte en utgift",
+      "expense_deleted": "<b>{{actor}}</b> slettet «{{title}}»",
+      "expense_deleted_simple": "<b>{{actor}}</b> slettet en utgift",
+      "settlement_added": "<b>{{actor}}</b> gjorde opp med {{to}}",
+      "settlement_reverted": "<b>{{actor}}</b> angret et oppgjør",
+      "member_joined": "<b>{{actor}}</b> ble med",
+      "group_created": "<b>{{actor}}</b> opprettet gruppen",
+      "group_renamed": "<b>{{actor}}</b> ga gruppen navnet «{{newName}}»",
+      "group_updated": "<b>{{actor}}</b> oppdaterte gruppen",
+      "group_archived": "<b>{{actor}}</b> arkiverte gruppen",
+      "invite_link_rotated": "<b>{{actor}}</b> byttet invitasjonslenken",
+      "generic": "<b>{{actor}}</b> · {{event}}"
+    }
   },
   "addExpense": {
     "addCategory": "Legg til kategori…",
@@ -1454,7 +1471,7 @@
     "devEyebrow": "utviklerverktøy",
     "editNameAndPhone": "Rediger navn og telefon",
     "editProfile": "Rediger profil",
-    "homeCurrency": "Hjemmevaluta",
+    "currencyTile": "Valuta",
     "language": "Språk",
     "languageAuto": "Automatisk",
     "monthlySummary": "Månedsoppsummering",
@@ -1464,8 +1481,6 @@
       "githubLabel": "Se kildekoden på GitHub",
       "selfHostLabel": "Dokumentasjon for selvdrift"
     },
-    "phoneLabel": "telefon",
-    "phoneMissing": "ikke satt",
     "rateAppStore": "Vurder oss på App Store",
     "ratePlayStore": "Vurder oss på Play Store",
     "rateStore": "Vurder oss",

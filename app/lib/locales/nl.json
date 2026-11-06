@@ -110,7 +110,24 @@
     "title": "Activiteit",
     "today": "Vandaag",
     "yesterday": "Gisteren",
-    "you": "Jij"
+    "you": "Jij",
+    "row": {
+      "expense_added": "<b>{{actor}}</b> voegde \"{{title}}\" toe",
+      "expense_added_simple": "<b>{{actor}}</b> voegde een uitgave toe",
+      "expense_edited": "<b>{{actor}}</b> bewerkte \"{{title}}\"",
+      "expense_edited_simple": "<b>{{actor}}</b> bewerkte een uitgave",
+      "expense_deleted": "<b>{{actor}}</b> verwijderde \"{{title}}\"",
+      "expense_deleted_simple": "<b>{{actor}}</b> verwijderde een uitgave",
+      "settlement_added": "<b>{{actor}}</b> rekende af met {{to}}",
+      "settlement_reverted": "<b>{{actor}}</b> maakte een afrekening ongedaan",
+      "member_joined": "<b>{{actor}}</b> werd lid",
+      "group_created": "<b>{{actor}}</b> maakte de groep aan",
+      "group_renamed": "<b>{{actor}}</b> hernoemde de groep naar \"{{newName}}\"",
+      "group_updated": "<b>{{actor}}</b> werkte de groep bij",
+      "group_archived": "<b>{{actor}}</b> archiveerde de groep",
+      "invite_link_rotated": "<b>{{actor}}</b> verving de uitnodigingslink",
+      "generic": "<b>{{actor}}</b> · {{event}}"
+    }
   },
   "addExpense": {
     "addCategory": "Categorie toevoegen…",
@@ -1454,7 +1471,7 @@
     "devEyebrow": "dev tools",
     "editNameAndPhone": "Naam en telefoon bewerken",
     "editProfile": "Profiel bewerken",
-    "homeCurrency": "Thuisvaluta",
+    "currencyTile": "Valuta",
     "language": "Taal",
     "languageAuto": "Automatisch",
     "monthlySummary": "Maandoverzicht",
@@ -1464,8 +1481,6 @@
       "githubLabel": "Broncode op GitHub bekijken",
       "selfHostLabel": "Documentatie voor zelf hosten"
     },
-    "phoneLabel": "telefoon",
-    "phoneMissing": "niet ingesteld",
     "rateAppStore": "Beoordeel ons in de App Store",
     "ratePlayStore": "Beoordeel ons in de Play Store",
     "rateStore": "Beoordeel ons",
