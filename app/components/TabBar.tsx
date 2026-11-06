@@ -18,7 +18,7 @@ const ROUTE_TO_TAB: Record<
   you: { icon: 'user', labelKey: 'tabs.you' },
 };
 
-export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+export function TabBar({ state, descriptors, emitter, navigateToTab }: BottomTabBarProps) {
   const colors = useColors();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
@@ -43,12 +43,12 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
         if (!tabInfo) return null;
 
         function onPress() {
-          const event = navigation.emit({
+          const event = emitter.emit({
             type: 'tabPress',
             target: route.key,
             canPreventDefault: true,
           });
-          if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name);
+          if (!isFocused && !event.defaultPrevented) navigateToTab(route.key);
         }
 
         return (

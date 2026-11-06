@@ -110,7 +110,24 @@
     "title": "动态",
     "today": "今天",
     "yesterday": "昨天",
-    "you": "我"
+    "you": "我",
+    "row": {
+      "expense_added": "<b>{{actor}}</b> 记了一笔“{{title}}”",
+      "expense_added_simple": "<b>{{actor}}</b> 记了一笔",
+      "expense_edited": "<b>{{actor}}</b> 修改了“{{title}}”",
+      "expense_edited_simple": "<b>{{actor}}</b> 修改了一笔支出",
+      "expense_deleted": "<b>{{actor}}</b> 删除了“{{title}}”",
+      "expense_deleted_simple": "<b>{{actor}}</b> 删除了一笔支出",
+      "settlement_added": "<b>{{actor}}</b> 向 {{to}} 结算",
+      "settlement_reverted": "<b>{{actor}}</b> 撤销了一笔结算",
+      "member_joined": "<b>{{actor}}</b> 加入了群组",
+      "group_created": "<b>{{actor}}</b> 创建了群组",
+      "group_renamed": "<b>{{actor}}</b> 把群组改名为“{{newName}}”",
+      "group_updated": "<b>{{actor}}</b> 更新了群组",
+      "group_archived": "<b>{{actor}}</b> 归档了群组",
+      "invite_link_rotated": "<b>{{actor}}</b> 重置了邀请链接",
+      "generic": "<b>{{actor}}</b> · {{event}}"
+    }
   },
   "addExpense": {
     "addCategory": "添加类别…",
@@ -1436,7 +1453,6 @@
     "appearanceDark": "深色",
     "appearanceLight": "浅色",
     "appearanceSystem": "跟随系统",
-    "appearanceTileHint": "轻点两下切换。长按查看全部选项。",
     "archivedGroups": "已归档群组",
     "avatar": {
       "choosePhoto": "从相册选择",
@@ -1452,7 +1468,7 @@
     "devEyebrow": "开发者选项",
     "editNameAndPhone": "编辑姓名和手机号",
     "editProfile": "编辑资料",
-    "homeCurrency": "本位币",
+    "currencyTile": "货币",
     "language": "语言",
     "languageAuto": "自动",
     "monthlySummary": "月度总结",
@@ -1462,15 +1478,12 @@
       "githubLabel": "在 GitHub 上查看源码",
       "selfHostLabel": "自托管文档"
     },
-    "phoneLabel": "手机号",
-    "phoneMissing": "未填写",
     "rateAppStore": "在 App Store 评分",
     "ratePlayStore": "在 Play Store 评分",
     "rateStore": "给我们评分",
     "rateUnavailableBody": "Chara 还未上架应用商店。",
     "rateUnavailableTitle": "暂不可用",
     "replayOnboarding": "重看新手引导",
-    "sealLabel": "你的名字印章。轻点即可盖章。",
     "sendFeedback": "发送反馈",
     "settingsEyebrow": "设置",
     "shareMessage": "我在用 Chara 跟朋友分账，挺好用：https://getchara.dowtech.dev",

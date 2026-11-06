@@ -110,7 +110,24 @@
     "title": "Tapahtumat",
     "today": "Tänään",
     "yesterday": "Eilen",
-    "you": "Sinä"
+    "you": "Sinä",
+    "row": {
+      "expense_added": "<b>{{actor}}</b> lisäsi kulun ”{{title}}”",
+      "expense_added_simple": "<b>{{actor}}</b> lisäsi kulun",
+      "expense_edited": "<b>{{actor}}</b> muokkasi kulua ”{{title}}”",
+      "expense_edited_simple": "<b>{{actor}}</b> muokkasi kulua",
+      "expense_deleted": "<b>{{actor}}</b> poisti kulun ”{{title}}”",
+      "expense_deleted_simple": "<b>{{actor}}</b> poisti kulun",
+      "settlement_added": "<b>{{actor}}</b> tasasi käyttäjälle {{to}}",
+      "settlement_reverted": "<b>{{actor}}</b> perui tasauksen",
+      "member_joined": "<b>{{actor}}</b> liittyi",
+      "group_created": "<b>{{actor}}</b> loi ryhmän",
+      "group_renamed": "<b>{{actor}}</b> nimesi ryhmän: ”{{newName}}”",
+      "group_updated": "<b>{{actor}}</b> päivitti ryhmää",
+      "group_archived": "<b>{{actor}}</b> arkistoi ryhmän",
+      "invite_link_rotated": "<b>{{actor}}</b> uusi kutsulinkin",
+      "generic": "<b>{{actor}}</b> · {{event}}"
+    }
   },
   "addExpense": {
     "addCategory": "Lisää kategoria…",
@@ -1439,7 +1456,6 @@
     "appearanceDark": "Tumma",
     "appearanceLight": "Vaalea",
     "appearanceSystem": "Järjestelmä",
-    "appearanceTileHint": "Muuta kaksoisnapautuksella. Pitkä painallus näyttää kaikki vaihtoehdot.",
     "archivedGroups": "Arkistoidut ryhmät",
     "avatar": {
       "choosePhoto": "Valitse kirjastosta",
@@ -1455,7 +1471,7 @@
     "devEyebrow": "kehitystyökalut",
     "editNameAndPhone": "Muokkaa nimeä ja puhelinta",
     "editProfile": "Muokkaa profiilia",
-    "homeCurrency": "Kotivaluutta",
+    "currencyTile": "Valuutta",
     "language": "Kieli",
     "languageAuto": "Automaattinen",
     "monthlySummary": "Kuukausiyhteenveto",
@@ -1465,15 +1481,12 @@
       "githubLabel": "Näytä lähdekoodi GitHubissa",
       "selfHostLabel": "Itsehosting-dokumentaatio"
     },
-    "phoneLabel": "puhelin",
-    "phoneMissing": "ei asetettu",
     "rateAppStore": "Arvostele App Storessa",
     "ratePlayStore": "Arvostele Play Kaupassa",
     "rateStore": "Arvostele",
     "rateUnavailableBody": "Charaa ei ole vielä julkaistu kauppaan.",
     "rateUnavailableTitle": "Ei vielä saatavilla",
     "replayOnboarding": "Käy perehdytys uudelleen",
-    "sealLabel": "Nimileimasi. Napauta leimataksesi.",
     "sendFeedback": "Lähetä palautetta",
     "settingsEyebrow": "asetukset",
     "shareMessage": "Olen jakanut laskuja Charalla — kokeile sinäkin: https://getchara.dowtech.dev",

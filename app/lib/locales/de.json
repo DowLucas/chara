@@ -110,7 +110,24 @@
     "title": "Aktivität",
     "today": "Heute",
     "yesterday": "Gestern",
-    "you": "Du"
+    "you": "Du",
+    "row": {
+      "expense_added": "<b>{{actor}}</b> hat „{{title}}“ hinzugefügt",
+      "expense_added_simple": "<b>{{actor}}</b> hat eine Ausgabe eingetragen",
+      "expense_edited": "<b>{{actor}}</b> hat „{{title}}“ bearbeitet",
+      "expense_edited_simple": "<b>{{actor}}</b> hat eine Ausgabe bearbeitet",
+      "expense_deleted": "<b>{{actor}}</b> hat „{{title}}“ gelöscht",
+      "expense_deleted_simple": "<b>{{actor}}</b> hat eine Ausgabe gelöscht",
+      "settlement_added": "<b>{{actor}}</b> hat {{to}} bezahlt",
+      "settlement_reverted": "<b>{{actor}}</b> hat einen Ausgleich rückgängig gemacht",
+      "member_joined": "<b>{{actor}}</b> ist beigetreten",
+      "group_created": "<b>{{actor}}</b> hat die Gruppe angelegt",
+      "group_renamed": "<b>{{actor}}</b> hat die Gruppe in „{{newName}}“ umbenannt",
+      "group_updated": "<b>{{actor}}</b> hat die Gruppe bearbeitet",
+      "group_archived": "<b>{{actor}}</b> hat die Gruppe archiviert",
+      "invite_link_rotated": "<b>{{actor}}</b> hat den Einladungslink erneuert",
+      "generic": "<b>{{actor}}</b> · {{event}}"
+    }
   },
   "addExpense": {
     "addCategory": "Kategorie hinzufügen…",
@@ -1439,7 +1456,6 @@
     "appearanceDark": "Dunkel",
     "appearanceLight": "Hell",
     "appearanceSystem": "System",
-    "appearanceTileHint": "Doppeltippen zum Ändern. Lange drücken für alle Optionen.",
     "archivedGroups": "Archivierte Gruppen",
     "avatar": {
       "choosePhoto": "Aus Mediathek wählen",
@@ -1455,7 +1471,7 @@
     "devEyebrow": "Entwickler-Tools",
     "editNameAndPhone": "Name und Telefon bearbeiten",
     "editProfile": "Profil bearbeiten",
-    "homeCurrency": "Heimwährung",
+    "currencyTile": "Währung",
     "language": "Sprache",
     "languageAuto": "Automatisch",
     "monthlySummary": "Monatsübersicht",
@@ -1465,15 +1481,12 @@
       "githubLabel": "Quellcode auf GitHub ansehen",
       "selfHostLabel": "Selbst-Hosting-Dokumentation"
     },
-    "phoneLabel": "Telefon",
-    "phoneMissing": "nicht hinterlegt",
     "rateAppStore": "Im App Store bewerten",
     "ratePlayStore": "Im Play Store bewerten",
     "rateStore": "App bewerten",
     "rateUnavailableBody": "Chara ist noch in keinem Store veröffentlicht.",
     "rateUnavailableTitle": "Noch nicht verfügbar",
     "replayOnboarding": "Onboarding nochmal ansehen",
-    "sealLabel": "Dein Namensstempel. Tippen zum Stempeln.",
     "sendFeedback": "Feedback senden",
     "settingsEyebrow": "Einstellungen",
     "shareMessage": "Ich teile meine Rechnungen mit Chara – schau mal: https://getchara.dowtech.dev",

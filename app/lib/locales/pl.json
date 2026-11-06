@@ -118,7 +118,24 @@
     "title": "Aktywność",
     "today": "Dziś",
     "yesterday": "Wczoraj",
-    "you": "Ty"
+    "you": "Ty",
+    "row": {
+      "expense_added": "<b>{{actor}}</b> dodał(a) „{{title}}”",
+      "expense_added_simple": "<b>{{actor}}</b> dodał(a) wydatek",
+      "expense_edited": "<b>{{actor}}</b> edytował(a) „{{title}}”",
+      "expense_edited_simple": "<b>{{actor}}</b> edytował(a) wydatek",
+      "expense_deleted": "<b>{{actor}}</b> usunął/usunęła „{{title}}”",
+      "expense_deleted_simple": "<b>{{actor}}</b> usunął/usunęła wydatek",
+      "settlement_added": "<b>{{actor}}</b> rozliczył(a) się z {{to}}",
+      "settlement_reverted": "<b>{{actor}}</b> cofnął/cofnęła rozliczenie",
+      "member_joined": "<b>{{actor}}</b> dołączył(a)",
+      "group_created": "<b>{{actor}}</b> stworzył(a) grupę",
+      "group_renamed": "<b>{{actor}}</b> zmienił(a) nazwę grupy na „{{newName}}”",
+      "group_updated": "<b>{{actor}}</b> zaktualizował(a) grupę",
+      "group_archived": "<b>{{actor}}</b> zarchiwizował(a) grupę",
+      "invite_link_rotated": "<b>{{actor}}</b> zmienił(a) link zaproszenia",
+      "generic": "<b>{{actor}}</b> · {{event}}"
+    }
   },
   "addExpense": {
     "addCategory": "Dodaj kategorię…",
@@ -1535,7 +1552,6 @@
     "appearanceDark": "Ciemny",
     "appearanceLight": "Jasny",
     "appearanceSystem": "Systemowy",
-    "appearanceTileHint": "Dotknij dwukrotnie, aby zmienić. Przytrzymaj, aby zobaczyć wszystkie opcje.",
     "archivedGroups": "Zarchiwizowane grupy",
     "avatar": {
       "choosePhoto": "Wybierz z galerii",
@@ -1551,7 +1567,7 @@
     "devEyebrow": "narzędzia dev",
     "editNameAndPhone": "Edytuj imię i telefon",
     "editProfile": "Edytuj profil",
-    "homeCurrency": "Waluta domowa",
+    "currencyTile": "Waluta",
     "language": "Język",
     "languageAuto": "Automatycznie",
     "monthlySummary": "Podsumowanie miesiąca",
@@ -1561,15 +1577,12 @@
       "githubLabel": "Zobacz źródło na GitHubie",
       "selfHostLabel": "Dokumentacja własnego hostingu"
     },
-    "phoneLabel": "telefon",
-    "phoneMissing": "nieustawiony",
     "rateAppStore": "Oceń nas w App Store",
     "ratePlayStore": "Oceń nas w Play Store",
     "rateStore": "Oceń nas",
     "rateUnavailableBody": "Chara nie jest jeszcze opublikowana w sklepie.",
     "rateUnavailableTitle": "Jeszcze niedostępne",
     "replayOnboarding": "Powtórz wprowadzenie",
-    "sealLabel": "Twoja pieczęć z imieniem. Dotknij, aby odbić.",
     "sendFeedback": "Wyślij opinię",
     "settingsEyebrow": "ustawienia",
     "shareMessage": "Dzielę rachunki z Chara — sprawdź: https://getchara.dowtech.dev",

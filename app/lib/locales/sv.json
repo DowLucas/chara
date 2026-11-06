@@ -110,7 +110,24 @@
     "title": "Aktivitet",
     "today": "Idag",
     "yesterday": "Igår",
-    "you": "Du"
+    "you": "Du",
+    "row": {
+      "expense_added": "<b>{{actor}}</b> lade till ”{{title}}”",
+      "expense_added_simple": "<b>{{actor}}</b> lade till en utgift",
+      "expense_edited": "<b>{{actor}}</b> redigerade ”{{title}}”",
+      "expense_edited_simple": "<b>{{actor}}</b> redigerade en utgift",
+      "expense_deleted": "<b>{{actor}}</b> tog bort ”{{title}}”",
+      "expense_deleted_simple": "<b>{{actor}}</b> tog bort en utgift",
+      "settlement_added": "<b>{{actor}}</b> betalade {{to}}",
+      "settlement_reverted": "<b>{{actor}}</b> ångrade en betalning",
+      "member_joined": "<b>{{actor}}</b> gick med",
+      "group_created": "<b>{{actor}}</b> skapade gruppen",
+      "group_renamed": "<b>{{actor}}</b> döpte om gruppen till ”{{newName}}”",
+      "group_updated": "<b>{{actor}}</b> uppdaterade gruppen",
+      "group_archived": "<b>{{actor}}</b> arkiverade gruppen",
+      "invite_link_rotated": "<b>{{actor}}</b> bytte inbjudningslänk",
+      "generic": "<b>{{actor}}</b> · {{event}}"
+    }
   },
   "addExpense": {
     "addCategory": "Lägg till kategori…",
@@ -1439,7 +1456,6 @@
     "appearanceDark": "Mörkt",
     "appearanceLight": "Ljust",
     "appearanceSystem": "System",
-    "appearanceTileHint": "Dubbeltryck för att ändra. Tryck länge för alla alternativ.",
     "archivedGroups": "Arkiverade grupper",
     "avatar": {
       "choosePhoto": "Välj från bilder",
@@ -1455,7 +1471,7 @@
     "devEyebrow": "utvecklarverktyg",
     "editNameAndPhone": "Redigera namn och telefon",
     "editProfile": "Redigera profil",
-    "homeCurrency": "Hemvaluta",
+    "currencyTile": "Valuta",
     "language": "Språk",
     "languageAuto": "Automatiskt",
     "monthlySummary": "Månadssammanfattning",
@@ -1465,15 +1481,12 @@
       "githubLabel": "Visa källkod på GitHub",
       "selfHostLabel": "Dokumentation för egen drift"
     },
-    "phoneLabel": "telefon",
-    "phoneMissing": "ej angivet",
     "rateAppStore": "Betygsätt oss i App Store",
     "ratePlayStore": "Betygsätt oss i Play Store",
     "rateStore": "Betygsätt oss",
     "rateUnavailableBody": "Chara finns inte i någon butik ännu.",
     "rateUnavailableTitle": "Inte tillgängligt ännu",
     "replayOnboarding": "Spela upp introduktionen igen",
-    "sealLabel": "Din namnstämpel. Tryck för att stämpla.",
     "sendFeedback": "Skicka feedback",
     "settingsEyebrow": "inställningar",
     "shareMessage": "Jag delar utgifter med Chara — kolla in det: https://getchara.dowtech.dev",

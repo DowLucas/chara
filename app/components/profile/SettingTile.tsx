@@ -1,43 +1,48 @@
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import type { Icon } from 'phosphor-react-native';
 import { Text } from '@/components/Text';
 import { isPopupJustClosed } from '@/lib/popup-guard';
 import { fontDisplay, fontMono, fontSize, spacing } from '@/lib/theme';
 import { makeStyles, useColors } from '@/lib/theme-context';
 
 interface Props {
-  icon: React.ComponentProps<typeof Feather>['name'];
+  icon: Icon;
   label: string;
   value: string;
   onPress: () => void;
-  onLongPress?: () => void;
-  accessibilityHint?: string;
   /** 'rows' at large Dynamic Type sizes so the value never truncates. */
   layout: 'tiles' | 'rows';
 }
 
 /** A large quick-setting tile on the You tab (Appearance, Language, Home
  *  currency). Becomes a full-width row when text is large. */
-export function SettingTile({ icon, label, value, onPress, onLongPress, accessibilityHint, layout }: Props) {
+export function SettingTile({ icon: TileIcon, label, value, onPress, layout }: Props) {
   const styles = useStyles();
   const colors = useColors();
   const rows = layout === 'rows';
   return (
     <TouchableOpacity
       onPress={() => { if (!isPopupJustClosed()) onPress(); }}
-      onLongPress={onLongPress}
       activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel={`${label}, ${value}`}
-      accessibilityHint={accessibilityHint}
       style={[styles.tile, rows && styles.tileRow]}
     >
       <View style={styles.icon}>
-        <Feather name={icon} size={18} color={colors.graphite} />
+        <TileIcon size={20} color={colors.graphite} />
       </View>
       <View style={rows ? styles.textRow : undefined}>
-        <Text style={styles.label}>{label}</Text>
+        {/* One word per label; it shrinks a little rather than breaking
+            mid-word. tileLayoutFor switches to rows before it would. */}
+        <Text
+          style={[styles.label, !rows && styles.labelTile]}
+          numberOfLines={rows ? undefined : 1}
+          adjustsFontSizeToFit={!rows}
+          minimumFontScale={0.85}
+        >
+          {label}
+        </Text>
         <Text style={styles.value} numberOfLines={rows ? undefined : 2}>{value}</Text>
       </View>
     </TouchableOpacity>
@@ -65,6 +70,8 @@ const useStyles = makeStyles((colors) => ({
     justifyContent: 'center',
   },
   label: { fontFamily: fontDisplay, fontSize: fontSize.body, color: colors.graphite },
+  // Keep in sync with TILE_LABEL_MIN_WIDTH in lib/profile-scene.ts.
+  labelTile: { fontSize: fontSize.bodyS },
   value: {
     fontFamily: fontMono,
     fontSize: fontSize.caption,

@@ -126,7 +126,24 @@
     "title": "النشاط",
     "today": "اليوم",
     "yesterday": "أمس",
-    "you": "أنت"
+    "you": "أنت",
+    "row": {
+      "expense_added": "أضاف <b>{{actor}}</b> \"{{title}}\"",
+      "expense_added_simple": "أضاف <b>{{actor}}</b> مصروفًا",
+      "expense_edited": "عدّل <b>{{actor}}</b> \"{{title}}\"",
+      "expense_edited_simple": "عدّل <b>{{actor}}</b> مصروفًا",
+      "expense_deleted": "حذف <b>{{actor}}</b> \"{{title}}\"",
+      "expense_deleted_simple": "حذف <b>{{actor}}</b> مصروفًا",
+      "settlement_added": "سدّد <b>{{actor}}</b> إلى {{to}}",
+      "settlement_reverted": "تراجع <b>{{actor}}</b> عن تسوية",
+      "member_joined": "انضم <b>{{actor}}</b>",
+      "group_created": "أنشأ <b>{{actor}}</b> المجموعة",
+      "group_renamed": "غيّر <b>{{actor}}</b> اسم المجموعة إلى \"{{newName}}\"",
+      "group_updated": "حدّث <b>{{actor}}</b> المجموعة",
+      "group_archived": "أرشف <b>{{actor}}</b> المجموعة",
+      "invite_link_rotated": "جدّد <b>{{actor}}</b> رابط الدعوة",
+      "generic": "<b>{{actor}}</b> · {{event}}"
+    }
   },
   "addExpense": {
     "addCategory": "إضافة فئة…",
@@ -1631,7 +1648,6 @@
     "appearanceDark": "داكن",
     "appearanceLight": "فاتح",
     "appearanceSystem": "النظام",
-    "appearanceTileHint": "اضغط مرتين للتغيير. اضغط مطولًا لكل الخيارات.",
     "archivedGroups": "المجموعات المؤرشفة",
     "avatar": {
       "choosePhoto": "اختيار من المكتبة",
@@ -1647,7 +1663,7 @@
     "devEyebrow": "أدوات المطور",
     "editNameAndPhone": "تعديل الاسم والهاتف",
     "editProfile": "تعديل الملف الشخصي",
-    "homeCurrency": "العملة الأساسية",
+    "currencyTile": "العملة",
     "language": "اللغة",
     "languageAuto": "تلقائي",
     "monthlySummary": "الملخص الشهري",
@@ -1657,15 +1673,12 @@
       "githubLabel": "عرض الكود المصدري على GitHub",
       "selfHostLabel": "مستندات الاستضافة الذاتية"
     },
-    "phoneLabel": "الهاتف",
-    "phoneMissing": "غير محدد",
     "rateAppStore": "قيّمنا على App Store",
     "ratePlayStore": "قيّمنا على Play Store",
     "rateStore": "قيّمنا",
     "rateUnavailableBody": "لم يُنشر Chara في أي متجر بعد.",
     "rateUnavailableTitle": "غير متوفر بعد",
     "replayOnboarding": "إعادة التهيئة",
-    "sealLabel": "ختم اسمك. اضغط لتختم.",
     "sendFeedback": "إرسال ملاحظات",
     "settingsEyebrow": "الإعدادات",
     "shareMessage": "أنا أقسّم الفواتير مع Chara — جرّبه: https://getchara.dowtech.dev",
