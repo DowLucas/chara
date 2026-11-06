@@ -1012,6 +1012,13 @@
     "saving": "Speichert…",
     "submit": "Weiter"
   },
+  "pendingSwish": {
+    "body": "Du hast Swish geöffnet, um {{name}} {{amount}} in {{group}} zu zahlen, aber Chara wurde geschlossen, bevor du bestätigen konntest. Wenn die Zahlung durchgegangen ist, trage sie jetzt ein.",
+    "errorBody": "Die Zahlung konnte nicht eingetragen werden. Öffne die Gruppe und gleiche dort ab, um sie einzutragen.",
+    "no": "Nein",
+    "title": "Ist deine Swish-Zahlung durchgegangen?",
+    "yes": "Ja, eintragen"
+  },
   "privacy": {
     "analyticsDescription": "Hilft uns zu verstehen, wie Chara genutzt wird. Keine personenbezogenen Daten, IP-Adressen oder Inhalte. Du kannst es jederzeit ausschalten.",
     "analyticsLabel": "Anonyme Nutzungsstatistik senden",
