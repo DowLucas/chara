@@ -72,7 +72,7 @@
     "expo-status-bar": "~58.0.4",
     "expo-store-review": "~58.0.2",
     "expo-system-ui": "~58.0.7",
-    "i18next": "^26.1.0",
+    "i18next": "^26.3.4",
     "phosphor-react-native": "^3.0.6",
     "posthog-react-native": "^4.45.14",
     "react": "19.3.0",
